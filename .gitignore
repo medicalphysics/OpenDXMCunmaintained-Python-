@@ -107,3 +107,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+.spyderproject
+engine/_interaction_func.c
+engine/_interaction_func.html
+engine/_random.c
+engine/_siddon_func.c
+engine/_siddon_func.html
+engine/cyrandom.html
+*.xlsm

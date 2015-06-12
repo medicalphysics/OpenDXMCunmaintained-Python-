@@ -1,0 +1,122 @@
+2;Adipose tissue head;7
+3;Adipose tissue trunk;7
+4;Adipose tissue left arm;7
+5;Adipose tissue right arm;7
+6;Adipose tissue left leg;7
+7;Adipose tissue right leg;7
+8;Adrenals;4
+9;Bladder wall;4
+27;Brain;4
+28;Anterior nasal passage;2
+29;Posterior nasal passage;2
+30;Pharynx (nasal part);2
+31;Pharynx (oral part);2
+32;Larynx;2
+33;Bronchial tree;4
+34;Eyes;4
+35;Eye lenses;4
+36;Heart;4
+38;Left kidney;4
+39;Right kidney;4
+41;Liver;4
+43;Left lung;8
+44;Right lung;8
+46;Muscle tissue head;3
+47;Muscle tissue trunk;3
+48;Muscle tissue left arm;3
+49;Muscle tissue right arm;3
+50;Muscle tissue left leg;3
+51;Muscle tissue right leg;3
+52;Oesophagus;4
+54;Pancreas;4
+55;Penis;4
+135;Upper left arm bone;1/5/6
+136;Lower left arm bones;1/6
+137;Left hand bones;1/6
+138;Upper right arm bone;1/5/6
+139;Lower right arm bones;1/6
+140;Right hand bones;1/6
+141;Clavicles;1/5/6
+143;Upper left leg bone;1/5/6
+144;Lower left leg bones;1/6
+145;Left foot bones;1/6
+146;Upper right leg bone;1/5/6
+147;Lower right leg bones;1/6
+148;Right foot bones;1/6
+149;Mandible;1/5/6
+150;Pelvis;1/5/6
+152;Rib 1 left side;1/5/6
+153;Rib 2 left side;1/5/6
+154;Rib 3 left side;1/5/6
+155;Rib 4 left side;1/5/6
+156;Rib 5 left side;1/5/6
+157;Rib 6 left side;1/5/6
+158;Rib 7 left side;1/5/6
+159;Rib 8 left side;1/5/6
+160;Rib 9 left side;1/5/6
+161;Rib 10 left side;1/5/6
+162;Rib 11 left side;1/5/6
+163;Rib 12 left side;1/5/6
+164;Rib 1 right side;1/5/6
+165;Rib 2 right side;1/5/6
+166;Rib 3 right side;1/5/6
+167;Rib 4 right side;1/5/6
+168;Rib 5 right side;1/5/6
+169;Rib 6 right side;1/5/6
+170;Rib 7 right side;1/5/6
+171;Rib 8 right side;1/5/6
+172;Rib 9 right side;1/5/6
+173;Rib 10 right side;1/5/6
+174;Rib 11 right side;1/5/6
+175;Rib 12 right side;1/5/6
+176;Scapulae;1/5/6
+177;Skull;1/5/6
+180;Cervical vertebra 1;1/5/6
+181;Cervical vertebra 2;1/5/6
+182;Cervical vertebra 3;1/5/6
+183;Cervical vertebra 4;1/5/6
+184;Cervical vertebra 5;1/5/6
+185;Cervical vertebra 6;1/5/6
+186;Cervical vertebra 7;1/5/6
+188;Thoracic vertebra 1;1/5/6
+189;Thoracic vertebra 2;1/5/6
+190;Thoracic vertebra 3;1/5/6
+191;Thoracic vertebra 4;1/5/6
+192;Thoracic vertebra 5;1/5/6
+193;Thoracic vertebra 6;1/5/6
+194;Thoracic vertebra 7;1/5/6
+195;Thoracic vertebra 8;1/5/6
+196;Thoracic vertebra 9;1/5/6
+197;Thoracic vertebra 10;1/5/6
+198;Thoracic vertebra 11;1/5/6
+199;Thoracic vertebra 12;1/5/6
+201;Lumbar vertebra 1;1/5/6
+202;Lumbar vertebra 2;1/5/6
+203;Lumbar vertebra 3;1/5/6
+204;Lumbar vertebra 4;1/5/6
+205;Lumbar vertebra 5;1/5/6
+206;Sacrum;1/5/6
+207;Sternum;1/5/6
+211;Head skin;2
+212;Trunk skin;2
+214;Left arm skin;2
+215;Right arm skin;2
+217;Left leg skin;2
+218;Right leg skin;2
+219;Small intestine (wall + contents);4
+220;Spinal cord;4
+221;Spleen;4
+222;Stomach wall;4
+223;Teeth;1
+224;Testes;4
+225;Thymus;4
+226;Thyroid;4
+227;Trachea;4
+242;Bladder contents;4
+243;Large intestine contents;4
+244;Stomach contents;4
+245;Bed + pillow;4
+250;Ascending + transverse colon;4
+251;Descending + sigmoid colon;4
+252;Gall bladder;4
+253;Prostate;4

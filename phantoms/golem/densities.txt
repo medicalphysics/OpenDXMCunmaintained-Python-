@@ -1,0 +1,9 @@
+hardbone 1.92
+skin 1.09
+muscletissue 1.05
+softtissue 1.05
+redbonemarrow 1.03
+yellowbonemarrow 0.98
+adiposetissue 0.95
+lung 0.26
+air 0.00129
