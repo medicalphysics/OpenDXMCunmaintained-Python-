@@ -28,6 +28,14 @@ var/
 *.manifest
 *.spec
 
+#spyder
+spyder*
+
+#voxel phantoms(licensing issues)
+phantoms/golem/segm_golem
+phantoms/golem/Organlist.doc
+phantoms/golem/README.txt
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
