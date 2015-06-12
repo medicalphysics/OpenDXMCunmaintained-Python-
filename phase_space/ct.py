@@ -9,13 +9,55 @@ import numpy as np
 import scipy.interpolate
 
 
-def spiral_phase_space(scan_fov, sdd, total_collimation, pitch=1,
-                       start=0, stop=1, exposures=100, histories=1,
-                       energy=70000., energy_specter=None,
-                       batch_size=None, modulation_xy=None,
-                       modulation_z=None):
+def spiral(scan_fov, sdd, total_collimation, pitch=1,
+           start=0, stop=1, exposures=100, histories=1,
+           energy=70000., energy_specter=None,
+           batch_size=None, modulation_xy=None,
+           modulation_z=None):
+    """Generate CT phase space, return a iterator.
+
+    INPUT:
+        scan_fov : float
+            scanner field of view in cm
+        sdd : float
+            source detector distance in cm
+        total_collimation : float
+            detector collimation or width in cm
+        pitch : float
+            pitch value of the spiral
+        start : float
+            start z position for spiral in cm
+        stop : float
+            stop z position for spiral in cm
+        exposures : int
+            number of exposures per rotation
+        histories : int
+            number of photon histories per exposure
+        energy : float
+            monochromatic photon energy in eV (ignored if energy_specter
+            is applied)
+        energy_specter : [(N,), (N,)]
+            [ndarray(energy), ndarray(intensity)] list/tuple of
+            two ndarrays of lenght one, with energy and intensity of specter
+        batch_size : int
+            number of histories per batch, must be greater than
+            histories
+        modulation_xy : [(N,), (N,)]
+            tube current XY modulation, list/tuple of
+            (ndarray(position), ndarray(scale_factors))
+        modulation_z : [(N,), (N,)]
+            tube current modulation z axis, list/tuple of
+            (ndarray(position), ndarray(scale_factors))
+
+    OUTPUT:
+        Iterator returning ndarrays of shape (8, batch_size),
+        one row is equal to photon (start_x, start_y, star_z, direction_x,
+        direction_y, direction_z, energy, weight)
+    """
+
     # total number of exposures + one total rotation
-    e = int((abs(start-stop)/total_collimation + 1) * exposures)
+    exposures = int(exposures)
+    e = int((abs(start - stop) / total_collimation + 1) * exposures)
     if start < stop:
         d_col = total_collimation / 2.
     else:
@@ -42,6 +84,7 @@ def spiral_phase_space(scan_fov, sdd, total_collimation, pitch=1,
     if energy_specter is None:
         energy_specter = [np.array([energy], dtype=np.double),
                           np.array([1.0], dtype=np.double)]
+    energy_specter[1] /= energy_specter[1].sum()
 
     if modulation_xy is None:
         mod_xy = lambda x: 1.0

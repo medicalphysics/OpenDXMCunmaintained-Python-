@@ -4,25 +4,27 @@ import elements
 import scipy.interpolate as inter
 
 ###############################################################################
-#Calculates an emmission spectra from Bhremsstralong on electron interaction in
-#tungsten. I.E spectra from an x-ray tube with tungsten anode.
-#This code is based on:
+# Calculates an emmission spectra from Bhremsstralong on electron interaction
+# in tungsten. I.E spectra from an x-ray tube with tungsten anode.
+# This code is based on:
 #
-#PAPER 1
-#Calculation of x-ray spectra emerging from an x-ray tube. Part I.
-#Electron penetration characteristics in x-ray targets
-#Gavin G. Poludniowskia and Philip M. Evans
-#Joint Department of Physics, Institute of Cancer Research and The Royal Marsden NHS Foundation Trust,
-#Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
+# PAPER 1
+# Calculation of x-ray spectra emerging from an x-ray tube. Part I.
+# Electron penetration characteristics in x-ray targets
+# Gavin G. Poludniowskia and Philip M. Evans
+# Joint Department of Physics, Institute of Cancer Research and
+# The Royal Marsden NHS Foundation Trust,
+# Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
 #
-#and
+# and
 #
-#PAPER 2
-#Calculation of x-ray spectra emerging from an x-ray tube. Part II.
-#X-ray production and filtration in x-ray targets
-#Gavin G. Poludniowskia
-#Joint Department of Physics, Institute of Cancer Research and The Royal Marsden NHS Foundation Trust,
-#Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
+# PAPER 2
+# Calculation of x-ray spectra emerging from an x-ray tube. Part II.
+# X-ray production and filtration in x-ray targets
+# Gavin G. Poludniowskia
+# Joint Department of Physics, Institute of Cancer Research and
+# The Royal Marsden NHS Foundation Trust,
+# Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
 ###############################################################################
 
 # some constants
@@ -73,7 +75,7 @@ def attinuation(hv, name='tungsten', density=False):
     return a(hv)
 
 
-def R_TW(T0):
+def __R_TW(T0):
     """ Thomson-Whiddington electron range in tungsten.
         T0: Initial electron energy
     """
@@ -89,7 +91,7 @@ def __PDF_int_F(u, T0, px):
     """
     # interpolating Monte-Carlo data obtained from ref1 (paper1)
     f = inter.interp2d(CPF100_F_px, CPF100_u, CPF100_F, fill_value=None)
-    return f(px, u) * R_TW(T0) / R_TW(100.)
+    return f(px, u) * __R_TW(T0) / __R_TW(100.)
 
 
 def __PDF_int_M(u, T0, px):
@@ -101,7 +103,7 @@ def __PDF_int_M(u, T0, px):
     """
     # interpolating Monte-Carlo data obtained from ref1 (paper1)
     f = inter.interp2d(CPF100_M_px, CPF100_u, CPF100_M, fill_value=None)
-    return f(px, u) * R_TW(T0) / R_TW(100.)
+    return f(px, u) * __R_TW(T0) / __R_TW(100.)
 
 
 def __f(u, T0, px):
@@ -112,7 +114,7 @@ def __f(u, T0, px):
     """
     # based directly on paper 1 eq 3
     rtw = 0.0119 * T0**1.513
-    ppx = np.repeat(np.reshape(px,(1, -1)), u.shape[0],axis=0)
+    ppx = np.repeat(np.reshape(px, (1, -1)), u.shape[0], axis=0)
 
     n_f = (1. - ppx / rtw)**(1.753)
     exp_dum = 1. - np.exp(- 18. * ppx / rtw)
@@ -174,7 +176,7 @@ def __Nobserved_char(hv, T0):
     u = np.linspace(.1, 1, 200).astype(np.double)
     px = np.linspace(0, 16, 100).astype(np.double)
     du = u[1] - u[0]
-    dpx = dpx = (px[1] - px[0]) / 1000 # converting from mg/cm to g/cm
+    dpx = dpx = (px[1] - px[0]) / 1000  # converting from mg/cm to g/cm
     a = np.repeat(__cross_section_SRMEBH(hv, u, T0).reshape((-1, 1)),
                   px.shape[0], axis=-1)
     corr_a = np.nan_to_num(a * __f(u, T0, px)).sum(axis=0)
@@ -188,7 +190,7 @@ def __Nobserved_emit(hv, T0, theta):
     u = np.linspace(.1, 1, 200).astype(np.double)
     px = np.linspace(0, 16, 100).astype(np.double)
     du = u[1] - u[0]
-    dpx = (px[1] - px[0]) / 1000 # converting from mg/cm to g/cm
+    dpx = (px[1] - px[0]) / 1000  # converting from mg/cm to g/cm
     a = np.repeat(__cross_section_SRMEBH(hv, u, T0).reshape((-1, 1)),
                   px.shape[0], axis=-1)
 
@@ -219,17 +221,68 @@ def __raw_specter(T0, angle_deg=None, angle_rad=None):
     # / by tube potential / tungsten density
 #    n = 6.02214129e23*0.005439512619669277  / T0 / 19.3   *10
 #    print n
-    n = TUNGSTEN_NUMBER_DENSITY / T0
+    n = TUNGSTEN_NUMBER_DENSITY
 #    print n
     dx = 2.
     Nf = 0.68
     P = 0.33 * 100
-    return hv, (Nemit + Nchar * (1 + P))* n * dx * Nf
+    return hv, (Nemit + Nchar * (1 + P)) * n * dx * Nf
+
 
 def specter(T0, angle_deg=None, angle_rad=None,
             filtration_materials=None, filtration_mm=None,
             mAs=1., sdd=100., detector_area=1.):
+    """
+    Generate x-ray specter from tungsten anode by the methods of ref. 1 and 2.
 
+    INPUT:
+        T0 : float
+            Tube potential in keV should be between 30 and 150 keV but may
+            provide acceptable results for higher potentials.
+        angle_deg : float [degrees]
+            Anode angle in degrees, typicalvalue is 12 degrees.
+        angle_rad : float [radians]
+            Anode angle in radians.
+        filtration_materials : iterable or string
+            Additional Aluminum or Copper filtration in the tube
+            Iterable may contain the following values 'al', 'aluminum' or 13
+            for aluminum and similar for copper. One of the values may also be
+            supplied as a string instead of iterator.
+        filtration_mm : iterable or float
+            mm of Copper or Aluminum filtration, must be provide with the
+            filtration_materials keyword and of same type.
+        mAs : float
+            Scaling of specter to the mAs setting of the tube.
+        sdd : float > 0.0
+            Source detector distance in cm, or simply the distance to calculate
+            the spectrum intensities.
+        detector_area : float
+            Area to calculate spectrum intensities at sdd.
+    OUTPUT:
+        energies, intensity : {float ndarray, float ndarray}
+            The spectrum energies and intensity, intensity are
+            gives as N_photons / [cm^2 mAs]
+
+    Reference 1:
+        Calculation of x-ray spectra emerging from an x-ray tube. Part I.
+        Electron penetration characteristics in x-ray targets.
+        Medical Physics, Vol. 34(6), 2164-2174
+
+        Gavin G. Poludniowskia and Philip M. Evans
+        Joint Department of Physics, Institute of Cancer Research and
+        The Royal Marsden NHS Foundation Trust,
+        Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
+
+    Reference 2:
+        Calculation of x-ray spectra emerging from an x-ray tube. Part II.
+        X-ray production and filtration in x-ray targets.
+        Medical Physics, Vol. 34(6), 2175-2186
+
+        Gavin G. Poludniowskia
+        Joint Department of Physics, Institute of Cancer Research and
+        The Royal Marsden NHS Foundation Trust,
+        Downs Road, Sutton, Surrey SM2 5PT, United Kingdom
+    """
     hv, N_obs = __raw_specter(T0, angle_deg, angle_rad)
     if isinstance(filtration_materials, str):
         filtration_materials = [filtration_materials]
@@ -242,12 +295,14 @@ def specter(T0, angle_deg=None, angle_rad=None,
             elif str(material).strip().lower() in ['cu', 'copper', '29']:
                 name = 'copper'
             elif str(material).strip().lower() in ['w', 'tungsten', '74',
-                        'wolfram']:
+                                                   'wolfram']:
                 name = 'tungsten'
             else:
                 continue
-            N_obs *=  np.exp(-attinuation(hv, name, True) * mm / 10.)
+            N_obs *= np.exp(-attinuation(hv, name, True) * mm / 10.)
     except Exception, e:
         print e
-    electrons_per_mas = 1./1.60217657e-16
-    return hv, N_obs * mAs * electrons_per_mas * detector_area / (4*np.pi*sdd**2)
+    electrons_per_mas = 1. / 1.60217657e-16
+
+    return (hv, N_obs * mAs * electrons_per_mas * detector_area /
+            (4 * np.pi * sdd**2))

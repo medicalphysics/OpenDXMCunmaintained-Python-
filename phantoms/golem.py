@@ -23,6 +23,7 @@ MAX_ENERGY = 500e3
 
 
 def _find_attinuation_lut(material_map, index_map=None):
+
     if index_map is None:
         index_map = dict([(k, k) for k in material_map.keys()])
 
@@ -92,11 +93,19 @@ def read_golem():
     golem_path = os.path.join(os.path.dirname(sys.argv[0]), 'golem')
 
     # reading golem_array
-    with open(os.path.join(golem_path, 'segm_golem')) as r:
-        c = r.read()
+    try:
+        with open(os.path.join(golem_path, 'segm_golem')) as r:
+            c = r.read()
+    except IOError, e:
+        print """Could not find segm_golem binary in folder {0}.
+                 You may download the
+                 golem voxel phantom from Helmholtz Zentrum research
+                 center""".format(golem_path)
+        raise e
     header_len = 4096
-    a_raw = np.array(c[header_len:], dtype='c', order='C').view(np.uint8).reshape((220, 256, 256))
-#    a_raw = a_raw.reshape((220, 256, 256))
+    a_raw = np.array(c[header_len:], dtype='c',
+                     order='C').view(np.uint8).reshape((220, 256, 256))
+
     organ_array = np.swapaxes(a_raw, 0, 2)
     organ_array = np.swapaxes(organ_array, 0, 1)
     print organ_array.shape
