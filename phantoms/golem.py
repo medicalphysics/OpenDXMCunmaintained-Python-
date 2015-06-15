@@ -14,21 +14,20 @@ import sys
 import numpy as np
 from scipy import interp as interp
 
+import pdb
+import pylab as plt
+
 HEADER = ('energy', 'rayleigh', 'compton', 'photoelectric', 'ppn', 'ppe',
           'total', 'totalnocoherent')
 
 MAX_ENERGY = 500e3
 
 
-def _find_attinuation_lut(golem_path, material_map, index_map=None):
-
-    if index_map is None:
-        index_map = dict([(k, k) for k in material_map.keys()])
-
+def _find_attinuation_lut(golem_path, material_map):
 
     atts = {}
     for key, value in material_map.items():
-        atts[index_map[key]] = _parse_tissue_attinuation(os.path.join(golem_path, value+'.txt'))
+        atts[key] = _parse_tissue_attinuation(os.path.join(golem_path, value+'.txt'))
 
     energies = np.array([])
     for a in atts.values():
@@ -88,6 +87,7 @@ def read_golem():
 
     """
     golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'phantoms', 'golem')
+#    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'golem')
 
     # reading golem_array
     try:
@@ -109,49 +109,53 @@ def read_golem():
     spacing = np.array([2.08, 2.08, 8.], dtype=np.double) / 10.
 
     # getting density
-    density = _parse_densities(os.path.join(golem_path, 'densities.txt'))
+    density_map = _parse_densities(os.path.join(golem_path, 'densities.txt'))
 
     density_array = np.zeros_like(organ_array, dtype=np.double)
-    material_array = np.zeros_like(organ_array, dtype=np.intc)
-
+    material_array = np.zeros_like(organ_array, dtype=np.intc)    
+    organ_map = {}
     material_map = {}
-    material_index_map = {}
+
     with open(os.path.join(golem_path, 'materialmap.txt')) as r:
-        i = 0
         for line in r.readlines():
             material, ind = (line.strip()).split()
-            material_map[int(ind)] = material
-            material_index_map[int(ind)] = i
-            i += 1
-
-    organ_map = {}
+            material_map[int(ind)] = material    
+    
     with open(os.path.join(golem_path, 'organmap.txt')) as r:
-        for line in r.readlines():
+        for line in r.readlines():          
             seg_ind, organ, materials = (line.strip()).split(';')
             material = int(materials[0])
             ind = organ_array == int(seg_ind)
-
-            density_array[ind] = density[material_map[material]]
-            material_array[ind] = material_index_map[material]
+            
+            density_array[ind] = density_map[material_map[material]]
+            material_array[ind] = material
             organ_map[int(seg_ind)] = organ
-
-    lut = _find_attinuation_lut(golem_path, material_map, material_index_map)
-
+    
+    material_index = np.unique(material_array)
+    material_array_red = np.zeros_like(organ_array, dtype=np.intc)    
+    material_map_red = {}
+    for i in range(material_index.shape[0]):
+        material_map_red[i] = material_map[material_index[i]]
+        ind = material_array == material_index[i]
+        material_array_red[ind] = i
+    pdb.set_trace()
+    lut = _find_attinuation_lut(golem_path, material_map_red)
+    
     return spacing, density_array, lut, material_array, organ_array, organ_map
 
 
-#if __name__ == '__main__':
-#    spacing, density_array, lut, material_array, organ_array, organ_map = read_golem()
-#
-#    from matplotlib import pylab as plt
-#
-#    k = 110
-##    pdb.set_trace()
-#    plt.subplot(131)
-#    plt.imshow(density_array[:,:,k])
-#    plt.subplot(132)
-#    plt.imshow(material_array[:,:,k])
-#    plt.subplot(133)
-#    plt.imshow(organ_array[:,:,k])
-#    plt.show()
+if __name__ == '__main__':
+    spacing, density_array, lut, material_array, organ_array, organ_map = read_golem()
+
+    from matplotlib import pylab as plt
+
+    k = 110
 #    pdb.set_trace()
+    plt.subplot(131)
+    plt.imshow(density_array[:,:,k])
+    plt.subplot(132)
+    plt.imshow(material_array[:,:,k])
+    plt.subplot(133)
+    plt.imshow(organ_array[:,:,k])
+    plt.show()
+    pdb.set_trace()

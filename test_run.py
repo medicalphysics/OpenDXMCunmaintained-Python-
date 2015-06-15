@@ -18,7 +18,6 @@ import pdb
 
 def test():
 
-    print 'ERROR IN MATERIAL ARRAY'
 
     spacing, density_array, lut, material_array, organ_array, organ_map = read_golem()
 
