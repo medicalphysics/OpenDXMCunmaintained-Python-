@@ -14,20 +14,17 @@ import sys
 import numpy as np
 from scipy import interp as interp
 
-import pdb
-
 HEADER = ('energy', 'rayleigh', 'compton', 'photoelectric', 'ppn', 'ppe',
           'total', 'totalnocoherent')
 
 MAX_ENERGY = 500e3
 
 
-def _find_attinuation_lut(material_map, index_map=None):
+def _find_attinuation_lut(golem_path, material_map, index_map=None):
 
     if index_map is None:
         index_map = dict([(k, k) for k in material_map.keys()])
 
-    golem_path = os.path.join(os.path.dirname(sys.argv[0]), 'golem')
 
     atts = {}
     for key, value in material_map.items():
@@ -90,7 +87,7 @@ def read_golem():
     spacing, densityarray, lut_material, materialarray, organarray, organmap
 
     """
-    golem_path = os.path.join(os.path.dirname(sys.argv[0]), 'golem')
+    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'phantoms', 'golem')
 
     # reading golem_array
     try:
@@ -108,7 +105,6 @@ def read_golem():
 
     organ_array = np.swapaxes(a_raw, 0, 2)
     organ_array = np.swapaxes(organ_array, 0, 1)
-    print organ_array.shape
     # defining spacing
     spacing = np.array([2.08, 2.08, 8.], dtype=np.double) / 10.
 
@@ -139,23 +135,23 @@ def read_golem():
             material_array[ind] = material_index_map[material]
             organ_map[int(seg_ind)] = organ
 
-    lut = _find_attinuation_lut(material_map, material_index_map)
+    lut = _find_attinuation_lut(golem_path, material_map, material_index_map)
 
     return spacing, density_array, lut, material_array, organ_array, organ_map
 
 
-if __name__ == '__main__':
-    spacing, density_array, lut, material_array, organ_array, organ_map = read_golem()
-
-    from matplotlib import pylab as plt
-
-    k = 110
+#if __name__ == '__main__':
+#    spacing, density_array, lut, material_array, organ_array, organ_map = read_golem()
+#
+#    from matplotlib import pylab as plt
+#
+#    k = 110
+##    pdb.set_trace()
+#    plt.subplot(131)
+#    plt.imshow(density_array[:,:,k])
+#    plt.subplot(132)
+#    plt.imshow(material_array[:,:,k])
+#    plt.subplot(133)
+#    plt.imshow(organ_array[:,:,k])
+#    plt.show()
 #    pdb.set_trace()
-    plt.subplot(131)
-    plt.imshow(density_array[:,:,k])
-    plt.subplot(132)
-    plt.imshow(material_array[:,:,k])
-    plt.subplot(133)
-    plt.imshow(organ_array[:,:,k])
-    plt.show()
-    pdb.set_trace()

@@ -84,7 +84,8 @@ def spiral(scan_fov, sdd, total_collimation, pitch=1,
     if energy_specter is None:
         energy_specter = [np.array([energy], dtype=np.double),
                           np.array([1.0], dtype=np.double)]
-    energy_specter[1] /= energy_specter[1].sum()
+    energy_specter = (energy_specter[0],
+                      energy_specter[1] / energy_specter[1].sum())
 
     if modulation_xy is None:
         mod_xy = lambda x: 1.0
@@ -128,7 +129,7 @@ def spiral(scan_fov, sdd, total_collimation, pitch=1,
             ret[6, :] = np.random.choice(energy_specter[0],
                                          batch_size,
                                          p=energy_specter[1])
-            yield ret
+            yield ret, i, e
             teller = 0
         else:
             teller += 1
@@ -137,4 +138,5 @@ def spiral(scan_fov, sdd, total_collimation, pitch=1,
         ret[6, :] = np.random.choice(energy_specter[0],
                                      batch_size,
                                      p=energy_specter[1])
-        yield ret[:, :teller * histories]
+        yield ret[:, :teller * histories], i, e
+
