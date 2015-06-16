@@ -68,11 +68,11 @@ def test():
                           'start': 0.,
                           'stop': spacing[2] * density_array.shape[2],
                           'exposures': 1200,
-                          'histories': 2000,
+                          'histories': 10,
                           'energy_specter': specter(120., angle_deg=12.,
                                                     filtration_materials='Al',
                                                     filtration_mm=4.),
-                          'batch_size': 3000000,
+                          'batch_size': 30000,
                         }
 
     particles = spiral(*phase_space_args, **phase_space_kwargs)
@@ -102,20 +102,20 @@ def test():
                                                            human_time(t2))
     print 'Done'
     
-    print 'Saving data to {0}'.format(H5PATH)
-    saveobj = {'spacing': spacing,
-               'density_array': density_array,
-               'lut': lut,
-               'material_array': material_array,
-               'organ_array': organ_array,
-               'organ_map': organ_map,
-               'dose': dose}
-    for key, value in saveobj.items():
-        if isinstance(value, np.ndarray):
-            save_array_to_h5(H5PATH, value, key)
-        elif isinstance(value, dict):
-            save_dict_to_h5(H5PATH, value, key)
-    print 'Done'
+#    print 'Saving data to {0}'.format(H5PATH)
+#    saveobj = {'spacing': spacing,
+#               'density_array': density_array,
+#               'lut': lut,
+#               'material_array': material_array,
+#               'organ_array': organ_array,
+#               'organ_map': organ_map,
+#               'dose': dose}
+#    for key, value in saveobj.items():
+#        if isinstance(value, np.ndarray):
+#            save_array_to_h5(H5PATH, value, key)
+#        elif isinstance(value, dict):
+#            save_dict_to_h5(H5PATH, value, key)
+#    print 'Done'
 
     
     

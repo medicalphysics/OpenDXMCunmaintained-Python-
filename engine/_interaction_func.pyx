@@ -301,17 +301,13 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
     cdef double weight, dist, r1, azimutal_angle
     cdef double compton, rayleigh, photo, total, scatter_angle, scatter_energy
-    cdef int valid, force_interaction, index, material, i, n_indices, n_max
-    n_max = <int> N[0]
-    if n_max > <int>N[1]:
-        n_max = <int> N[1]
-    if n_max < <int> N[2]:
-        n_max = <int> N[2]
+    cdef int valid, force_interaction, index, material, i, n_indices, n_max   
+    
+    n_max = <int>(N[0] + N[1] + N[2])
 
     cdef double* particle = <double*>malloc(8*sizeof(double))
     for i in range(8):
         particle[i] = particles[i, particle_index]
-
 
 
     cdef double* stop = <double*> malloc(3*sizeof(double))
@@ -319,8 +315,8 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
     cdef double* weight_p = <double*> malloc(sizeof(double))
     cdef int* index_p = <int*> malloc(sizeof(int))
 
-    cdef double* l =<double*> malloc(n_max*n_max*sizeof(double))
-    cdef int* ind=<int*> malloc(n_max*3*n_max*sizeof(int))
+    cdef double* l =<double*> malloc(n_max * sizeof(double))
+    cdef int* ind=<int*> malloc(n_max * sizeof(int))
 
     force_interaction = 1
     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
