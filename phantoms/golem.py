@@ -27,7 +27,8 @@ def _find_attinuation_lut(golem_path, material_map):
 
     atts = {}
     for key, value in material_map.items():
-        atts[key] = _parse_tissue_attinuation(os.path.join(golem_path, value+'.txt'))
+        atts[key] = _parse_tissue_attinuation(os.path.join(golem_path,
+                                                           value+'.txt'))
 
     energies = np.array([])
     for a in atts.values():
@@ -38,7 +39,8 @@ def _find_attinuation_lut(golem_path, material_map):
     for i, a in atts.items():
         lut[i, 0, :] = energies[:]
 #        pdb.set_trace()
-        for ind, item in enumerate(['total', 'rayleigh', 'photoelectric', 'compton']):
+        for ind, item in enumerate(['total', 'rayleigh', 'photoelectric',
+                                    'compton']):
             en = np.array(a['energy'])
             at = np.array(a[item])
             sind = np.argsort(en)
@@ -47,6 +49,7 @@ def _find_attinuation_lut(golem_path, material_map):
 #        lut[i, 2, :] = interp(energies, a['energy'], a['rayleigh'])
 #        lut[i, 3, :] = interp(energies, a['energy'], a['photoelectric'])
 #        lut[i, 4, :] = interp(energies, a['energy'], a['compton'])
+    lut[:, 0, :] *= 1.e6
     return lut
 
 
@@ -86,7 +89,8 @@ def read_golem():
     spacing, densityarray, lut_material, materialarray, organarray, organmap
 
     """
-    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'phantoms', 'golem')
+    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])),
+                              'phantoms', 'golem')
 #    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'golem')
 
     # reading golem_array
@@ -112,35 +116,35 @@ def read_golem():
     density_map = _parse_densities(os.path.join(golem_path, 'densities.txt'))
 
     density_array = np.zeros_like(organ_array, dtype=np.double)
-    material_array = np.zeros_like(organ_array, dtype=np.intc)    
+    material_array = np.zeros_like(organ_array, dtype=np.intc)
     organ_map = {}
     material_map = {}
 
     with open(os.path.join(golem_path, 'materialmap.txt')) as r:
         for line in r.readlines():
             material, ind = (line.strip()).split()
-            material_map[int(ind)] = material    
-    
+            material_map[int(ind)] = material
+
     with open(os.path.join(golem_path, 'organmap.txt')) as r:
-        for line in r.readlines():          
+        for line in r.readlines():
             seg_ind, organ, materials = (line.strip()).split(';')
             material = int(materials[0])
             ind = organ_array == int(seg_ind)
-            
+
             density_array[ind] = density_map[material_map[material]]
             material_array[ind] = material
             organ_map[int(seg_ind)] = organ
-    
+
     material_index = np.unique(material_array)
-    material_array_red = np.zeros_like(organ_array, dtype=np.intc)    
+    material_array_red = np.zeros_like(organ_array, dtype=np.intc)
     material_map_red = {}
     for i in range(material_index.shape[0]):
         material_map_red[i] = material_map[material_index[i]]
         ind = material_array == material_index[i]
         material_array_red[ind] = i
-    pdb.set_trace()
+
     lut = _find_attinuation_lut(golem_path, material_map_red)
-    
+
     return spacing, density_array, lut, material_array, organ_array, organ_map
 
 

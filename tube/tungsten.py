@@ -260,8 +260,8 @@ def specter(T0, angle_deg=None, angle_rad=None,
             Area to calculate spectrum intensities at sdd.
     OUTPUT:
         energies, intensity : {float ndarray, float ndarray}
-            The spectrum energies and intensity, intensity are
-            gives as N_photons / [cm^2 mAs]
+            The spectrum energies and intensity, energy in units of electron
+            volts eV, intensity are gives as N_photons / [cm^2 mAs]
 
     Reference 1:
         Calculation of x-ray spectra emerging from an x-ray tube. Part I.
@@ -304,5 +304,5 @@ def specter(T0, angle_deg=None, angle_rad=None,
         print e
     electrons_per_mas = 1. / 1.60217657e-16
 
-    return (hv, N_obs * mAs * electrons_per_mas * detector_area /
+    return (hv * 1000, N_obs * mAs * electrons_per_mas * detector_area /
             (4 * np.pi * sdd**2))

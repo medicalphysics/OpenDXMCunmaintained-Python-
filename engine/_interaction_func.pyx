@@ -32,6 +32,7 @@ cdef extern from "math.h":
     double log(double) nogil
     double asin(double) nogil
     double acos(double) nogil
+    int isnan(double x) nogil
 
 cdef double ERRF = 1.e-9
 
@@ -179,7 +180,7 @@ cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,
     else:
         for i in range(N):
             cum_prob[i] = 0
-        return 
+        return
     cum_sum = 0
     for i in range(N):
         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]
@@ -196,13 +197,13 @@ cdef void interaction_point(double* particle, double[:] spacing, double[:] offse
     cdef double* u = <double*> malloc(N*sizeof(double))
     cdef double* cum_prob = <double*> malloc(N*sizeof(double))
 
-    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)    
-#    cum_sum = 0
-#    for i in range(N):
-#        att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
-#        u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
-#        cum_sum += u[i] * lenghts[i]
-#        cum_prob[i] = 1 - exp(-cum_sum)
+#    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
+    cum_sum = 0
+    for i in range(N):
+        att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
+        u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
+        cum_sum += u[i] * lenghts[i]
+        cum_prob[i] = 1 - exp(-cum_sum)
 
     #test for zero prob
     if cum_prob[N-1] < ERRF:
@@ -242,9 +243,9 @@ cdef void interaction_point(double* particle, double[:] spacing, double[:] offse
     free(u)
     free(cum_prob)
     return
-    
 
-    
+
+
 cdef void interaction_point_forced(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:
 
     cdef int i, j
@@ -253,14 +254,14 @@ cdef void interaction_point_forced(double* particle, double[:] spacing, double[:
     cdef double* u = <double*> malloc(N * sizeof(double))
     cdef double* cum_prob = <double*> malloc(N * sizeof(double))
 
-#    cum_sum = 0
-#    for i in range(N):
-#        att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
-#        u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
-#        cum_sum += u[i] * lenghts[i]
-#        cum_prob[i] = 1 - exp(-cum_sum)
-    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
-    
+    cum_sum = 0
+    for i in range(N):
+        att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
+        u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
+        cum_sum += u[i] * lenghts[i]
+        cum_prob[i] = 1 - exp(-cum_sum)
+#    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
+
 
 
     #test for zero prob
@@ -282,8 +283,8 @@ cdef void interaction_point_forced(double* particle, double[:] spacing, double[:
             else:
                 delta_r = r1
                 dist = delta_r / cum_prob[i] * lenghts[i]
-            break 
-    
+            break
+
     index[0] = 3*i
 
     for j in range(3):
@@ -306,12 +307,12 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
         n_max = <int> N[1]
     if n_max < <int> N[2]:
         n_max = <int> N[2]
-    
+
     cdef double* particle = <double*>malloc(8*sizeof(double))
     for i in range(8):
         particle[i] = particles[i, particle_index]
 
-    
+
 
     cdef double* stop = <double*> malloc(3*sizeof(double))
 
@@ -327,9 +328,9 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
         if particle[6] < ENERGY_CUTOFF:
             break
-        
+
         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)
-        
+
         #############MEMORY LEAK
         if force_interaction == 1:
 #            interaction_point_forced(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
@@ -339,11 +340,11 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
         index = index_p[0]
         weight = weight_p[0]
-        
+
         if index < 0:
             break
         #############MEMORY LEAK END
-        
+
         material = material_map[ind[index], ind[index + 1], ind[index+2]]
         compton = att_linear(attinuation_lut, material, 4, particle[6])
         photo = att_linear(attinuation_lut, material, 3, particle[6])
@@ -351,13 +352,13 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
         total = compton + rayleigh + photo
 #
         r1 = random.random() * total
-        
+
         if r1 <= photo:
             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
             valid = 0
-            
+
         elif r1 <= (compton + photo):
-            
+
             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
             azimutal_angle = random.random() * PI * 2.
             particle[7] = weight
