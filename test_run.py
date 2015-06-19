@@ -54,8 +54,8 @@ def save_dict_to_h5(path, d, name, dtype=None):
     arr = np.zeros(n, dtype=dtype)
     teller = 0
     for key, value in d.items():
-        arr['tissue'][teller] = value
-        arr['index'][teller] = key
+        for name, data in zip(arr.dtype.names, [key, value]):
+            arr[name][teller] = data
         teller += 1
     h5.create_table(h5.root, name, description=arr)
     h5.close()
@@ -67,9 +67,7 @@ def test():
     print 'Generating photon specter...'
     spect = specter(120., angle_deg=12., filtration_materials='Al', 
                     filtration_mm=4.)
-    photons_per_mas = spect[1].sum()
-    print spect[1].sum()
-    pdb.set_trace()           
+    
     print 'Done'
     
     print 'Reading phantom Golem...'
@@ -87,9 +85,9 @@ def test():
                           'start': 0.,
                           'stop': spacing[2] * density_array.shape[2],
                           'exposures': 1200,
-                          'histories': 100,
+                          'histories': 10000,
                           'energy_specter': spect,
-                          'batch_size': 5000000,
+                          'batch_size': 10000000,
                         }
 
     particles = spiral(*phase_space_args, **phase_space_kwargs)
@@ -136,10 +134,23 @@ def test():
             save_array_to_h5(H5PATH, value, key, add=add)
         elif isinstance(value, dict):
             save_dict_to_h5(H5PATH, value, key)
+    
+    mc_info = {'pitch': 0.8,
+               'start': 0.,
+               'stop': spacing[2] * density_array.shape[2],
+               'exposures': 1200,
+               'histories': 10000,
+               'kv': 120,
+               'filtrationAlmm': 4.,
+               'batch_size': 50000000,
+               'total_histories': n
+               }
+    
+    save_dict_to_h5(H5PATH, mc_info, 'mc_info', dtype={'names':['parameter', 'value'], 'formats': ['a64', 'a64']})
     print 'Done'
 
     print 'Test: NaNs in dose_array', np.any(np.isnan(dose))
-    dose_ = (dose / density_array) * (photons_per_mas * 1.60217657e-19 / float(n) * np.prod(spacing))
+#    dose_ = (dose / density_array) * (photons_per_mas * 1.60217657e-19 / float(n) * np.prod(spacing))
 #    dose *= (organ_array != 0)
     for i in range(9):
         plt.subplot(3,3,i+1)
