@@ -231,7 +231,7 @@ def __raw_specter(T0, angle_deg=None, angle_rad=None):
 
 def specter(T0, angle_deg=None, angle_rad=None,
             filtration_materials=None, filtration_mm=None,
-            mAs=1., sdd=100., detector_area=None):
+            mAs=1., sdd=100., detector_area=1.):
     """
     Generate x-ray specter from tungsten anode by the methods of ref. 1 and 2.
 
@@ -303,8 +303,6 @@ def specter(T0, angle_deg=None, angle_rad=None,
     except Exception, e:
         print e
     electrons_per_mas = 1. / 1.60217657e-16
-    if detector_area is None:
-        red_factor = 1.
-    else:
-        red_factor = detector_area / (4 * np.pi * sdd**2)
-    return (hv * 1000, N_obs * mAs * electrons_per_mas * red_factor)
+
+    return (hv * 1000, N_obs * mAs * electrons_per_mas * detector_area /
+            (4 * np.pi * sdd**2))

@@ -40,8 +40,7 @@ cdef double ELECTRON_MASS = 510998.9  # eV/c^2
 cdef double PI = 3.14159265359
 cdef double ENERGY_CUTOFF = 10.e3 # eV
 cdef double ENERGY_MAXVAL = 300.e3 # eV
-cdef double WEIGHT_CUTOFF = 0.05
-cdef double RUSSIAN_RULETTE_CHANCE = 2 # 1 / CHANCE probability of photon survival 
+cdef double WEIGHT_CUTOFF = 0.01
 
 
 cdef inline double sign(double a) nogil: return -1 if a > 0 else 1
@@ -251,6 +250,7 @@ cdef void interaction_point_forced(double* particle, double[:] spacing, double[:
 
     cdef int i, j
     cdef double att, cum_sum, r1, delta_r, dist
+#    cdef np.ndarray[np.double_t, ndim=1] u, cum_prob
     cdef double* u = <double*> malloc(N * sizeof(double))
     cdef double* cum_prob = <double*> malloc(N * sizeof(double))
 
@@ -259,8 +259,10 @@ cdef void interaction_point_forced(double* particle, double[:] spacing, double[:
         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
         cum_sum += u[i] * lenghts[i]
-        cum_prob[i] = 1. - exp(-cum_sum)
+        cum_prob[i] = 1 - exp(-cum_sum)
 #    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
+
+
 
     #test for zero prob
     if cum_prob[N-1] < ERRF:
@@ -272,30 +274,25 @@ cdef void interaction_point_forced(double* particle, double[:] spacing, double[:
         free(cum_prob)
         return
 
-    r1 = random.random() * cum_prob[N-1]
+    r1 = random.random()
     for i in range(N):
-        if r1 < cum_prob[i]:
+        if r1 < cum_prob[i] / cum_prob[N-1]:
             if i > 0:
                 delta_r = (r1 - cum_prob[i - 1])
                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]
             else:
                 delta_r = r1
                 dist = delta_r / cum_prob[i] * lenghts[i]
+            break
 
-            index[0] = 3*i
-            for j in range(3):
-                stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
-            weight[0] = particle[7] * cum_prob[N-1]
-            free(u)
-            free(cum_prob)
-            return
+    index[0] = 3*i
 
     for j in range(3):
-        stop[j] = 0
-    index[0] = <int>-1
-    weight[0] = <int>0
+        stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
+    weight[0] = particle[7] * cum_prob[N-1]
     free(u)
     free(cum_prob)
+#    print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist,  cum_prob
     return
 
 
@@ -304,25 +301,26 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
     cdef double weight, dist, r1, azimutal_angle
     cdef double compton, rayleigh, photo, total, scatter_angle, scatter_energy
-    cdef int valid, force_interaction, index, material, i, n_indices, n_max   
-
-    cdef double weight_cutoff = WEIGHT_CUTOFF
-    cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE    
-    
-    n_max = <int>(N[0] + N[1] + N[2] + 3)
+    cdef int valid, force_interaction, index, material, i, n_indices, n_max
+    n_max = <int> N[0]
+    if n_max > <int>N[1]:
+        n_max = <int> N[1]
+    if n_max < <int> N[2]:
+        n_max = <int> N[2]
 
     cdef double* particle = <double*>malloc(8*sizeof(double))
     for i in range(8):
         particle[i] = particles[i, particle_index]
 
 
-    cdef double* stop = <double*> malloc(3 * sizeof(double))
+
+    cdef double* stop = <double*> malloc(3*sizeof(double))
 
     cdef double* weight_p = <double*> malloc(sizeof(double))
     cdef int* index_p = <int*> malloc(sizeof(int))
 
-    cdef double* l =<double*> malloc(n_max * sizeof(double))
-    cdef int* ind=<int*> malloc(n_max * 3 * sizeof(int))
+    cdef double* l =<double*> malloc(n_max*n_max*sizeof(double))
+    cdef int* ind=<int*> malloc(n_max*3*n_max*sizeof(int))
 
     force_interaction = 1
     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
@@ -333,6 +331,7 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)
 
+        #############MEMORY LEAK
         if force_interaction == 1:
 #            interaction_point_forced(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
             interaction_point_forced(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
@@ -344,6 +343,7 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
         if index < 0:
             break
+        #############MEMORY LEAK END
 
         material = material_map[ind[index], ind[index + 1], ind[index+2]]
         compton = att_linear(attinuation_lut, material, 4, particle[6])
@@ -358,6 +358,7 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
             valid = 0
 
         elif r1 <= (compton + photo):
+
             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
             azimutal_angle = random.random() * PI * 2.
             particle[7] = weight
@@ -367,8 +368,9 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
             particle[6] = scatter_energy
             rot_particle(particle, scatter_angle)
             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
-            
+
         else:
+
             scatter_angle = rayleigh_event_draw_theta()
             azimutal_angle = random.random() * PI * 2.
             for i in range(3):
@@ -377,13 +379,8 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
             rot_particle(particle, scatter_angle)
             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
 
-        if weight < WEIGHT_CUTOFF and valid == 1:
-            # Russion rulette photon termination
-            r1 = random.random()
-            if russian_rulette_chance * r1 <= 1:
-                particle[7] *= russian_rulette_chance
-            else:
-                valid = 0
+        if weight < WEIGHT_CUTOFF:
+            valid = 0
 #        force_interaction = 0
 
     free(l)
@@ -394,12 +391,18 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
     free(weight_p)
     return
 
-
 def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose):
     cdef long i
+#    cdef double[:] particle = np.empty(8, dtype=np.double)
+#    cdef openmp.omp_lock_t lock
+#    cdef np.ndarray[np.double_t, ndim=1] particle
     for i in prange(particles.shape[1], schedule='static', nogil=True):
+#    for i in range(particles.shape[1]):
+#        particle = particles[:, i]
+#        particle = particles[:,i]
+#        particle = np.empty(8, dtype=np.double)
+#        print ''
         transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
     return
 
-#def profile():
-    
+

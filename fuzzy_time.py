@@ -6,8 +6,8 @@ Created on Mon Jun 15 13:52:33 2015
 """
 import math
 
-seconds = [86400., 3600., 60., 1.]
-names = ['days', 'hours', 'minutes', 'seconds']
+seconds = [86400., 3600., 60.]
+names = ['days', 'hours', 'minutes']
 
 #times ={'days': 86400.,
 #        'hours': 3600.,
@@ -15,7 +15,7 @@ names = ['days', 'hours', 'minutes', 'seconds']
 
 def human_time(sec):
     if sec <= seconds[-1]:
-        return 'less than a {0}'.format(names[-1])
+        return 'less than a minute'
     times = []
     labels = []
     for i, s in enumerate(seconds):
@@ -32,7 +32,7 @@ def human_time(sec):
 
             break
     else:
-        return 'less than a {0}'.format(names[-1])
+        return 'less than a minute'
     if len(times) > 1:
        if times[-1] == 0:
            return 'about {0} {1}'.format(times[0], labels[0])
