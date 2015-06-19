@@ -129,7 +129,7 @@ def spiral(scan_fov, sdd, total_collimation, pitch=1,
             ret[6, :] = np.random.choice(energy_specter[0],
                                          batch_size,
                                          p=energy_specter[1])
-            yield ret, i, e
+            yield ret, i*histories, e*histories
             teller = 0
         else:
             teller += 1
@@ -138,5 +138,5 @@ def spiral(scan_fov, sdd, total_collimation, pitch=1,
         ret[6, :] = np.random.choice(energy_specter[0],
                                      batch_size,
                                      p=energy_specter[1])
-        yield ret[:, :teller * histories], i, e
+        yield ret[:, :teller * histories], i*histories, e*histories
 

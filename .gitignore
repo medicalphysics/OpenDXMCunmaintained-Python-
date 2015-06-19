@@ -116,3 +116,5 @@ engine/_siddon_func.html
 engine/cyrandom.html
 *.xlsm
 *.h5
+engine/cyrandom.c
+engine/cyrandom.c
