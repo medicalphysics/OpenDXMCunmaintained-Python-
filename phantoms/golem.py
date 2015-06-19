@@ -13,6 +13,7 @@ import os
 import sys
 import numpy as np
 from scipy import interp as interp
+import tables as tb
 
 import pdb
 import pylab as plt
@@ -22,6 +23,77 @@ HEADER = ('energy', 'rayleigh', 'compton', 'photoelectric', 'ppn', 'ppe',
 
 MAX_ENERGY = 500e3
 
+def save_array_to_h5(path, array, name):
+    
+    h5 = tb.open_file(path, mode='a')
+    try:
+        h5.get_node(h5.root, name)
+    except tb.NoSuchNodeError:
+        pass
+    else:
+        h5.remove_node(h5.root, name, True)
+    h5.create_carray(h5.root, name=name, obj=array)
+    h5.close()
+
+def load_array_from_h5(path, name):
+    try:
+        h5 = tb.open_file(path, mode='r')
+    except IOError, e:
+        raise e
+    try:
+        arr_n = h5.get_node(h5.root, name)
+    except tb.NoSuchNodeError:
+        h5.close()
+        raise ValueError('No node named {0} in database'.format(name))
+    else:
+        arr = arr_n.read()
+        h5.close()
+        return arr
+
+def save_dict_to_h5(path, d, name, dtype=None):
+    h5 = tb.open_file(path, mode='a')
+    try:
+        h5.get_node(h5.root, name)
+    except tb.NoSuchNodeError:
+        pass
+    else:
+        h5.remove_node(h5.root, name, True)
+    # creating structured array:
+    n = len(d)
+    if dtype is None:
+        dtype = {'names':['index', 'tissue'], 'formats': ['i4', 'a64']}
+    arr = np.zeros(n, dtype=dtype)
+    teller = 0
+    for key, value in d.items():
+        arr['tissue'][teller] = value
+        arr['index'][teller] = key
+        teller += 1
+    h5.create_table(h5.root, name, description=arr)
+    h5.close()
+
+def load_dict_from_h5(path, name, key='index', value='tissue'):
+    try:
+        h5 = tb.open_file(path, mode='r')
+    except IOError, e:
+        raise e
+    try:
+        t = h5.get_node(h5.root, name)
+    except tb.NoSuchNodeError:
+        h5.close()
+        raise ValueError('No node named {0} in database'.format(name))
+    else:
+        try:
+            d = dict(zip(t.col(key), t.col(value)))
+        except KeyError:
+            h5.close()
+            raise ValueError('Key {0} or value {1} is missing from table ' 
+                'names {2}'.format(key, value, t.colnames))
+        else:
+            h5.close()
+            return d
+    h5.close()
+        
+    
 
 def _find_attinuation_lut(golem_path, material_map):
 
@@ -83,7 +155,7 @@ def _parse_tissue_attinuation(fil):
     return data_list
 
 
-def read_golem():
+def read_golem(load=True, save=True):
     """
     output:
     spacing, densityarray, lut_material, materialarray, organarray, organmap
@@ -91,6 +163,36 @@ def read_golem():
     """
     golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])),
                               'phantoms', 'golem')
+    golem_h5 = os.path.join(golem_path, 'golem.h5')                       
+    # We will read a saved golem if allowed by load keyword
+    
+    if load == True:
+        obj = []
+        for name in ['spacing', 'density_array', 'lut', 'material_array', 
+                     'organ_array']:
+            try:
+                obj.append(load_array_from_h5(golem_h5, name))
+            except ValueError, e:
+                print e
+                break
+            except IOError, e:
+                print e
+                break
+        else:
+            try:
+                obj.append(load_dict_from_h5(golem_h5, 'organ_map', 
+                                             key='index', 
+                                             value='tissue'))
+                obj.insert(4, load_dict_from_h5(golem_h5, 'material_map', 
+                                             key='index', 
+                                             value='tissue'))   
+            except ValueError, e:
+                print e
+            except IOError, e:
+                print e
+            else:    
+                return obj
+
 #    golem_path = os.path.join(os.path.normpath(os.path.dirname(sys.argv[0])), 'golem')
 
     # reading golem_array
@@ -144,8 +246,29 @@ def read_golem():
         material_array_red[ind] = i
 
     lut = _find_attinuation_lut(golem_path, material_map_red)
+        
+    if save == True:            
+        saveobj = {'spacing': spacing,
+                   'density_array': density_array,
+                   'lut': lut,
+                   'material_array': material_array_red,
+                   'material_map': material_map_red,
+                   'organ_array': organ_array,
+                   'organ_map': organ_map,
+                   }
+        try:
+            for key, value in saveobj.items():
+                if isinstance(value, np.ndarray):
+                    save_array_to_h5(golem_h5, value, key)
+                elif isinstance(value, dict):
+                    save_dict_to_h5(golem_h5, value, key)        
+        except ValueError, e:
+            print 'INFO: Error in saving phantom', e
+        except IOError, e:
+            print ('INFO: Error in opening or creating database '
+                'file {0}'.format(golem_h5)), e
 
-    return spacing, density_array, lut, material_array, organ_array, organ_map
+    return spacing, density_array, lut, material_array_red, material_map_red,  organ_array, organ_map
 
 
 if __name__ == '__main__':
