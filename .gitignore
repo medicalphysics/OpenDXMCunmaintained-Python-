@@ -112,6 +112,6 @@ engine/cyrandom.c
 engine/_interaction_func.c
 engine/_siddon_func.c
 phantoms/golem/Organlist.doc
-*.txt
+data/phantoms
 phantoms/golem/segm_golem
 engine/cyrandom.c

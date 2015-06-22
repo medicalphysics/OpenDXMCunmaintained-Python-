@@ -9,7 +9,7 @@ import numpy as np
 import scipy.interpolate
 
 
-def spiral(scan_fov, sdd, total_collimation, pitch=1,
+def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
            start=0, stop=1, exposures=100, histories=1,
            energy=70000., energy_specter=None,
            batch_size=None, modulation_xy=None,
