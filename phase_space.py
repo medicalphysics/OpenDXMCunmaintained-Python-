@@ -13,7 +13,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
            start=0, stop=1, exposures=100, histories=1,
            energy=70000., energy_specter=None,
            batch_size=None, modulation_xy=None,
-           modulation_z=None):
+           modulation_z=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -48,7 +48,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         modulation_z : [(N,), (N,)]
             tube current modulation z axis, list/tuple of
             (ndarray(position), ndarray(scale_factors))
-
+        start_at_exposure_no: int
+            Starting at this exposure number, used for resuming a simulation
     OUTPUT:
         Iterator returning ndarrays of shape (8, batch_size),
         one row is equal to photon (start_x, start_y, star_z, direction_x,
@@ -58,14 +59,15 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     # total number of exposures + one total rotation
     exposures = int(exposures)
     e = int((abs(start - stop) / total_collimation + 1) * exposures)
+
     if start < stop:
         d_col = total_collimation / 2.
     else:
         d_col = -total_collimation / 2.
     # positions along z for each exposure
     t = np.linspace(start-d_col, stop + d_col, e)
-    # we randomize the positions not make the progress bar jump
-    t = np.random.permutation(t)
+#    # we randomize the positions not make the progress bar jump
+#    t = np.random.permutation(t)
     # angle for each z position , i.e the x, y coordinates
     ang = t / (pitch * total_collimation) * np.pi * 2.
 
@@ -78,7 +80,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         batch_size = histories
     if batch_size < histories:
         batch_size = histories
-    batch_size -= (batch_size % histories)
+    batch_size += (batch_size % histories)
     assert batch_size % histories == 0
 
     if energy_specter is None:
@@ -104,7 +106,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
 
-    for i in xrange(e):
+    for i in xrange(start_at_exposure_no, e):
         R = rot(ang[i])
 #        pdb.set_trace()
         ind_b = teller * histories
