@@ -396,6 +396,43 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
 
 def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose):
+     """Score dose by the Monte Carlo method. If OpenMP is available during 
+     compilation, this method will run multithreaded.
+
+    INPUT:
+        particles : ndarray (8, k) dtype=double
+            k particles to simulate, typical generated from a phase space method
+        N : ndarray (3) dtype=double
+            shape of dose array (values must be natural numbers greater than zero)
+        spacing : ndarray (3) dtype=double
+            voxel spacing in cm
+        offset : ndarray (3) dtype=double
+            voxel offset from the upper left voxel in cm 
+        material_map : ndarray (N[0], N[1], N[2]), dtype=intc
+            ndarray of material index with same shape as dose array. 
+            Values in material map must be in range 0: number_of_materials - 1.
+        density_map : ndarray (N[0], N[1], N[2]), dtype=double
+            ndarray of densities with same shape as dose array. 
+            Values must be in grams / cm^3
+        attinuation_lut : ndarray (number_of_materials, 5, k), dtype=double
+            attinuation lookup table for each material, first index must 
+            correspond to a value in material_map. 
+            Second correspions to energy and type of attinuations:
+            0: energy in eV
+            1: total attinuation coefficient in cm^2/g
+            2: Rayleight scatter attinuation coefficient in cm^2/g
+            3: Photoelectric absorbsion attinuation coefficient in cm^2/g
+            5: Compton scatter attinuation coefficient in cm^2/g
+            Example:
+            attinuation_lut[0, 0, :] gives energies for material 0
+            attinuation_lut[0, 1, :] gives total attinuation coefficient for 
+            material 0 at corresponding energies
+        dose : ndarray (N[0], N[1], N[2]), dtype=double
+            Array to score energy, same shape as material_map and density_map
+        
+    OUTPUT:
+        None, the dose array is updated, values are in eV
+    """               
     cdef long i
     for i in prange(particles.shape[1], schedule='static', nogil=True):
         transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
