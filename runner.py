@@ -12,21 +12,23 @@ import tables as tb
 import utils
 import os
 import sys
-import time 
+import time
 
 import pdb
+import pylab as plt
 
 
-def generate_attinuation_lut(materials, material_map, min_eV=None, max_eV=None):
+def generate_attinuation_lut(materials, material_map, min_eV=None,
+                             max_eV=None):
 
     if min_eV is None:
         min_eV = 0.
     if max_eV is None:
         max_eV = 100.e6
-    
+
     names = [m.name for m in materials]
     atts = {}
-    
+
     for key, value in material_map.items():
         key = int(key)
         try:
@@ -36,20 +38,22 @@ def generate_attinuation_lut(materials, material_map, min_eV=None, max_eV=None):
                              '{0} in first argument. '
                              'The material_map requires {0}'.format(value))
         atts[key] = materials[ind].attinuation
-        
-    
+
+
     energies = np.unique(np.array([a['energy'] for a in atts.values()]).ravel())
     e_ind = (energies <= max_eV) * (energies >= min_eV)
     if not any(e_ind):
-        raise ValueError('Supplied minimum or maximum energies are out of range')
+        raise ValueError('Supplied minimum or maximum energies '
+                         'are out of range')
     energies = energies[e_ind]
     lut = np.empty((len(atts), 5, len(energies)), dtype=np.double)
     for i, a in atts.items():
         lut[i, 0, :] = energies
-        for j, key in enumerate(['total', 'rayleigh', 'photoelectric', 'compton']):
+        for j, key in enumerate(['total', 'rayleigh', 'photoelectric',
+                                 'compton']):
             lut[i, j+1, :] = np.interp(energies, a['energy'], a[key])
     return lut
-    
+
 
 class Database(object):
     def __init__(self, db_file_path):
@@ -58,6 +62,8 @@ class Database(object):
         self.__h5 = None
         if not self.database_valid():
             raise ValueError("Database path is not writeable")
+
+        self.validate()
 
     def open(self, mode='a'):
         if self.__h5 is None:
@@ -106,6 +112,101 @@ class Database(object):
             pass
         return n
 
+    def add_simulation(self, protocol):
+        try:
+            assert protocol.protocol_name != ""
+            assert protocol.patient_name != ""
+        except AssertionError:
+            raise ValueError('Simulation object needs to reference a patient '
+                             'and a protocol')
+        self.open()
+        try:
+            table = self.__h5.get_node(self.__h5.root, name='simulations')
+        except tb.NoSuchNodeError:
+            table = self.__h5.create_table(self.__h5.root, 'simulations',
+                                           description=protocol.dtype)
+
+        condition = 'name == "{}"'.format(protocol.name)
+
+        for row in table.where(condition):
+            for key, value in protocol.values.items():
+                row[key] = value
+            row.update()
+            break
+        else:
+            row = table.row
+            for key, value in protocol.values.items():
+                row[key] = value
+            row.append()
+        table.flush()
+
+        # saving dose
+        dose_node = self.get_node('dose', create=True)
+        try:
+            self.get_node(protocol.name, dose_node)
+        except tb.NoSuchNodeError:
+            pass
+        else:
+            self.__h5.remove_node(dose_node,name=protocol.name)
+        if protocol.dose is not None:
+            self.__h5.create_carray(dose_node, protocol.name,
+                                    obj=protocol.dose)
+
+
+    def get_simulation(self, name):
+        table = self.get_node('simulations')
+        condition = 'name == "{}"'.format(name)
+        description = {}
+        for row in table.where(condition):
+            for key, value in zip(table.colnames, row[:]):
+                description[key] = value
+            break
+        else:
+            raise ValueError('No protocol named {}'.format(name))
+
+        dose_node = self.get_node('dose', create=True)
+        try:
+            dose_arr = self.get_node(name, where=dose_node)
+        except tb.NoSuchNodeError:
+            Simulation(name, description=description)
+        else:
+            return Simulation(name, description=description,
+                              dose=dose_arr.read())
+
+    def add_protocol(self, protocol):
+        self.open()
+        try:
+            table = self.__h5.get_node(self.__h5.root, name='protocols')
+        except tb.NoSuchNodeError:
+            table = self.__h5.create_table(self.__h5.root, 'protocols',
+                                           description=protocol.dtype)
+
+        condition = 'name == "{}"'.format(protocol.name)
+
+        for row in table.where(condition):
+            for key, value in protocol.values.items():
+                row[key] = value
+            row.update()
+            break
+        else:
+            row = table.row
+            for key, value in protocol.values.items():
+                row[key] = value
+            row.append()
+        table.flush()
+
+    def get_protocol(self, name):
+        table = self.get_node('protocols')
+        condition = 'name == "{}"'.format(name)
+        description = {}
+        for row in table.where(condition):
+            for key, value in zip(table.colnames, row[:]):
+                description[key] = value
+            break
+        else:
+            raise ValueError('No protocol named {}'.format(name))
+        return CTProtocol(name, description=description)
+
     def add_material(self, material):
         node = self.get_node('materials', create=True)
         att_node = self.get_node('attinuation', where=node, create=True)
@@ -116,13 +217,14 @@ class Database(object):
         else:
             self.__h5.remove_node(att_node, name=material.name)
         mat_table = self.__h5.create_table(att_node, material.name,
-                                           obj=material.attinuation)        
+                                           obj=material.attinuation)
         mat_table.flush()
         try:
             dens_table = self.__h5.get_node(node, name='densities')
         except tb.NoSuchNodeError:
             dtype = np.dtype([('key', 'a64'), ('value', np.double)])
-            dens_table = self.__h5.create_table(node, name='densities', description=dtype)
+            dens_table = self.__h5.create_table(node, name='densities',
+                                                description=dtype)
 
         condition = 'key == "{}"'.format(material.name)
         cond_index = dens_table.get_where_list(condition)
@@ -133,7 +235,6 @@ class Database(object):
         row['value'] = material.density
         row.append()
         dens_table.flush()
-        
 
     def get_material(self, name):
         node = self.get_node('materials', create=True)
@@ -149,15 +250,13 @@ class Database(object):
             pass
         else:
             for row in dens_table:
-                if row['key'] == name:        
+                if row['key'] == name:
                     density = row['value']
                     break
             else:
                 density = None
-        
-        return Material(name, attinuations=mat_table.read(), density=density)
-        
 
+        return Material(name, attinuations=mat_table.read(), density=density)
 
     def get_all_materials(self):
         materials = []
@@ -168,6 +267,12 @@ class Database(object):
         return materials
 
     def add_patient(self, patient, overwrite=False):
+        for var in  ['density_array', 'spacing', 'material_array',
+                     'material_map']:
+            if getattr(patient, var) is None:
+                raise ValueError('{} property of '
+                                 'patient can not be None'.format(var))
+
         node = self.get_node('patients', create=True)
         try:
             pat_node = self.__h5.get_node(node, name=patient.name)
@@ -234,12 +339,41 @@ class Database(object):
                 setattr(pat_obj, var, data)
         return pat_obj
 
+    def validate(self):
+        self.open()
+        broken_sims = []
+        try:
+            sim_table = self.get_node('simulations')
+        except tb.NoSuchNodeError:
+            return
+        for row in sim_table:
+            protocol_name = row['protocol_name']
+            patient_name = row['patient_name']
+            try:
+                self.get_protocol(protocol_name)
+            except ValueError:
+                broken_sims.append(row.nrow)
+                continue
+            try:
+                self.get_patient(patient_name)
+            except ValueError:
+                broken_sims.append(row.nrow)
+                continue
+        sim_table.autoindex = False
+        print broken_sims
+        for ind in broken_sims:
+            sim_table.remove_row(ind)
+        sim_table.flush_rows_to_index()
+        sim_table.autoindex = True
+        sim_table.flush()
+
     def __del__(self):
         self.close()
 
 
 class Material(object):
-    def __init__(self, name, density=None, att_file=None, attinuations=None, density_file=None):
+    def __init__(self, name, density=None, att_file=None, attinuations=None,
+                 density_file=None):
         self.name = name
         self.__density = density
         self.__atts = attinuations
@@ -248,6 +382,7 @@ class Material(object):
             self.attinuation = att_file
         if density_file is not None:
             self.density_from_file(density_file)
+
     @property
     def name(self):
         return self.__name
@@ -273,10 +408,6 @@ class Material(object):
             l = s.lower().split()
             if self.name in l:
                 self.density = l[l.index(self.name) + 1]
-                
-            
-            
-            
 
     @property
     def attinuation(self):
@@ -312,8 +443,8 @@ class Material(object):
 
 
 class CTProtocol(object):
-    def __init__(self, name, description=None):        
-        description = {'name': '',
+    def __init__(self, name, description=None):
+        self.__description = {'name': '',
                               'scan_fov': 50.,
                               'sdd': 100.,
                               'detector_width': 0.6,
@@ -326,11 +457,14 @@ class CTProtocol(object):
                               'ctdi_w100': 0.,
                               'kV': 120.,
                               'region': 'abdomen',
-                              'conversion_factor_ctdiair': 0, # per 1000000 histories to dose
-                              'conversion_factor_ctdiw': 0, # per 1000000 histories to dose
+                              # per 1000000 histories to dose
+                              'conversion_factor_ctdiair': 0,
+                              # per 1000000 histories to dose
+                              'conversion_factor_ctdiw': 0,
                               'is_spiral': False,
-                             }
-        dtype = {'name': 'a64',
+                              'pitch': 0
+                              }
+        self.__dtype = {'name': 'a64',
                         'scan_fov': np.float,
                         'sdd': np.float,
                         'detector_width': np.float,
@@ -343,84 +477,317 @@ class CTProtocol(object):
                         'ctdi_w100': np.float,
                         'kV': np.float,
                         'region': 'a64',
-                        'conversion_factor_ctdiair': np.float, # per 1000000 histories to dose
-                        'conversion_factor_ctdiw': np.float, # per 1000000 histories to dose
+                        # per 1000000 histories to dose
+                        'conversion_factor_ctdiair': np.float,
+                        # per 1000000 histories to dose
+                        'conversion_factor_ctdiw': np.float,
                         'is_spiral': np.bool,
+                        'pitch': np.float
                         }
-        super(CTProtocol, self).__setattr__('__description', description)
-        super(CTProtocol, self).__setattr__('__dtype', dtype)
-        
-    def __setattr__(self, name, value):
-        if '__description' in self.__dict__:
-            if name in super(CTProtocol, self).__getattr__('__description'):
-#                if isinstance(value, str):
-#                    value = "".join([l for l in value.split() if len(l) > 0])
-#                    value = value.lower()
-    
-                self.__dict__['__description'][name] = value
-                return
-        super(CTProtocol, self).__setattr__(name, value)
-    
-    def __getattr__(self, name):
-        if '__description' in self.__dict__:
-            if name in super(CTProtocol, self).__getattr__('__description'):
-                return self.__dict__['__description'][name] 
-        return super(CTProtocol, self).__getattr__(name)
-            
-        
-#    @property
-#    def name(self):
-#        return self.__dict__['__description']['name'] 
-#
-#    @name.setter
-#    def name(self, value):
-#        value = str(value)
-#        name = "".join([l for l in value.split() if len(l) > 0])
-#        assert len(name) > 0
-#        self.__dict__['__description']['name'] = name.lower()
-##        self.__description['name'] = name.lower()
+        if description is not None:
+            for key, value in description.items():
+                self.__description[key] = value
+        self.name = name
 
-    def obtain_ctdiair_conversion_factor(self, material, 
-                                 callback=None):
-        
-        spacing = np.array((1 ,1, 10), dtype=np.double)
+    @property
+    def dtype(self):
+        d = {'names': [], 'formats': []}
+        for key, value in self.__dtype.items():
+            d['names'].append(key)
+            d['formats'].append(value)
+        return np.dtype(d)
+
+    @property
+    def values(self):
+        return self.__description
+
+    @property
+    def pitch(self):
+        return self.__description['pitch']
+
+    @pitch.setter
+    def pitch(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['pitch'] = value
+
+    @property
+    def name(self):
+        return self.__description['name']
+
+    @name.setter
+    def name(self, value):
+        value = str(value)
+        name = "".join([l for l in value.split() if len(l) > 0])
+        assert len(name) > 0
+        self.__description['name'] = name.lower()
+
+    @property
+    def scan_fov(self):
+        return self.__description['scan_fov']
+
+    @scan_fov.setter
+    def scan_fov(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['scan_fov'] = value
+
+    @property
+    def sdd(self):
+        return self.__description['sdd']
+
+    @sdd.setter
+    def sdd(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['sdd'] = value
+
+    @property
+    def detector_width(self):
+        return self.__description['detector_width']
+
+    @detector_width.setter
+    def detector_width(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['detector_width'] = value
+
+    @property
+    def detector_rows(self):
+        return self.__description['detector_rows']
+
+    @detector_rows.setter
+    def detector_rows(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['detector_rows'] = value
+
+    @property
+    def modulation_xy(self):
+        return self.__description['modulation_xy']
+
+    @modulation_xy.setter
+    def modulation_xy(self, value):
+        value = bool(value)
+        self.__description['modulation_xy'] = value
+
+    @property
+    def modulation_z(self):
+        return self.__description['modulation_z']
+
+    @modulation_z.setter
+    def modulation_z(self, value):
+        value = bool(value)
+        self.__description['modulation_z'] = value
+
+    @property
+    def al_filtration(self):
+        return self.__description['al_filtration']
+
+    @al_filtration.setter
+    def al_filtration(self, value):
+        value = float(value)
+        assert value > 0
+        self.__description['al_filtration'] = value
+
+    @property
+    def xcare(self):
+        return self.__description['xcare']
+
+    @xcare.setter
+    def xcare(self, value):
+        value = bool(value)
+        self.__description['xcare'] = value
+
+    @property
+    def is_spiral(self):
+        return self.__description['is_spiral']
+
+    @is_spiral.setter
+    def is_spiral(self, value):
+        value = bool(value)
+        self.__description['is_spiral'] = value
+
+    @property
+    def ctdi_air100(self):
+        return self.__description['ctdi_air100']
+
+    @ctdi_air100.setter
+    def ctdi_air100(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['ctdi_air100'] = value
+
+    @property
+    def ctdi_w100(self):
+        return self.__description['ctdi_w100']
+
+    @ctdi_w100.setter
+    def ctdi_w100(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['ctdi_w100'] = value
+
+    @property
+    def kV(self):
+        return self.__description['kV']
+
+    @kV.setter
+    def kV(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['kV'] = value
+
+    @property
+    def region(self):
+        return self.__description['region']
+
+    @region.setter
+    def region(self, value):
+        value = str(value)
+        region = "".join([l for l in value.split() if len(l) > 0])
+        assert len(region) > 0
+        self.__description['region'] = region.lower()
+
+    @property
+    def conversion_factor_ctdiair(self):
+        return self.__description['conversion_factor_ctdiair']
+
+    @conversion_factor_ctdiair.setter
+    def conversion_factor_ctdiair(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['conversion_factor_ctdiair'] = value
+
+    @property
+    def conversion_factor_ctdiw(self):
+        return self.__description['conversion_factor_ctdiw']
+
+    @conversion_factor_ctdiw.setter
+    def conversion_factor_ctdiw(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['conversion_factor_ctdiw'] = value
+
+    @property
+    def total_collimation(self):
+        return self.detector_rows * self.detector_width
+
+    def obtain_ctdiair_conversion_factor(self, material, callback=None):
+
+        spacing = np.array((1, 1, 10), dtype=np.double)
         N = np.rint(np.array((self.sdd / spacing[0], self.sdd / spacing[1], 1),
                              dtype=np.double))
-        
+
         offset = -N * spacing / 2.
         material_array = np.zeros(N, dtype=np.intc)
         material_map = {0: material.name}
         density_array = np.zeros(N, dtype=np.double) + material.density
         lut = generate_attinuation_lut([material], material_map, max_eV=0.5e6)
         dose = np.zeros_like(density_array, dtype=np.double)
-        
-        en_specter = specter(self.kV, angle_deg=10., filtration_materials='Al', filtration_mm=6.)
-        norm_specter = (en_specter[0], en_specter[1]/en_specter[1].sum())        
-        particles = phase_space.ct_seq(self.scan_fov, self.sdd, 
-                                       self.total_collimation, 
-                                       histories=10000, exposures=1200, 
-                                       batch_size=1000000, 
+
+        en_specter = specter(self.kV, angle_deg=10., filtration_materials='Al',
+                             filtration_mm=6.)
+        norm_specter = (en_specter[0], en_specter[1]/en_specter[1].sum())
+        particles = phase_space.ct_seq(self.scan_fov, self.sdd,
+                                       self.total_collimation,
+                                       histories=1000, exposures=1200,
+                                       batch_size=10000,
                                        energy_specter=norm_specter)
 #        pdb.set_trace()
-        t0 = time.clock() 
+        t0 = time.clock()
         for batch, i, tot in particles:
-            score_energy(batch, N, spacing, offset, material_array, 
+            score_energy(batch, N, spacing, offset, material_array,
                          density_array, lut, dose)
             p = round(i * 100 / float(tot), 1)
-            t1 = (time.clock()- t0) / float(i) * (tot - i)
-            print '{0}% {1}, ETA in {2}'.format(p, time.ctime(), utils.human_time(t1))
-        
+            t1 = (time.clock() - t0) / float(i) * (tot - i)
+            print '{0}% {1}, ETA in {2}'.format(p, time.ctime(),
+                                                utils.human_time(t1))
+
         center = np.floor(N / 2).astype(np.int)
-        d = dose[center[0], center[1], center[2]] / material.density * np.prod(spacing)
-        d /= float(tot) / 1000000. 
+        d = dose[center[0], center[1],
+                 center[2]] / material.density * np.prod(spacing)
+        d /= float(tot) / 1000000.
         print d
-        self.__desciption['conversion_factor_ctdiair'] = self.ctdi_air100 / d
+        self.__description['conversion_factor_ctdiair'] = self.ctdi_air100 / d
         print self.conversion_factor
-        
-            
-        
-#        lut = np.zeros((1,5,))
-        
+
+    def generate_ctdi_phantom(self, pmma, air, size=32.):
+        spacing = np.array((1, 1, 10), dtype=np.double)
+        N = np.rint(np.array((self.sdd / spacing[0], self.sdd / spacing[1], 1),
+                             dtype=np.double))
+
+        offset = -N * spacing / 2.
+        material_array = np.zeros(N, dtype=np.intc)
+        radii_phantom = size * spacing[0]
+        radii_meas = 2. * spacing[0]
+        center = (N * spacing / 2.)[:2]
+        radii_pos = 28*spacing[0]
+        pos = [(center[0], center[1])]
+        for ang in [0, 90, 180, 270]:
+            dx = radii_pos * np.sin(np.deg2rad(ang))
+            dy = radii_pos * np.cos(np.deg2rad(ang))
+            pos.append((center[0] + dx, center[1] + dy))
+
+        for i in range(int(N[2])):
+            material_array[:, :, i] += utils.circle_mask((N[0], N[1]),
+                                                         radii_phantom)
+            for p in pos:
+                material_array[:, :, i] += utils.circle_mask((N[0], N[1]),
+                                                             radii_meas,
+                                                             center=p)
+
+        material_map = {0: air.name, 1: pmma.name, 2: air.name}
+        density_array = np.zeros_like(material_array, dtype=np.double)
+        density_array[material_array == 0] = air.density
+        density_array[material_array == 1] = pmma.density
+        density_array[material_array == 2] = air.density
+
+#        density_array = np.zeros(N, dtype=np.double) + material.density
+        lut = generate_attinuation_lut([air, pmma], material_map, max_eV=0.5e6)
+        return N, spacing, offset, material_array, density_array, lut, pos
+#        dose = np.zeros_like(density_array, dtype=np.double)
+
+    def obtain_ctdiw_conversion_factor(self, pmma, air,
+                                       callback=None, phantom_size=32.):
+
+        args = self.generate_ctdi_phantom(pmma, air)
+        N, spacing, offset, material_array, density_array, lut, meas_pos = args
+
+        # removing outside air
+        lut[0, 1:, :] = 0
+
+        dose = np.zeros_like(density_array)
+
+        en_specter = specter(self.kV, angle_deg=10., filtration_materials='Al',
+                             filtration_mm=6.)
+        norm_specter = (en_specter[0], en_specter[1]/en_specter[1].sum())
+
+        particles = phase_space.ct_seq(self.scan_fov, self.sdd,
+                                       self.total_collimation,
+                                       histories=50000, exposures=1200,
+                                       batch_size=1000000,
+                                       energy_specter=norm_specter)
+#        pdb.set_trace()
+        t0 = time.clock()
+        for batch, i, tot in particles:
+            score_energy(batch, N, spacing, offset, material_array,
+                         density_array, lut, dose)
+            p = round(i * 100 / float(tot), 1)
+            t1 = (time.clock() - t0) / float(i) * (tot - i)
+            print '{0}% {1}, ETA in {2}'.format(p, time.ctime(),
+                                                utils.human_time(t1))
+
+        d = []
+        for p in meas_pos:
+            x, y = int(p[0]), int(p[1])
+            d.append(dose[x, y, 0] / air.density * np.prod(spacing))
+            d[-1] /= (float(tot) / 1000000.)
+
+        ctdiv = d.pop(0) / 3.
+        ctdiv += 2. * sum(d) / 3. / 4.
+        self.conversion_factor_ctdiw = self.ctdi_w100 / ctdiv
+
 
 class Patient(object):
     def __init__(self, name):
@@ -461,7 +828,7 @@ class Patient(object):
 
     @material_array.setter
     def material_array(self, value):
-#        assert isinstance(value, np.ndarray)
+        assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
         self.__material_array = value.astype(np.intc)
 
@@ -511,28 +878,207 @@ class Patient(object):
 
 
 class Simulation(object):
-    def __init__(self):
-        self.__exposures = 100.
-        self.__histories = 1
-        self.__energy = 70000.
-        self.__energy_specter = None
-        self.__batch_size = None
-        self.__pitch = 1.
-        self.__start = 0.
-        self.__stop = 1.
-        self.__start_at_exposure_no = 0
+    def __init__(self, name, description=None, dose=None):
+        self.__description = {'name': '',
+                              'protocol_name': '',
+                              'patient_name': '',
+                              'exposures': 1200.,
+                              'histories': 1000,
+                              'batch_size': 0,
+                              'start': 0.,
+                              'stop': 0.,
+                              'start_at_exposure_no': 0,
+                              'finish': False
+                              }
+        self.__dtype = {'name': 'a64',
+                        'protocol_name': 'a64',
+                        'patient_name': 'a64',
+                        'exposures': np.int,
+                        'histories': np.int,
+                        'batch_size': np.int,
+                        'start': np.float,
+                        'stop': np.float,
+                        'start_at_exposure_no': np.int,
+                        'finish': np.bool
+                        }
+        self.__dose = None
+        if description is not None:
+            for key, value in description.items():
+                self.__description[key] = value
+        if dose is not None:
+            self.dose = dose
+        self.name = name
+
+    @property
+    def dose(self):
+        return self.__dose
+
+    @dose.setter
+    def dose(self, value):
+        assert isinstance(value, np.ndarray)
+        self.__dose = value
+
+    @property
+    def finish(self):
+        return self.__description['finish']
+
+    @finish.setter
+    def finish(self, value):
+        value = bool(value)
+        self.__description['finish'] = value
+
+    @property
+    def name(self):
+        return self.__description['name']
+
+    @name.setter
+    def name(self, value):
+        value = str(value)
+        name = "".join([l for l in value.split() if len(l) > 0])
+        assert len(name) > 0
+        self.__description['name'] = name.lower()
+
+    @property
+    def protocol_name(self):
+        return self.__description['protocol_name']
+
+    @protocol_name.setter
+    def protocol_name(self, value):
+        value = str(value)
+        name = "".join([l for l in value.split() if len(l) > 0])
+        assert len(name) > 0
+        self.__description['protocol_name'] = name.lower()
+
+    @property
+    def patient_name(self):
+        return self.__description['patient_name']
+
+    @patient_name.setter
+    def patient_name(self, value):
+        value = str(value)
+        name = "".join([l for l in value.split() if len(l) > 0])
+        assert len(name) > 0
+        self.__description['patient_name'] = name.lower()
+
+    @property
+    def exposures(self):
+        return self.__description['exposures']
+
+    @exposures.setter
+    def exposures(self, value):
+        value = int(value)
+        assert value >= 0
+        self.__description['exposures'] = value
+
+    @property
+    def histories(self):
+        return self.__description['histories']
+
+    @histories.setter
+    def histories(self, value):
+        value = int(value)
+        assert value >= 0
+        self.__description['histories'] = value
+
+    @property
+    def batch_size(self):
+        return self.__description['batch_size']
+
+    @batch_size.setter
+    def batch_size(self, value):
+        value = int(value)
+        assert value >= 0
+        self.__description['batch_size'] = value
+
+    @property
+    def start(self):
+        return self.__description['start']
+
+    @start.setter
+    def start(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['start'] = value
+
+    @property
+    def stop(self):
+        return self.__description['stop']
+
+    @stop.setter
+    def stop(self, value):
+        value = float(value)
+        assert value >= 0
+        self.__description['stop'] = value
+
+    @property
+    def start_at_exposure_no(self):
+        return self.__description['start_at_exposure_no']
+
+    @start_at_exposure_no.setter
+    def start_at_exposure_no(self, value):
+        value = int(value)
+        assert value >= 0
+        self.__description['start_at_exposure_no'] = value
+
+    @property
+    def dtype(self):
+        d = {'names': [], 'formats': []}
+        for key, value in self.__dtype.items():
+            d['names'].append(key)
+            d['formats'].append(value)
+        return np.dtype(d)
+
+    @property
+    def values(self):
+        return self.__description
+
+
+
+def test_simulation():
+
+    p2 = Patient('test2')
+    p1 = Patient('test1')
+
+    pt = CTProtocol('test')
+    s2 = Simulation('test2')
+    s1 = Simulation('test1')
+    s1.patient_name = 'test1'
+    s1.protocol_name = 'test2'
+    s2.patient_name = 'test2'
+    s2.protocol_name = 'test2'
+
+
+    db_path = os.path.abspath("C://test//test.h5")
+    db = Database(db_path)
+
+    db.add_simulation(s1)
+    db.add_simulation(s2)
+    db.add_patient(p1, overwrite=True)
+    db.add_patient(p2, overwrite=True)
+    db.add_protocol(pt)
+
+    db.validate()
+    pdb.set_trace()
+    ss = db.get_simulation('test')
+    pdb.set_trace()
 
 def test_protocol():
     p = CTProtocol('test')
-    pdb.set_trace()
-    p.ctdi_air100 = 8.76
-    
+
     db_path = os.path.abspath("C://test//test.h5")
     database = Database(db_path)
+    database.add_protocol(p)
+    pp = database.get_protocol('test')
+    pp.ctdi_air100 = 8.7
+    pp.ctdi_w100 = 14.9
+
     air = database.get_material('air')
-    p.obtain_conversion_factor(air)
+    pmma = air = database.get_material('pmma')
+    pp.obtain_ctdiw_conversion_factor(pmma, air)
+
+#    p.obtain_conversion_factor(air)
     pdb.set_trace()
-    
+
 def test_materials():
     db_path = os.path.abspath("C://test//test.h5")
     database = Database(db_path)
@@ -547,10 +1093,11 @@ def test_materials():
         database.close()
 
     materials = database.get_all_materials()
-    
+
 
 
 if __name__ == '__main__':
     test_materials()
-    test_protocol()
+#    test_protocol()
+    test_simulation()
 
