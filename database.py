@@ -147,11 +147,10 @@ class Database(object):
         except tb.NoSuchNodeError:
             pass
         else:
-            self.__h5.remove_node(dose_node,name=protocol.name)
+            self.__h5.remove_node(dose_node, name=protocol.name)
         if protocol.dose is not None:
             self.__h5.create_carray(dose_node, protocol.name,
                                     obj=protocol.dose)
-
 
     def get_simulation(self, name):
         table = self.get_node('simulations')
@@ -266,12 +265,50 @@ class Database(object):
             materials.append(self.get_material(child._v_name))
         return materials
 
+    def validate_patient(self, patient):
+        # test for all properties
+        for prop in ['material_array', 'material_map', 'spacing']:
+            if getattr(patient, prop) is None:
+                raise ValueError('Patient needs to have the {0} property'.format(prop))
+
+        #testing material_array
+        unique_materials = np.unique(patient.material_array)
+        for mat_ind in unique_materials:
+            if mat_ind not in patient.material_map.keys():
+                raise ValueError('Material map must have all elements in material array.')
+
+        #sanitize material arrays:
+        if np.sum(unique_materials - np.arange(len(unique_materials))) != 0:
+            mat_map_red = {}
+            mat_arr_red = np.zeros_like(patient.material_array)
+            for ind, mat in enumerate(unique_materials):
+                mat_map_red[ind] = material_map[mat]
+                indices = patient.material_array == mat
+                mat_arr_red[indices] = ind
+            patient.material_array = mat_arr_red
+            patient.material_map = mat_map_red
+
+        if patient.density_array is None:
+            dens_arr = np.zeros_like(patient.material_array, dtype=np.double)
+            materials = self.get_all_materials()
+            materials_dict = {m.name: m.density for m in materials if m.density is not None}
+            for key, value in patient.material_map.items():
+                if value in materials_dict:
+                    indices = patient.material_array == key
+                    dens_arr[indices] = materials_dict[value]
+                else:
+                    raise ValueError('Density data for required material {} for patient {} is not in database'.format(value, patient.name))
+            patient.density_array = dens_arr
+        return patient
+
+
+
     def add_patient(self, patient, overwrite=False):
-        for var in  ['density_array', 'spacing', 'material_array',
-                     'material_map']:
-            if getattr(patient, var) is None:
-                raise ValueError('{} property of '
-                                 'patient can not be None'.format(var))
+        try:
+            patient = self.validate_patient(patient)
+        except Exception, e:
+            print e
+            raise ValueError
 
         node = self.get_node('patients', create=True)
         try:

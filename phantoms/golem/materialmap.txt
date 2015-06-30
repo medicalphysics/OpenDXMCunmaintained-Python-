@@ -1,9 +1,0 @@
-hardbone 1
-skin 2
-muscletissue 3
-softtissue 4
-redbonemarrow 5
-yellowbonemarrow 6
-adiposetissue 7
-lung 8
-air 9
