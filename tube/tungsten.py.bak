@@ -1,6 +1,6 @@
 import numpy as np
-from .CPF100 import CPF100_M, CPF100_F, CPF100_u, CPF100_M_px, CPF100_F_px
-from . import elements
+from CPF100 import CPF100_M, CPF100_F, CPF100_u, CPF100_M_px, CPF100_F_px
+import elements
 import scipy.interpolate as inter
 
 ###############################################################################
@@ -300,8 +300,8 @@ def specter(T0, angle_deg=None, angle_rad=None,
             else:
                 continue
             N_obs *= np.exp(-attinuation(hv, name, True) * mm / 10.)
-    except Exception as e:
-        print(e)
+    except Exception, e:
+        print e
     electrons_per_mas = 1. / 1.60217657e-16
     if detector_area is None:
         red_factor = 1.

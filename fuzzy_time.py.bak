@@ -42,7 +42,7 @@ def human_time(sec):
 
 
 if __name__ == '__main__':
-    print((human_time(3660)))
+    print(human_time(3660))
 
 
 

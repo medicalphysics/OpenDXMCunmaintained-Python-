@@ -106,7 +106,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
 
-    for i in range(start_at_exposure_no, e):
+    for i in xrange(start_at_exposure_no, e):
         R = rot(ang[i])
 #        pdb.set_trace()
         ind_b = teller * histories
@@ -239,7 +239,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
 
-    for i in range(start_at_exposure_no, e):
+    for i in xrange(start_at_exposure_no, e):
         R = rot(ang[i])
 #        pdb.set_trace()
         ind_b = teller * histories

@@ -41,7 +41,7 @@ cdef double PI = 3.14159265359
 cdef double ENERGY_CUTOFF = 10.e3 # eV
 cdef double ENERGY_MAXVAL = 300.e3 # eV
 cdef double WEIGHT_CUTOFF = 0.05
-cdef double RUSSIAN_RULETTE_CHANCE = 2 # 1 / CHANCE probability of photon survival 
+cdef double RUSSIAN_RULETTE_CHANCE = 2 # 1 / CHANCE probability of photon survival
 
 
 cdef inline double sign(double a) nogil: return -1 if a > 0 else 1
@@ -304,11 +304,11 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
     cdef double weight, dist, r1, azimutal_angle
     cdef double compton, rayleigh, photo, total, scatter_angle, scatter_energy
-    cdef int valid, force_interaction, index, material, i, n_indices, n_max   
+    cdef int valid, force_interaction, index, material, i, n_indices, n_max
 
     cdef double weight_cutoff = WEIGHT_CUTOFF
-    cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE    
-    
+    cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE
+
     n_max = <int>(N[0] + N[1] + N[2] + 3)
 
     cdef double* particle = <double*>malloc(8*sizeof(double))
@@ -367,7 +367,7 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
             particle[6] = scatter_energy
             rot_particle(particle, scatter_angle)
             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
-            
+
         else:
             scatter_angle = rayleigh_event_draw_theta()
             azimutal_angle = random.random() * PI * 2.
@@ -396,8 +396,9 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
 
 
 def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose):
-     """Score dose by the Monte Carlo method. If OpenMP is available during 
-     compilation, this method will run multithreaded.
+    """
+    Score dose by the Monte Carlo method. If OpenMP is available during
+    compilation, this method will run multithreaded.
 
     INPUT:
         particles : ndarray (8, k) dtype=double
@@ -407,16 +408,16 @@ def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:
         spacing : ndarray (3) dtype=double
             voxel spacing in cm
         offset : ndarray (3) dtype=double
-            voxel offset from the upper left voxel in cm 
+            voxel offset from the upper left voxel in cm
         material_map : ndarray (N[0], N[1], N[2]), dtype=intc
-            ndarray of material index with same shape as dose array. 
+            ndarray of material index with same shape as dose array.
             Values in material map must be in range 0: number_of_materials - 1.
         density_map : ndarray (N[0], N[1], N[2]), dtype=double
-            ndarray of densities with same shape as dose array. 
+            ndarray of densities with same shape as dose array.
             Values must be in grams / cm^3
         attinuation_lut : ndarray (number_of_materials, 5, k), dtype=double
-            attinuation lookup table for each material, first index must 
-            correspond to a value in material_map. 
+            attinuation lookup table for each material, first index must
+            correspond to a value in material_map.
             Second correspions to energy and type of attinuations:
             0: energy in eV
             1: total attinuation coefficient in cm^2/g
@@ -425,18 +426,19 @@ def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:
             5: Compton scatter attinuation coefficient in cm^2/g
             Example:
             attinuation_lut[0, 0, :] gives energies for material 0
-            attinuation_lut[0, 1, :] gives total attinuation coefficient for 
+            attinuation_lut[0, 1, :] gives total attinuation coefficient for
             material 0 at corresponding energies
         dose : ndarray (N[0], N[1], N[2]), dtype=double
             Array to score energy, same shape as material_map and density_map
-        
+
     OUTPUT:
         None, the dose array is updated, values are in eV
-    """               
+    """
+
     cdef long i
     for i in prange(particles.shape[1], schedule='static', nogil=True):
         transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
     return
 
 #def profile():
-    
+

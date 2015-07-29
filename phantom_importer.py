@@ -8,6 +8,17 @@ import os
 import sys
 import numpy as np
 
+import pdb
+
+
+def test():
+    path = "C://GitHub//OpenDXMC//data//phantoms//golem//segm_golem"
+    arr = np.fromfile(path, dtype=np.uint8)
+    arr = arr[4096:]
+    print(arr[0:10])
+    pdb.set_trace()
+    
+
 def read_golem(path=None):
     """
     output:
@@ -25,8 +36,9 @@ def read_golem(path=None):
 
     # reading golem_array
     try:
-        with open(os.path.join(golem_path, 'segm_golem')) as r:
-            c = r.read()
+        c = np.fromfile(os.path.join(golem_path, 'segm_golem'), dtype=np.uint8)
+#        with open(os.path.join(golem_path, 'segm_golem'), "rb") as r:
+#            c = r.read().decode('ascii')
     except IOError:
         err_msg =  """Could not find segm_golem binary in folder {0}.
                       You may download the
@@ -34,8 +46,7 @@ def read_golem(path=None):
                       center""".format(golem_path)
         raise IOError(err_msg)
     header_len = 4096
-    a_raw = np.array(c[header_len:], dtype='c',
-                     order='C').view(np.uint8).reshape((220, 256, 256))
+    a_raw = c[header_len:].reshape((220, 256, 256))
 
     organ_array = np.swapaxes(a_raw, 0, 2)
     organ_array = np.swapaxes(organ_array, 0, 1)
@@ -58,12 +69,14 @@ def read_golem(path=None):
             material_map[int(material)] = ""
             material_array[ind] = material
             organ_map[int(seg_ind)] = organ
-
+        
     with open(os.path.join(golem_path, 'materialmap.txt')) as r:
         for line in r.readlines():
             material, ind_s = (line.strip()).split(';')
             ind = int(ind_s)
             material_map[ind] = material
 
-
     return spacing, material_array, material_map,  organ_array, organ_map
+
+if __name__ == '__main__':
+    test()

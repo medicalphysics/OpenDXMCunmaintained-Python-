@@ -41,7 +41,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
         atts[key] = materials[ind].attinuation
 
 
-    energies = np.unique(np.hstack([a['energy'] for a in list(atts.values())]))
+    energies = np.unique(np.array([a['energy'] for a in list(atts.values())]).ravel())
     e_ind = (energies <= max_eV) * (energies >= min_eV)
     if not any(e_ind):
         raise ValueError('Supplied minimum or maximum energies '
@@ -126,7 +126,7 @@ class Database(object):
             table = self.__h5.create_table(self.__h5.root, 'simulations',
                                            description=protocol.dtype)
 
-        condition = 'name == b"{}"'.format(protocol.name)
+        condition = 'name == "{}"'.format(protocol.name)
 
         for row in table.where(condition):
             for key, value in list(protocol.values.items()):
@@ -154,7 +154,7 @@ class Database(object):
 
     def get_simulation(self, name):
         table = self.get_node('simulations')
-        condition = 'name == b"{}"'.format(name)
+        condition = 'name == "{}"'.format(name)
         description = {}
         for row in table.where(condition):
             for key, value in zip(table.colnames, row[:]):
@@ -180,7 +180,7 @@ class Database(object):
             table = self.__h5.create_table(self.__h5.root, 'protocols',
                                            description=protocol.dtype)
 
-        condition = 'name == b"{}"'.format(protocol.name)
+        condition = 'name == "{}"'.format(protocol.name)
 
         for row in table.where(condition):
             for key, value in list(protocol.values.items()):
@@ -196,7 +196,7 @@ class Database(object):
 
     def get_protocol(self, name):
         table = self.get_node('protocols')
-        condition = 'name == b"{}"'.format(name)
+        condition = 'name == "{}"'.format(name)
         description = {}
         for row in table.where(condition):
             for key, value in zip(table.colnames, row[:]):
@@ -225,10 +225,9 @@ class Database(object):
             dens_table = self.__h5.create_table(node, name='densities',
                                                 description=dtype)
 
-        condition = 'key == b"{}"'.format(material.name)
+        condition = 'key == "{}"'.format(material.name)
         cond_index = dens_table.get_where_list(condition)
         for ind in cond_index:
-            
             dens_table.remove_row(ind)
         row = dens_table.row
         row['key'] = material.name
@@ -245,16 +244,17 @@ class Database(object):
             raise e
 
         try:
-            dens_table = self.get_node('densities', where=node, create=False)
+            dens_table = self.__h5.get_node(node, name='densities')
         except tb.NoSuchNodeError as e:
-            density = None
+            pass
         else:
             for row in dens_table:
-                if row['key'] == bytes(name, encoding='ascii'):
+                if row['key'] == name:
                     density = row['value']
                     break
             else:
                 density = None
+
         return Material(name, attinuations=mat_table.read(), density=density)
 
     def get_all_materials(self):
@@ -269,7 +269,7 @@ class Database(object):
         # test for all properties
         for prop in ['material_array', 'material_map', 'spacing']:
             if getattr(patient, prop) is None:
-                raise ValueError('Patient {0} needs to have the {1} property'.format(patient.name, prop))
+                raise ValueError('Patient needs to have the {0} property'.format(prop))
 
         #testing material_array
         unique_materials = np.unique(patient.material_array)
@@ -305,7 +305,8 @@ class Database(object):
         try:
             patient = self.validate_patient(patient)
         except Exception as e:
-            raise e
+            print(e)
+            raise ValueError
 
         node = self.get_node('patients', create=True)
         try:
@@ -394,7 +395,7 @@ class Database(object):
                 broken_sims.append(row.nrow)
                 continue
         sim_table.autoindex = False
-        print(('boken sims', broken_sims))
+        print('boken sims', broken_sims)
         for ind in broken_sims:
             sim_table.remove_row(ind)
         sim_table.flush_rows_to_index()
@@ -726,7 +727,7 @@ class CTProtocol(object):
         particles = phase_space.ct_seq(self.scan_fov, self.sdd,
                                        self.total_collimation,
                                        histories=1000, exposures=1200,
-                                       batch_size=100000,
+                                       batch_size=10000,
                                        energy_specter=norm_specter)
 #        pdb.set_trace()
         t0 = time.clock()
@@ -735,8 +736,8 @@ class CTProtocol(object):
                          density_array, lut, dose)
             p = round(i * 100 / float(tot), 1)
             t1 = (time.clock() - t0) / float(i) * (tot - i)
-            print(('{0}% {1}, ETA in {2}'.format(p, time.ctime(),
-                                                utils.human_time(t1))))
+            print('{0}% {1}, ETA in {2}'.format(p, time.ctime(),
+                                                utils.human_time(t1)))
 
         center = np.floor(N / 2).astype(np.int)
         d = dose[center[0], center[1],
@@ -744,6 +745,7 @@ class CTProtocol(object):
         d /= float(tot) / 1000000.
         print(d)
         self.__description['conversion_factor_ctdiair'] = self.ctdi_air100 / d
+        print(self.conversion_factor)
 
     def generate_ctdi_phantom(self, pmma, air, size=32.):
         spacing = np.array((1, 1, 10), dtype=np.double)
@@ -798,8 +800,8 @@ class CTProtocol(object):
 
         particles = phase_space.ct_seq(self.scan_fov, self.sdd,
                                        self.total_collimation,
-                                       histories=1000, exposures=1200,
-                                       batch_size=100000,
+                                       histories=50000, exposures=1200,
+                                       batch_size=1000000,
                                        energy_specter=norm_specter)
 #        pdb.set_trace()
         t0 = time.clock()
@@ -808,8 +810,8 @@ class CTProtocol(object):
                          density_array, lut, dose)
             p = round(i * 100 / float(tot), 1)
             t1 = (time.clock() - t0) / float(i) * (tot - i)
-            print(('{0}% {1}, ETA in {2}'.format(p, time.ctime(),
-                                                utils.human_time(t1))))
+            print('{0}% {1}, ETA in {2}'.format(p, time.ctime(),
+                                                utils.human_time(t1)))
 
         d = []
         for p in meas_pos:
@@ -819,7 +821,6 @@ class CTProtocol(object):
 
         ctdiv = d.pop(0) / 3.
         ctdiv += 2. * sum(d) / 3. / 4.
-        print(ctdiv)
         self.conversion_factor_ctdiw = self.ctdi_w100 / ctdiv
 
 
@@ -1092,9 +1093,9 @@ def test_simulation():
     db.add_protocol(pt)
 
     db.validate()
-#    pdb.set_trace()
-#    ss = db.get_simulation('test')
-#    pdb.set_trace()
+    pdb.set_trace()
+    ss = db.get_simulation('test')
+    pdb.set_trace()
 
 def test_protocol():
     p = CTProtocol('test')
@@ -1107,18 +1108,16 @@ def test_protocol():
     pp.ctdi_w100 = 14.9
 
     air = database.get_material('air')
-    pmma = database.get_material('pmma')
+    pmma = air = database.get_material('pmma')
     pp.obtain_ctdiw_conversion_factor(pmma, air)
 
-    pp.obtain_ctdiair_conversion_factor(air)
-    print(pp.conversion_factor_ctdiair, pp.conversion_factor_ctdiw)
-    database.add_protocol(pp)
-#    pdb.set_trace()
+#    p.obtain_conversion_factor(air)
+    pdb.set_trace()
 
 def test_materials():
     db_path = os.path.abspath("C://test//test.h5")
     database = Database(db_path)
-    material_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data', 'materials')
+    material_dir = os.path.join(os.path.dirname(sys.argv[0]), 'data//materials')
 #    material_dir = os.path.abspath("C://GitHub//OpenDXMC//data//materials//attinuation")
     material_paths = utils.find_all_files([os.path.join(material_dir, 'attinuation')])
     dens_file = os.path.join(material_dir, 'densities.txt')
@@ -1126,15 +1125,13 @@ def test_materials():
         name = os.path.splitext(os.path.basename(path))[0]
         material = Material(name, att_file=path, density_file=dens_file)
         database.add_material(material)
-    database.close()
+        database.close()
 
     materials = database.get_all_materials()
-    air = database.get_material('air')    
-    database.close()
 
 def test_golem_patient():
     phantom_path = os.path.join(os.path.dirname(sys.argv[0]), 'data','phantoms')
-    spacing, material_array, material_map, organ_array, organ_map = phantom_importer.read_golem(phantom_path)
+    spacing, material_array, material_map,  organ_array, organ_map = phantom_importer.read_golem(phantom_path)
     pat = Patient('golem')
     pat.spacing = spacing
     pat.material_array = material_array

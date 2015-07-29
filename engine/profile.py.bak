@@ -10,7 +10,7 @@ import pstats, cProfile
 import pyximport
 pyximport.install()
 
-from . import _interaction_func
+import _interaction_func
 
 cProfile.runctx()
 
