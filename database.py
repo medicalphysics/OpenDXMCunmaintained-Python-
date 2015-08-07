@@ -14,9 +14,34 @@ import utils
 import os
 import sys
 import time
+import re
+import logging
+
 
 import pdb
 import pylab as plt
+
+
+logger = logging.getLogger('OpenDXMC')
+
+
+def add_materials_to_database(db_instance, materials_folder_path):
+    path = os.path.abspath(materials_folder_path)
+
+    density_file = os.path.join(path, "densities.txt")
+
+    for p in utils.find_all_files([os.path.join(path, 'attinuation')]):
+        name = os.path.splitext(os.path.basename(p))[0]
+        # test for valif material name
+        if re.match('^[\w-]+$', name) is None:
+            logger.warning(
+                "material file {0} contains illegal characters"
+                ", only alphanummeric characters and "
+                "dashes are allowed.".format(p)
+                )
+            continue
+        material = Material(name, att_file=path, density_file=density_file)
+        db_instance.add_material(material)
 
 
 def generate_attinuation_lut(materials, material_map, min_eV=None,
@@ -228,7 +253,7 @@ class Database(object):
         condition = 'key == b"{}"'.format(material.name)
         cond_index = dens_table.get_where_list(condition)
         for ind in cond_index:
-            
+
             dens_table.remove_row(ind)
         row = dens_table.row
         row['key'] = material.name
@@ -321,7 +346,7 @@ class Database(object):
         pat_node = self.__h5.create_group(node, patient.name)
         # saving arrays
         for var in ['organ_array', 'density_array', 'material_array',
-                    'spacing']:
+                    'spacing', 'ct_array']:
             obj = getattr(patient, var)
             if obj is not None:
                 self.__h5.create_carray(pat_node, var, obj=obj)
@@ -406,6 +431,23 @@ class Database(object):
 
 
 class Material(object):
+    """
+    Material object for interaction with database.
+
+    INPUT:
+
+    name:
+        Name of material, only alphanummeric values are allowed
+    density [optional]:
+        material density in g/cm3
+    att_file [optional]:
+        filepath to text file containing attinuation data
+    attinuations [optional]:
+        attinuation nd array
+    density_file [optional]:
+        read density from this file
+
+    """
     def __init__(self, name, density=None, att_file=None, attinuations=None,
                  density_file=None):
         self.name = name
@@ -437,11 +479,15 @@ class Material(object):
         self.__density = float(value)
 
     def density_from_file(self, path):
-        with open(path) as f:
-            s = f.read()
-            l = s.lower().split()
-            if self.name in l:
-                self.density = l[l.index(self.name) + 1]
+        try:
+            with open(path) as f:
+                s = f.read()
+                l = s.lower().split()
+                if self.name in l:
+                    self.density = l[l.index(self.name) + 1]
+        except FileNotFoundError:
+            logger.warning("Could not open densities file {0} "
+                           "for material {1}".format(path, self.name))
 
     @property
     def attinuation(self):
@@ -832,7 +878,7 @@ class Patient(object):
         self.__material_map = None
         self.__density_array = None
         self.__spacing = None
-
+        self.__ct_array = None
         self.name = name
 
     @property
@@ -845,6 +891,14 @@ class Patient(object):
         name = "".join([l for l in value.split() if len(l) > 0])
         assert len(name) > 0
         self.__name = name.lower()
+
+    @property
+    def ct_array(self):
+        return self.__ct_array
+
+   @ct_array.setter
+    def ct_array(self, value):
+        self.__ct_array = value.astype(np.int16)
 
     @property
     def organ_array(self):
@@ -909,6 +963,9 @@ class Patient(object):
         assert len(value.shape) == 1
 #        assert len(value.shape[0]) == 3
         self.__spacing = value.astype(np.double)
+
+    def density_map_from_ct_array(self):
+
 
 
 class Simulation(object):
@@ -1129,7 +1186,7 @@ def test_materials():
     database.close()
 
     materials = database.get_all_materials()
-    air = database.get_material('air')    
+    air = database.get_material('air')
     database.close()
 
 def test_golem_patient():
@@ -1147,6 +1204,10 @@ def test_golem_patient():
     db.add_patient(pat)
     db.close()
 
+def test_simulation():
+    db_path = os.path.abspath("C:\test\test.h5")
+    db = Database(db_path)
+    # adding materials
 
 
 if __name__ == '__main__':

@@ -11,14 +11,6 @@ import numpy as np
 import pdb
 
 
-def test():
-    path = "C://GitHub//OpenDXMC//data//phantoms//golem//segm_golem"
-    arr = np.fromfile(path, dtype=np.uint8)
-    arr = arr[4096:]
-    print(arr[0:10])
-    pdb.set_trace()
-    
-
 def read_golem(path=None):
     """
     output:
@@ -69,7 +61,7 @@ def read_golem(path=None):
             material_map[int(material)] = ""
             material_array[ind] = material
             organ_map[int(seg_ind)] = organ
-        
+
     with open(os.path.join(golem_path, 'materialmap.txt')) as r:
         for line in r.readlines():
             material, ind_s = (line.strip()).split(';')
