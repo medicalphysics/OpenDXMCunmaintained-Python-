@@ -19,7 +19,6 @@ import logging
 
 
 import pdb
-import pylab as plt
 
 
 logger = logging.getLogger('OpenDXMC')
@@ -29,7 +28,7 @@ def add_materials_to_database(db_instance, materials_folder_path):
     path = os.path.abspath(materials_folder_path)
 
     density_file = os.path.join(path, "densities.txt")
-
+    organic_file = os.path.join(path, "organics.txt")
     for p in utils.find_all_files([os.path.join(path, 'attinuation')]):
         name = os.path.splitext(os.path.basename(p))[0]
         # test for valif material name
@@ -40,7 +39,8 @@ def add_materials_to_database(db_instance, materials_folder_path):
                 "dashes are allowed.".format(p)
                 )
             continue
-        material = Material(name, att_file=path, density_file=density_file)
+        material = Material(name, att_file=path, density_file=density_file, 
+                            organic_file=organic_file)
         db_instance.add_material(material)
 
 
@@ -137,30 +137,30 @@ class Database(object):
             pass
         return n
 
-    def add_simulation(self, protocol):
+    def add_simulation(self, simulation):
         try:
-            assert protocol.protocol_name != ""
-            assert protocol.patient_name != ""
+            assert simulation.simulation_name != ""
+            assert simulation.patient_name != ""
         except AssertionError:
             raise ValueError('Simulation object needs to reference a patient '
-                             'and a protocol')
+                             'and a simulation')
         self.open()
         try:
             table = self.__h5.get_node(self.__h5.root, name='simulations')
         except tb.NoSuchNodeError:
             table = self.__h5.create_table(self.__h5.root, 'simulations',
-                                           description=protocol.dtype)
+                                           description=simulation.dtype)
 
-        condition = 'name == b"{}"'.format(protocol.name)
+        condition = 'name == b"{}"'.format(simulation.name)
 
         for row in table.where(condition):
-            for key, value in list(protocol.values.items()):
+            for key, value in list(simulation.values.items()):
                 row[key] = value
             row.update()
             break
         else:
             row = table.row
-            for key, value in list(protocol.values.items()):
+            for key, value in list(simulation.values.items()):
                 row[key] = value
             row.append()
         table.flush()
@@ -168,14 +168,14 @@ class Database(object):
         # saving dose
         dose_node = self.get_node('dose', create=True)
         try:
-            self.get_node(protocol.name, dose_node)
+            self.get_node(simulation.name, dose_node)
         except tb.NoSuchNodeError:
             pass
         else:
-            self.__h5.remove_node(dose_node, name=protocol.name)
-        if protocol.dose is not None:
-            self.__h5.create_carray(dose_node, protocol.name,
-                                    obj=protocol.dose)
+            self.__h5.remove_node(dose_node, name=simulation.name)
+        if simulation.dose is not None:
+            self.__h5.create_carray(dose_node, simulation.name,
+                                    obj=simulation.dose)
 
     def get_simulation(self, name):
         table = self.get_node('simulations')
@@ -244,20 +244,21 @@ class Database(object):
                                            obj=material.attinuation)
         mat_table.flush()
         try:
-            dens_table = self.__h5.get_node(node, name='densities')
+            dens_table = self.__h5.get_node(node, name='info')
         except tb.NoSuchNodeError:
-            dtype = np.dtype([('key', 'a64'), ('value', np.double)])
-            dens_table = self.__h5.create_table(node, name='densities',
+            dtype = np.dtype([('material', 'a64'), ('density', np.double), 
+                              ('organic', np.bool)])
+            dens_table = self.__h5.create_table(node, name='info',
                                                 description=dtype)
 
-        condition = 'key == b"{}"'.format(material.name)
+        condition = 'material == b"{}"'.format(material.name)
         cond_index = dens_table.get_where_list(condition)
         for ind in cond_index:
-
             dens_table.remove_row(ind)
         row = dens_table.row
-        row['key'] = material.name
-        row['value'] = material.density
+        row['material'] = material.name
+        row['density'] = material.density
+        row['organic'] = material.organic
         row.append()
         dens_table.flush()
 
@@ -268,50 +269,67 @@ class Database(object):
             mat_table = self.__h5.get_node(att_node, name=name)
         except tb.NoSuchNodeError as e:
             raise e
-
         try:
-            dens_table = self.get_node('densities', where=node, create=False)
+            dens_table = self.get_node('info', where=node, create=False)
         except tb.NoSuchNodeError as e:
             density = None
+            organic = None
         else:
             for row in dens_table:
-                if row['key'] == bytes(name, encoding='ascii'):
-                    density = row['value']
+                if row['material'] == bytes(name, encoding='ascii'):
+                    density = row['density']
+                    organic = row['organic']
                     break
             else:
                 density = None
-        return Material(name, attinuations=mat_table.read(), density=density)
+                organic = None
+        return Material(name, attinuations=mat_table.read(), density=density, 
+                        organic=organic)
 
-    def get_all_materials(self):
+    def get_all_materials(self, organic_only=False):
         materials = []
         node = self.get_node('materials', create=True)
-        att_node = self.get_node('attinuation', where=node, create=True)
-        for child in att_node:
-            materials.append(self.get_material(child._v_name))
+        _ = self.get_node('attinuation', where=node, create=True)
+        try:
+            info_table = self.get_node('info', where=node)
+        except tb.NoSuchNodeError:
+            return []
+        else:
+            if organic_only:
+                for row in info_table:
+                    materials.append(self.get_material(row['material']))
+            else:
+                for row in info_table.where('organic == True'):
+                    materials.append(self.get_material(row['material']))
         return materials
 
     def validate_patient(self, patient):
         # test for all properties
-        for prop in ['material_array', 'material_map', 'spacing']:
+        for prop in ['spacing']:
             if getattr(patient, prop) is None:
                 raise ValueError('Patient {0} needs to have the {1} property'.format(patient.name, prop))
-
+        if patient.ct_array is None:
+            assert all([patient.material_array, patient.material_map])
+        else:            
+            return          
+            
         #testing material_array
-        unique_materials = np.unique(patient.material_array)
-        for mat_ind in unique_materials:
-            if mat_ind not in list(patient.material_map.keys()):
-                raise ValueError('Material map must have all elements in material array.')
+        if patient.material_array is not None:
+            unique_materials = np.unique(patient.material_array)
+            for mat_ind in unique_materials:
+                if mat_ind not in list(patient.material_map.keys()):
+                    raise ValueError('Material map must have all elements in material array.')
 
-        #sanitize material arrays:
-        if np.sum(unique_materials - np.arange(len(unique_materials))) != 0:
-            mat_map_red = {}
-            mat_arr_red = np.zeros_like(patient.material_array)
-            for ind, mat in enumerate(unique_materials):
-                mat_map_red[ind] = patient.material_map[mat]
-                indices = patient.material_array == mat
-                mat_arr_red[indices] = ind
-            patient.material_array = mat_arr_red
-            patient.material_map = mat_map_red
+            #sanitize material arrays:
+            if np.sum(unique_materials - np.arange(len(unique_materials))) != 0:
+                mat_map_red = {}
+                mat_arr_red = np.zeros_like(patient.material_array)
+                for ind, mat in enumerate(unique_materials):
+                    mat_map_red[ind] = patient.material_map[mat]
+                    indices = patient.material_array == mat
+                    mat_arr_red[indices] = ind
+                patient.material_array = mat_arr_red
+                patient.material_map = mat_map_red
 
         if patient.density_array is None:
             dens_arr = np.zeros_like(patient.material_array, dtype=np.double)
@@ -346,7 +364,7 @@ class Database(object):
         pat_node = self.__h5.create_group(node, patient.name)
         # saving arrays
         for var in ['organ_array', 'density_array', 'material_array',
-                    'spacing', 'ct_array']:
+                    'spacing', 'ct_array', 'exposure_modulation']:
             obj = getattr(patient, var)
             if obj is not None:
                 self.__h5.create_carray(pat_node, var, obj=obj)
@@ -377,7 +395,7 @@ class Database(object):
 
         # getting arrays
         for var in ['organ_array', 'density_array', 'material_array',
-                    'spacing']:
+                    'spacing', 'exposure_modulation']:
             try:
                 obj = self.__h5.get_node(pat_node, name=var)
             except tb.NoSuchNodeError:
@@ -448,16 +466,19 @@ class Material(object):
         read density from this file
 
     """
-    def __init__(self, name, density=None, att_file=None, attinuations=None,
-                 density_file=None):
+    def __init__(self, name, density=None, organic=None, att_file=None, 
+                 attinuations=None, density_file=None, organic_file=None):
         self.name = name
         self.__density = density
         self.__atts = attinuations
+        self.__organic = None
 
         if att_file is not None:
             self.attinuation = att_file
         if density_file is not None:
             self.density_from_file(density_file)
+        if organic_file is not None:
+            self.organic_from_file(organig_file)
 
     @property
     def name(self):
@@ -478,6 +499,25 @@ class Material(object):
     def density(self, value):
         self.__density = float(value)
 
+    @property
+    def organic(self):
+        return self.__organic
+
+    @organic.setter
+    def organic(self, value):
+        self.__organic = bool(value)
+
+    def organic_from_file(self, path):
+        try:
+            with open(path) as f:
+                s = f.read()
+                l = s.lower().split()
+                if self.name in l:
+                    self.organic = True
+        except FileNotFoundError:
+            logger.warning("Could not open organic file {0} "
+                           "for material {1}".format(path, self.name))
+        
     def density_from_file(self, path):
         try:
             with open(path) as f:
@@ -531,7 +571,7 @@ class CTProtocol(object):
                               'detector_rows': 64,
                               'modulation_xy': False,
                               'modulation_z': False,
-                              'al_filtration': 0.,
+                              'al_filtration': 7.,
                               'xcare': False,
                               'ctdi_air100': 0.,
                               'ctdi_w100': 0.,
@@ -879,6 +919,7 @@ class Patient(object):
         self.__density_array = None
         self.__spacing = None
         self.__ct_array = None
+        self.__exposure_modulation = None
         self.name = name
 
     @property
@@ -896,7 +937,7 @@ class Patient(object):
     def ct_array(self):
         return self.__ct_array
 
-   @ct_array.setter
+    @ct_array.setter
     def ct_array(self, value):
         self.__ct_array = value.astype(np.int16)
 
@@ -963,11 +1004,60 @@ class Patient(object):
         assert len(value.shape) == 1
 #        assert len(value.shape[0]) == 3
         self.__spacing = value.astype(np.double)
-
-    def density_map_from_ct_array(self):
-
-
-
+    @property
+    def exposure_modulation(self):
+        return self.__exposure_modulation
+    
+    @exposure_modulation.setter
+    def exposure_modulation(self, value):
+        arr = np.array(value).astype(np.float)
+        assert len(arr.shape) == 2
+        assert arr.shape[0] > 5
+        self.__exposure_modulation = arr
+        
+    def generate_material_map_array_from_ct_array(self, specter, materials):
+        if self.ct_array is None:
+            return
+        specter = (specter[0]/1000., specter[1]/specter[1].sum())
+        
+        water_key = None
+        material_map = {}
+        material_att = {}
+        material_dens = {}
+        materials.sort(key=lambda x: x.density)
+        for i, mat in enumerate(materials):
+            material_map[i] = mat.name
+            material_dens[i] = mat.density
+            #interpolationg and integrating attinuation coefficient
+            material_att[i] = np.trapz(np.interp(specter[0], 
+                                                 mat.attinuation['energy'], 
+                                                 mat.attinuation['total']), 
+                                       specter[0])
+            material_att[i] *= mat.density
+            if mat.name == 'water':
+                water_key = i
+        # getting a list of attinuation
+        material_HU_list = [(key, (att / material_att[water_key] -1.)*1000.) 
+                            for key, att in material_att.items()]
+        material_HU_list.sort(key=lambda x: x[1])
+        
+        material_array = np.zeros_like(self.ct_array, dtype=np.int)
+        density_array = np.zeros_like(self.ct_array, dtype=np.float)
+        llim = -np.inf
+        for i in range(len(material_HU_list)):
+            if i == len(material_HU_list) -1:
+                ulim = np.inf
+            else:
+                ulim = 0.5 *(material_HU_list[i][1] + material_HU_list[i+1][1])
+            ind = np.nonzero((self.ct_array > llim) * (self.ct_array <= ulim))
+            material_array[ind] = material_HU_list[i][0]
+            density_array[ind] = material_dens[material_HU_list[i][0]]
+            llim = ulim
+        self.material_map = material_map
+        self.material_array = material_array
+        self.density_array = density_array
+        
+        
 class Simulation(object):
     def __init__(self, name, description=None, dose=None):
         self.__description = {'name': '',
