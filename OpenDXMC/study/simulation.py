@@ -8,16 +8,103 @@ import numpy as np
 
 
 
+def generate_attinuation_lut(materials, material_map, min_eV=None,
+                             max_eV=None):
+    if min_eV is None:
+        min_eV = 0.
+    if max_eV is None:
+        max_eV = 100.e6
+
+    names = [m.name for m in materials]
+    atts = {}
+
+    for key, value in list(material_map.items()):
+        key = int(key)
+        try:
+            ind = names.index(value)
+        except ValueError:
+            raise ValueError('No material named '
+                             '{0} in first argument. '
+                             'The material_map requires {0}'.format(value))
+        atts[key] = materials[ind].attinuation
+
+
+    energies = np.unique(np.hstack([a['energy'] for a in list(atts.values())]))
+    e_ind = (energies <= max_eV) * (energies >= min_eV)
+    if not any(e_ind):
+        raise ValueError('Supplied minimum or maximum energies '
+                         'are out of range')
+    energies = energies[e_ind]
+    lut = np.empty((len(atts), 5, len(energies)), dtype=np.double)
+    for i, a in list(atts.items()):
+        lut[i, 0, :] = energies
+        for j, key in enumerate(['total', 'rayleigh', 'photoelectric',
+                                 'compton']):
+            lut[i, j+1, :] = np.interp(energies, a['energy'], a[key])
+    return lut
+
+
+def prepare_geometry_from_ct_array(ctarray, specter, materials):
+        """genereate material and density arrays and material map from
+           a list of materials to use
+           INPUT:
+               specter for this study
+               list of materials
+           OUTPUT :
+               material_map, material_array, density_array
+        """
+        if ctarray is None:
+            return
+        specter = (specter[0]/1000., specter[1]/specter[1].sum())
+
+        water_key = None
+        material_map = {}
+        material_att = {}
+        material_dens = {}
+        materials.sort(key=lambda x: x.density)
+        for i, mat in enumerate(materials):
+            material_map[i] = mat.name
+            material_dens[i] = mat.density
+            #interpolationg and integrating attinuation coefficient
+            material_att[i] = np.trapz(np.interp(specter[0],
+                                                 mat.attinuation['energy'],
+                                                 mat.attinuation['total']),
+                                       specter[0])
+            material_att[i] *= mat.density
+            if mat.name == 'water':
+                water_key = i
+        assert water_key is not None  # we need to include water in materials
+
+        # getting a list of attinuation
+        material_HU_list = [(key, (att / material_att[water_key] -1.)*1000.)
+                            for key, att in material_att.items()]
+        material_HU_list.sort(key=lambda x: x[1])
+
+        material_array = np.zeros_like(ctarray, dtype=np.int)
+        density_array = np.zeros_like(ctarray, dtype=np.float)
+        llim = -np.inf
+        for i in range(len(material_HU_list)):
+            if i == len(material_HU_list) -1:
+                ulim = np.inf
+            else:
+                ulim = 0.5 *(material_HU_list[i][1] + material_HU_list[i+1][1])
+            ind = np.nonzero((ctarray > llim) * (ctarray <= ulim))
+            material_array[ind] = material_HU_list[i][0]
+            density_array[ind] = material_dens[material_HU_list[i][0]]
+            llim = ulim
+
+        return material_map, material_array, density_array
+
+
+
 class Simulation(object):
-    
+
     __description = { 'name': '',
                       'scan_fov': 50.,
                       'sdd': 100.,
                       'detector_width': 0.6,
                       'detector_rows': 64,
                       'collimation_width': 0.6 * 64,
-                      'modulation_xy': False,
-                      'modulation_z': False,
                       'al_filtration': 7.,
                       'xcare': False,
                       'ctdi_air100': 0.,
@@ -44,8 +131,6 @@ class Simulation(object):
                 'detector_width': np.float,
                 'detector_rows': np.int,
                 'collimation_width': np.float,
-                'modulation_xy': np.bool,
-                'modulation_z': np.bool,
                 'al_filtration': np.float,
                 'xcare': np.bool,
                 'ctdi_air100': np.float,
@@ -75,39 +160,11 @@ class Simulation(object):
                  'energi_imparted': None
                  }
     __tables = { 'material_map': None,
-                 'density_map': None,
                  'organ_map': None
                  }
+
     def __init__(self, name, description=None):
-
-        if description is not None:
-            for key, value in list(description.items()):
-                if key in self.__description:
-                    self.__description[key] = value
         self.name = name
-
-    def __setattr__(self, name, value):
-        print('setting {0} to {1}'.format(name, value))      
-        if name in Simulation.__description:
-            if name == 'name':
-                print('editing name')
-                value = self.validate_name(value)
-            Simulation.__description[name] = value
-        elif name in Simulation.__arrays:
-            Simulation.__arrays[name] = value
-        elif name in Simulation.__tables:
-            Simulation.__tables[name] = value
-        else:
-            self.__dict__[name] = value
-
-    def __getattr__(self, name):
-        if name in Simulation.__description:
-            return Simulation.__description[name]
-        elif name in Simulation.__arrays:
-            return Simulation.__arrays[name]
-        elif name in Simulation.__tables:
-            return Simulation.__tables[name]
-        return Simulation.__getattr__(self, name)
 
     def numpy_dtype(self):
         d = {'names': [], 'formats': []}
@@ -115,21 +172,259 @@ class Simulation(object):
             d['names'].append(key)
             d['formats'].append(value)
         return np.dtype(d)
-        
+
     def decription(self):
         return self.__description
-   
+
     def arrays(self):
         return self.__arrays
 
     def tables(self):
         return self.__tables
 
-    def validate_name(self, value):
+    @property
+    def name(self):
+        return self.__description['name']
+
+    @name.setter
+    def name(self, value):
         value = str(value)
         name = "".join([l for l in value.split() if len(l) > 0])
         assert len(name) > 0
-        return name.lower()
+        self.__description['name'] = name.lower()
+
+    @property
+    def scan_fov(self):
+        return self.__description['scan_fov']
+    @scan_fov.setter
+    def scan_fov(self, value):
+        assert value > 0.
+        self.__description['scan_fov'] = float(value)
+
+    @property
+    def sdd(self):
+        return self.__description['sdd']
+    @sdd.setter
+    def sdd(self, value):
+        assert value > 0.
+        self.__description['sdd'] = float(value)
+
+    @property
+    def detector_width(self):
+        return self.__description['detector_width']
+    @detector_width.setter
+    def detector_width(self, value):
+        assert value > 0.
+        self.__description['detector_width'] = float(value)
+
+    @property
+    def detector_rows(self):
+        return self.__description['detector_rows']
+    @detector_rows.setter
+    def detector_rows(self, value):
+        assert value > 0
+        self.__description['detector_rows'] = int(value)
+
+    @property
+    def total_collimation(self):
+        return self.__description['detector_rows'] * self.__description['detector_width']
+
+    @property
+    def collimation_width(self):
+        return self.__description['collimation_width']
+    @collimation_width.setter
+    def collimation_width(self, value):
+        assert value > 0.
+        self.__description['collimation_width'] = float(value)
+
+    @property
+    def al_filtration(self):
+        return self.__description['al_filtration']
+    @al_filtration.setter
+    def al_filtration(self, value):
+        self.__description['al_filtration'] = float(value)
+
+    @property
+    def xcare(self):
+        return self.__description['xcare']
+    @xcare.setter
+    def xcare(self, value):
+        self.__description['xcare'] = bool(value)
+
+    @property
+    def ctdi_air100(self):
+        return self.__description['ctdi_air100']
+    @ctdi_air100.setter
+    def ctdi_air100(self, value):
+        self.__description['ctdi_air100'] = float(value)
+
+    @property
+    def ctdi_w100(self):
+        return self.__description['ctdi_w100']
+    @ctdi_w100.setter
+    def ctdi_w100(self, value):
+        self.__description['ctdi_w100'] = float(value)
+
+    @property
+    def kV(self):
+        return self.__description['kV']
+    @kV.setter
+    def kV(self, value):
+        assert value >= 40.
+        self.__description['kV'] = float(value)
+
+    @property
+    def region(self):
+        return self.__description['region']
+    @region.setter
+    def region(self, value):
+        self.__description['region'] = value
+
+    @property
+    def conversion_factor_ctdiair(self):
+        return self.__description['conversion_factor_ctdiair']
+
+    @property
+    def conversion_factor_ctdiw(self):
+        return self.__description['conversion_factor_ctdiw']
+
+    @property
+    def is_spiral(self):
+        return self.__description['is_spiral']
+    @is_spiral.setter
+    def is_spiral(self, value):
+        self.__description['is_spiral'] = bool(value)
+
+    @property
+    def pitch(self):
+        return self.__description['pitch']
+    @pitch.setter
+    def pitch(self, value):
+        assert value > 0
+        self.__description['pitch'] = float(value)
+
+    @property
+    def exposures(self):
+        return self.__description['exposures']
+    @exposures.setter
+    def exposures(self, value):
+        assert int(value) > 0
+        self.__description['exposures'] = int(value)
+
+    @property
+    def histories(self):
+        return self.__description['histories']
+    @histories.setter
+    def histories(self, value):
+        assert int(value) > 0
+        self.__description['histories'] = int(value)
+
+    @property
+    def batch_size(self):
+        return self.__description['batch_size']
+    @batch_size.setter
+    def batch_size(self, value):
+        assert int(value) > 0
+        self.__description['batch_size'] = int(value)
+
+    @property
+    def start(self):
+        return self.__description['start']
+    @start.setter
+    def start(self, value):
+        self.__description['start'] = float(value)
+
+    @property
+    def stop(self):
+        return self.__description['stop']
+    @stop.setter
+    def stop(self, value):
+        self.__description['stop'] = float(value)
+
+    @property
+    def start_at_exposure_no(self):
+        return self.__description['start_at_exposure_no']
+    @start_at_exposure_no.setter
+    def start_at_exposure_no(self, value):
+        self.__description['start_at_exposure_no'] = int(value)
+
+    @property
+    def finish(self):
+        return self.__description['finish']
+    @finish.setter
+    def finish(self, value):
+        self.__description['finish'] = bool(value)
+
+    @property
+    def material(self):
+        return self.__arrays['material']
+    @material.setter
+    def material(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 3
+        self.__arrays['material'] = value
+    @property
+    def density(self):
+        return self.__arrays['density']
+    @density.setter
+    def density(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 3
+        self.__arrays['density'] = value
+    @property
+    def organ(self):
+        return self.__arrays['organ']
+    @organ.setter
+    def organ(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 3
+        self.__arrays['organ'] = value
+    @property
+    def spacing(self):
+        return self.__arrays['spacing']
+    @spacing.setter
+    def spacing(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 1
+        self.__arrays['spacing'] = value
+    @property
+    def ctarray(self):
+        return self.__arrays['ctarray']
+    @ctarray.setter
+    def ctarray(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 3
+        self.__arrays['ctarray'] = value
+    @property
+    def exposure_modulation(self):
+        return self.__arrays['exposure_modulation']
+    @exposure_modulation.setter
+    def exposure_modulation(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 2
+        self.__arrays['exposure_modulation'] = value
+    @property
+    def energy_imparted(self):
+        return self.__arrays['energy_imparted']
+    @energy_imparted.setter
+    def energy_imparted(self, value):
+        assert isinstance(value, np.ndarray)
+        assert len(value.shape) == 3
+        self.__arrays['energy_imparted'] = value
+    @property
+    def material_map(self):
+        return self.__tables['material_map']
+    @material_map.setter
+    def material_map(self, value):
+        assert isinstance(value, np.recarray)
+        self.__tables['material_map'] = value
+    @property
+    def organ_map(self):
+        return self.__tables['organ_map']
+    @organ_map.setter
+    def organ_map(self, value):
+        assert isinstance(value, np.recarray)
+        self.__tables['organ_map'] = value
 
 #
 #    def obtain_ctdiair_conversion_factor(self, material, callback=None):
@@ -251,16 +546,17 @@ class Simulation(object):
 
 def test_simulation():
     s = Simulation('eple')
-    s.spacing = np.ones(3)
+#    s.spacing = np.ones(3)
     s.name='Eple'
-    s.eple = 5
-    
-    print(s.spacing) 
-    print(s.name, s.eple)
+#    s.eple = 5
 
-    
+#    print(s.spacing)
+#    print(s.name, s.eple)
+
+
 if __name__ == '__main__':
+
     test_simulation()
-    
-    
-    
+
+
+
