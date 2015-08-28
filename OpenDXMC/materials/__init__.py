@@ -1,3 +1,2 @@
 #
-from materials import Material
-from materials import material_importer
+from opendxmc.materials.materials import Material

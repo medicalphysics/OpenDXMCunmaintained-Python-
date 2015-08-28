@@ -5,42 +5,11 @@ Created on Fri Aug 21 15:15:30 2015
 @author: erlean
 """
 import numpy as np
-import os
-import sys
-import re
 import logging
-
-from opendxmc.utils import find_all_files
 
 import pdb
 
 logger = logging.getLogger('OpenDXMC')
-
-
-def import_materials(material_data_folder_path):
-    app_path = os.path.dirname(sys.argv[0])
-    materials_path = os.path.join(app_path, 'opendxmc', 'data', 'materials')
-
-    path = os.path.abspath(material_data_folder_path)
-    density_file = os.path.join(materials_path, "densities.txt")
-    organic_file = os.path.join(materials_path, "organics.txt")
-
-    materials = []
-
-    for p in find_all_files([os.path.join(path, 'attinuation')]):
-        name = os.path.splitext(os.path.basename(p))[0]
-        # test for valid material name
-        if re.match('^[\w-]+$', name) is None:
-            logger.warning(
-                "material file {0} contains illegal characters"
-                ", only alphanummeric characters and "
-                "dashes are allowed.".format(p)
-                )
-            continue
-        materials.append(Material(name, att_file=path,
-                                  density_file=density_file,
-                                  organic_file=organic_file))
-    return materials
 
 
 class Material(object):
@@ -66,7 +35,7 @@ class Material(object):
         self.name = name
         self.__density = density
         self.__atts = attinuations
-        self.__organic = None
+        self.__organic = organic
 
         if att_file is not None:
             self.attinuation = att_file
@@ -84,7 +53,10 @@ class Material(object):
 
     @name.setter
     def name(self, value):
-        value = str(value)
+        if isinstance(value, bytes):
+            value = str(value, encoding='utf-8')
+        else:
+            value = str(value)
         name = "".join([l for l in value.split() if len(l) > 0])
         assert len(name) > 0
         self.__name = name.lower()

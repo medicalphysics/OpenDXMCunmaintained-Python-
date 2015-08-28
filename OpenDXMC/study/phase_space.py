@@ -7,13 +7,37 @@ Created on Fri Jun 12 09:47:01 2015
 
 import numpy as np
 import scipy.interpolate
+from opendxmc.tube.tungsten import specter
+
+def ct_phase_space(simulation, batch_size=None):
+    arglist = ['scan_fov', 'sdd', 'total_collimation']
+    kwarglist = ['start', 'stop', 'exposures', 'histories',
+                 'exposure_modulation', 'start_at_exposure_no']
+
+    args = [getattr(simulation, a) for a in arglist]
+    kwargs = {}
+    for a in kwarglist:
+        kwargs[a] = getattr(simulation, a)
+
+    if simulation.is_spiral:
+        kwargs['pitch'] = simulation.pitch
+        phase_func = ct_spiral
+    else:
+        kwargs['step'] = simulation.step
+        phase_func = ct_seq
+
+    s = specter(simulation.kV, filtration_materials='Al',
+                filtration_mm=simulation.al_filtration)
+    kwargs['energy_specter'] = s
+
+    return phase_func(*args, **kwargs)
 
 
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
-              batch_size=None, modulation_xy=None,
-              modulation_z=None, start_at_exposure_no=0):
+              batch_size=None,
+              exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -42,10 +66,10 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         batch_size : int
             number of histories per batch, must be greater than
             histories
-        modulation_xy : [(N,), (N,)]
+        modulation_xy : [(N,), (N,)] (NOT IMPLEMENTED)
             tube current XY modulation, list/tuple of
             (ndarray(position), ndarray(scale_factors))
-        modulation_z : [(N,), (N,)]
+        exposure_modulation : [(N,), (N,)]
             tube current modulation z axis, list/tuple of
             (ndarray(position), ndarray(scale_factors))
         start_at_exposure_no: int
@@ -89,19 +113,20 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     energy_specter = (energy_specter[0],
                       energy_specter[1] / energy_specter[1].sum())
 
-    if modulation_xy is None:
-        mod_xy = lambda x: 1.0
-    else:
-        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
-                                            copy=False, bounds_error=False,
-                                            fill_value=1.0)
+#    if modulation_xy is None:
+#        mod_xy = lambda x: 1.0
+#    else:
+#        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
+#                                            copy=False, bounds_error=False,
+#                                            fill_value=1.0)
 
-    if modulation_z is None:
+    if exposure_modulation is None:
         mod_z = lambda x: 1.0
     else:
-        mod_z = scipy.interpolate.interp1d(modulation_z[0], modulation_z[1],
+        mod_z = scipy.interpolate.interp1d(exposure_modulation[0],
+                                           exposure_modulation[1],
                                            copy=False, bounds_error=False,
-                                           fill_value=1.0)
+                                           fill_value=1.0, kind='nearest')
 
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
@@ -131,7 +156,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             ret[6, :] = np.random.choice(energy_specter[0],
                                          batch_size,
                                          p=energy_specter[1])
-            yield ret, i*histories, e*histories
+            yield ret, i, e
             teller = 0
         else:
             teller += 1
@@ -140,14 +165,14 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         ret[6, :] = np.random.choice(energy_specter[0],
                                      batch_size,
                                      p=energy_specter[1])
-        yield ret[:, :teller * histories], i*histories, e*histories
+        yield ret[:, :teller * histories], i, e
 
 
-def ct_seq(scan_fov, sdd, total_collimation, 
+def ct_seq(scan_fov, sdd, total_collimation,
            start=0, stop=0, step=0,  exposures=100, histories=1,
            energy=70000., energy_specter=None,
-           batch_size=None, modulation_z=None, start_at_exposure_no=0):
-    """Generate CT sequential phase space, returns a iterator.
+           batch_size=None, exposure_modulation=None, start_at_exposure_no=0):
+    """Generate CT sequential phase space, returns an iterator.
 
     INPUT:
         scan_fov : float
@@ -175,7 +200,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
         batch_size : int
             number of histories per batch, must be greater than
             histories
-        modulation_z : [(N,), (N,)]
+        exposure_modulation : [(N,), (N,)]
             tube current modulation z axis, list/tuple of
             (ndarray(position), ndarray(scale_factors))
         start_at_exposure_no: int
@@ -184,7 +209,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
         Iterator returning ndarrays of shape (8, batch_size),
         one row is equal to photon (start_x, start_y, star_z, direction_x,
         direction_y, direction_z, energy, weight)
-    """               
+    """
     if start < stop:
         d_col = total_collimation / 2.
     else:
@@ -196,7 +221,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
     s = int(np.ceil(np.abs(start - stop) / float(step)))
     if s == 0:
         s = 1
-    
+
     e = s * exposures
     t = np.zeros(e)
     if start < stop:
@@ -205,7 +230,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
         dstep =-step
     for i in range(s):
         t[i*exposures:(i+1)*exposures] = start + i*dstep
-    
+
 #    # we randomize the positions not make the progress bar jump
 #    t = np.random.permutation(t)
     # angle for each z position , i.e the x, y coordinates
@@ -229,12 +254,13 @@ def ct_seq(scan_fov, sdd, total_collimation,
     energy_specter = (energy_specter[0],
                       energy_specter[1] / energy_specter[1].sum())
 
-    if modulation_z is None:
+    if exposure_modulation is None:
         mod_z = lambda x: 1.0
     else:
-        mod_z = scipy.interpolate.interp1d(modulation_z[0], modulation_z[1],
+        mod_z = scipy.interpolate.interp1d(exposure_modulation[0],
+                                           exposure_modulation[1],
                                            copy=False, bounds_error=False,
-                                           fill_value=1.0)
+                                           fill_value=1.0, kind='nearest')
 
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
@@ -264,7 +290,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
             ret[6, :] = np.random.choice(energy_specter[0],
                                          batch_size,
                                          p=energy_specter[1])
-            yield ret, i*histories, e*histories
+            yield ret, i, e
             teller = 0
         else:
             teller += 1
@@ -273,4 +299,4 @@ def ct_seq(scan_fov, sdd, total_collimation,
         ret[6, :] = np.random.choice(energy_specter[0],
                                      batch_size,
                                      p=energy_specter[1])
-        yield ret[:, :teller * histories], i*histories, e*histories               
+        yield ret[:, :teller * histories], i, e

@@ -9,7 +9,6 @@ import numpy as np
 import tables as tb
 import itertools
 import os
-import sys
 
 import logging
 logger = logging.getLogger('OpenDXMC')
@@ -51,34 +50,36 @@ class Database(object):
         except tb.NoSuchNodeError:
 
             if not create:
-                raise ValueError("Node {} do not exist in {}. Was not allowed to create a new node".format(node, where))
+                raise ValueError("Node {0} do not exist in {1}. Was not allowed to create a new node".format(name, where))
 
             if obj is None:
                 node = self.db_instance.create_group(where, name,
                                                      createparents=True)
-            elif isinstance(obj, np.recarray):
+            elif isinstance(obj, np.recarray) or isinstance(obj, np.dtype):
                 node = self.db_instance.create_table(where, name,
-                                                     description=obj)
+                                                     description=obj,
+                                                     createparents=True)
             elif isinstance(obj, np.ndarray):
-                node = self.db_instance.create_carray(where, name, obj=obj)
+                node = self.db_instance.create_carray(where, name, obj=obj,
+                                                      createparents=True)
             else:
-                raise ValueError("Node {} do not exist in {}. Unable to create new node, did not understand obj type".format(node, where))
+                raise ValueError("Node {0} do not exist in {1}. Unable to create new node, did not understand obj type".format(name, where))
 
         return node
 
     def add_material(self, material, overwrite=True):
-        mat_table = self.get_node('/', 'meta_materials',
+        mat_table = self.get_node('/', 'meta_materials', create=True,
                                   obj=material.numpy_dtype())
 
         # test for existing data
-        matching_names = mat_table.get_where_list('name == "{}"'.format(material.name))
+        matching_names = mat_table.get_where_list('name == b"{}"'.format(material.name))
         if len(matching_names) > 0:
             if not overwrite:
                 raise ValueError('Material {} is already present i database'.format(material.name))
             else:
                 logger.warning('Overwriting material {} already in database'.format(material.name))
-        matching_names.sort(reverse=True)
-        for ind in matching_names:
+        matching_names.sort()
+        for ind in matching_names[::-1]:
             mat_table.remove_row(ind)
         mat_table.flush()
 
@@ -109,31 +110,32 @@ class Database(object):
         mat_table = self.get_node('/', 'meta_materials', create=False)
 
         if material_names_list is None:
-            material_names_list = [row['name'] for row in mat_table]
+            material_names_list = [str(row['name'], encoding='utf-8') for row in mat_table]
 
         for row in mat_table:
-            if row['name'] in material_names_list:
-                if organic_only and row['organic']:
-                    att_node = self.get_node('/attinuations', row['name'])
-                    materials.append(Material(row['name'],
+            name = str(row['name'], encoding='utf-8')
+            if name in material_names_list:
+                if (organic_only and row['organic']) or not organic_only:
+                    att_node = self.get_node('/attinuations', name)
+                    materials.append(Material(name,
                                               density=row['density'],
                                               organic=row['organic'],
                                               attinuations=att_node.read()))
+        import pdb
         return materials
-
 
     def add_simulation(self, simulation, overwrite=True):
         meta_table = self.get_node('/', 'meta_data',
                                    obj=simulation.numpy_dtype())
         #test for existing data
-        matching_names = meta_table.get_where_list('name == "{}"'.format(simulation.name))
+        matching_names = meta_table.get_where_list('name == b"{}"'.format(simulation.name))
         if len(matching_names) > 0:
             if not overwrite:
                 raise ValueError('Simulation {} is already present i database'.format(simulation.name))
             else:
                 logger.warning('Overwriting simulation {} already in database'.format(simulation.name))
-        matching_names.sort(reverse=True)
-        for ind in matching_names:
+        matching_names.sort()
+        for ind in matching_names[::-1]:
             meta_table.remove_row(ind)
         meta_table.flush()
 
@@ -150,8 +152,8 @@ class Database(object):
         meta_table.flush()
 
         #adding arrays
-        for key, value in itertools.chain(simulation.arrays.iteritems() +
-                                          simulation.tables.iteritems):
+        for key, value in itertools.chain(iter(simulation.arrays.items()),
+                                          iter(simulation.tables.items())):
             if value is not None:
                 self.get_node('/simulations/{0}'.format(simulation.name), key,
                               obj=value)
@@ -162,18 +164,35 @@ class Database(object):
         meta_table = self.get_node('/', 'meta_data')
         simulation = Simulation(name)
 
-        for row in meta_table.where('name == "{}"'.format(name)):
+        for row in meta_table.where('name == b"{}"'.format(name)):
             for key in meta_table.colnames:
-                setattr(simulation, key, row[key])
+                try:
+                    setattr(simulation, key, row[key])
+                except AssertionError:
+                    pass
             break
         else:
+            self.close()
             raise ValueError('No study named {}'.format(name))
 
-        pat_node = self.get_node('/simulations', simulation.name, create=False)
+        pat_node = self.get_node('/simulations', name, create=False)
         for data_node in pat_node:
             node_name = data_node._v_name
             setattr(simulation, node_name, data_node.read())
+        self.close()
         return simulation
+
+    def list_simulations(self):
+        if not self.test_node('/', 'meta_data'):
+            logger.warning('There is no simulations in database')
+            self.close()
+            return []
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        names = [str(row['name'], encoding='utf-8') for row in meta_table]
+        self.close()
+        return names
+
+
 
 
 

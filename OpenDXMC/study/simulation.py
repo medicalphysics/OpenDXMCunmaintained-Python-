@@ -116,12 +116,14 @@ class Simulation(object):
                       # per 1000000 histories to dose
                       'conversion_factor_ctdiw': 0,
                       'is_spiral': False,
+                      'al_filtration': 7.,
                       'pitch': 0,
                       'exposures': 1200.,
                       'histories': 1000,
-                      'batch_size': 0,
+                      'batch_size': 1,
                       'start': 0.,
                       'stop': 0.,
+                      'step': 0,
                       'start_at_exposure_no': 0,
                       'finish': False,
                       }
@@ -142,12 +144,14 @@ class Simulation(object):
                 # per 1000000 histories to dose
                 'conversion_factor_ctdiw': np.float,
                 'is_spiral': np.bool,
+                'al_filtration': np.float,
                 'pitch': np.float,
                 'exposures': np.int,
                 'histories': np.int,
                 'batch_size': np.int,
                 'start': np.float,
                 'stop': np.float,
+                'step': np.float,
                 'start_at_exposure_no': np.int,
                 'finish': np.bool
                 }
@@ -173,12 +177,15 @@ class Simulation(object):
             d['formats'].append(value)
         return np.dtype(d)
 
-    def decription(self):
+    @property
+    def description(self):
         return self.__description
 
+    @property
     def arrays(self):
         return self.__arrays
 
+    @property
     def tables(self):
         return self.__tables
 
@@ -188,7 +195,10 @@ class Simulation(object):
 
     @name.setter
     def name(self, value):
-        value = str(value)
+        if isinstance(value, bytes):
+            value = str(value, encoding='utf-8')
+        else:
+            value = str(value)
         name = "".join([l for l in value.split() if len(l) > 0])
         assert len(name) > 0
         self.__description['name'] = name.lower()
@@ -283,10 +293,19 @@ class Simulation(object):
     @property
     def conversion_factor_ctdiair(self):
         return self.__description['conversion_factor_ctdiair']
+    @conversion_factor_ctdiair.setter
+    def conversion_factor_ctdiair(self, value):
+        assert float(value) > 0
+        self.__description['conversion_factor_ctdiair'] = float(value)
 
     @property
     def conversion_factor_ctdiw(self):
         return self.__description['conversion_factor_ctdiw']
+    @conversion_factor_ctdiw.setter
+    def conversion_factor_ctdiw(self, value):
+        assert float(value) > 0
+        self.__description['conversion_factor_ctdiw'] = float(value)
+
 
     @property
     def is_spiral(self):
@@ -300,7 +319,8 @@ class Simulation(object):
         return self.__description['pitch']
     @pitch.setter
     def pitch(self, value):
-        assert value > 0
+        if float(value) > 0:
+            self.is_spiral = True
         self.__description['pitch'] = float(value)
 
     @property
@@ -340,6 +360,13 @@ class Simulation(object):
     @stop.setter
     def stop(self, value):
         self.__description['stop'] = float(value)
+
+    @property
+    def step(self):
+        return self.__description['step']
+    @step.setter
+    def step(self, value):
+        self.__description['step'] = float(value)
 
     @property
     def start_at_exposure_no(self):
@@ -541,22 +568,4 @@ class Simulation(object):
 #        ctdiv += 2. * sum(d) / 3. / 4.
 #        print(ctdiv)
 #        self.conversion_factor_ctdiw = self.ctdi_w100 / ctdiv
-
-
-
-def test_simulation():
-    s = Simulation('eple')
-#    s.spacing = np.ones(3)
-    s.name='Eple'
-#    s.eple = 5
-
-#    print(s.spacing)
-#    print(s.name, s.eple)
-
-
-if __name__ == '__main__':
-
-    test_simulation()
-
-
 
