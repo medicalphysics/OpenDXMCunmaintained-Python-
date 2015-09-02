@@ -117,7 +117,6 @@ cdef void get_stop(double* particle, double [:] N, double [:] spacing, double [:
                 t_max = max(t_max, t_cand)
     for i in range(3):
         s[i] = particle[i] + particle[i+3] * t_max
-#    return s
 
 
 cdef int is_intersecting(double* particle, double [:] N, double [:] spacing, double [:] offset) nogil:
@@ -148,11 +147,8 @@ cdef int array_indices(double* particle, double [:] N, double [:] spacing, doubl
     cdef double *stop = <double *>malloc(3 * sizeof(double))
     get_stop(particle, N, spacing, offset, stop)
 
-#    cdef np.ndarray[np.double_t, ndim=2] a_e = np.empty((3, 2), dtype=np.double)
     cdef double *a_e = <double *>malloc(6 * sizeof(double))
-#    cdef np.ndarray[np.int_t, ndim=2] ind_e = np.empty((3, 2), dtype=np.int)
     cdef int *ind_e = <int *>malloc(6 * sizeof(int))
-#    cdef np.ndarray[np.int_t, ndim=1] ind = np.empty(3, dtype=np.int)
     cdef int *ind = <int *>malloc(3 * sizeof(int))
     cdef int i
 
@@ -207,7 +203,6 @@ cdef int array_indices(double* particle, double [:] N, double [:] spacing, doubl
                 n += (ind_e[i+3] - ind_e[i] + 1)
 
     #finding a intersection values
-#    cdef np.ndarray[np.double_t, ndim=1] a_ind = np.zeros(n+2, dtype=np.double)
     cdef double *a_ind = <double *>malloc((n+2) * sizeof(double))
     cdef double *a_xy = <double *>malloc((n+2) * sizeof(double))
     cdef int j, k
@@ -220,10 +215,6 @@ cdef int array_indices(double* particle, double [:] N, double [:] spacing, doubl
     a_ind[k] = amin
     a_ind[k+1] = amax
 
-
-#    cdef np.ndarray[np.int_t, ndim=2] indices
-
-
     cdef double a_red
     cdef double distance = 0
     #finding euclidian distance between start stop
@@ -232,13 +223,6 @@ cdef int array_indices(double* particle, double [:] N, double [:] spacing, doubl
     distance = sqrt(distance)
     #unique intersections
     j = unique_array(a_ind, a_xy, n+2)
-
-
-#    if (indices is  NULL):
-#    indices[0] = <int *>malloc(3 * j * sizeof(int)) 
-#
-#    if lenght is NULL:
-#    lenght[0] = <double *>malloc(j * sizeof(double))
 
     cdef int l = 0
     for i in range(j):
@@ -283,7 +267,7 @@ def array_indices_py(particle, N, spacing, offset):
     cdef int n_max = <int>N.max()
     cdef double* lenght = <double*>malloc(n_max*n_max *sizeof(double))
     cdef int* ind=<int*>malloc(3*n_max*n_max *sizeof(int))
-    
+
     cdef int n, i, j
     cdef double* particle_p = <double*>malloc(8*sizeof(double))
     for i in range(8):

@@ -21,6 +21,10 @@ cdef Random random
 random = Random()
 
 
+###TODO###
+##rename density_map and material_map too density_array, material_array
+
+
 cdef extern from "math.h":
     double sin(double) nogil
     double cos(double) nogil

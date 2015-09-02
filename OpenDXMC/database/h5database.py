@@ -121,7 +121,7 @@ class Database(object):
                                               density=row['density'],
                                               organic=row['organic'],
                                               attinuations=att_node.read()))
-        import pdb
+        self.close()
         return materials
 
     def add_simulation(self, simulation, overwrite=True):
@@ -193,7 +193,7 @@ class Database(object):
         return names
 
 
-
-
+    def __del__(self):
+        self.close()
 
 
