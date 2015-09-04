@@ -56,7 +56,7 @@ def ct_phase_space(simulation, batch_size=None):
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
-              batch_size=None,
+              batch_size=0,
               exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
 
@@ -84,8 +84,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             [ndarray(energy), ndarray(intensity)] list/tuple of
             two ndarrays of lenght one, with energy and intensity of specter
         batch_size : int
-            number of histories per batch, must be greater than
-            histories
+            number of histories per batch, if less than histories it is set to
+            histories.
         modulation_xy : [(N,), (N,)] (NOT IMPLEMENTED)
             tube current XY modulation, list/tuple of
             (ndarray(position), ndarray(scale_factors))
@@ -271,18 +271,27 @@ def ct_seq(scan_fov, sdd, total_collimation,
     batch_size += (batch_size % histories)
     assert batch_size % histories == 0
 
+
     if energy_specter is None:
         energy_specter = [np.array([energy], dtype=np.double),
                           np.array([1.0], dtype=np.double)]
     energy_specter = (energy_specter[0],
                       energy_specter[1] / energy_specter[1].sum())
 
+#    if modulation_xy is None:
+#        mod_xy = lambda x: 1.0
+#    else:
+#        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
+#                                            copy=False, bounds_error=False,
+#                                            fill_value=1.0)
+
     if exposure_modulation is None:
         mod_z = lambda x: 1.0
     else:
+        exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
         mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
                                            exposure_modulation[:, 1],
-                                           copy=False, bounds_error=False,
+                                           copy=True, bounds_error=False,
                                            fill_value=1.0, kind='nearest')
 
     teller = 0

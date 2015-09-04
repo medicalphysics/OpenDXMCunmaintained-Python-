@@ -12,10 +12,13 @@ from opendxmc.data import get_stored_materials
 from opendxmc.study import import_ct_series
 from opendxmc.runner import ct_phase_space
 from opendxmc.runner import ct_runner
+from opendxmc.runner import obtain_ctdiair_conversion_factor
+from opendxmc.runner import obtain_ctdiw_conversion_factor
 from opendxmc.engine import score_energy
 import logging
 import pdb
 
+from matplotlib import pylab as plt
 
 import numpy as np
 
@@ -86,16 +89,50 @@ def test_simulation(db_instance):
     if len(sims) == 0:
         raise ValueError('No patient in database')
     sim = db_instance.get_simulation(sims[0])
-    materials = db_instance.get_materials(organic_only=True)
-#    del db_instance
+    materials = db_instance.get_materials(organic_only=False)
 
-    sim.histories = 100
+
+    sim.histories = 1
     sim.batch_size = 1000000
     sim.pitch = 0.9
+    sim.ctdi_air100 = 8.75e-3
+    sim.ctdi_w100 = 15. / 2.5 * 1e-3
 
     ct_runner(sim, materials)
-    db.add_simulation(sim)
+
+    for m in materials:
+        if m.name == 'air':
+            air = m
+        elif m.name == 'pmma':
+            pmma = m
+
+
+
+#    air_factor = []
+#    w_factor = []
+#    for i in range(10):
+#        print('Running number', i+1)
+#        obtain_ctdiw_conversion_factor(sim, air, pmma)
+#        obtain_ctdiair_conversion_factor(sim, air)
+#        air_factor.append(sim.conversion_factor_ctdiair)
+#        w_factor.append(sim.conversion_factor_ctdiw)
+#    print(air_factor)
+#    print(w_factor)
+#    pdb.set_trace()
+
+    obtain_ctdiw_conversion_factor(sim, air, pmma)
+#    obtain_ctdiair_conversion_factor(sim, air)
+    print(sim.energy_imparted[128, 128, 10]*sim.conversion_factor_ctdiair)
+    print(sim.energy_imparted[128, 128, 10]*sim.conversion_factor_ctdiw)
+    for i in range(9):
+        plt.subplot(3,3,i+1)
+        k = int(i * (sim.energy_imparted.shape[2] - 1) / 9.)
+        plt.imshow(np.squeeze(sim.energy_imparted[:,:,k]))
+    db_instance.add_simulation(sim)
+    plt.show(block=True)
+
     pdb.set_trace()
+
 
 
 def test_suite():
@@ -103,12 +140,12 @@ def test_suite():
     test_pat = os.path.abspath('C://test//test_abdomen')
 
 #     starting off clean
-#    try:
-#        os.remove(p)
-#    except FileNotFoundError:
-#        pass
-#    db = test_database(p, test_pat)
-#    del db
+    try:
+        os.remove(p)
+    except FileNotFoundError:
+        pass
+    db = test_database(p, test_pat)
+    del db
 
 
     db = Database(p)

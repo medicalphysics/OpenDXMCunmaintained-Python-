@@ -7,7 +7,7 @@ Created on Thu Jul 30 10:38:15 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 
-from gui_widgets.dicom_lut import get_lut
+from dicom_lut import get_lut
 
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level, front_lut, back_lut):
@@ -237,6 +237,7 @@ class Scene(QtGui.QGraphicsScene):
 class View(QtGui.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
         self._scene = Scene()
         self.setScene(self._scene)
         self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.black))
