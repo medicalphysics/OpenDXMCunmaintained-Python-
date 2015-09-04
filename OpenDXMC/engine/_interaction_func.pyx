@@ -21,6 +21,10 @@ cdef Random random
 random = Random()
 
 
+###TODO###
+##rename density_map and material_map too density_array, material_array
+
+
 cdef extern from "math.h":
     double sin(double) nogil
     double cos(double) nogil
@@ -395,7 +399,7 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
     return
 
 
-def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose):
+def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):
     """
     Score dose by the Monte Carlo method. If OpenMP is available during
     compilation, this method will run multithreaded.
@@ -434,11 +438,18 @@ def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:
     OUTPUT:
         None, the dose array is updated, values are in eV
     """
-
     cdef long i
-    for i in prange(particles.shape[1], schedule='static', nogil=True):
-        transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
-    return
+    cdef int n
+    if num_threads is None:
+        for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):
+            transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
+        return
+    else:
+        n = int(num_threads)
+
+        for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
+            transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
+        return
 
 #def profile():
 

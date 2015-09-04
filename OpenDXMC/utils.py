@@ -9,6 +9,7 @@ import os
 import math
 import numpy as np
 
+
 def human_time(sec):
     seconds = [86400., 3600., 60., 1.]
     names = ['days', 'hours', 'minutes', 'seconds']
@@ -33,9 +34,9 @@ def human_time(sec):
     else:
         return 'less than a {0}'.format(names[-1][:-1])
     if len(times) > 1:
-       if times[-1] == 0:
-           return 'about {0} {1}'.format(times[0], labels[0])
-       return 'about {0} {1} and {2} {3}'.format(times[0], labels[0], times[1], labels[1])
+        if times[-1] == 0:
+            return 'about {0} {1}'.format(times[0], labels[0])
+        return 'about {0} {1} and {2} {3}'.format(times[0], labels[0], times[1], labels[1])
     return 'about {0} {1}'.format(times[0], labels[0])
 
 
@@ -50,6 +51,7 @@ def circle_mask(array_shape, radius, center=None):
     index = x**2 + y**2 <= radius**2
     a[cx-radius:cx+radius+1, cy-radius:cy+radius+1][index] = 1
     return a
+
 
 def find_all_files(pathList):
     for path in pathList:

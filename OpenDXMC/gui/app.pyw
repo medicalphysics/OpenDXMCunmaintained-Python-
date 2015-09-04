@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from gui_widgets.viewer import View
+from viewer import View
 import logging
 
 logger = logging.getLogger('OpenDXMC')

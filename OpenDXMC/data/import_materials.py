@@ -24,7 +24,7 @@ def get_stored_materials():
     organic_file = os.path.join(material_data_path, "organics.txt")
 
     for p in find_all_files([os.path.join(material_data_path, 'attinuation')]):
-        name = os.path.splitext(os.path.basename(p))[0]
+        name = str(os.path.splitext(os.path.basename(p))[0])
         # test for valid material name
         if re.match('^[\w-]+$', name) is None:
             logger.warning(

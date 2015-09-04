@@ -121,7 +121,7 @@ class Database(object):
                                               density=row['density'],
                                               organic=row['organic'],
                                               attinuations=att_node.read()))
-        import pdb
+        self.close()
         return materials
 
     def add_simulation(self, simulation, overwrite=True):
@@ -134,22 +134,33 @@ class Database(object):
                 raise ValueError('Simulation {} is already present i database'.format(simulation.name))
             else:
                 logger.warning('Overwriting simulation {} already in database'.format(simulation.name))
-        matching_names.sort()
-        for ind in matching_names[::-1]:
-            meta_table.remove_row(ind)
-        meta_table.flush()
 
         if self.test_node('/simulations', simulation.name):
             self.db_instance.remove_node('/simulations', name=simulation.name,
                                          recursive=True)
 
+        for row in meta_table.where('name == b"{}"'.format(simulation.name)):
+            for key, value in simulation.description.items():
+                row[key] = value
+            row.update()
+            break
+        else:
+            row = meta_table.row
+            for key, value in simulation.description.items():
+                row[key] = value
+            row.append()
+        meta_table.flush()
+
+#
+#        if len(matching_names) >
+#        matching_names.sort()
+#        for ind in matching_names[::-1]:
+#            meta_table.remove_row(ind)
+#            meta_table.flush()
+
 
         # adding descriptiondata
-        meta_row = meta_table.row
-        for key, value in simulation.description.items():
-            meta_row[key] = value
-        meta_row.append()
-        meta_table.flush()
+
 
         #adding arrays
         for key, value in itertools.chain(iter(simulation.arrays.items()),
@@ -193,7 +204,7 @@ class Database(object):
         return names
 
 
-
-
+    def __del__(self):
+        self.close()
 
 

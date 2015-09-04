@@ -6,7 +6,7 @@ Created on Tue Apr 21 12:18:26 2015
 """
 
 
-print 'python setup.py build_ext --inplace'
+print('python setup.py build_ext --inplace')
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -19,9 +19,19 @@ numpy_dirs=numpy.get_include()
 
 #ext_modules = [Extension("_siddon", ["_siddon.pyx"], include_dirs=[numpy_dirs])]
 #ext_modules += [Extension("_interaction", ["_interaction.pyx"], include_dirs=[numpy_dirs])]
-ext_modules = [Extension("engine._siddon_func", ["engine//_siddon_func.pyx"], include_dirs=[numpy_dirs], extra_compile_args=[])]
-ext_modules += [Extension("engine._interaction_func", ["engine//_interaction_func.pyx"], include_dirs=[numpy_dirs], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
-ext_modules += [Extension("engine.cyrandom", ["engine//cyrandom.pyx"], include_dirs=[numpy_dirs], extra_compile_args=[])]
+ext_modules = [Extension("opendxmc.engine._siddon_func",
+                         ["opendxmc//engine//_siddon_func.pyx"],
+                         include_dirs=[numpy_dirs],
+                         extra_compile_args=['-O3'])]
+ext_modules += [Extension("opendxmc.engine._interaction_func",
+                          ["opendxmc//engine//_interaction_func.pyx"],
+                          include_dirs=[numpy_dirs],
+                          extra_compile_args=['-fopenmp', '-O3'],
+                          extra_link_args=['-fopenmp'])]
+ext_modules += [Extension("opendxmc.engine.cyrandom",
+                          ["opendxmc//engine//cyrandom.pyx"],
+                          include_dirs=[numpy_dirs],
+                          extra_compile_args=['-O3'])]
 #ext_modules += [Extension("specter.specter", ["specter//specter.pyx"], include_dirs=[numpy_dirs], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
 #ext_modules = [Extension("engine.test", ["engine//test.pyx"], include_dirs=[numpy_dirs], extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp'])]
 setup(
