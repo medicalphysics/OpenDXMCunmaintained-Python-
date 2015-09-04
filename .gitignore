@@ -5,6 +5,7 @@ __pycache__/
 # C extensions
 *.so
 
+
 # Distribution / packaging
 .Python
 env/
@@ -22,6 +23,7 @@ var/
 .installed.cfg
 *.egg
 
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -30,11 +32,6 @@ var/
 
 #spyder
 spyder*
-
-#voxel phantoms(licensing issues)
-phantoms/golem/segm_golem
-phantoms/golem/Organlist.doc
-phantoms/golem/README.txt
 
 # Installer logs
 pip-log.txt
@@ -107,3 +104,14 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+.spyderproject
+*.xlsm
+*.h5
+*.html
+OpenDXMC/engine/cyrandom.c
+OpenDXMC/engine/_interaction_func.c
+OpenDXMC/engine/_siddon_func.c
+OpenDXMC/phantoms/golem/Organlist.doc
+OpenDXMC/data/phantoms
+OpenDXMC/phantoms/golem/segm_golem
+OpenDXMC/engine/cyrandom.c
