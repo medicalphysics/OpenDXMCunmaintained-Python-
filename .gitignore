@@ -108,10 +108,10 @@ $RECYCLE.BIN/
 *.xlsm
 *.h5
 *.html
-OpenDXMC/engine/cyrandom.c
-OpenDXMC/engine/_interaction_func.c
-OpenDXMC/engine/_siddon_func.c
-OpenDXMC/phantoms/golem/Organlist.doc
-OpenDXMC/data/phantoms
-OpenDXMC/phantoms/golem/segm_golem
-OpenDXMC/engine/cyrandom.c
+opendxmc/engine/cyrandom.c
+opendxmc/engine/_interaction_func.c
+opendxmc/engine/_siddon_func.c
+opendxmc/phantoms/golem/Organlist.doc
+opendxmc/data/phantoms
+opendxmc/phantoms/golem/segm_golem
+opendxmc/engine/cyrandom.c
