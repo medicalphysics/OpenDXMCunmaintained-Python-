@@ -436,7 +436,9 @@ class Simulation(object):
                     raise e
             self.__tables['material_map'] = value_rec
             return
-        assert isinstance(value, np.recarray)
+        assert value.dtype.names is not None
+        assert 'key' in value.dtype.names
+        assert 'value' in value.dtype.names
         self.__tables['material_map'] = value
 
     @property

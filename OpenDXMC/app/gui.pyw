@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from opendxmc.app.viewer import View
+from opendxmc.app.view import View, ViewController
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel
 import logging
 
@@ -77,7 +77,7 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
         # Databse interface
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test2.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('E:/test.h5'))
 
         # Models
         self.simulation_list_model = ListModel(self.interface, self,
@@ -91,7 +91,6 @@ class MainWindow(QtGui.QMainWindow):
         material_list_view.setModel(self.material_list_model)
 
         # Widgets
-        w2 = View()
 
         list_view_collection_widget = QtGui.QWidget()
         list_view_collection_widget.setContentsMargins(0, 0, 0, 0)
@@ -99,13 +98,11 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
         list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
-
         central_splitter.addWidget(list_view_collection_widget)
-        central_splitter.addWidget(w2)
-        self.timer = QtCore.QTimer(self)
 
-        self.timer.timeout.connect(w2.set_random)
-        self.timer.start(1000)
+        view = View()
+        self.viewcontroller = ViewController(self.interface, view)
+        central_splitter.addWidget(view)
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -133,7 +130,6 @@ def main(args):
 
 
 def start():
-    print(sys.argv)
     # exit code 1 triggers a restart
     # Also testing for memory error
     try:

@@ -5,9 +5,40 @@ Created on Thu Jul 30 10:38:15 2015
 @author: erlean
 """
 import numpy as np
+from scipy.ndimage.filters import gaussian_filter
 from PyQt4 import QtGui, QtCore
+from opendxmc.study import Simulation
+from .dicom_lut import get_lut
 
-from dicom_lut import get_lut
+
+import logging
+logger = logging.getLogger('OpenDXMC')
+
+
+class ViewController(QtCore.QObject):
+    viewCtDoseArray = QtCore.pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
+    def __init__(self, database_interface, view, parent=None):
+        super().__init__(parent)
+        database_interface.request_simulation_view.connect(self.applySimulation)
+
+        self.view = view
+        self.dosescene = DoseScene()
+        self.viewCtDoseArray.connect(self.dosescene.setCtDoseArrays)
+        self.view.setScene(self.dosescene)
+
+    @QtCore.pyqtSlot(Simulation)
+    def applySimulation(self, sim):
+        logger.debug('Got signal request to view Simulation {}'.format(sim.name))
+        if sim.energy_imparted is None:
+            logger.debug('View request for Simulation {} denied: No dose array available'.format(sim.name))
+        elif sim.ctarray is None:
+            logger.debug('View request for Simulation {} denied: No CT array available.'.format(sim.name))
+        else:
+            self.viewCtDoseArray.emit(sim.ctarray, sim.energy_imparted, sim.spacing)
+
+    @QtCore.pyqtSlot(np.ndarray)
+    def updateDoseArray(self, array):
+        pass
 
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level, front_lut, back_lut):
@@ -91,14 +122,14 @@ class BlendImageItem(QtGui.QGraphicsItem):
         super().__init__(parent)
 
         self.back_image = np.zeros((512, 512))
-        self.back_level = (.5, .5)
+        self.back_level = (500, 1000)
         self.front_image = np.zeros((512, 512))
-        self.front_level = (.5, .5)
+        self.front_level = (1000000, 10000)
 
         self.back_alpha = 255
-        self.front_alpha = 128
+        self.front_alpha = 127
         self.back_lut = get_lut('gray', self.back_alpha)
-        self.front_lut = get_lut('hot_metal_blue', self.front_alpha)
+        self.front_lut = get_lut('pet', self.front_alpha)
 
         self.qimage = None
 
@@ -228,6 +259,72 @@ class ImageItem(QtGui.QGraphicsItem):
         painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
 #        super(ImageItem, self).paint(painter, style, widget)
 
+
+class DoseScene(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.image_item = BlendImageItem()
+        self.addItem(self.image_item)
+
+        self.dose_array = None
+        self.ct_array = None
+        self.view_slice = 1  # value 0, 1, 2
+        self.shape = (0, 0, 0)
+        self.index = 0
+        self.spacing = (1., 1., 1.)
+
+    @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
+    def setCtDoseArrays(self, ct, dose, spacing):
+        self.dose_array = gaussian_filter(dose, .5)
+        #setting transform
+        sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.image_item.setLevels(front=(self.dose_array.max()/2.,self.dose_array.max()/2.))
+        self.ct_array = ct
+        self.shape = ct.shape
+        self.spacing = spacing
+        self.index = 0
+        self.reloadImages()
+        rect = transform.mapRect(self.image_item.boundingRect())
+
+        self.setSceneRect(rect)
+        for view in self.views():
+            view.fitInView(rect)
+        logger.debug('Dosescene is setting image data')
+
+    @QtCore.pyqtSlot(np.ndarray)
+    def setDoseArray(self, dose):
+        self.dose_array = dose
+        self.reloadImages()
+
+    def getSlice(self, array, index):
+        if self.view_slice == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_slice]]))
+        elif self.view_slice == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_slice], :]))
+        elif self.view_slice == 0:
+            return np.copy(np.squeeze(array[index % self.shape[self.view_slice], :, :]))
+        raise ValueError('view must select one of 0,1,2 dimensions')
+
+
+    def reloadImages(self):
+        self.image_item.setImage(self.getSlice(self.dose_array, self.index),
+                                 self.getSlice(self.ct_array, self.index))
+
+    def wheelEvent(self, ev):
+        if ev.delta() > 0:
+            self.index += 1
+        elif ev.delta() < 0:
+            self.index -= 1
+        self.reloadImages()
+        ev.accept()
+
+#    def mouseMoveEvent(self, ev):
+#        if ev.button() == QtCore.Qt.LeftButton:
+#        elif ev.button() == QtCore.Qt.RightButton:
+
 class Scene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -238,23 +335,7 @@ class View(QtGui.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
-        self._scene = Scene()
-        self.setScene(self._scene)
         self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.black))
-
-    @QtCore.pyqtSlot()
-    def set_random(self):
-        a1 = np.zeros((256, 256))
-#        a1[128:138, :] = 1
-        a2 = np.zeros((256, 256))
-        for i in range(256):
-            if i % 3:
-                a1[i, :] = i / 256.
-            a2[:, i] = i / 256.
-        self.scene().image_item.setImage(a2, a1)
-        self.scene().setSceneRect(self.scene().image_item.boundingRect())
-        self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
-#        self.setImage(array)
 
     def resizeEvent(self, ev):
         super().resizeEvent(ev)

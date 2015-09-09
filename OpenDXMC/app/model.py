@@ -7,7 +7,8 @@ Created on Tue Sep  8 10:10:58 2015
 
 from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
-from opendxmc.study import import_ct_series
+from opendxmc.study import import_ct_series, Simulation
+from opendxmc.materials import Material
 import numpy as np
 import logging
 logger = logging.getLogger('OpenDXMC')
@@ -20,13 +21,14 @@ class DatabaseInterface(QtCore.QObject):
     recive_simulation_list = QtCore.pyqtSignal(list)
     recive_material_list = QtCore.pyqtSignal(list)
 
+    request_simulation_view = QtCore.pyqtSignal(Simulation)
+    request_material_view = QtCore.pyqtSignal(Material)
 
     def __init__(self, database_qurl, parent=None):
         super().__init__(parent)
         self.__db = None
 
         self.set_database(database_qurl)
-
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
@@ -77,11 +79,31 @@ class DatabaseInterface(QtCore.QObject):
             self.__db.add_simulation(sim)
             self.get_simulation_list()
 
+    @QtCore.pyqtSlot(str)
+    def select_simulation(self, name):
+        try:
+            sim = self.__db.get_simulation(name)
+        except ValueError:
+            pass
+        else:
+            logger.debug('Emmitting signal for request to view Simulation {}'.format(sim.name))
+            self.request_simulation_view.emit(sim)
+
+    @QtCore.pyqtSlot(str)
+    def select_material(self, name):
+        try:
+            mat = self.__db.get_material(name)
+        except ValueError:
+            pass
+        else:
+            self.request_material_view.emit(mat)
+
 
 class ListModel(QtCore.QAbstractListModel):
 
     request_data_list = QtCore.pyqtSignal()
     request_import_dicom = QtCore.pyqtSignal(list)
+    request_viewing = QtCore.pyqtSignal(str)
 
     def __init__(self, interface, parent=None, simulations=False,
                  materials=False):
@@ -91,8 +113,10 @@ class ListModel(QtCore.QAbstractListModel):
         # connecting interface
         # outbound signals
         if simulations:
+            self.request_viewing.connect(interface.select_simulation)
             self.request_data_list.connect(interface.get_simulation_list)
         elif materials:
+            self.request_viewing.connect(interface.select_material)
             self.request_data_list.connect(interface.get_material_list)
         self.request_import_dicom.connect(interface.import_dicom)
 
@@ -111,6 +135,11 @@ class ListModel(QtCore.QAbstractListModel):
         #muste update persistent index
         self.__data = sims
         self.layoutChanged.emit()
+
+    @QtCore.pyqtSlot(str)
+    def element_activated(self, name):
+        self.request_viewing.emit(name)
+
 
     def rowCount(self, index):
         if not index.isValid():
@@ -156,6 +185,8 @@ class ListModel(QtCore.QAbstractListModel):
 
 
 class ListView(QtGui.QListView):
+    name_activated = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptDrops(True)
@@ -163,6 +194,21 @@ class ListView(QtGui.QListView):
         self.setDropIndicatorShown(True)
         self.setDragDropMode(self.DropOnly)
 
+        self.activated.connect(self.activation_name)
+
+    def setModel(self, model):
+        try:
+            self.name_activated.disconnect()
+        except TypeError:
+            pass
+        super().setModel(model)
+        self.name_activated.connect(model.element_activated)
+
+
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
+    def activation_name(self, index):
+        if index.isValid():
+            self.name_activated.emit(index.data())
 #class Model(QtCore.QAbstractItemModel):
 #    request_simulation_list = QtCore.pyqtSignal()
 #    request_import_dicom = QtCore.pyqtSignal(list)

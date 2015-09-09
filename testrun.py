@@ -32,29 +32,9 @@ def test_database_init(db_path):
     return db
 
 
-def test_database_default_materials(db):
-    materials = []
-
-    for mat in get_stored_materials():
-        materials.append(mat)
-        db.add_material(mat)
-
-    r_materials = [r_mat for r_mat in db.get_materials()]
-
-    for mat in materials:
-        assert mat.name in [r_mat.name for r_mat in r_materials]
-
-    for r_mat in r_materials:
-        for prop in ['density', 'organic', 'attinuation']:
-            try:
-                assert getattr(r_mat, prop) is not None
-            except AssertionError as e:
-                raise e
-
-
 def test_database_ct_import(db, im_path):
     sims = []
-    for sim in import_ct_series(im_path):
+    for sim in import_ct_series([im_path]):
         db.add_simulation(sim)
         sims.append(sim)
 
@@ -66,9 +46,6 @@ def test_database_ct_import(db, im_path):
 def test_database(db_path, test_pat_path):
     # testing generation of database
     db = test_database_init(db_path)
-
-#    test databse import of default materials
-    test_database_default_materials(db)
 
 #     test database import test ct images
     test_database_ct_import(db, test_pat_path)
@@ -85,14 +62,14 @@ def test_phase_space(db):
 
 
 def test_simulation(db_instance):
-    sims = db_instance.simulations_list()
+    sims = db_instance.simulation_list()
     if len(sims) == 0:
         raise ValueError('No patient in database')
     sim = db_instance.get_simulation(sims[0])
     materials = db_instance.get_materials(organic_only=False)
 
 
-    sim.histories = 1
+    sim.histories = 100
     sim.batch_size = 1000000
     sim.pitch = 0.9
     sim.ctdi_air100 = 8.75e-3
@@ -136,8 +113,8 @@ def test_simulation(db_instance):
 
 
 def test_suite():
-    p = os.path.abspath('C://test//test.h5')
-    test_pat = os.path.abspath('C://test//test_abdomen')
+    p = os.path.abspath('E://test.h5')
+    test_pat = os.path.abspath('E://test_abdomen//')
 
 #     starting off clean
     try:

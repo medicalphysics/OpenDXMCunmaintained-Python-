@@ -27,13 +27,10 @@ class Database(object):
     def init_new_database(self):
         # setting up materials if not exist
         try:
-            mat_table = self.get_node('/', 'meta_materials', create=False, obj=None)
+            self.get_node('/', 'meta_materials', create=False, obj=None)
         except ValueError:
             for m in get_stored_materials():
                 self.add_material(m)
-
-
-
 
     def open(self):
         if self.db_instance is not None:
@@ -112,6 +109,30 @@ class Database(object):
         logger.info('Successfully wrote material {} to database'.format(material.name))
         self.close()
 
+    def get_material(self, name):
+        logger.debug('Attempting to read material {} from database'.format(name))
+        if not self.test_node('/', 'meta_materials'):
+            logger.warning('There is no materials in database')
+            raise ValueError('No material {} in database'.format(name))
+
+        mat_table = self.get_node('/', 'meta_materials', create=False)
+
+        for row in mat_table.where('name == b"{}"'.format(name)):
+            name = str(row['name'], encoding='utf-8')
+            att_node = self.get_node('/attinuations', name)
+            material = Material(name,
+                                density=row['density'],
+                                organic=row['organic'],
+                                attinuations=att_node.read())
+            break
+        else:
+            logger.warning('There is no material by name {} in database'.format(name))
+            self.close()
+            raise ValueError('No material {} in database'.format(name))
+
+        self.close()
+        logger.debug('Successfully read material {} from database'.format(name))
+        return material
 
     def get_materials(self, material_names_list=None, organic_only=False):
         if not self.test_node('/', 'meta_materials'):
@@ -184,6 +205,12 @@ class Database(object):
         self.close()
 
     def get_simulation(self, name, ignore_arrays=False):
+        logger.debug('Attempting to read simulation {} from database.'.format(name))
+        if not self.test_node('/', 'meta_data'):
+            logger.warning('There is no simulations in database')
+            self.close()
+            raise ValueError('No simulation by name {} in database'.format(name))
+
         meta_table = self.get_node('/', 'meta_data')
         simulation = Simulation(name)
 
@@ -196,12 +223,16 @@ class Database(object):
             break
         else:
             self.close()
+            logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(name))
             raise ValueError('No study named {}'.format(name))
-        if ignore_arrays:
+
+        if not ignore_arrays:
             pat_node = self.get_node('/simulations', name, create=False)
             for data_node in pat_node:
                 node_name = data_node._v_name
+                logger.debug('Reading data node {}'.format(node_name))
                 setattr(simulation, node_name, data_node.read())
+        logger.debug('Successfully read simulation {} from database.'.format(name))
         self.close()
         return simulation
 
