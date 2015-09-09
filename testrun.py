@@ -76,7 +76,7 @@ def test_database(db_path, test_pat_path):
 
 
 def test_phase_space(db):
-    names = db.list_simulations()
+    names = db.simulations_list()
     assert len(names) > 0
     for name in names:
         sim = db.get_simulation(name)
@@ -85,7 +85,7 @@ def test_phase_space(db):
 
 
 def test_simulation(db_instance):
-    sims = db_instance.list_simulations()
+    sims = db_instance.simulations_list()
     if len(sims) == 0:
         raise ValueError('No patient in database')
     sim = db_instance.get_simulation(sims[0])

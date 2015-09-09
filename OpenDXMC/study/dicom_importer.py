@@ -41,9 +41,9 @@ def aec_from_dicom_list(dc_list):
     return exp
 
 
-def import_ct_series(directory_path, scaling=(.5, .5, 1)):
+def import_ct_series(paths, scaling=(.5, .5, 1)):
     series = {}
-    for p in find_all_files([os.path.abspath(directory_path)]):
+    for p in find_all_files(paths):
         try:
             dc = dicom.read_file(p)
         except dicom.filereader.InvalidDicomError:

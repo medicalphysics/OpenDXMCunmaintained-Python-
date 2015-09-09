@@ -10,18 +10,30 @@ import tables as tb
 import itertools
 import os
 
-import logging
-logger = logging.getLogger('OpenDXMC')
-
-
 from opendxmc.study.simulation import Simulation
 from opendxmc.materials import Material
+from opendxmc.data import get_stored_materials
+
+import logging
+logger = logging.getLogger('OpenDXMC')
 
 
 class Database(object):
     def __init__(self, database_path=None):
         self.db_path = os.path.abspath(database_path)
         self.db_instance = None
+        self.init_new_database()
+
+    def init_new_database(self):
+        # setting up materials if not exist
+        try:
+            mat_table = self.get_node('/', 'meta_materials', create=False, obj=None)
+        except ValueError:
+            for m in get_stored_materials():
+                self.add_material(m)
+
+
+
 
     def open(self):
         if self.db_instance is not None:
@@ -124,6 +136,17 @@ class Database(object):
         self.close()
         return materials
 
+    def material_list(self):
+        if not self.test_node('/', 'meta_materials'):
+            logger.warning('There is no materials in database')
+            self.close()
+            return []
+        meta_table = self.get_node('/', 'meta_materials', create=False)
+        names = [str(row['name'], encoding='utf-8') for row in meta_table]
+        self.close()
+        return names
+
+
     def add_simulation(self, simulation, overwrite=True):
         meta_table = self.get_node('/', 'meta_data',
                                    obj=simulation.numpy_dtype())
@@ -151,17 +174,6 @@ class Database(object):
             row.append()
         meta_table.flush()
 
-#
-#        if len(matching_names) >
-#        matching_names.sort()
-#        for ind in matching_names[::-1]:
-#            meta_table.remove_row(ind)
-#            meta_table.flush()
-
-
-        # adding descriptiondata
-
-
         #adding arrays
         for key, value in itertools.chain(iter(simulation.arrays.items()),
                                           iter(simulation.tables.items())):
@@ -171,7 +183,7 @@ class Database(object):
         logger.info('Successfully wrote simulation {} to database'.format(simulation.name))
         self.close()
 
-    def get_simulation(self, name):
+    def get_simulation(self, name, ignore_arrays=False):
         meta_table = self.get_node('/', 'meta_data')
         simulation = Simulation(name)
 
@@ -185,15 +197,15 @@ class Database(object):
         else:
             self.close()
             raise ValueError('No study named {}'.format(name))
-
-        pat_node = self.get_node('/simulations', name, create=False)
-        for data_node in pat_node:
-            node_name = data_node._v_name
-            setattr(simulation, node_name, data_node.read())
+        if ignore_arrays:
+            pat_node = self.get_node('/simulations', name, create=False)
+            for data_node in pat_node:
+                node_name = data_node._v_name
+                setattr(simulation, node_name, data_node.read())
         self.close()
         return simulation
 
-    def list_simulations(self):
+    def simulation_list(self):
         if not self.test_node('/', 'meta_data'):
             logger.warning('There is no simulations in database')
             self.close()
