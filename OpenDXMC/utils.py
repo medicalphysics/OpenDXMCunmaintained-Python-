@@ -54,7 +54,8 @@ def circle_mask(array_shape, radius, center=None):
 
 
 def find_all_files(pathList):
-    for path in pathList:
+    for p in pathList:
+        path = os.path.abspath(p)
         if os.path.isdir(path):
             for dirname, dirnames, filenames in os.walk(path):
                 for filename in filenames:
