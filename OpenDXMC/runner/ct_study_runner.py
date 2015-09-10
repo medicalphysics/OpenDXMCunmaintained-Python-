@@ -255,9 +255,13 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True):
         score_energy(p, N, simulation.spacing, offset, simulation.material,
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
+        simulation.start_at_exposure_no = e + 1
 
     generate_dose_conversion_factor(simulation, materials)
     simulation.energy_imparted = energy_imparted
+    simulation.MC_finished = True
+    simulation.MC_ready = False
+    simulation.start_at_exposure_no = 0
 
 
 def generate_dose_conversion_factor(simulation, materials):

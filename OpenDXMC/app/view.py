@@ -276,7 +276,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing):
-        self.dose_array = gaussian_filter(dose, .5)
+        self.dose_array = gaussian_filter(dose, 1.)
         #setting transform
         sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)

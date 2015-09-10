@@ -147,6 +147,8 @@ class ListModel(QtCore.QAbstractListModel):
         return 0
 
     def data(self, index, role):
+        if not index.isValid():
+            return None
         row = index.row()
         if role == QtCore.Qt.DisplayRole:
             return self.__data[row]
@@ -209,6 +211,65 @@ class ListView(QtGui.QListView):
     def activation_name(self, index):
         if index.isValid():
             self.name_activated.emit(index.data())
+
+
+
+class DataLabel(QtGui.QLabel):
+    def __init__(self, parent=None, data=None):
+        super().__init__(parent)
+        self.setAlignment(QtCore.Qt.AlignRight)
+        if data is not None:
+            self.set_data(data)
+
+    @QtCore.pyqtSlot(object)
+    def set_data(self, data):
+#        if hasattr(data, '__iter__'):
+#            self.setText(', '.join([str(d) for d in data]))
+#            return
+        self.setText(str(data))
+
+
+
+
+class SimulationEditor(QtGui.QWidget):
+    def __init__(self, interface, parent=None):
+        super().__init__(parent)
+        self.__simulation = Simulation('None')
+        interface.request_simulation_view.connect(self.update_data)
+        self.setLayout(QtGui.QGridLayout())
+        self.description_widgets = {}
+        self.setup_widgets()
+
+    def setup_widgets(self):
+        names = []
+        vals = []
+        dtype = []
+        editable = []
+        volatile = []
+
+        layout = self.layout()
+
+        for ind, key in enumerate(self.__simulation.description.keys()):
+            self.description_widgets[key] = DataLabel(data=self.__simulation.description[key])
+            layout.addWidget(DataLabel(data=key), ind, 0, 1, 1)
+            layout.addWidget(self.description_widgets[key], ind, 1, 1, 1)
+#            names.append(key)
+#            vals.append(self.__simulation.description[key])
+#            dtype.append(self.__simulation.dtype_dict[key])
+#            editable.append(self.__simulation.editable[key])
+#            volatile.append(self.__simulation.volatile[key])
+
+
+    @QtCore.pyqtSlot(Simulation)
+    def update_data(self, sim):
+        self.__simulation = sim
+        for key, value in self.__simulation.description.items():
+            self.description_widgets[key].set_data(value)
+
+
+
+
+
 #class Model(QtCore.QAbstractItemModel):
 #    request_simulation_list = QtCore.pyqtSignal()
 #    request_import_dicom = QtCore.pyqtSignal(list)

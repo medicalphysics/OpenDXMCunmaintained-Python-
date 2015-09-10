@@ -11,85 +11,133 @@ import logging
 logger = logging.getLogger('OpenDXMC')
 
 
-class Simulation(object):
+SIMULATION_DESCRIPTION = {
+    #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION
+    'name': ['', 'a64', False, True, 'Simulation ID'],
+    'scan_fov': [50., np.double, True, True, 'Scan field of view [cm]'],
+    'sdd': [100., np.double, True, True, 'Source detector distance [cm]'],
+    'detector_width': [0.06, np.double, True, True, 'Detector width [cm]'],
+    'detector_rows': [64, np.int, True, True, 'Detector rows'],
+    'collimation_width': [0.06 * 64, np.double, True, True, 'Total collimation width [cm]'],
+    'al_filtration': [7., np.double, True, True, 'Filtration of primary beam [mmAl]'],
+    'xcare': [False, np.bool, True, True, 'XCare'],
+    'ctdi_air100': [0., np.double, False, True, 'CTDIair [mGy/100mAs]'],
+    'ctdi_vol100': [0., np.double, False, True, 'CTDIvol [mGy/100mAs]'],
+    'ctdi_w100': [0., np.double, False, True, 'CTDIw [mGy/100mAs/pitch]'],
+    'kV': [120., np.double, True, True, 'Tube potential [kV]'],
+    'region': ['abdomen', 'a64', False, False, 'Examination region'],
+    # per 1000000 histories
+    'conversion_factor_ctdiair': [0., np.double, False, False, 'CTDIair to dose conversionfactor'],
+    # per 1000000 histories to dose
+    'conversion_factor_ctdiw': [0., np.double, False, False, 'CTDIw to dose conversionfactor'],
+    'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
+    'pitch': [.9, np.double, True, True, 'Pitch'],
+    'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
+    'histories': [1000, np.int, True, True, 'Numper of photon histories per exposure'],
+    'batch_size': [0, np.int, True, True, 'Number og exposures in each calculation batch'],
+    'start': [0, np.double, True, True, 'Start position [cm]'],
+    'stop': [0, np.double, True, True, 'Stop position [cm]'],
+    'step': [0, np.int, True, True, 'Sequential aqusition step size [cm]'],
+    'start_at_exposure_no': [0, np.int, True, True, 'Start simulating exposure number'],
+    'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
+    'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
+    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
+    'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
+    'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
+    }
 
-    __description = { 'name': '',
-                      'scan_fov': 50.,
-                      'sdd': 100.,
-                      'detector_width': 0.06,
-                      'detector_rows': 64,
-                      'collimation_width': 0.06 * 64,
-                      'al_filtration': 7.,
-                      'xcare': False,
-                      'ctdi_air100': 0.,
-                      'ctdi_vol100': 0.,
-                      'ctdi_w100': 0.,
-                      'kV': 120.,
-                      'region': 'abdomen',
-                      # per 1000000 histories
-                      'conversion_factor_ctdiair': 0,
-                      # per 1000000 histories to dose
-                      'conversion_factor_ctdiw': 0,
-                      'is_spiral': True,
-                      'al_filtration': 7.,
-                      'pitch': .9,
-                      'exposures': 1200.,
-                      'histories': 1000,
-                      'batch_size': 0,
-                      'start': 0.,
-                      'stop': 0.,
-                      'step': 0,
-                      'start_at_exposure_no': 0,
-                      'MC_finished': False,
-                      'MC_ready': False,
-                      'scaling': np.ones(3, dtype=np.double),
-                      'ignore_air': False
-                      }
-    __dtype = { 'name': 'a64',
-                'scan_fov': np.float,
-                'sdd': np.float,
-                'detector_width': np.float,
-                'detector_rows': np.int,
-                'collimation_width': np.float,
-                'al_filtration': np.float,
-                'xcare': np.bool,
-                'ctdi_air100': np.float,
-                'ctdi_vol100': np.float,
-                'ctdi_w100': np.float,
-                'kV': np.float,
-                'region': 'a64',
-                # per 1000000 histories to dose
-                'conversion_factor_ctdiair': np.float,
-                # per 1000000 histories to dose
-                'conversion_factor_ctdiw': np.float,
-                'is_spiral': np.bool,
-                'al_filtration': np.float,
-                'pitch': np.float,
-                'exposures': np.int,
-                'histories': np.int,
-                'batch_size': np.int,
-                'start': np.float,
-                'stop': np.float,
-                'step': np.float,
-                'start_at_exposure_no': np.int,
-                'MC_finished': np.bool,
-                'MC_ready': np.bool,
-                'scaling': np.dtype((np.double, 3)),
-                'ignore_air': np.bool
+# Generating a recarray for SIMULATION_DESCRIPTION to insert in database
+DESCRIPTION_RECARRAY = np.array([(k, v[2], v[3], v[4])
+                                 for k, v in SIMULATION_DESCRIPTION.items()],
+                                dtype=[('name', 'a64'), ('volatale', np.bool),
+                                       ('editable', np.bool),
+                                       ('description', 'a128')]).view(np.recarray)
+
+
+class Simulation(object):
+#    __description = {'name': '',
+#                     'scan_fov': 50.,
+#                     'sdd': 100.,
+#                     'detector_width': 0.06,
+#                     'detector_rows': 64,
+#                     'collimation_width': 0.06 * 64,
+#                     'xcare': False,
+#                     'ctdi_air100': 0.,
+#                     'ctdi_vol100': 0.,
+#                     'ctdi_w100': 0.,
+#                     'kV': 120.,
+#                     'region': 'abdomen',
+#                     # per 1000000 histories
+#                     'conversion_factor_ctdiair': 0,
+#                     # per 1000000 histories to dose
+#                     'conversion_factor_ctdiw': 0,
+#                     'is_spiral': True,
+#                     'al_filtration': 7.,
+#                     'pitch': .9,
+#                     'exposures': 1200.,
+#                     'histories': 1000,
+#                     'batch_size': 0,
+#                     'start': 0.,
+#                     'stop': 0.,
+#                     'step': 0,
+#                     'start_at_exposure_no': 0,
+#                     'MC_finished': False,
+#                     'MC_ready': False,
+#                     'scaling': np.ones(3, dtype=np.double),
+#                     'ignore_air': False
+#                     }
+#    __dtype = {'name': 'a64',
+#               'scan_fov': np.float,
+#               'sdd': np.float,
+#               'detector_width': np.float,
+#               'detector_rows': np.int,
+#               'collimation_width': np.float,
+#               'xcare': np.bool,
+#               'ctdi_air100': np.float,
+#               'ctdi_vol100': np.float,
+#               'ctdi_w100': np.float,
+#               'kV': np.float,
+#               'region': 'a64',
+#               # per 1000000 histories to dose
+#               'conversion_factor_ctdiair': np.float,
+#               # per 1000000 histories to dose
+#               'conversion_factor_ctdiw': np.float,
+#               'is_spiral': np.bool,
+#               'al_filtration': np.float,
+#               'pitch': np.float,
+#               'exposures': np.int,
+#               'histories': np.int,
+#               'batch_size': np.int,
+#               'start': np.float,
+#               'stop': np.float,
+#               'step': np.float,
+#               'start_at_exposure_no': np.int,
+#               'MC_finished': np.bool,
+#               'MC_ready': np.bool,
+#               'scaling': np.dtype((np.double, 3)),
+#               'ignore_air': np.bool
+#               }
+    __description = {}
+    __dtype = {}
+    __arrays = {'organ': None,
+                'ctarray': None,
+                'exposure_modulation': None,
+                'organ_map': None
                 }
-    __arrays = { 'material': None,
-                 'density': None,
-                 'organ': None,
-                 'spacing':None,
-                 'ctarray': None,
-                 'exposure_modulation': None,
-                 'energy_imparted': None
-                 }
-    __tables = { 'material_map': None,
-                 'organ_map': None
-                 }
+    __volatiles = {'material': None,
+                   'density': None,
+                   'energy_imparted': None,
+                   'material_map': None,
+                   }
 
     def __init__(self, name, description=None):
+        for key, value in SIMULATION_DESCRIPTION.items():
+            self.__description[key] = value[0]
+            self.__dtype[key] = value[1]
+
+        if description:
+            for key, value in description.items():
+                self.__description[key] = value
         self.name = name
 
     def numpy_dtype(self):
@@ -225,6 +273,10 @@ class Simulation(object):
         return self.__description['region']
     @region.setter
     def region(self, value):
+        if isinstance(value, bytes):
+            value = str(value, encoding='utf-8')
+        else:
+            value = str(value)
         self.__description['region'] = value
 
     @property
@@ -232,7 +284,7 @@ class Simulation(object):
         return self.__description['conversion_factor_ctdiair']
     @conversion_factor_ctdiair.setter
     def conversion_factor_ctdiair(self, value):
-        assert float(value) > 0
+        assert float(value) >= 0
         self.__description['conversion_factor_ctdiair'] = float(value)
 
     @property
@@ -240,7 +292,7 @@ class Simulation(object):
         return self.__description['conversion_factor_ctdiw']
     @conversion_factor_ctdiw.setter
     def conversion_factor_ctdiw(self, value):
-        assert float(value) > 0
+        assert float(value) >= 0
         self.__description['conversion_factor_ctdiw'] = float(value)
 
 
@@ -349,6 +401,19 @@ class Simulation(object):
             self.__description['scaling'] = value.astype(np.double)
 
     @property
+    def spacing(self):
+        return self.__description['spacing']
+    @spacing.setter
+    def spacing(self, value):
+        if isinstance(value, np.ndarray):
+            self.__description['spacing'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert len(value) == 3
+            self.__description['spacing'] = value.astype(np.double)
+
+    @property
     def ignore_air(self):
         return self.__description['ignore_air']
     @ignore_air.setter
@@ -357,20 +422,20 @@ class Simulation(object):
 
     @property
     def material(self):
-        return self.__arrays['material']
+        return self.__volatiles['material']
     @material.setter
     def material(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['material'] = value
+        self.__volatiles['material'] = value
     @property
     def density(self):
-        return self.__arrays['density']
+        return self.__volatiles['density']
     @density.setter
     def density(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['density'] = value.astype(np.double)
+        self.__volatiles['density'] = value.astype(np.double)
     @property
     def organ(self):
         return self.__arrays['organ']
@@ -380,14 +445,6 @@ class Simulation(object):
         assert len(value.shape) == 3
         self.__arrays['organ'] = value.astype(np.int)
 
-    @property
-    def spacing(self):
-        return self.__arrays['spacing']
-    @spacing.setter
-    def spacing(self, value):
-        assert isinstance(value, np.ndarray)
-        assert len(value.shape) == 1
-        self.__arrays['spacing'] = value.astype(np.double)
     @property
     def ctarray(self):
         return self.__arrays['ctarray']
@@ -408,19 +465,19 @@ class Simulation(object):
 
     @property
     def energy_imparted(self):
-        return self.__arrays['energy_imparted']
+        return self.__volatiles['energy_imparted']
     @energy_imparted.setter
     def energy_imparted(self, value):
         if value is None:
-            self.__arrays['energy_imparted'] = None
+            self.__volatiles['energy_imparted'] = None
             return
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['energy_imparted'] = value.astype(np.double)
+        self.__volatiles['energy_imparted'] = value.astype(np.double)
 
     @property
     def material_map(self):
-        return self.__tables['material_map']
+        return self.__volatiles['material_map']
     @material_map.setter
     def material_map(self, value):
         if isinstance(value, dict):
@@ -434,16 +491,16 @@ class Simulation(object):
                     logger.error('Did not understand setting of requested '
                                  'material map')
                     raise e
-            self.__tables['material_map'] = value_rec
+            self.__volatiles['material_map'] = value_rec
             return
         assert value.dtype.names is not None
         assert 'key' in value.dtype.names
         assert 'value' in value.dtype.names
-        self.__tables['material_map'] = value
+        self.__volatiles['material_map'] = value
 
     @property
     def organ_map(self):
-        return self.__tables['organ_map']
+        return self.__arrays['organ_map']
     @organ_map.setter
     def organ_map(self, value):
         if isinstance(value, dict):
@@ -457,10 +514,10 @@ class Simulation(object):
                     logger.error('Did not understand setting of requested '
                                  'organ map')
                     raise e
-            self.__tables['organ_map'] = value_rec
+            self.__arrays['organ_map'] = value_rec
             return
         assert isinstance(value, np.recarray)
-        self.__tables['organ_map'] = value
+        self.__arrays['organ_map'] = value
 
     @property
     def dose(self):

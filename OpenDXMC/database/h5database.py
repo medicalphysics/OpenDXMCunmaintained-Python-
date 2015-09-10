@@ -10,7 +10,7 @@ import tables as tb
 import itertools
 import os
 
-from opendxmc.study.simulation import Simulation
+from opendxmc.study.simulation import Simulation, DESCRIPTION_RECARRAY
 from opendxmc.materials import Material
 from opendxmc.data import get_stored_materials
 
@@ -26,11 +26,19 @@ class Database(object):
 
     def init_new_database(self):
         # setting up materials if not exist
+
         try:
             self.get_node('/', 'meta_materials', create=False, obj=None)
         except ValueError:
+            logger.debug('Materials not found, attempting to import local materals')
             for m in get_stored_materials():
                 self.add_material(m)
+        if not self.test_node('/', 'meta_description'):
+            logger.debug('Generating description data for simulation.')
+            self.get_node('/', 'meta_description', create=True,
+                          obj=DESCRIPTION_RECARRAY)
+
+        logger.debug('Using database: {}'.format(self.db_path))
 
     def open(self):
         if self.db_instance is not None:
@@ -172,6 +180,7 @@ class Database(object):
         meta_table = self.get_node('/', 'meta_data',
                                    obj=simulation.numpy_dtype())
         #test for existing data
+        print(simulation.name)
         matching_names = meta_table.get_where_list('name == b"{}"'.format(simulation.name))
         if len(matching_names) > 0:
             if not overwrite:
@@ -196,15 +205,18 @@ class Database(object):
         meta_table.flush()
 
         #adding arrays
-        for key, value in itertools.chain(iter(simulation.arrays.items()),
-                                          iter(simulation.tables.items())):
+        for key, value in iter(simulation.arrays.items()):
             if value is not None:
                 self.get_node('/simulations/{0}'.format(simulation.name), key,
                               obj=value)
+        for key, value in iter(simulation.volatiles.items()):
+            if value is not None:
+                self.get_node('/simulations/{0}/volatiles'.format(simulation.name),
+                              key, obj=value)
         logger.info('Successfully wrote simulation {} to database'.format(simulation.name))
         self.close()
 
-    def get_simulation(self, name, ignore_arrays=False):
+    def get_simulation(self, name, ignore_arrays=False, unsafe_read=True):
         logger.debug('Attempting to read simulation {} from database.'.format(name))
         if not self.test_node('/', 'meta_data'):
             logger.warning('There is no simulations in database')
@@ -212,15 +224,26 @@ class Database(object):
             raise ValueError('No simulation by name {} in database'.format(name))
 
         meta_table = self.get_node('/', 'meta_data')
-        simulation = Simulation(name)
+
 
         for row in meta_table.where('name == b"{}"'.format(name)):
-            for key in meta_table.colnames:
-                try:
-                    setattr(simulation, key, row[key])
-                except AssertionError:
-                    pass
-            break
+            if unsafe_read:
+                description = {}
+                for key in meta_table.colnames:
+                    if isinstance(row[key], bytes):
+                        description[key] = str(row[key], encoding='utf-8')
+                    else:
+                        description[key] = row[key]
+                simulation = Simulation(name, description)
+                break
+            else:
+                simulation = Simulation(name)
+                for key in meta_table.colnames:
+                    try:
+                        setattr(simulation, key, row[key])
+                    except AssertionError:
+                        pass
+                break
         else:
             self.close()
             logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(name))
@@ -228,13 +251,104 @@ class Database(object):
 
         if not ignore_arrays:
             pat_node = self.get_node('/simulations', name, create=False)
-            for data_node in pat_node:
+            for data_node in pat_node._f_walknodes('Array'):
                 node_name = data_node._v_name
                 logger.debug('Reading data node {}'.format(node_name))
                 setattr(simulation, node_name, data_node.read())
         logger.debug('Successfully read simulation {} from database.'.format(name))
         self.close()
         return simulation
+
+    def purge_simulation(self, name):
+        logger.debug('Attempting to purge simulation {}'.format(name))
+        sim_node = self.get_node('/simulations/', name, create=False)
+        if self.test_node(sim_node, 'volatiles'):
+            self.db_instance.remove_node(sim_node, 'volatiles', recursive=True)
+        self.close()
+        logger.debug('Purged simulation {}'.format(name))
+
+    def update_simulation(self, description_dict):
+        try:
+            assert isinstance(description_dict, dict)
+        except AssertionError:
+            raise ValueError('Must provide a dictionary to update simulation metadata')
+        name = description_dict.get('name', '')
+        logger.debug('Attempting to update metadata for simulation {}'.format(name))
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        description_array = self.get_node('/', 'meta_description', create=False).read()
+
+        purge_simulation = False
+
+        for row in meta_table.where('name == b"{}"'.format(name)):
+            for item in meta_table.colnames:
+                ind = np.argwhere(description_array['name'] == item)[0]
+                if description_array['editable'][ind]:
+                    try:
+                        value = description_dict[item]
+                    except KeyError:
+                        pass
+                    else:
+                        if row[item] != value:
+                            row[item] = value
+                            if description_array['volatile'][ind]:
+                                purge_simulation = True
+            row.update()
+            break
+        else:
+            self.close()
+            logger.warning('Could not update {}. No simulation named {} in database'.format(name))
+            raise ValueError('No simulation named {} in database'.format(name))
+        meta_table.flush()
+        if purge_simulation:
+            self.purge_simulation(name)
+        self.close()
+        logger.debug('Updated metadata for simulation {}'.format(name))
+
+    def copy_simulation(self, source_name, dest_name):
+        logger.debug('Attempting to copy simualtion {0} to {1}'.format(source_name, dest_name))
+        if isinstance(dest_name, bytes):
+            dest_name = str(dest_name, encoding='utf-8')
+        else:
+            dest_name = str(dest_name)
+        dest_name = "".join([l for l in dest_name.split() if len(l) > 0])
+        if len(dest_name) < 1:
+            self.close()
+            raise ValueError('Destination name must be valid and longer than zero')
+
+
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        #test for names
+        name_exist = [False, False]  # [source, dest]
+        for row in meta_table:
+            name = str(row['name'], encoding='utf-8')
+            if not name_exist[0]:
+                if name == source_name:
+                    name_exist[0] = True
+            if not name_exist[1]:
+                if name == dest_name:
+                    name_exist[1] = True
+
+        if name_exist[0] and not name_exist[1]:
+            assert self.test_node('/simulations', source_name)
+            assert not self.test_node('/simulations', dest_name)
+            self.db_instance.copy_node('/simulations', '/simulations', dest_name, source_name, recursive=True)
+            new_row = meta_table.row
+            for row in meta_table.where('name == b"{}"'.format(source_name)):
+                name = str(row['name'], encoding='utf-8')
+                    if name == source_name:
+                        for item in meta_table.colnames:
+                            new_row[item] = row[item]
+                        new_row['name'] = dest_name
+                        new_row.append()
+                        meta_table.flush()
+                        break
+        else:
+            logger.warning('Unable to copy simulation {0} to {1}, error in destination name'.format(source_name, dest_name))
+            self.close()
+            return
+        self.close()
+        logger.warning('Copied simulation {0} to {1}'.format(source_name, dest_name))
+
 
     def simulation_list(self):
         if not self.test_node('/', 'meta_data'):

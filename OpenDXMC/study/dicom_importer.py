@@ -70,6 +70,7 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                 len(series), sum([len(x) for x in series.values()])))
 
     for name, value in series.items():
+        logger.debug('Setting up data for simulation {}'.format(name))
         dc = value[0]
         value.sort(key=lambda x: x[0x20, 0x32].value[2])
 

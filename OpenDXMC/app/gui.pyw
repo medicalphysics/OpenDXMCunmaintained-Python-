@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, SimulationEditor
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -77,7 +77,7 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
         # Databse interface
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('E:/test.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('E:/test2.h5'))
 
         # Models
         self.simulation_list_model = ListModel(self.interface, self,
@@ -99,6 +99,9 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
+
+        simulation_editor = SimulationEditor(self.interface)
+        central_splitter.addWidget(simulation_editor)
 
         view = View()
         self.viewcontroller = ViewController(self.interface, view)
