@@ -258,7 +258,55 @@ class ImageItem(QtGui.QGraphicsItem):
             self.render()
         painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
 #        super(ImageItem, self).paint(painter, style, widget)
+class
+class PlanningScene(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image_item = ImageItem()
+        self.ct_array = None
+        self.shape = (0, 0, 0)
+        self.spacing = (1., 1., 1.)
+        self.index = 0
+        self.view_slice = 1
 
+    @QtCore.pyqtSlot(np.ndarray, np.ndarray)
+    def setCtArray(self, ct, spacing):
+        #setting transform
+        sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.ct_array = ct
+        self.shape = ct.shape
+        self.spacing = spacing
+        self.index = 0
+        self.reloadImages()
+        rect = transform.mapRect(self.image_item.boundingRect())
+
+        self.setSceneRect(rect)
+        for view in self.views():
+            view.fitInView(rect)
+        logger.debug('Planningscene is setting image data')
+
+    def getSlice(self, array, index):
+        if self.view_slice == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_slice]]))
+        elif self.view_slice == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_slice], :]))
+        elif self.view_slice == 0:
+            return np.copy(np.squeeze(array[index % self.shape[self.view_slice], :, :]))
+        raise ValueError('view must select one of 0,1,2 dimensions')
+
+
+    def reloadImages(self):
+        self.image_item.setImage(self.getSlice(self.dose_array, self.index))
+
+    def wheelEvent(self, ev):
+        if ev.delta() > 0:
+            self.index += 1
+        elif ev.delta() < 0:
+            self.index -= 1
+        self.reloadImages()
+        ev.accept()
 
 class DoseScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
