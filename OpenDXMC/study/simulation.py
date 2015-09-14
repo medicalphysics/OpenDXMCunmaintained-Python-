@@ -150,6 +150,9 @@ class Simulation(object):
     @property
     def description(self):
         return self.__description
+    @property
+    def dtype(self):
+        return self.__dtype
 
     @property
     def arrays(self):

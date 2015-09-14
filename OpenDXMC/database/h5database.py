@@ -304,7 +304,28 @@ class Database(object):
         self.close()
         logger.debug('Updated metadata for simulation {}'.format(name))
 
-    def copy_simulation(self, source_name, dest_name):
+    def get_unique_simulation_name(self):
+        logger.debug('Finding unique simulation name')
+        if not self.test_node('/', 'meta_data'):
+            logger.debug('No simulations in database, no names to test')
+            self.close()
+            return 'NewName'
+
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        i = 1
+        name = 'NewName'
+        while True:
+            for row in meta_table.where('name == b"{}"'.format(name)):
+                break
+            else:
+                self.close()
+                return name
+            name = 'NewName{}'.format(i)
+            i += 1
+
+    def copy_simulation(self, source_name, dest_name=None):
+        if dest_name is None:
+            dest_name = self.get_unique_simulation_name()
         logger.debug('Attempting to copy simualtion {0} to {1}'.format(source_name, dest_name))
         if isinstance(dest_name, bytes):
             dest_name = str(dest_name, encoding='utf-8')
@@ -331,17 +352,18 @@ class Database(object):
         if name_exist[0] and not name_exist[1]:
             assert self.test_node('/simulations', source_name)
             assert not self.test_node('/simulations', dest_name)
+            logger.info('Database is copying simulation nodes, it may take a few seconds')
             self.db_instance.copy_node('/simulations', '/simulations', dest_name, source_name, recursive=True)
             new_row = meta_table.row
             for row in meta_table.where('name == b"{}"'.format(source_name)):
                 name = str(row['name'], encoding='utf-8')
-                    if name == source_name:
-                        for item in meta_table.colnames:
-                            new_row[item] = row[item]
-                        new_row['name'] = dest_name
-                        new_row.append()
-                        meta_table.flush()
-                        break
+                if name == source_name:
+                    for item in meta_table.colnames:
+                        new_row[item] = row[item]
+                    new_row['name'] = dest_name
+                    new_row.append()
+                    meta_table.flush()
+                    break
         else:
             logger.warning('Unable to copy simulation {0} to {1}, error in destination name'.format(source_name, dest_name))
             self.close()

@@ -4,12 +4,13 @@ Created on Tue Sep  8 10:10:58 2015
 
 @author: erlean
 """
-
+import numpy as np
+import copy
 from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
-from opendxmc.study import import_ct_series, Simulation
+from opendxmc.study import import_ct_series, Simulation, SIMULATION_DESCRIPTION
 from opendxmc.materials import Material
-import numpy as np
+
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -23,6 +24,8 @@ class DatabaseInterface(QtCore.QObject):
 
     request_simulation_view = QtCore.pyqtSignal(Simulation)
     request_material_view = QtCore.pyqtSignal(Material)
+    database_busy = QtCore.pyqtSignal(bool)
+
 
     def __init__(self, database_qurl, parent=None):
         super().__init__(parent)
@@ -32,6 +35,7 @@ class DatabaseInterface(QtCore.QObject):
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
+        self.database_busy.emit(True)
         if self.__db:
             self.__db.close()
         fileinfo = QtCore.QFileInfo(database_qurl.toLocalFile())
@@ -61,26 +65,34 @@ class DatabaseInterface(QtCore.QObject):
         logger.debug('Attemting to use database in {0}'.format(path.absoluteFilePath()))
 
         self.__db = Database(path.absoluteFilePath())
+        self.database_busy.emit(False)
 
     @QtCore.pyqtSlot()
     def get_simulation_list(self):
+        self.database_busy.emit(True)
         sims = self.__db.simulation_list()
         self.recive_simulation_list.emit(sims)
+        self.database_busy.emit(False)
 
     @QtCore.pyqtSlot()
     def get_material_list(self):
+        self.database_busy.emit(True)
         mats = self.__db.material_list()
         self.recive_material_list.emit(mats)
+        self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(list)
     def import_dicom(self, qurl_list):
         paths = [url.toLocalFile() for url in qurl_list]
         for sim in import_ct_series(paths):
-            self.__db.add_simulation(sim)
+            self.database_busy.emit(True)
+            self.__db.add_simulation(sim, overwrite=False)
             self.get_simulation_list()
+            self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str)
     def select_simulation(self, name):
+        self.database_busy.emit(True)
         try:
             sim = self.__db.get_simulation(name)
         except ValueError:
@@ -88,23 +100,35 @@ class DatabaseInterface(QtCore.QObject):
         else:
             logger.debug('Emmitting signal for request to view Simulation {}'.format(sim.name))
             self.request_simulation_view.emit(sim)
+        self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str)
     def select_material(self, name):
+        self.database_busy.emit(True)
         try:
             mat = self.__db.get_material(name)
         except ValueError:
             pass
         else:
             self.request_material_view.emit(mat)
+        self.database_busy.emit(False)
 
+    @QtCore.pyqtSlot(list)
+    def copy_simulation(self, names):
+        for name in names:
+            if isinstance(name, bytes):
+                name = str(name, encoding='utf-8')
+            self.database_busy.emit(True)
+            self.__db.copy_simulation(name)
+            self.database_busy.emit(False)
+        self.get_simulation_list()
 
 class ListModel(QtCore.QAbstractListModel):
 
     request_data_list = QtCore.pyqtSignal()
     request_import_dicom = QtCore.pyqtSignal(list)
     request_viewing = QtCore.pyqtSignal(str)
-
+    request_copy_elements = QtCore.pyqtSignal(list)
     def __init__(self, interface, parent=None, simulations=False,
                  materials=False):
         super().__init__(parent)
@@ -115,6 +139,7 @@ class ListModel(QtCore.QAbstractListModel):
         if simulations:
             self.request_viewing.connect(interface.select_simulation)
             self.request_data_list.connect(interface.get_simulation_list)
+            self.request_copy_elements.connect(interface.copy_simulation)
         elif materials:
             self.request_viewing.connect(interface.select_material)
             self.request_data_list.connect(interface.get_material_list)
@@ -169,17 +194,32 @@ class ListModel(QtCore.QAbstractListModel):
 
     def flags(self, index):
         if index.isValid():
-            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled
+            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsDropEnabled | QtCore.Qt.ItemIsDragEnabled
         return QtCore.Qt.ItemIsDropEnabled
 
+    def mimeData(self, index_list):
+        mimedata = QtCore.QMimeData()
+        names = [self.__data[index.row()] for index in index_list if index.isValid()]
+        if len(names) > 0:
+            mimedata.setData('text/plain', ','.join(names))
+        return mimedata
+
     def mimeTypes(self):
-        return ['text/uri-list']
+#        return ['text/uri-list']
+        return ['text/plain', 'text/uri-list']
 
     def dropMimeData(self, mimedata, action, row, column, index):
+        print('trying to drop')
         if mimedata.hasUrls():
-            self.request_import_dicom.emit(mimedata.urls())
-            logger.debug(' '.join([u.toLocalFile() for u in mimedata.urls()]))
+            import pdb
+            pdb.set_trace()
+            urls = [u for u in mimedata.urls() if u.isLocalFile()]
+            self.request_import_dicom.emit(urls)
+            logger.debug(' '.join([u.toLocalFile() for u in urls]))
             return True
+        elif mimedata.hasText():
+            names = mimedata.data('text/plain').split(',')
+            self.request_copy_elements.emit([str(n, encoding='ascii') for n in names])
         return False
 
     def supportedDropActions(self):
@@ -189,12 +229,20 @@ class ListModel(QtCore.QAbstractListModel):
 class ListView(QtGui.QListView):
     name_activated = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, simulation=True):
         super().__init__(parent)
-        self.setAcceptDrops(True)
-        self.viewport().setAcceptDrops(True)
-        self.setDropIndicatorShown(True)
-        self.setDragDropMode(self.DropOnly)
+        if simulation:
+            self.setAcceptDrops(True)
+            self.viewport().setAcceptDrops(True)
+            self.setDropIndicatorShown(True)
+            self.setDragDropMode(self.DragDrop)
+            self.setDefaultDropAction(QtCore.Qt.CopyAction)
+        else:
+            self.setAcceptDrops(False)
+            self.viewport().setAcceptDrops(False)
+            self.setDropIndicatorShown(True)
+            self.setDragDropMode(self.NoDragDrop)
+            self.setDefaultDropAction(QtCore.Qt.CopyAction)
 
         self.activated.connect(self.activation_name)
 
@@ -213,128 +261,212 @@ class ListView(QtGui.QListView):
             self.name_activated.emit(index.data())
 
 
-
-class DataLabel(QtGui.QLabel):
-    def __init__(self, parent=None, data=None):
-        super().__init__(parent)
-        self.setAlignment(QtCore.Qt.AlignRight)
-        if data is not None:
-            self.set_data(data)
-
-    @QtCore.pyqtSlot(object)
-    def set_data(self, data):
-#        if hasattr(data, '__iter__'):
-#            self.setText(', '.join([str(d) for d in data]))
-#            return
-        self.setText(str(data))
-
-
-
-
-class SimulationEditor(QtGui.QWidget):
+class PropertiesModel(QtCore.QAbstractTableModel):
+    error_setting_value = QtCore.pyqtSignal(str)
     def __init__(self, interface, parent=None):
         super().__init__(parent)
-        self.__simulation = Simulation('None')
+        self.__data = copy.copy(SIMULATION_DESCRIPTION)
+        self.__indices = list(self.__data.keys())
         interface.request_simulation_view.connect(self.update_data)
-        self.setLayout(QtGui.QGridLayout())
-        self.description_widgets = {}
-        self.setup_widgets()
 
-    def setup_widgets(self):
-        names = []
-        vals = []
-        dtype = []
-        editable = []
-        volatile = []
+        self.__simulation = Simulation('None')
+        self.fontMetric= QtGui.QFontMetrics(QtGui.QFont())
 
-        layout = self.layout()
 
-        for ind, key in enumerate(self.__simulation.description.keys()):
-            self.description_widgets[key] = DataLabel(data=self.__simulation.description[key])
-            layout.addWidget(DataLabel(data=key), ind, 0, 1, 1)
-            layout.addWidget(self.description_widgets[key], ind, 1, 1, 1)
-#            names.append(key)
-#            vals.append(self.__simulation.description[key])
-#            dtype.append(self.__simulation.dtype_dict[key])
-#            editable.append(self.__simulation.editable[key])
-#            volatile.append(self.__simulation.volatile[key])
-
+    def properties_data(self):
+        return self.__data, self.__indices
 
     @QtCore.pyqtSlot(Simulation)
     def update_data(self, sim):
-        self.__simulation = sim
-        for key, value in self.__simulation.description.items():
-            self.description_widgets[key].set_data(value)
+        self.layoutAboutToBeChanged.emit()
+        for key, value in sim.description.items():
+            self.__data[key][0] = value
+        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
+        self.layoutChanged.emit()
 
+    def rowCount(self, index):
+        if not index.isValid():
+            return len(self.__data)
+        return 0
 
+    def columnCount(self, index):
+        if not index.isValid():
+            return 2
+        return 0
 
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+        row = index.row()
+        column = index.column()
+        if column == 0:
+            pos = 4
+        elif column == 1:
+            pos = 0
+        else:
+            return None
 
+        var = self.__indices[row]
 
-#class Model(QtCore.QAbstractItemModel):
-#    request_simulation_list = QtCore.pyqtSignal()
-#    request_import_dicom = QtCore.pyqtSignal(list)
-#    def __init__(self, database_path, parent=None):
-#        super().__init__(parent)
-#
-#        interface = Database_interface(database_path, None)
-#        # connecting interface
-#        # outbound signals
-#        self.request_simulation_list.connect(interface.get_simulation_list)
-#        self.request_import_dicom.connect(interface.import_dicom)
-#        # inbound signals
-#        interface.recive_simulation_list.connect(self.recive_simulation_list)
-#
-#
-#        self.__data = []
-#        self.request_simulation_list.emit()
-#
-#    @QtCore.pyqtSlot(list)
-#    def recive_simulation_list(self, sims):
-#        self.layoutAboutToBeChanged.emit()
-#        #muste update persistent index
-#        self.__data = sims
-#        self.layoutChanged.emit()
-#
-#
-#    def flags(self, index):
-#        return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-#
-#    def data(self, index, role):
-#        row = index.row()
-#        if role == QtCore.Qt.DisplayRole:
-#            return self.__data[row]
-#        elif role == QtCore.Qt.DecorationRole:
-#            pass
-#        elif role == QtCore.Qt.ToolTipRole:
-#            pass
+        if role == QtCore.Qt.DisplayRole:
+            if (column == 1) and isinstance(self.__data[var][0], np.ndarray):
+                return ','.join([str(p) for p in self.__data[var][pos]])
+            elif (column == 1) and isinstance(self.__data[var][0], bool):
+                return ''
+            return self.__data[var][pos]
+        elif role == QtCore.Qt.DecorationRole:
+            pass
+        elif role == QtCore.Qt.ToolTipRole:
+            pass
 #        elif role == QtCore.Qt.SizeHintRole:
-#            pass
-#        elif role == QtCore.Qt.BackgroundRole:
-#            pass
-#        elif role == QtCore.Qt.ForegroundRole:
-#            pass
-#        return None
+#            return QtGui.qApp.fontMetrics().boundingRect(str(self.__data[var][pos])).size() 
+##            return QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, str(self.data(index, QtCore.Qt.DisplayRole)))#+ QtCore.QSize(50, 1)
+##            return self.fontMetric.boundingRect(str(self.__data[var][pos])).size()
+        elif role == QtCore.Qt.BackgroundRole:
+            if not self.__data[var][3] and index.column() == 1:
+                return QtGui.qApp.palette().brush(QtGui.qApp.palette().Window)
+        elif role == QtCore.Qt.ForegroundRole:
+            pass
+        elif role == QtCore.Qt.CheckStateRole:
+            if (column == 1) and isinstance(self.__data[var][0], bool):
+                if self.__data[var][0]:
+                    return QtCore.Qt.Checked
+                else:
+                    return QtCore.Qt.Unchecked
+        return None
+
+    def setData(self, index, value, role):
+        if not index.isValid():
+            return False
+        if index.column() != 1:
+            return False
+        if role == QtCore.Qt.DisplayRole:
+            self.__data[self.__indices[index.row()]][0] = value
+
+            self.dataChanged.emit(index, index)
+            return True
+        elif role == QtCore.Qt.EditRole:
+            var = self.__indices[index.row()]
+            try:
+                setattr(self.__simulation, var, value)
+            except Exception as e:
+                self.error_setting_value.emit(str(e))
+                return False
+            else:
+                self.__data[var][0] = value
+            self.dataChanged.emit(index, index)
+            return True
+        elif role == QtCore.Qt.CheckStateRole:
+            self.__data[self.__indices[index.row()]][0] = bool(value == QtCore.Qt.Checked)
+            print(value)
+            self.dataChanged.emit(index, index)
+            return True
+
+    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+        return str(section)
+
+    def flags(self, index):
+        if index.isValid():
+            if self.__data[self.__indices[index.row()]][3] and index.column() == 1:
+                if isinstance(self.__data[self.__indices[index.row()]][0], bool):
+                    return  QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable# | QtCore.Qt.ItemIsEditable
+                return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
+            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+        return QtCore.Qt.NoItemFlags
+
+
+class LineEdit(QtGui.QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+     
+    def set_data(self, value):
+        self.setText(str(value))
+
+class IntSpinBox(QtGui.QSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setRange(-1e9, 1e9)
+
+    def set_data(self, value):
+        self.setValue(int(value))
+
+
+class DoubleSpinBox(QtGui.QDoubleSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setRange(-1e9, 1e9)
+        
+    def set_data(self, value):
+        self.setValue(float(value))
+
+class CheckBox(QtGui.QCheckBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def set_data(self, value):
+        self.setChecked(bool(value))
+
+
+class PropertiesDelegate(QtGui.QItemDelegate):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def createEditor(self, parent, option, index):
+        data , ind= index.model().properties_data()
+        var = ind[index.row()]
+        if data[var][1] is np.bool:
+#            return CheckBox(parent)
+            return None
+        elif data[var][1] is np.double:
+            return DoubleSpinBox(parent)
+        elif data[var][1] is np.int:
+            return IntSpinBox(parent)
+        return None
+    
+    def setEditorData(self, editor, index):
+        data, ind= index.model().properties_data()
+        var = ind[index.row()]
+        editor.set_data(data[var][0])
+#        if isinstance(editor, QtGui.QCheckBox):
+#            editor.setChecked(data[var][0])
+#        elif isinstance(editor, QtGui.QSpinBox) or isinstance(editor, QtGui.QDoubleSpinBox):
+#            editor.setValue(data[var][0])
+#        elif isinstance(editor, QtGui.QTextEdit):
+#            editor.setText(data[var][0])
+##        self.setProperty('bool', bool)
+#        factory = QtGui.QItemEditorFactory()
+#        print(factory.valuePropertyName(QtCore.QVariant.Bool))
 #
-#    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-#        return str(section)
-#    def rowCount(self):
-#        return len(self.__data)
-#
-#
-#    def index(self, row, column, parent_index):
-#        return self.createIndex(row, column, self.__data[row])
-#
-#    def parent(self, index):
-#        return QtCore.QModelIndex()
-#    def mimeTypes(self):
-#        return ['text/uri-list']
-#    def supportedDropActions(self):
-#        return QtCore.Qt.CopyAction | QtCore.Qt.MoveAction
-#
-#    def dropMimeData(self, mimedata, action, row, column, index):
-#        if mimedata.hasUrls():
-#            self.request_import_dicom.emit(mimedata.urls())
-#            return True
-#        return False
+##        factory.registerEditor(QtCore.QVariant.Bool, QtGui.QCheckBox())
+#        self.setItemEditorFactory(factory)
+##        self.itemEditorFactory().setDefaultFactory(QtGui.QItemEditorFactory())
+
+class PropertiesView(QtGui.QTableView):
+    def __init__(self, interface, parent=None):
+        super().__init__(parent)
+        self.setModel(PropertiesModel(interface))
+        self.setItemDelegateForColumn(1, PropertiesDelegate())
+        
+        self.setWordWrap(False)
+#        self.setTextElideMode(QtCore.Qt.ElideMiddle)
+#        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+#        self.horizontalHeader().setMinimumSectionSize(-1)
+        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+
+    def resizeEvent(self, ev):
+#        self.resizeColumnsToContents()
+#        self.resizeRowsToContents()
+        super().resizeEvent(ev)
+        
+        
+class DataLabel(QtGui.QLabel):
+    def __init__(self, value,parent=None):
+        super().__init__(parent)
+        self.setAlignment(QtCore.Qt.AlignRight)
+        self.setText(value)
+
+
 
 

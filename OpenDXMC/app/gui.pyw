@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, SimulationEditor
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -49,14 +49,74 @@ class StatusBarButton(QtGui.QPushButton):
         self.setCheckable(True)
 
 
+class BusyWidget(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.progress)
+        self.timer.timeout.connect(self.update)
+        self.progress = 0
+        self.pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.white), 50.,
+                              cap=QtCore.Qt.RoundCap)
+        self.setLayout(QtGui.QHBoxLayout())
+        label = QtGui.QLabel('!')
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setToolTip('Writing or Reading to Database')
+        self.setToolTip('Writing or Reading to Database')
+        self.layout().addWidget(label)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        
+        self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, 'OpenDXMC'))
+#        self.setMinimumWidth(20)
+        self.setVisible(False)
+
+    @QtCore.pyqtSlot()
+    def progress(self):
+        self.progress = (self.progress + 64) % 5760
+
+    @QtCore.pyqtSlot(bool)
+    def start(self, start):
+        self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, '!!!')*2)
+        if start and not self.isVisible():
+            self.timer.start(50)
+            self.show()
+        elif not start:
+            self.hide()
+            self.timer.stop()
+
+    def paintEvent(self, ev):
+        if self.width() > self.height():
+            d = self.height()
+        else:
+            d = self.width()
+
+        rect = QtCore.QRectF(0, 0, d*.70, d*.70)
+        rect.moveCenter(QtCore.QPointF(self.rect().center()))
+
+        self.pen.setWidthF(d * .15)
+        p = QtGui.QPainter(self)
+        p.setRenderHint(p.Antialiasing, True)
+        p.setPen(self.pen)
+
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 32) % 360,
+                                               255, 255))
+        p.drawArc(rect, self.progress, 960)
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress//32) % 360 + 180,
+                                               255, 255))
+        p.drawArc(rect, self.progress + 2880, 960)
+
+
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super().__init__()
+
+        database_busywidget = BusyWidget()
 
         # statusbar
         status_bar = QtGui.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
         status_bar.addPermanentWidget(statusbar_log_button)
+        status_bar.addPermanentWidget(database_busywidget)
         self.setStatusBar(status_bar)
 
         # logging
@@ -78,6 +138,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # Databse interface
         self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('E:/test2.h5'))
+        self.interface.database_busy.connect(database_busywidget.start)
 
         # Models
         self.simulation_list_model = ListModel(self.interface, self,
@@ -100,7 +161,8 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
 
-        simulation_editor = SimulationEditor(self.interface)
+#        simulation_editor = SimulationEditor(self.interface)
+        simulation_editor = PropertiesView(self.interface)
         central_splitter.addWidget(simulation_editor)
 
         view = View()
@@ -112,6 +174,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # threading
         self.database_thread = QtCore.QThread(self)
+#        logger.warning('DISABLED THREADING')
         self.interface.moveToThread(self.database_thread)
         self.database_thread.start()
 

@@ -258,7 +258,7 @@ class ImageItem(QtGui.QGraphicsItem):
             self.render()
         painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
 #        super(ImageItem, self).paint(painter, style, widget)
-class
+
 class PlanningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -339,7 +339,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
         self.setSceneRect(rect)
         for view in self.views():
-            view.fitInView(rect)
+            view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         logger.debug('Dosescene is setting image data')
 
     @QtCore.pyqtSlot(np.ndarray)

@@ -101,7 +101,7 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                 pass
             else:
                 if key in units_in_mm:
-                    setattr(patient, key, dc[tag].value / 10.)
+                    setattr(patient, key, float(dc[tag].value) / 10.)
                 else:
                     setattr(patient, key, dc[tag].value)
 
