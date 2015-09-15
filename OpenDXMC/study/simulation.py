@@ -150,6 +150,7 @@ class Simulation(object):
     @property
     def description(self):
         return self.__description
+
     @property
     def dtype(self):
         return self.__dtype
@@ -157,7 +158,9 @@ class Simulation(object):
     @property
     def arrays(self):
         return self.__arrays
-
+    @property
+    def volatiles(self):
+        return self.__volatiles
     @property
     def tables(self):
         return self.__tables

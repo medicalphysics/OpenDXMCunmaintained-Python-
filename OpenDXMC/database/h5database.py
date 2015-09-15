@@ -273,6 +273,7 @@ class Database(object):
         except AssertionError:
             raise ValueError('Must provide a dictionary to update simulation metadata')
         name = description_dict.get('name', '')
+        print('name', name)
         logger.debug('Attempting to update metadata for simulation {}'.format(name))
         meta_table = self.get_node('/', 'meta_data', create=False)
         description_array = self.get_node('/', 'meta_description', create=False).read()
@@ -281,7 +282,8 @@ class Database(object):
 
         for row in meta_table.where('name == b"{}"'.format(name)):
             for item in meta_table.colnames:
-                ind = np.argwhere(description_array['name'] == item)[0]
+                print(description_array['name'])
+                ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
                 if description_array['editable'][ind]:
                     try:
                         value = description_dict[item]
@@ -296,7 +298,7 @@ class Database(object):
             break
         else:
             self.close()
-            logger.warning('Could not update {}. No simulation named {} in database'.format(name))
+            logger.warning('Could not update {0}. No simulation named {0} in database'.format(name))
             raise ValueError('No simulation named {} in database'.format(name))
         meta_table.flush()
         if purge_simulation:

@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView, PropertiesWidget
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -98,10 +98,10 @@ class BusyWidget(QtGui.QWidget):
         p.setRenderHint(p.Antialiasing, True)
         p.setPen(self.pen)
 
-        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 32) % 360,
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 16) % 360,
                                                255, 255))
         p.drawArc(rect, self.progress, 960)
-        self.pen.setColor(QtGui.QColor.fromHsv((self.progress//32) % 360 + 180,
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress //64) % 360 + 180,
                                                255, 255))
         p.drawArc(rect, self.progress + 2880, 960)
 
@@ -137,7 +137,7 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
         # Databse interface
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('E:/test2.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
         self.interface.database_busy.connect(database_busywidget.start)
 
         # Models
@@ -160,9 +160,8 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
-
-#        simulation_editor = SimulationEditor(self.interface)
-        simulation_editor = PropertiesView(self.interface)
+        
+        simulation_editor = PropertiesWidget(self.interface)
         central_splitter.addWidget(simulation_editor)
 
         view = View()

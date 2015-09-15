@@ -122,7 +122,13 @@ class DatabaseInterface(QtCore.QObject):
             self.__db.copy_simulation(name)
             self.database_busy.emit(False)
         self.get_simulation_list()
-
+    @QtCore.pyqtSlot(dict)
+    def update_simulation_properties(self, prop_dict):
+        logger.debug('Request database to update simulation properties.')
+        self.database_busy.emit(True)
+        self.__db.update_simulation(prop_dict)
+        self.database_busy.emit(False)
+        
 class ListModel(QtCore.QAbstractListModel):
 
     request_data_list = QtCore.pyqtSignal()
@@ -209,10 +215,7 @@ class ListModel(QtCore.QAbstractListModel):
         return ['text/plain', 'text/uri-list']
 
     def dropMimeData(self, mimedata, action, row, column, index):
-        print('trying to drop')
         if mimedata.hasUrls():
-            import pdb
-            pdb.set_trace()
             urls = [u for u in mimedata.urls() if u.isLocalFile()]
             self.request_import_dicom.emit(urls)
             logger.debug(' '.join([u.toLocalFile() for u in urls]))
@@ -263,18 +266,38 @@ class ListView(QtGui.QListView):
 
 class PropertiesModel(QtCore.QAbstractTableModel):
     error_setting_value = QtCore.pyqtSignal(str)
+    request_simulation_update = QtCore.pyqtSignal(dict)
+    unsaved_data_changed = QtCore.pyqtSignal(bool)
+    
     def __init__(self, interface, parent=None):
         super().__init__(parent)
         self.__data = copy.copy(SIMULATION_DESCRIPTION)
+        self.__init_data = copy.copy(self.__data)
         self.__indices = list(self.__data.keys())
+        self.__indices.sort()
         interface.request_simulation_view.connect(self.update_data)
-
+        self.request_simulation_update.connect(interface.update_simulation_properties)
         self.__simulation = Simulation('None')
-        self.fontMetric= QtGui.QFontMetrics(QtGui.QFont())
-
+        
 
     def properties_data(self):
         return self.__data, self.__indices
+
+    @QtCore.pyqtSlot()
+    def apply_properties(self):
+        self.__init_data = self.__data
+        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+        self.unsaved_data_changed.emit(False)
+        
+    def test_for_unsaved_changes(self):
+        for key, value in self.__data.items():
+            if self.__init_data[key] != value:
+                self.unsaved_data_changed.emit(True)
+                return
+        self.unsaved_data_changed.emit(False)
+        
+        
+    
 
     @QtCore.pyqtSlot(Simulation)
     def update_data(self, sim):
@@ -283,6 +306,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             self.__data[key][0] = value
         self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
         self.layoutChanged.emit()
+        self.unsaved_data_changed.emit(False)
 
     def rowCount(self, index):
         if not index.isValid():
@@ -310,7 +334,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.DisplayRole:
             if (column == 1) and isinstance(self.__data[var][0], np.ndarray):
-                return ','.join([str(p) for p in self.__data[var][pos]])
+                return ', '.join([str(round(p, 3)) for p in self.__data[var][pos]])
             elif (column == 1) and isinstance(self.__data[var][0], bool):
                 return ''
             return self.__data[var][pos]
@@ -318,10 +342,6 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             pass
         elif role == QtCore.Qt.ToolTipRole:
             pass
-#        elif role == QtCore.Qt.SizeHintRole:
-#            return QtGui.qApp.fontMetrics().boundingRect(str(self.__data[var][pos])).size() 
-##            return QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, str(self.data(index, QtCore.Qt.DisplayRole)))#+ QtCore.QSize(50, 1)
-##            return self.fontMetric.boundingRect(str(self.__data[var][pos])).size()
         elif role == QtCore.Qt.BackgroundRole:
             if not self.__data[var][3] and index.column() == 1:
                 return QtGui.qApp.palette().brush(QtGui.qApp.palette().Window)
@@ -355,10 +375,11 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             else:
                 self.__data[var][0] = value
             self.dataChanged.emit(index, index)
+            self.test_for_unsaved_changes()
             return True
         elif role == QtCore.Qt.CheckStateRole:
             self.__data[self.__indices[index.row()]][0] = bool(value == QtCore.Qt.Checked)
-            print(value)
+            self.test_for_unsaved_changes()
             self.dataChanged.emit(index, index)
             return True
 
@@ -460,13 +481,27 @@ class PropertiesView(QtGui.QTableView):
 #        self.resizeRowsToContents()
         super().resizeEvent(ev)
         
-        
-class DataLabel(QtGui.QLabel):
-    def __init__(self, value,parent=None):
+class PropertiesWidget(QtGui.QWidget):
+    def __init__(self, interface, parent=None):
         super().__init__(parent)
-        self.setAlignment(QtCore.Qt.AlignRight)
-        self.setText(value)
+        self.setLayout(QtGui.QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        view = PropertiesView(interface)
+        model = view.model()
+        self.layout().addWidget(view)
 
-
-
-
+        apply_button = QtGui.QPushButton()
+        apply_button.setText('Apply')
+        apply_button.clicked.connect(model.apply_properties)
+        apply_button.setEnabled(False)
+        model.unsaved_data_changed.connect(apply_button.setDisabled)
+                
+        
+        run_button = QtGui.QPushButton()         
+        
+        button_layout = QtGui.QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.addWidget(apply_button)
+        
+        self.layout().addLayout(button_layout)
+    
