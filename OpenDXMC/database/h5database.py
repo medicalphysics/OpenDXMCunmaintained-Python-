@@ -273,16 +273,17 @@ class Database(object):
         except AssertionError:
             raise ValueError('Must provide a dictionary to update simulation metadata')
         name = description_dict.get('name', '')
-        print('name', name)
+        self.open()
         logger.debug('Attempting to update metadata for simulation {}'.format(name))
         meta_table = self.get_node('/', 'meta_data', create=False)
         description_array = self.get_node('/', 'meta_description', create=False).read()
 
-        purge_simulation = False
+        purge_simulation = False  
 
+        got_row = False # fix since braking loop while updating table is not allowed
         for row in meta_table.where('name == b"{}"'.format(name)):
+            got_row = True
             for item in meta_table.colnames:
-                print(description_array['name'])
                 ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
                 if description_array['editable'][ind]:
                     try:
@@ -292,15 +293,20 @@ class Database(object):
                     else:
                         if row[item] != value:
                             row[item] = value
-                            if description_array['volatile'][ind]:
+                            logger.debug('Updated {0} value to {1} for simulation {2}'.format(item, value, name))
+                            if description_array['volatale'][ind]:
                                 purge_simulation = True
+            
             row.update()
-            break
-        else:
+            
+        if not got_row:
             self.close()
             logger.warning('Could not update {0}. No simulation named {0} in database'.format(name))
             raise ValueError('No simulation named {} in database'.format(name))
-        meta_table.flush()
+        else:
+            meta_table.flush()            
+        
+        
         if purge_simulation:
             self.purge_simulation(name)
         self.close()

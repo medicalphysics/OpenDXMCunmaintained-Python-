@@ -122,12 +122,15 @@ class DatabaseInterface(QtCore.QObject):
             self.__db.copy_simulation(name)
             self.database_busy.emit(False)
         self.get_simulation_list()
+    
     @QtCore.pyqtSlot(dict)
     def update_simulation_properties(self, prop_dict):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
         self.__db.update_simulation(prop_dict)
+        self.select_simulation(prop_dict['name'])
         self.database_busy.emit(False)
+
         
 class ListModel(QtCore.QAbstractListModel):
 

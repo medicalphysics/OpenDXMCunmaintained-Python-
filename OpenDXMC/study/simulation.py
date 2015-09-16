@@ -13,7 +13,7 @@ logger = logging.getLogger('OpenDXMC')
 
 SIMULATION_DESCRIPTION = {
     #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION
-    'name': ['', 'a64', False, True, 'Simulation ID'],
+    'name': ['', 'a64', False, False, 'Simulation ID'],
     'scan_fov': [50., np.double, True, True, 'Scan field of view [cm]'],
     'sdd': [100., np.double, True, True, 'Source detector distance [cm]'],
     'detector_width': [0.06, np.double, True, True, 'Detector width [cm]'],
