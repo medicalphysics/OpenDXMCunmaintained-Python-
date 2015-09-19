@@ -21,10 +21,14 @@ class ViewController(QtCore.QObject):
         super().__init__(parent)
         database_interface.request_simulation_view.connect(self.applySimulation)
 
-        self.view = view
+        self.view = view()
         self.dosescene = DoseScene()
         self.viewCtDoseArray.connect(self.dosescene.setCtDoseArrays)
         self.view.setScene(self.dosescene)
+    
+    @property
+    def view(self):
+        return self.view
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
@@ -270,7 +274,7 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.view_slice = 1
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray)
-    def setCtArray(self, ct, spacing):
+    def setCtArray(self, ct, spacing, start, stop):
         #setting transform
         sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
@@ -317,7 +321,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
         self.dose_array = None
         self.ct_array = None
-        self.view_slice = 1  # value 0, 1, 2
+        self.view_slice = 2  # value 0, 1, 2
         self.shape = (0, 0, 0)
         self.index = 0
         self.spacing = (1., 1., 1.)

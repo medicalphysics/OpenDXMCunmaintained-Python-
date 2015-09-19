@@ -84,7 +84,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             [ndarray(energy), ndarray(intensity)] list/tuple of
             two ndarrays of lenght one, with energy and intensity of specter
         batch_size : int
-            number of histories per batch, if less than histories it is set to
+            number of exposures per batch, if less than histories it is set to
             histories.
         modulation_xy : [(N,), (N,)] (NOT IMPLEMENTED)
             tube current XY modulation, list/tuple of
@@ -122,10 +122,9 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
                               [0, 0, 1]], dtype=np.double)
 
     if batch_size is None:
-        batch_size = histories
-    if batch_size < histories:
-        batch_size = histories
-    batch_size += (batch_size % histories)
+        batch_size = 1
+    batch_size *= histories
+    
     assert batch_size % histories == 0
 
     if energy_specter is None:

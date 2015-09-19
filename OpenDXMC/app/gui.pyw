@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView, PropertiesWidget
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView, PropertiesWidget, RunManager
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -140,6 +140,9 @@ class MainWindow(QtGui.QMainWindow):
         self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
         self.interface.database_busy.connect(database_busywidget.start)
 
+        ## MC runner
+        self.mcrunner = RunManager(self.interface)
+
         # Models
         self.simulation_list_model = ListModel(self.interface, self,
                                                simulations=True)
@@ -164,9 +167,8 @@ class MainWindow(QtGui.QMainWindow):
         simulation_editor = PropertiesWidget(self.interface)
         central_splitter.addWidget(simulation_editor)
 
-        view = View()
-        self.viewcontroller = ViewController(self.interface, view)
-        central_splitter.addWidget(view)
+        self.viewcontroller = ViewController(self.interface)
+        central_splitter.addWidget(self.viewcontroller.view())
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -176,6 +178,11 @@ class MainWindow(QtGui.QMainWindow):
 #        logger.warning('DISABLED THREADING')
         self.interface.moveToThread(self.database_thread)
         self.database_thread.start()
+
+        self.mc_thread = QtCore.QThread(self)
+        self.mcrunner.moveToThread(self.mc_thread)
+        self.mc_thread.start()
+        
 
     def __init_database(self):
         pass

@@ -259,6 +259,37 @@ class Database(object):
         self.close()
         return simulation
 
+    def get_MCready_simulation(self):
+        logger.debug('Attempting to find MC ready simulations from database.')
+        if not self.test_node('/', 'meta_data'):
+            logger.warning('There is no simulations in database')
+            self.close()
+
+        meta_table = self.get_node('/', 'meta_data')
+        
+        for row in meta_table.where('MC_ready & ~ MC_finished'):
+            simulation = Simulation(str(row['name'], encoding='utf-8'))
+            for key in meta_table.colnames:
+                try:
+                    setattr(simulation, key, row[key])
+                except AssertionError:
+                    pass
+            break
+        else:
+            self.close()
+            logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(simulation.name))
+            raise ValueError('No simulations ready')
+
+        
+        pat_node = self.get_node('/simulations', simulation.name, create=False)
+        for data_node in pat_node._f_walknodes('Array'):
+            node_name = data_node._v_name
+            logger.debug('Reading data node {}'.format(node_name))
+            setattr(simulation, node_name, data_node.read())
+        logger.debug('Successfully read simulation {} from database.'.format(simulation.name))
+        self.close()
+        return simulation
+
     def purge_simulation(self, name):
         logger.debug('Attempting to purge simulation {}'.format(name))
         sim_node = self.get_node('/simulations/', name, create=False)
@@ -281,32 +312,36 @@ class Database(object):
         purge_simulation = False  
 
         got_row = False # fix since braking loop while updating table is not allowed
-        for row in meta_table.where('name == b"{}"'.format(name)):
-            got_row = True
-            for item in meta_table.colnames:
-                ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
-                if description_array['editable'][ind]:
-                    try:
-                        value = description_dict[item]
-                    except KeyError:
-                        pass
-                    else:
-                        if row[item] != value:
-                            row[item] = value
-                            logger.debug('Updated {0} value to {1} for simulation {2}'.format(item, value, name))
-                            if description_array['volatale'][ind]:
-                                purge_simulation = True
-            
-            row.update()
-            
+        row_updated = False
+        for ind, row in enumerate(meta_table.where('name == b"{}"'.format(name))):
+
+            if ind == 0:
+                got_row = True
+
+                for item in meta_table.colnames:
+                    ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
+                    if description_array['editable'][ind] or item in ['MC_ready',]:
+                        try:
+                            value = description_dict[item]
+                        except KeyError:
+                            pass
+                        else:
+                            if row[item] != value:
+                                row[item] = value
+                                row_updated = True
+                                logger.debug('Updated {0} value to {1} for simulation {2}'.format(item, value, name))
+                                if description_array['volatale'][ind]:
+                                    purge_simulation = True
+                if row_updated:
+                    row.update()
+                
         if not got_row:
             self.close()
             logger.warning('Could not update {0}. No simulation named {0} in database'.format(name))
-            raise ValueError('No simulation named {} in database'.format(name))
+#            raise ValueError('No simulation named {} in database'.format(name))
         else:
-            meta_table.flush()            
-        
-        
+            meta_table.flush()               
+            
         if purge_simulation:
             self.purge_simulation(name)
         self.close()

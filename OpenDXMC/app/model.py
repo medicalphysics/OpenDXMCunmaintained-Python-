@@ -10,7 +10,7 @@ from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
 from opendxmc.study import import_ct_series, Simulation, SIMULATION_DESCRIPTION
 from opendxmc.materials import Material
-
+from opendxmc.runner import ct_runner
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -22,6 +22,8 @@ class DatabaseInterface(QtCore.QObject):
     recive_simulation_list = QtCore.pyqtSignal(list)
     recive_material_list = QtCore.pyqtSignal(list)
 
+    
+    request_simulation_run = QtCore.pyqtSignal(Simulation, list)
     request_simulation_view = QtCore.pyqtSignal(Simulation)
     request_material_view = QtCore.pyqtSignal(Material)
     database_busy = QtCore.pyqtSignal(bool)
@@ -131,7 +133,54 @@ class DatabaseInterface(QtCore.QObject):
         self.select_simulation(prop_dict['name'])
         self.database_busy.emit(False)
 
+    @QtCore.pyqtSlot()
+    def get_run_simulation(self):
+        self.database_busy.emit(True)
+        try:
+            sim = self.__db.get_MCready_simulation()
+        except ValueError:
+            logger.debug('Request to run simulations failed.')
+            self.database_busy.emit(False)
+            logger.warning('Failed')
+            return
+        else:
+            pass
         
+        try:
+            materials = self.__db.get_materials(organic_only=True)
+        except ValueError:
+            self.database_busy.emit(False)
+            logger.warning('failed')
+            return 
+            
+        logger.debug('Emmitting signal for request to run simulation {}'.format(sim.name))    
+        self.request_simulation_run.emit(sim, materials)
+        self.database_busy.emit(False)
+
+    @QtCore.pyqtSlot(Simulation)
+    def set_run_simulation(self, sim):
+        self.database_busy.emit(True)
+        self.__db.add_simulation(sim)
+        self.database_busy.emit(False)
+        self.get_run_simulation()
+        
+class RunManager(QtCore.QObject):
+    mc_calculation_finished = QtCore.pyqtSignal(Simulation)
+    def __init__(self, interface, parent=None):
+        super().__init__(parent)
+        interface.request_simulation_run.connect(self.run_simulation)
+        self.mc_calculation_finished.connect(interface.set_run_simulation)        
+        
+    @QtCore.pyqtSlot(Simulation, list)
+    def run_simulation(self, sim, mat_list):
+        ct_runner(sim, mat_list, energy_imparted_to_dose_conversion=True)
+        self.mc_calculation_finished.emit(sim)
+        
+    
+    
+    
+        
+  
 class ListModel(QtCore.QAbstractListModel):
 
     request_data_list = QtCore.pyqtSignal()
@@ -270,6 +319,7 @@ class ListView(QtGui.QListView):
 class PropertiesModel(QtCore.QAbstractTableModel):
     error_setting_value = QtCore.pyqtSignal(str)
     request_simulation_update = QtCore.pyqtSignal(dict)
+    request_simulation_start = QtCore.pyqtSignal()
     unsaved_data_changed = QtCore.pyqtSignal(bool)
     
     def __init__(self, interface, parent=None):
@@ -280,6 +330,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         self.__indices.sort()
         interface.request_simulation_view.connect(self.update_data)
         self.request_simulation_update.connect(interface.update_simulation_properties)
+        self.request_simulation_start.connect(interface.get_run_simulation)
         self.__simulation = Simulation('None')
         
 
@@ -288,9 +339,18 @@ class PropertiesModel(QtCore.QAbstractTableModel):
 
     @QtCore.pyqtSlot()
     def apply_properties(self):
+        self.__data['MC_ready'][0] = True
         self.__init_data = self.__data
         self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
         self.unsaved_data_changed.emit(False)
+
+    @QtCore.pyqtSlot()
+    def run_simulation(self):
+        self.__data['MC_running'][0] = True
+        self.__data['MC_ready'][0] = True
+        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+        self.unsaved_data_changed.emit(False)        
+        self.request_simulation_start.emit()        
         
     def test_for_unsaved_changes(self):
         for key, value in self.__data.items():
@@ -304,6 +364,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
 
     @QtCore.pyqtSlot(Simulation)
     def update_data(self, sim):
+        print('Viewed')
         self.layoutAboutToBeChanged.emit()
         for key, value in sim.description.items():
             self.__data[key][0] = value
@@ -500,11 +561,14 @@ class PropertiesWidget(QtGui.QWidget):
         model.unsaved_data_changed.connect(apply_button.setDisabled)
                 
         
-        run_button = QtGui.QPushButton()         
+        run_button = QtGui.QPushButton()    
+        run_button.setText('Run')
+        run_button.clicked.connect(model.request_simulation_start)        
         
         button_layout = QtGui.QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.addWidget(apply_button)
+        button_layout.addWidget(run_button)
         
         self.layout().addLayout(button_layout)
     
