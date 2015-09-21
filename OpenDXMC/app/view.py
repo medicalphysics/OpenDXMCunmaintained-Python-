@@ -16,33 +16,37 @@ logger = logging.getLogger('OpenDXMC')
 
 
 class ViewController(QtCore.QObject):
-    viewCtDoseArray = QtCore.pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
-    def __init__(self, database_interface, view, parent=None):
+    
+    def __init__(self, database_interface, parent=None):
         super().__init__(parent)
         database_interface.request_simulation_view.connect(self.applySimulation)
 
-        self.view = view()
-        self.dosescene = DoseScene()
-        self.viewCtDoseArray.connect(self.dosescene.setCtDoseArrays)
-        self.view.setScene(self.dosescene)
+        self.scenes = {'planning': PlanningScene(self), 
+                       'energy_imparted': DoseScene(self),} 
+#                       'material': PlanningScene()}
+        
+        self.graphicsview = View()
+        self.graphicsview.setScene(self.scenes['planning'])
     
     @property
     def view(self):
-        return self.view
+        return self.graphicsview
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
         logger.debug('Got signal request to view Simulation {}'.format(sim.name))
-        if sim.energy_imparted is None:
+        if sim.energy_imparted is not None:
+            
             logger.debug('View request for Simulation {} denied: No dose array available'.format(sim.name))
-        elif sim.ctarray is None:
-            logger.debug('View request for Simulation {} denied: No CT array available.'.format(sim.name))
+        if sim.ctarray is not None:
+            self.scenes['planning'].setCtArray(sim.ctarray, sim.spacing, sim.exposure_modulation)
+            logger.debug('Populating planning scene'.format(sim.name))
         else:
-            self.viewCtDoseArray.emit(sim.ctarray, sim.energy_imparted, sim.spacing)
+            pass
 
-    @QtCore.pyqtSlot(np.ndarray)
-    def updateDoseArray(self, array):
-        pass
+        scene = self.scenes['planning']
+        self.view.setScene(scene)
+        self.view.fitInView(scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level, front_lut, back_lut):
@@ -106,7 +110,7 @@ def arrayToQImage(array, level, lut):
     WC, WW = level[0], level[1]
     np.clip(array, WC-WW, WC+WW, out=array)
     array -= (WC - WW)
-    array *= 256./(WW*2)
+    array *= 255./(WW*2)
 
 #    array = (np.clip(array, WC - 0.5 - (WW-1) / 2, WC - 0.5 + (WW - 1) / 2) -
 #             (WC - 0.5 - (WW - 1) / 2)) * 255 / ((WC - 0.5 + (WW - 1) / 2) -
@@ -115,8 +119,8 @@ def arrayToQImage(array, level, lut):
     h, w = array.shape
     result = QtGui.QImage(array.data, w, h, QtGui.QImage.Format_Indexed8)
 #    result.ndarray = array
-    result.setColorTable(lut)
-#    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, LUT_TABLE[lut])
+#    result.setColorTable(lut)
+    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, lut)
     result.ndarray = array
     return result
 
@@ -204,11 +208,11 @@ class BlendImageItem(QtGui.QGraphicsItem):
 class ImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None, image=None, level=None, shape=None):
         super().__init__(parent)
-#        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         if image is None:
             if shape is None:
                 shape = (512, 512)
-            self.image = np.zeros(shape)
+            self.image = np.random.uniform(-500, 500,size=shape)
         else:
             self.image = image.view(np.ndarray)
         if image is not None and level is None:
@@ -216,7 +220,7 @@ class ImageItem(QtGui.QGraphicsItem):
             ma = image.max() + 1
             self.level = ((ma - mi) / 2, ) * 2
         elif level is None:
-            self.level = (-100, 100)
+            self.level = (0, 700)
         else:
             self.level = level
 
@@ -249,8 +253,8 @@ class ImageItem(QtGui.QGraphicsItem):
         self.update(self.boundingRect())
 
     def render(self):
-        self.qimage = arrayToQImage(self.image, self.level[0],
-                                    self.level[1])
+        self.qimage = arrayToQImage(self.image, self.level,
+                                    self.lut)
 
     def shape(self):
         path = QtGui.QPainterPath()
@@ -258,39 +262,80 @@ class ImageItem(QtGui.QGraphicsItem):
         return path
 
     def paint(self, painter, style, widget=None):
-        if self.qimage is None:
-            self.render()
-        painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
+        painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
 #        super(ImageItem, self).paint(painter, style, widget)
 
+class AecItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.aec = np.zeros((5, 2))
+        self.view_slice = 0
+        self.shape = (1, 1, 1)        
+        
+    def set_aec(self, aec, view_slice, shape):
+        self.shape = shape
+        self.view_slice = view_slice
+        
+        self.aec = aec
+        print(aec.shape)
+        self.aec[:, 0] -= self.aec[:, 0].min()
+        self.aec[:, 0] *= float(shape[2]) / self.aec[:, 0].max()
+#        self.aec[:, 0] += min([self.aec[0, 1], self.aec[-1, 1]])
+        self.aec[:, 1] /= self.aec[:, 1].max()
+    
+    def boundingRect(self):
+        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_slice)
+        return QtCore.QRectF(self.x(), self.y(), shape[1], shape[0])
+        
+
+    def paint(self, painter, style, widget=None):
+        if self.view_slice == 2:
+            return
+        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_slice)
+        
+        painter.setPen(QtGui.QPen(QtCore.Qt.white))
+        painter.drawLine(0, shape[0], shape[1], shape[0])
+        painter.drawLine(0, shape[0], 0, 0)
+        path = QtGui.QPainterPath(QtCore.QPointF(self.aec[0, 0], (1.-self.aec[0, 1])*self.shape[1]))
+        for i in range(1, self.aec.shape[0]):
+            path.lineTo(self.aec[i, 0], (1.-self.aec[i, 1])*self.shape[1])
+        painter.drawPath(path)
+       
+    
+    
 class PlanningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
-        self.ct_array = None
-        self.shape = (0, 0, 0)
+        self.addItem(self.image_item)
+        self.aec_item = AecItem()
+        self.addItem(self.aec_item)
+
+        self.array = np.random.uniform(size=(8, 8, 8))
+        self.shape = (8, 8, 8)
         self.spacing = (1., 1., 1.)
         self.index = 0
         self.view_slice = 1
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray)
-    def setCtArray(self, ct, spacing, start, stop):
+    def setCtArray(self, ct, spacing, aec):
         #setting transform
         sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-        self.ct_array = ct
+        self.aec_item.setTransform(transform)
+        self.aec_item.set_aec(aec, self.view_slice, ct.shape)       
+        self.array = ct
         self.shape = ct.shape
         self.spacing = spacing
-        self.index = 0
-        self.reloadImages()
-        rect = transform.mapRect(self.image_item.boundingRect())
-
-        self.setSceneRect(rect)
-        for view in self.views():
-            view.fitInView(rect)
+        self.index = self.index % self.shape[self.view_slice]
+        
         logger.debug('Planningscene is setting image data')
-
+        self.reloadImages()        
+        rect = transform.mapRect(self.image_item.boundingRect())
+        
+        self.setSceneRect(rect)
+        
     def getSlice(self, array, index):
         if self.view_slice == 2:
             return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_slice]]))
@@ -302,13 +347,14 @@ class PlanningScene(QtGui.QGraphicsScene):
 
 
     def reloadImages(self):
-        self.image_item.setImage(self.getSlice(self.dose_array, self.index))
+        self.image_item.setImage(self.getSlice(self.array, self.index))
 
     def wheelEvent(self, ev):
         if ev.delta() > 0:
             self.index += 1
         elif ev.delta() < 0:
             self.index -= 1
+        self.index %= self.shape[self.view_slice]
         self.reloadImages()
         ev.accept()
 
@@ -338,14 +384,15 @@ class DoseScene(QtGui.QGraphicsScene):
         self.shape = ct.shape
         self.spacing = spacing
         self.index = 0
-        self.reloadImages()
+        
         rect = transform.mapRect(self.image_item.boundingRect())
 
         self.setSceneRect(rect)
         for view in self.views():
             view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
         logger.debug('Dosescene is setting image data')
-
+        self.reloadImages()
+        
     @QtCore.pyqtSlot(np.ndarray)
     def setDoseArray(self, dose):
         self.dose_array = dose

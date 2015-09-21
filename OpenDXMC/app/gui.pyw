@@ -164,11 +164,11 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
         
-        simulation_editor = PropertiesWidget(self.interface)
-        central_splitter.addWidget(simulation_editor)
+#        simulation_editor = PropertiesWidget(self.interface)
+#        central_splitter.addWidget(simulation_editor)
 
         self.viewcontroller = ViewController(self.interface)
-        central_splitter.addWidget(self.viewcontroller.view())
+        central_splitter.addWidget(self.viewcontroller.view)
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
