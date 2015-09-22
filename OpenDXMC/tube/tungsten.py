@@ -301,7 +301,7 @@ def specter(T0, angle_deg=None, angle_rad=None,
                 continue
             N_obs *= np.exp(-attinuation(hv, name, True) * mm / 10.)
     except Exception as e:
-        print(e)
+        raise e
     electrons_per_mas = 1. / 1.60217657e-16
     if detector_area is None:
         red_factor = 1.

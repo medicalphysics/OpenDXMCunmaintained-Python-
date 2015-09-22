@@ -180,7 +180,6 @@ class Database(object):
         meta_table = self.get_node('/', 'meta_data',
                                    obj=simulation.numpy_dtype())
         #test for existing data
-        print(simulation.name)
         matching_names = meta_table.get_where_list('name == b"{}"'.format(simulation.name))
         if len(matching_names) > 0:
             if not overwrite:
@@ -270,7 +269,7 @@ class Database(object):
             self.close()
             raise ValueError('No simulations in database')
         meta_table = self.get_node('/', 'meta_data', create=False)
-        
+
         for row in meta_table.where('MC_ready & ~ MC_finished'):
             simulation = Simulation(str(row['name'], encoding='utf-8'))
             for key in meta_table.colnames:
@@ -284,7 +283,7 @@ class Database(object):
             logger.debug('No ready simulations found.')
             raise ValueError('No simulations ready')
 
-        
+
         pat_node = self.get_node('/simulations', simulation.name, create=False)
         for data_node in pat_node._f_walknodes('Array'):
             node_name = data_node._v_name
@@ -313,7 +312,7 @@ class Database(object):
         meta_table = self.get_node('/', 'meta_data', create=False)
         description_array = self.get_node('/', 'meta_description', create=False).read()
 
-        purge_simulation = False  
+        purge_simulation = False
 
         got_row = False # fix since braking loop while updating table is not allowed
         row_updated = False
@@ -338,15 +337,15 @@ class Database(object):
                                     purge_simulation = True
                 if row_updated:
                     row.update()
-                
+
         if not got_row:
             self.close()
             logger.warning('Could not update {0}. No simulation named {0} in database'.format(name))
 #            raise ValueError('No simulation named {} in database'.format(name))
         else:
-            meta_table.flush()               
+            meta_table.flush()
         if array_dict is not None:
-            for key, value in array_dict.items():        
+            for key, value in array_dict.items():
                 if self.test_node('/simulations/{}'.format(key), name):
                     arr_node = self.get_node('/simulations/{}'.format(key), name, create=False)
                     arr_node[:, :, :] = value[:, :, :]

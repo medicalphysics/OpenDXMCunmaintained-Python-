@@ -1,13 +1,20 @@
-from time import time
-cdef inline unsigned long time_based_seed() except? 0:
-    # on Windows, unsigned long is only 32 bits.  Subtract 30 years
-    # of seconds, so this value will fit.
-    cdef double time_val = time()
-    return <unsigned long> ((time_val - 946080000.0) * 100000.0)
+include "available_modules.pxi"
+
+IF CYTIME_AVAILABLE == 1:
+    from opendxmc.engine.cytime cimport time
+    cdef inline unsigned long time_based_seed() nogil:
+        return <unsigned long> (time() * 100000.0)
+ELSE:
+    from time import time
+    cdef inline unsigned long time_based_seed() except? 0:
+        # on Windows, unsigned long is only 32 bits.  Subtract 30 years
+        # of seconds, so this value will fit.
+        cdef double time_val = time()
+        return <unsigned long> ((time_val - 946080000.0) * 100000.0)
 
 from libc.math cimport log, sqrt
 
-from _random cimport (
+from opendxmc.engine._random cimport (
     genrand_int32, init_genrand, init_by_array, N as mt_N)
 
 from numpy cimport int64_t, uint8_t, uint64_t

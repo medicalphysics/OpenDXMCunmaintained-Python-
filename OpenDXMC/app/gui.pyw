@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, PropertiesView, PropertiesWidget, RunManager
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -65,7 +65,7 @@ class BusyWidget(QtGui.QWidget):
         self.setToolTip('Writing or Reading to Database')
         self.layout().addWidget(label)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        
+
         self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, 'OpenDXMC'))
 #        self.setMinimumWidth(20)
         self.setVisible(False)
@@ -120,7 +120,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatusBar(status_bar)
 
         # logging
-        self.log_widget = LogWidget()
+        self.log_widget = LogWidget(self)
         self.log_handler = LogHandler(self)
         self.log_handler.message.connect(self.log_widget.insertPlainText)
         self.log_widget.closed.connect(statusbar_log_button.setChecked)
@@ -137,7 +137,8 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
         # Databse interface
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
+#        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'))
         self.interface.database_busy.connect(database_busywidget.start)
 
         ## MC runner
@@ -163,12 +164,12 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
-        
+
 #        simulation_editor = PropertiesWidget(self.interface)
 #        central_splitter.addWidget(simulation_editor)
 
         self.viewcontroller = ViewController(self.interface)
-        central_splitter.addWidget(self.viewcontroller.view)
+        central_splitter.addWidget(self.viewcontroller.view_widget())
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -182,10 +183,10 @@ class MainWindow(QtGui.QMainWindow):
         self.mc_thread = QtCore.QThread(self)
         self.mcrunner.moveToThread(self.mc_thread)
         self.mc_thread.start()
-        
+
         self.mcrunner.mc_calculation_finished.emit()
 
-  
+
 
 
 def main(args):
