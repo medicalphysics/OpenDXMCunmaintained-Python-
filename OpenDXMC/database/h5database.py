@@ -265,7 +265,11 @@ class Database(object):
             logger.warning('There is no simulations in database')
             self.close()
 
-        meta_table = self.get_node('/', 'meta_data')
+        if not self.test_node('/', 'meta_data'):
+            logger.info('Could not scan for MC jobs, no simulations in database')
+            self.close()
+            raise ValueError('No simulations in database')
+        meta_table = self.get_node('/', 'meta_data', create=False)
         
         for row in meta_table.where('MC_ready & ~ MC_finished'):
             simulation = Simulation(str(row['name'], encoding='utf-8'))
@@ -277,7 +281,7 @@ class Database(object):
             break
         else:
             self.close()
-            logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(simulation.name))
+            logger.debug('No ready simulations found.')
             raise ValueError('No simulations ready')
 
         
@@ -298,7 +302,7 @@ class Database(object):
         self.close()
         logger.debug('Purged simulation {}'.format(name))
 
-    def update_simulation(self, description_dict):
+    def update_simulation(self, description_dict, array_dict=None, purge_volatiles=False):
         try:
             assert isinstance(description_dict, dict)
         except AssertionError:
@@ -341,8 +345,16 @@ class Database(object):
 #            raise ValueError('No simulation named {} in database'.format(name))
         else:
             meta_table.flush()               
-            
-        if purge_simulation:
+        if array_dict is not None:
+            for key, value in array_dict.items():        
+                if self.test_node('/simulations/{}'.format(key), name):
+                    arr_node = self.get_node('/simulations/{}'.format(key), name, create=False)
+                    arr_node[:, :, :] = value[:, :, :]
+                    logger.info('Updated {0} for simulation node {1}'.format(key, name))
+                else:
+                    self.get_node('/simulations/{}'.format(key), name, create=True, obj=value)
+                    logger.info('Created {0} for simulation node {1}'.format(key, name))
+        if purge_simulation and purge_volatiles:
             self.purge_simulation(name)
         self.close()
         logger.debug('Updated metadata for simulation {}'.format(name))

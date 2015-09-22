@@ -183,9 +183,9 @@ class MainWindow(QtGui.QMainWindow):
         self.mcrunner.moveToThread(self.mc_thread)
         self.mc_thread.start()
         
+        self.mcrunner.mc_calculation_finished.emit()
 
-    def __init_database(self):
-        pass
+  
 
 
 def main(args):

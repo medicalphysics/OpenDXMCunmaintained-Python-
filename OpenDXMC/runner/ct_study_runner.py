@@ -173,7 +173,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
     else:
         # Testing for required materials if the simulation have a material_map
         material_names = [m.name for m in materials]
-        for m_name in simulation.material_map['values']:
+        for m_name in simulation.material_map['value']:
             if m_name not in material_names:
                 raise ValueError('Provided materials are not in ct study')
 
@@ -200,7 +200,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
             raise ValueError('Error in material definitions for simulation')
 
 
-def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True):
+def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, callback=None):
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 
@@ -255,6 +255,8 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True):
         score_energy(p, N, simulation.spacing, offset, simulation.material,
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
+        if callback and time.clock()-time_start:
+            callback(simulation.name, energy_imparted, e + 1)
         simulation.start_at_exposure_no = e + 1
 
     generate_dose_conversion_factor(simulation, materials)

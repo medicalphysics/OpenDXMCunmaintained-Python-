@@ -125,12 +125,11 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(False)
         self.get_simulation_list()
     
-    @QtCore.pyqtSlot(dict)
-    def update_simulation_properties(self, prop_dict):
+    @QtCore.pyqtSlot(dict, dict, bool)
+    def update_simulation_properties(self, prop_dict, arr_dict, purge_volatiles):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
-        self.__db.update_simulation(prop_dict)
-        self.select_simulation(prop_dict['name'])
+        self.__db.update_simulation(prop_dict, arr_dict, purge_volatiles)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot()
@@ -157,26 +156,43 @@ class DatabaseInterface(QtCore.QObject):
         self.request_simulation_run.emit(sim, materials)
         self.database_busy.emit(False)
 
-    @QtCore.pyqtSlot(Simulation)
-    def set_run_simulation(self, sim):
-        self.database_busy.emit(True)
-        self.__db.add_simulation(sim)
-        self.database_busy.emit(False)
-        self.get_run_simulation()
+#    @QtCore.pyqtSlot(Simulation)
+#    def set_run_simulation(self, sim):
+#        self.database_busy.emit(True)
+#        self.__db.add_simulation(sim)
+#        self.database_busy.emit(False)
+#        self.get_run_simulation()
         
 class RunManager(QtCore.QObject):
-    mc_calculation_finished = QtCore.pyqtSignal(Simulation)
+    mc_calculation_finished = QtCore.pyqtSignal()
+    
+    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool)
     def __init__(self, interface, parent=None):
         super().__init__(parent)
         interface.request_simulation_run.connect(self.run_simulation)
-        self.mc_calculation_finished.connect(interface.set_run_simulation)        
-        
+        self.mc_calculation_finished.connect(interface.get_run_simulation)        
+        self.request_update_simulation.connect(interface.update_simulation_properties)
+        self.timer_interval = 1000 * 60 * 10
+        self.timer = QtCore.QBasicTimer()
+    
     @QtCore.pyqtSlot(Simulation, list)
     def run_simulation(self, sim, mat_list):
-        ct_runner(sim, mat_list, energy_imparted_to_dose_conversion=True)
-        self.mc_calculation_finished.emit(sim)
+        self.timer.stop()
+        self.timer.start(1000 * 60 * 10)
+        ct_runner(sim, mat_list, energy_imparted_to_dose_conversion=True, callback=self.update_simulation_iteration)
+               
+        self.request_update_simulation.emit(sim.description, sim.volatiles, False)
+        self.mc_calculation_finished.emit()
+        self.timer.stop()
         
-    
+    def update_simulation_iteration(self, name, energy_imparted, exposure_number):
+        if not self.timer.isActive():
+            desc = {'name': name, 
+                    'start_at_exposure_no': exposure_number}
+            arrs = {'energy_imparted': energy_imparted}
+            self.request_update_simulation.emit(desc, arrs, False)
+            self.timer.start(self.timer_interval)
+        
     
     
         
@@ -358,9 +374,6 @@ class PropertiesModel(QtCore.QAbstractTableModel):
                 self.unsaved_data_changed.emit(True)
                 return
         self.unsaved_data_changed.emit(False)
-        
-        
-    
 
     @QtCore.pyqtSlot(Simulation)
     def update_data(self, sim):

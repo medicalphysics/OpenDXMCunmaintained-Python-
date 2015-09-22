@@ -123,6 +123,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
     if batch_size is None:
         batch_size = 1
+    if batch_size < 1:
+        batch_size = 1
     batch_size *= histories
     
     assert batch_size % histories == 0

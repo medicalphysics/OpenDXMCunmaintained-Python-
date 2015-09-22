@@ -14,7 +14,19 @@ from .dicom_lut import get_lut
 import logging
 logger = logging.getLogger('OpenDXMC')
 
-
+class SceneSelectButton(QtGui.QPushButton):
+    scene_selected = QtCore.pyqtSignal(str)
+    def __init__(self, name, parent=None):
+        super().__init__(parent)
+        self.name = name
+        self.setFlat(True)
+        self.setText(self.name)
+    
+    @QtCore.pyqtSlot()
+    def relay_clicked(self):
+        self.scene_selected.emit(self.name)
+    
+        
 class ViewController(QtCore.QObject):
     
     def __init__(self, database_interface, parent=None):
@@ -27,10 +39,21 @@ class ViewController(QtCore.QObject):
         
         self.graphicsview = View()
         self.graphicsview.setScene(self.scenes['planning'])
+
+        self.scene_change_buttons = {}        
+        for key, value in self.scenes.items():
+            self.scene_change_buttons[key] = SceneSelectButton(key)
+            self.scene_change_buttons[key].scene_selected.connect(self.selectScene)
     
     @property
     def view(self):
         return self.graphicsview
+
+    def buttons(self):
+        return 
+    @QtCore.pyqtSlot(str)
+    def selectScene(self, scene_name):
+        self.graphicsview.setScene(self.scenes[scene_name])
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
