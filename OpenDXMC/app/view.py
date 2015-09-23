@@ -36,7 +36,8 @@ class ViewController(QtCore.QObject):
         self.scenes = {'planning': PlanningScene(self),
                        'energy_imparted': DoseScene(self),}
 #                       'material': PlanningScene()}
-
+        self.current_scene = 'planning'
+        self.current_view_orientation = 2
         self.graphicsview = View()
         self.graphicsview.setScene(self.scenes['planning'])
 
@@ -49,10 +50,13 @@ class ViewController(QtCore.QObject):
     def view_widget(self):
         wid = QtGui.QWidget()
         main_layout = QtGui.QVBoxLayout()
-
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
         menu_widget = QtGui.QMenuBar(wid)
-        menu_widget.addAction(QtGui.QAction('Test', menu_widget))
+        menu_widget.setContentsMargins(0, 0, 0, 0)
+        orientation_action = QtGui.QAction('Orientation', menu_widget)
+        orientation_action.triggered.connect(self.selectViewOrientation)
+        menu_widget.addAction(orientation_action)
         main_layout.addWidget(menu_widget)
 
         main_layout.addWidget(self.graphicsview)
@@ -63,10 +67,17 @@ class ViewController(QtCore.QObject):
 
         return wid
 
+    @QtCore.pyqtSlot()
+    def selectViewOrientation(self):
+        self.current_view_orientation += 1
+        self.current_view_orientation %= 3
+        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(), QtCore.Qt.KeepAspectRatio)
 
     @QtCore.pyqtSlot(str)
     def selectScene(self, scene_name):
-        self.graphicsview.setScene(self.scenes[scene_name])
+        self.current_scene = scene_name
+        self.graphicsview.setScene(self.scenes[self.current_scene])
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
@@ -274,8 +285,7 @@ class ImageItem(QtGui.QGraphicsItem):
         return self.qimage
 
     def boundingRect(self):
-        x, y = self.image.shape
-        return QtCore.QRectF(0, 0, y, x)
+        return QtCore.QRectF(self.qImage().rect())
 
     def setImage(self, image):
         self.image = image.view(np.ndarray)
@@ -305,53 +315,89 @@ class AecItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.aec = np.zeros((5, 2))
-        self.view_slice = 0
+        self.view_orientation = 2
         self.shape = (1, 1, 1)
+        self.index = 0
+        self.__path = None
+        self.__path_pos = None
 
-    def set_aec(self, aec, view_slice, shape):
+    def set_aec(self, aec, view_orientation, shape):
         self.shape = shape
-        self.view_slice = view_slice
+        self.view_orientation = view_orientation
 
         self.aec = aec
         self.aec[:, 0] -= self.aec[:, 0].min()
         self.aec[:, 0] /= self.aec[:, 0].max()
-#        self.aec[:, 0] += min([self.aec[0, 1], self.aec[-1, 1]])
+
         self.aec[:, 1] -= self.aec[:, 1].min()
         self.aec[:, 1] /= self.aec[:, 1].max()
+
+        self.__path = None
+        self.__path_pos = None
         self.prepareGeometryChange()
+
         self.update(self.boundingRect())
 
     def boundingRect(self):
-        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_slice)
+        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
         return QtCore.QRectF(0, 0, shape[1], shape[0]*.1)
 
+    def setIndex(self, index):
+        self.index = index % self.shape[self.view_orientation]
+        self.__path_pos = None
+#        self.prepareGeometryChange()
+        self.update(self.boundingRect())
+
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation
+        self.__path = None
+        self.__path_pos = None
+        self.prepareGeometryChange()
+        self.update(self.boundingRect())
+
     def aec_path(self):
-        rect = self.boundingRect()
-        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_slice)
-        path = QtGui.QPainterPath()
 
-        print(self.aec.min(axis=0), self.aec.max(axis=0))
+        if self.__path is None:
+            shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
+            self.__path = QtGui.QPainterPath()
 
-        x = self.aec[:, 0] * shape[1]
-        y = (1.-self.aec[:, 1]) * shape[0] *.1
-        print(y.min(), y.max())
-#        print(x)
-#        print(y)
-        path.moveTo(x[0], y[0])
-        for i in range(1, self.aec.shape[0]):
-            path.lineTo(x[i], y[i])
+            x = self.aec[:, 0] * shape[1]
+            y = (1.-self.aec[:, 1]) * shape[0] *.1
+            self.__path.moveTo(x[0], y[0])
+            for i in range(1, self.aec.shape[0]):
+                self.__path.lineTo(x[i], y[i])
 
-        return path
+            self.__path.moveTo(0, 0)
+            self.__path.lineTo(0, shape[0]*.1)
+            self.__path.lineTo(shape[1], shape[0]*.1)
+            self.__path.lineTo(shape[1], 0)
+            self.__path.lineTo(0, 0)
+
+
+        if self.__path_pos is None:
+            self.__path_pos = QtGui.QPainterPath()
+            if self.view_orientation == 2:
+                shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
+                self.__path_pos = QtGui.QPainterPath()
+                x = self.aec[:, 0] * shape[1]
+                y = (1.-self.aec[:, 1]) * shape[0] *.1
+                x_c = self.index / self.shape[2]
+                y_c = 1. - np.interp(x_c, self.aec[:, 0], self.aec[:, 1])
+                self.__path_pos.addEllipse(QtCore.QPointF(x_c * shape[1], y_c * shape[0] *.1), shape[0]*.005, shape[0]*.01)
+
+        p = QtGui.QPainterPath()
+        p.addPath(self.__path)
+        p.addPath(self.__path_pos)
+        return p
 
     def paint(self, painter, style, widget=None):
-        if self.view_slice == 2:
-            return
-#        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_slice)
+#        if self.view_orientation == 2:
+#            return
+#        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
 
         painter.setPen(QtGui.QPen(QtCore.Qt.white))
-
+        painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
-
 
 
 class PlanningScene(QtGui.QGraphicsScene):
@@ -366,49 +412,72 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
         self.index = 0
-        self.view_slice = 1
+        self.view_orientation = 2
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray)
     def setCtArray(self, ct, spacing, aec):
         #setting transform
-        sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
-        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-        self.image_item.setTransform(transform)
-        self.aec_item.setTransform(transform)
-        self.aec_item.set_aec(aec, self.view_slice, ct.shape)
+
+
 #        self.aec_item.setPos(self.image_item.boundingRect().center())
 
 
         self.array = ct
         self.shape = ct.shape
         self.spacing = spacing
-        self.index = self.index % self.shape[self.view_slice]
+        self.index = self.index % self.shape[self.view_orientation]
+        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+
 
         logger.debug('Planningscene is setting image data')
-        self.reloadImages()
-        rect = transform.mapRect(self.image_item.boundingRect().united(self.aec_item.boundingRect()))
+#        self.reloadImages()
 
-        self.setSceneRect(rect)
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation
+        self.aec_item.setViewOrientation(view_orientation)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def updateSceneTransform(self):
+        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.aec_item.setTransform(transform)
+
+        self.aec_item.prepareGeometryChange()
+        self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
+
+#        self.image_item.prepareGeometryChange()
+
+
+
+        self.setSceneRect(self.itemsBoundingRect())
 
     def getSlice(self, array, index):
-        if self.view_slice == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_slice]]))
-        elif self.view_slice == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[self.view_slice], :]))
-        elif self.view_slice == 0:
-            return np.copy(np.squeeze(array[index % self.shape[self.view_slice], :, :]))
+        if self.view_orientation == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
+        elif self.view_orientation == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
+        elif self.view_orientation == 0:
+            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
 
 
     def reloadImages(self):
         self.image_item.setImage(self.getSlice(self.array, self.index))
+        self.aec_item.setIndex(self.index)
 
     def wheelEvent(self, ev):
         if ev.delta() > 0:
             self.index += 1
         elif ev.delta() < 0:
             self.index -= 1
-        self.index %= self.shape[self.view_slice]
+        self.index %= self.shape[self.view_orientation]
         self.reloadImages()
         ev.accept()
 
@@ -421,7 +490,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
         self.dose_array = None
         self.ct_array = None
-        self.view_slice = 2  # value 0, 1, 2
+        self.view_orientation = 2  # value 0, 1, 2
         self.shape = (0, 0, 0)
         self.index = 0
         self.spacing = (1., 1., 1.)
@@ -430,7 +499,7 @@ class DoseScene(QtGui.QGraphicsScene):
     def setCtDoseArrays(self, ct, dose, spacing):
         self.dose_array = gaussian_filter(dose, 1.)
         #setting transform
-        sx, sy = [spacing[i] for i in range(3) if i != self.view_slice]
+        sx, sy = [spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
         self.image_item.setLevels(front=(self.dose_array.max()/2.,self.dose_array.max()/2.))
@@ -453,12 +522,12 @@ class DoseScene(QtGui.QGraphicsScene):
         self.reloadImages()
 
     def getSlice(self, array, index):
-        if self.view_slice == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_slice]]))
-        elif self.view_slice == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[self.view_slice], :]))
-        elif self.view_slice == 0:
-            return np.copy(np.squeeze(array[index % self.shape[self.view_slice], :, :]))
+        if self.view_orientation == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
+        elif self.view_orientation == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
+        elif self.view_orientation == 0:
+            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
 
 
