@@ -33,15 +33,15 @@ SIMULATION_DESCRIPTION = {
     'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
     'pitch': [.9, np.double, True, True, 'Pitch'],
     'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
-    'histories': [10, np.int, True, True, 'Numper of photon histories per exposure'],
-    'batch_size': [500, np.int, True, True, 'Number og exposures in each calculation batch'],
+    'histories': [10, np.int, True, True, 'Number of photon histories per exposure'],
+    'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
     'start': [0, np.double, True, True, 'Start position [cm]'],
     'stop': [0, np.double, True, True, 'Stop position [cm]'],
     'step': [0, np.int, True, True, 'Sequential aqusition step size [cm]'],
     'start_at_exposure_no': [0, np.int, True, True, 'Start simulating exposure number'],
     'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
     'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
-#    'MC_running': [False, np.bool, False, False, 'Simulation is running'],
+    'MC_running': [False, np.bool, False, False, 'Simulation is running'],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
@@ -386,6 +386,13 @@ class Simulation(object):
     @MC_finished.setter
     def MC_finished(self, value):
         self.__description['MC_finished'] = bool(value)
+
+    @property
+    def MC_running(self):
+        return self.__description['MC_running']
+    @MC_running.setter
+    def MC_running(self, value):
+        self.__description['MC_running'] = bool(value)
 
     @property
     def MC_ready(self):

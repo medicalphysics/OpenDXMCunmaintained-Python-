@@ -28,6 +28,7 @@ class DatabaseInterface(QtCore.QObject):
     request_material_view = QtCore.pyqtSignal(Material)
     database_busy = QtCore.pyqtSignal(bool)
 
+    simulation_updated = QtCore.pyqtSignal(dict, dict)
 
     def __init__(self, database_qurl, parent=None):
         super().__init__(parent)
@@ -132,12 +133,15 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(False)
         self.get_simulation_list()
 
-    @QtCore.pyqtSlot(dict, dict, bool)
-    def update_simulation_properties(self, prop_dict, arr_dict, purge_volatiles):
+    @QtCore.pyqtSlot(dict, dict, bool, bool)
+    def update_simulation_properties(self, prop_dict, arr_dict, purge_volatiles, cancel_if_running=True):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
-        self.__db.update_simulation(prop_dict, arr_dict, purge_volatiles)
+        self.__db.update_simulation(prop_dict, arr_dict, purge_volatiles, cancel_if_running)
+        if prop_dict.get('MC_ready', False) and not prop_dict.get('MC_running', False):
+            self.get_run_simulation()
         self.database_busy.emit(False)
+        self.simulation_updated.emit(prop_dict, arr_dict)
 
     @QtCore.pyqtSlot()
     def get_run_simulation(self):
@@ -145,9 +149,8 @@ class DatabaseInterface(QtCore.QObject):
         try:
             sim = self.__db.get_MCready_simulation()
         except ValueError:
-            logger.debug('Request to run simulations failed.')
+            logger.debug('Request to get ready simulations failed for a mysterious reason.')
             self.database_busy.emit(False)
-            logger.warning('Failed')
             return
         else:
             pass
@@ -156,7 +159,7 @@ class DatabaseInterface(QtCore.QObject):
             materials = self.__db.get_materials(organic_only=True)
         except ValueError:
             self.database_busy.emit(False)
-            logger.warning('failed')
+            logger.warning('Request to materials for a ready simulations failed for a mysterious reason.')
             return
 
         logger.debug('Emmitting signal for request to run simulation {}'.format(sim.name))
@@ -169,36 +172,76 @@ class DatabaseInterface(QtCore.QObject):
 #        self.__db.add_simulation(sim)
 #        self.database_busy.emit(False)
 #        self.get_run_simulation()
-
-class RunManager(QtCore.QObject):
+class Runner(QtCore.QThread):
     mc_calculation_finished = QtCore.pyqtSignal()
+    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
+    request_view_update = QtCore.pyqtSignal(dict, dict)
 
-    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool)
-    def __init__(self, interface, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        interface.request_simulation_run.connect(self.run_simulation)
-        self.mc_calculation_finished.connect(interface.get_run_simulation)
-        self.request_update_simulation.connect(interface.update_simulation_properties)
         self.timer_interval = 1000 * 60 * 10
         self.timer = QtCore.QBasicTimer()
+        self.simulation = None
+        self.material_list = None
 
-    @QtCore.pyqtSlot(Simulation, list)
-    def run_simulation(self, sim, mat_list):
-        self.timer.stop()
-        self.timer.start(1000 * 60 * 10, self)
-        ct_runner(sim, mat_list, energy_imparted_to_dose_conversion=True, callback=self.update_simulation_iteration)
+    def update_simulation_iteration(self, name, energy_imparted, exposure_number):
+        desc = {'name': name,
+                'start_at_exposure_no': exposure_number}
+        arrs = {'energy_imparted': energy_imparted}
+        if not self.timer.isActive():
+            self.request_update_simulation.emit(desc, arrs, False, False)
+            self.timer.start(self.timer_interval, self)
+        else:
+            self.request_view_update.emit(desc, arrs)
 
-        self.request_update_simulation.emit(sim.description, sim.volatiles, False)
+    def run(self):
+        self.request_update_simulation.emit({'name': self.simulation.name,
+                                             'MC_running': True},
+                                            {},
+                                            False, False)
+        self.timer.start(self.timer_interval, self)
+        ct_runner(self.simulation, self.material_list,
+                  energy_imparted_to_dose_conversion=True,
+                  callback=self.update_simulation_iteration)
+        self.simulation.MC_running = False
+        self.simulation.MC_ready = False
+        self.simulation.MC_finished = True
+        self.request_update_simulation.emit(self.simulation.description,
+                                            self.simulation.volatiles,
+                                            False, False)
+
         self.mc_calculation_finished.emit()
         self.timer.stop()
 
-    def update_simulation_iteration(self, name, energy_imparted, exposure_number):
-        if not self.timer.isActive():
-            desc = {'name': name,
-                    'start_at_exposure_no': exposure_number}
-            arrs = {'energy_imparted': energy_imparted}
-            self.request_update_simulation.emit(desc, arrs, False)
-            self.timer.start(self.timer_interval)
+
+class RunManager(QtCore.QObject):
+    mc_calculation_running = QtCore.pyqtSignal(bool)
+    def __init__(self, interface, view_controller, parent=None):
+        super().__init__(parent)
+        self.runner = Runner()
+        interface.request_simulation_run.connect(self.run_simulation)
+        self.runner.mc_calculation_finished.connect(interface.get_run_simulation)
+        self.runner.request_update_simulation.connect(interface.update_simulation_properties)
+        self.runner.request_view_update.connect(view_controller.updateSimulation)
+        self.runner.finished.connect(self.run_finished)
+        self.runner.started.connect(self.run_started)
+
+    @QtCore.pyqtSlot()
+    def run_started(self):
+        self.mc_calculation_running.emit(True)
+
+    @QtCore.pyqtSlot()
+    def run_finished(self):
+        self.mc_calculation_running.emit(False)
+
+    @QtCore.pyqtSlot(Simulation, list)
+    def run_simulation(self, sim, mat_list):
+        logger.debug('Attemp to start MC thread')
+        if not self.runner.isRunning():
+            self.runner.simulation = sim
+            self.runner.material_list = mat_list
+            self.runner.start()
+            logger.debug('MC thread started')
 
 
 

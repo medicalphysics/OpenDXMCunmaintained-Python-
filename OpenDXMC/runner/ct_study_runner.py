@@ -174,7 +174,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
         # Testing for required materials if the simulation have a material_map
         material_names = [m.name for m in materials]
         for m_name in simulation.material_map['value']:
-            if m_name not in material_names:
+            if str(m_name, encoding='utf-8') not in material_names:
                 raise ValueError('Provided materials are not in ct study')
 
     # test for correct material geometry and mapping
@@ -261,8 +261,6 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     generate_dose_conversion_factor(simulation, materials)
     simulation.energy_imparted = energy_imparted
-    simulation.MC_finished = True
-    simulation.MC_ready = False
     simulation.start_at_exposure_no = 0
 
 

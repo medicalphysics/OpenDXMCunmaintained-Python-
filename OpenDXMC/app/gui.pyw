@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from opendxmc.app.view import View, ViewController
+from opendxmc.app.view import View, ViewController, PropertiesModel
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager
 import logging
 
@@ -50,7 +50,7 @@ class StatusBarButton(QtGui.QPushButton):
 
 
 class BusyWidget(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, tooltip=''):
         super().__init__(parent)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.progress)
@@ -61,13 +61,13 @@ class BusyWidget(QtGui.QWidget):
         self.setLayout(QtGui.QHBoxLayout())
         label = QtGui.QLabel('!')
         label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setToolTip('Writing or Reading to Database')
-        self.setToolTip('Writing or Reading to Database')
+        label.setToolTip(tooltip)
+        self.setToolTip(tooltip)
         self.layout().addWidget(label)
         self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, 'OpenDXMC'))
-#        self.setMinimumWidth(20)
+
         self.setVisible(False)
 
     @QtCore.pyqtSlot()
@@ -75,7 +75,7 @@ class BusyWidget(QtGui.QWidget):
         self.progress = (self.progress + 64) % 5760
 
     @QtCore.pyqtSlot(bool)
-    def start(self, start):
+    def busy(self, start):
         self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, '!!!')*2)
         if start and not self.isVisible():
             self.timer.start(50)
@@ -96,13 +96,14 @@ class BusyWidget(QtGui.QWidget):
         self.pen.setWidthF(d * .15)
         p = QtGui.QPainter(self)
         p.setRenderHint(p.Antialiasing, True)
-        p.setPen(self.pen)
 
-        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 16) % 360,
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 16) % 180 + 0,
                                                255, 255))
+        p.setPen(self.pen)
         p.drawArc(rect, self.progress, 960)
-        self.pen.setColor(QtGui.QColor.fromHsv((self.progress //64) % 360 + 180,
+        self.pen.setColor(QtGui.QColor.fromHsv((self.progress // 16) % 180 + 180,
                                                255, 255))
+        p.setPen(self.pen)
         p.drawArc(rect, self.progress + 2880, 960)
 
 
@@ -110,17 +111,20 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        database_busywidget = BusyWidget()
+        database_busywidget = BusyWidget(tooltip='Writing or Reading to Database')
+        simulation_busywidget = BusyWidget(tooltip='Monte Carlo simulation in progress')
 
         # statusbar
         status_bar = QtGui.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
-        status_bar.addPermanentWidget(statusbar_log_button)
+        status_bar.addPermanentWidget(simulation_busywidget)
         status_bar.addPermanentWidget(database_busywidget)
+        status_bar.addPermanentWidget(statusbar_log_button)
+
         self.setStatusBar(status_bar)
 
         # logging
-        self.log_widget = LogWidget(self)
+        self.log_widget = LogWidget()
         self.log_handler = LogHandler(self)
         self.log_handler.message.connect(self.log_widget.insertPlainText)
         self.log_widget.closed.connect(statusbar_log_button.setChecked)
@@ -139,10 +143,17 @@ class MainWindow(QtGui.QMainWindow):
         # Databse interface
 #        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
         self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'))
-        self.interface.database_busy.connect(database_busywidget.start)
+        self.interface.database_busy.connect(database_busywidget.busy)
+
+        self.properties_model = PropertiesModel(self.interface)
+
+        self.viewcontroller = ViewController(self.interface, self.properties_model)
+
 
         ## MC runner
-        self.mcrunner = RunManager(self.interface)
+        self.mcrunner = RunManager(self.interface, self.viewcontroller)
+        self.mcrunner.mc_calculation_running.connect(simulation_busywidget.busy)
+
 
         # Models
         self.simulation_list_model = ListModel(self.interface, self,
@@ -168,7 +179,7 @@ class MainWindow(QtGui.QMainWindow):
 #        simulation_editor = PropertiesWidget(self.interface)
 #        central_splitter.addWidget(simulation_editor)
 
-        self.viewcontroller = ViewController(self.interface)
+
         central_splitter.addWidget(self.viewcontroller.view_widget())
 
         central_widget.setLayout(central_layout)
@@ -176,15 +187,19 @@ class MainWindow(QtGui.QMainWindow):
 
         # threading
         self.database_thread = QtCore.QThread(self)
-#        logger.warning('DISABLED THREADING')
         self.interface.moveToThread(self.database_thread)
-        self.database_thread.start()
 
         self.mc_thread = QtCore.QThread(self)
         self.mcrunner.moveToThread(self.mc_thread)
-        self.mc_thread.start()
 
-        self.mcrunner.mc_calculation_finished.emit()
+        self.properties_thread = QtCore.QThread(self)
+        self.properties_model.moveToThread(self.properties_thread)
+
+        self.mc_thread.start()
+        self.properties_thread.start()
+        self.database_thread.start()
+
+        self.mcrunner.runner.mc_calculation_finished.emit()
 
 
 

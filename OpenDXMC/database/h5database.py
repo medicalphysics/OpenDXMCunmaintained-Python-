@@ -84,6 +84,14 @@ class Database(object):
 
         return node
 
+    def remove_node(self, where, name):
+        self.open()
+        try:
+            self.db_instance.remove_node(where, name=name, recursive=True)
+        except tb.NoSuchNodeError:
+            pass
+        return
+
     def add_material(self, material, overwrite=True):
         mat_table = self.get_node('/', 'meta_materials', create=True,
                                   obj=material.numpy_dtype())
@@ -301,7 +309,8 @@ class Database(object):
         self.close()
         logger.debug('Purged simulation {}'.format(name))
 
-    def update_simulation(self, description_dict, array_dict=None, purge_volatiles=False):
+    def update_simulation(self, description_dict, array_dict=None,
+                          purge_volatiles=False, cancel_if_running=False):
         try:
             assert isinstance(description_dict, dict)
         except AssertionError:
@@ -317,13 +326,17 @@ class Database(object):
         got_row = False # fix since braking loop while updating table is not allowed
         row_updated = False
         for ind, row in enumerate(meta_table.where('name == b"{}"'.format(name))):
-
+            if cancel_if_running:
+                if row['MC_running']:
+                    self.close()
+                    logger.warning('Could not update data for simulation {}, simulation is running'.format(name))
+                    return
             if ind == 0:
                 got_row = True
 
                 for item in meta_table.colnames:
                     ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
-                    if description_array['editable'][ind] or item in ['MC_ready',]:
+                    if description_array['editable'][ind] or item in ['MC_ready', 'MC_running', 'MC_finished']:
                         try:
                             value = description_dict[item]
                         except KeyError:
@@ -341,17 +354,18 @@ class Database(object):
         if not got_row:
             self.close()
             logger.warning('Could not update {0}. No simulation named {0} in database'.format(name))
+            return
 #            raise ValueError('No simulation named {} in database'.format(name))
         else:
             meta_table.flush()
         if array_dict is not None:
             for key, value in array_dict.items():
                 if self.test_node('/simulations/{}'.format(key), name):
-                    arr_node = self.get_node('/simulations/{}'.format(key), name, create=False)
-                    arr_node[:, :, :] = value[:, :, :]
+                    self.remove_node('/simulations/{}'.format(name), key)
+                    self.get_node('/simulations/{}'.format(name), key, create=True, obj=value)
                     logger.info('Updated {0} for simulation node {1}'.format(key, name))
                 else:
-                    self.get_node('/simulations/{}'.format(key), name, create=True, obj=value)
+                    self.get_node('/simulations/{}'.format(name), key, create=True, obj=value)
                     logger.info('Created {0} for simulation node {1}'.format(key, name))
         if purge_simulation and purge_volatiles:
             self.purge_simulation(name)

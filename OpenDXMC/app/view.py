@@ -7,15 +7,17 @@ Created on Thu Jul 30 10:38:15 2015
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from PyQt4 import QtGui, QtCore
-from opendxmc.study import Simulation
+from opendxmc.study import Simulation, SIMULATION_DESCRIPTION
 from .dicom_lut import get_lut
-
-
+import copy
+import itertools
 import logging
 logger = logging.getLogger('OpenDXMC')
 
+
 class SceneSelectButton(QtGui.QPushButton):
     scene_selected = QtCore.pyqtSignal(str)
+
     def __init__(self, name, parent=None):
         super().__init__(parent)
         self.name = name
@@ -28,43 +30,53 @@ class SceneSelectButton(QtGui.QPushButton):
 
 
 class ViewController(QtCore.QObject):
-
-    def __init__(self, database_interface, parent=None):
+    simulation_properties_data = QtCore.pyqtSignal(dict)
+    def __init__(self, database_interface, properties_model, parent=None):
         super().__init__(parent)
         database_interface.request_simulation_view.connect(self.applySimulation)
-
+        database_interface.simulation_updated.connect(self.updateSimulation)
         self.scenes = {'planning': PlanningScene(self),
-                       'energy_imparted': DoseScene(self),}
-#                       'material': PlanningScene()}
+                       'energy_imparted': DoseScene(self),
+                       'running': RunningScene(self), }
+
+        self.current_simulation = None
         self.current_scene = 'planning'
         self.current_view_orientation = 2
         self.graphicsview = View()
         self.graphicsview.setScene(self.scenes['planning'])
+        self.properties_widget = PropertiesWidget(properties_model)
+
+        properties_model.request_update_simulation.connect(self.updateSimulation)
+        self.simulation_properties_data.connect(properties_model.update_data)
 
         self.scene_change_buttons = {}
         for key, value in self.scenes.items():
             self.scene_change_buttons[key] = SceneSelectButton(key)
             self.scene_change_buttons[key].scene_selected.connect(self.selectScene)
 
-
     def view_widget(self):
         wid = QtGui.QWidget()
-        main_layout = QtGui.QVBoxLayout()
+        main_layout = QtGui.QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
+        view_layout = QtGui.QVBoxLayout()
+        view_layout.setContentsMargins(0, 0, 0, 0)
+
+        main_layout.addWidget(self.properties_widget)
+
+        main_layout.addLayout(view_layout)
 
         menu_widget = QtGui.QMenuBar(wid)
         menu_widget.setContentsMargins(0, 0, 0, 0)
         orientation_action = QtGui.QAction('Orientation', menu_widget)
         orientation_action.triggered.connect(self.selectViewOrientation)
-        menu_widget.addAction(orientation_action)
-        main_layout.addWidget(menu_widget)
 
-        main_layout.addWidget(self.graphicsview)
+        menu_widget.addAction(orientation_action)
+        view_layout.addWidget(menu_widget)
+
+        view_layout.addWidget(self.graphicsview)
         wid.setLayout(main_layout)
 
 #        sub_layout = QtGui.QVBoxLayout()
-
-
         return wid
 
     @QtCore.pyqtSlot()
@@ -79,8 +91,11 @@ class ViewController(QtCore.QObject):
         self.current_scene = scene_name
         self.graphicsview.setScene(self.scenes[self.current_scene])
 
+
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
+        self.current_simulation = sim
+        self.simulation_properties_data.emit(sim.description)
         logger.debug('Got signal request to view Simulation {}'.format(sim.name))
         if sim.energy_imparted is not None:
 
@@ -91,12 +106,39 @@ class ViewController(QtCore.QObject):
         else:
             pass
 
-        scene = self.scenes['planning']
-        self.graphicsview.setScene(scene)
-        self.graphicsview.fitInView(scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
+        if sim.MC_running or True:
+            self.current_scene = 'running'
+            if self.current_simulation.energy_imparted is not None:
+                self.scenes[self.current_scene].setArray(self.current_simulation.energy_imparted, self.current_simulation.spacing)
+        else:
+            self.current_scene = 'planning'
+
+        self.graphicsview.setScene(self.scenes[self.current_scene])
+
+#        self.graphicsview.fitInView(scene.sceneRect(),
+#                                    QtCore.Qt.KeepAspectRatio)
+
+    @QtCore.pyqtSlot(dict, dict)
+    def updateSimulation(self, description, volatiles):
+        if self.current_simulation is None:
+            return
+        if description.get('name', None) == self.current_simulation.name:
+            for key, value in itertools.chain(description.items(), volatiles.items()):
+                setattr(self.current_simulation, key, value)
+            self.simulation_properties_data.emit(self.current_simulation.description)
+
+            if self.current_simulation.MC_running:
+                self.current_scene = 'running'
+                self.graphicsview.setScene(self.scenes[self.current_scene])
+                if self.current_simulation.energy_imparted is not None:
+                    self.scenes[self.current_scene].setArray(self.current_simulation.energy_imparted, self.current_simulation.spacing)
 
 
-def blendArrayToQImage(front_array, back_array, front_level, back_level, front_lut, back_lut):
+#            self.applySimulation(self.current_simulation)
+
+
+def blendArrayToQImage(front_array, back_array, front_level, back_level,
+                       front_lut, back_lut):
     """Convert the 2D numpy array `gray` into a 8-bit QImage with a gray
     colormap.  The first dimension represents the vertical image axis.
     ATTENTION: This QImage carries an attribute `ndimage` with a
@@ -131,15 +173,11 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level, front_l
                             QtGui.QImage.Format_Indexed8)
     front_qim.setColorTable(front_lut)
     back_qim.setColorTable(back_lut)
-#    front_qim = front_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, front_lut, flags=QtCore.Qt.DiffuseAlphaDither)
-    back_qim = back_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, back_lut)#, flags=QtCore.Qt.DiffuseAlphaDither)
 
+    back_qim = back_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, back_lut)#, flags=QtCore.Qt.DiffuseAlphaDither)
 
     p = QtGui.QPainter(back_qim)
 
-#    p.drawImage(QtCore.QPointF(0., 0.), back_qim)
-#    p.setCompositionMode(QtGui.QPainter.CompositionMode_Plus)
-#    p.setCompositionMode(QtGui.QPainter.CompositionMode_Xor)
     p.drawImage(QtCore.QPointF(0., 0.), front_qim)
 
     return back_qim
@@ -253,13 +291,13 @@ class BlendImageItem(QtGui.QGraphicsItem):
 
 
 class ImageItem(QtGui.QGraphicsItem):
-    def __init__(self, parent=None, image=None, level=None, shape=None):
+    def __init__(self, parent=None, image=None, level=None, shape=None, lut='gray'):
         super().__init__(parent)
         self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         if image is None:
             if shape is None:
                 shape = (512, 512)
-            self.image = np.random.uniform(-500, 500,size=shape)
+            self.image = np.random.uniform(-500, 500, size=shape)
         else:
             self.image = image.view(np.ndarray)
         if image is not None and level is None:
@@ -274,7 +312,7 @@ class ImageItem(QtGui.QGraphicsItem):
         self.prepareGeometryChange()
         self.qimage = None
 
-        self.lut = get_lut('gray')
+        self.lut = get_lut(lut, 255)
 
         self.setImage(np.random.normal(size=(512, 512)) * 500.)
 #        self.setLevels((0., 1.))
@@ -293,7 +331,9 @@ class ImageItem(QtGui.QGraphicsItem):
         self.qimage = None
         self.update(self.boundingRect())
 
-    def setLevels(self, level):
+    def setLevels(self, level=None):
+        if level is None:
+            level = (np.median(self.image), (self.image.max() - self.image.min())/ 2.)
         self.level = level
         self.qimage = None
         self.update(self.boundingRect())
@@ -309,7 +349,7 @@ class ImageItem(QtGui.QGraphicsItem):
 
     def paint(self, painter, style, widget=None):
         painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
-#        super(ImageItem, self).paint(painter, style, widget)
+
 
 class AecItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -362,7 +402,7 @@ class AecItem(QtGui.QGraphicsItem):
             self.__path = QtGui.QPainterPath()
 
             x = self.aec[:, 0] * shape[1]
-            y = (1.-self.aec[:, 1]) * shape[0] *.1
+            y = (1. - self.aec[:, 1]) * shape[0] * .1
             self.__path.moveTo(x[0], y[0])
             for i in range(1, self.aec.shape[0]):
                 self.__path.lineTo(x[i], y[i])
@@ -373,14 +413,13 @@ class AecItem(QtGui.QGraphicsItem):
             self.__path.lineTo(shape[1], 0)
             self.__path.lineTo(0, 0)
 
-
         if self.__path_pos is None:
             self.__path_pos = QtGui.QPainterPath()
             if self.view_orientation == 2:
                 shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
                 self.__path_pos = QtGui.QPainterPath()
                 x = self.aec[:, 0] * shape[1]
-                y = (1.-self.aec[:, 1]) * shape[0] *.1
+                y = (1. - self.aec[:, 1]) * shape[0] * .1
                 x_c = self.index / self.shape[2]
                 y_c = 1. - np.interp(x_c, self.aec[:, 0], self.aec[:, 1])
                 self.__path_pos.addEllipse(QtCore.QPointF(x_c * shape[1], y_c * shape[0] *.1), shape[0]*.005, shape[0]*.01)
@@ -391,10 +430,6 @@ class AecItem(QtGui.QGraphicsItem):
         return p
 
     def paint(self, painter, style, widget=None):
-#        if self.view_orientation == 2:
-#            return
-#        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
-
         painter.setPen(QtGui.QPen(QtCore.Qt.white))
         painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
@@ -414,14 +449,7 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.index = 0
         self.view_orientation = 2
 
-    @QtCore.pyqtSlot(np.ndarray, np.ndarray)
     def setCtArray(self, ct, spacing, aec):
-        #setting transform
-
-
-#        self.aec_item.setPos(self.image_item.boundingRect().center())
-
-
         self.array = ct
         self.shape = ct.shape
         self.spacing = spacing
@@ -429,12 +457,6 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
         self.reloadImages()
         self.updateSceneTransform()
-
-
-
-        logger.debug('Planningscene is setting image data')
-#        self.reloadImages()
-
 
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
@@ -452,10 +474,6 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.aec_item.prepareGeometryChange()
         self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
 
-#        self.image_item.prepareGeometryChange()
-
-
-
         self.setSceneRect(self.itemsBoundingRect())
 
     def getSlice(self, array, index):
@@ -466,7 +484,6 @@ class PlanningScene(QtGui.QGraphicsScene):
         elif self.view_orientation == 0:
             return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
-
 
     def reloadImages(self):
         self.image_item.setImage(self.getSlice(self.array, self.index))
@@ -480,6 +497,42 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.index %= self.shape[self.view_orientation]
         self.reloadImages()
         ev.accept()
+
+class RunningScene(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image_item = ImageItem(lut='pet')
+        self.addItem(self.image_item)
+
+        self.array = np.random.uniform(size=(8, 8, 8))
+        self.shape = np.array((8, 8, 8))
+        self.spacing = np.array((1., 1., 1.))
+        self.view_orientation = 2
+
+    def setArray(self, energy_imparted, spacing):
+        self.array = energy_imparted
+        self.shape = energy_imparted.shape
+        self.spacing = spacing
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def updateSceneTransform(self):
+        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.setSceneRect(self.itemsBoundingRect())
+
+    def reloadImages(self):
+        self.image_item.setImage(self.array.max(axis=self.view_orientation))
+        self.image_item.setLevels()
+
+
 
 class DoseScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
@@ -498,11 +551,12 @@ class DoseScene(QtGui.QGraphicsScene):
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing):
         self.dose_array = gaussian_filter(dose, 1.)
-        #setting transform
+        # setting transform
         sx, sy = [spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-        self.image_item.setLevels(front=(self.dose_array.max()/2.,self.dose_array.max()/2.))
+        self.image_item.setLevels(front=(self.dose_array.max()/2.,
+                                         self.dose_array.max()/2.))
         self.ct_array = ct
         self.shape = ct.shape
         self.spacing = spacing
@@ -530,7 +584,6 @@ class DoseScene(QtGui.QGraphicsScene):
             return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
 
-
     def reloadImages(self):
         self.image_item.setImage(self.getSlice(self.dose_array, self.index),
                                  self.getSlice(self.ct_array, self.index))
@@ -553,6 +606,7 @@ class Scene(QtGui.QGraphicsScene):
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
 
+
 class View(QtGui.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -563,21 +617,28 @@ class View(QtGui.QGraphicsView):
         super().resizeEvent(ev)
         self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
+    def setScene(self, scene):
+        super().setScene(scene)
+        self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
+
+
 class PropertiesModel(QtCore.QAbstractTableModel):
-    error_setting_value = QtCore.pyqtSignal(str)
-    request_simulation_update = QtCore.pyqtSignal(dict)
-    request_simulation_start = QtCore.pyqtSignal()
+#    error_setting_value = QtCore.pyqtSignal(str)
+#    request_simulation_update = QtCore.pyqtSignal(dict)
+#    request_simulation_start = QtCore.pyqtSignal()
+    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
     unsaved_data_changed = QtCore.pyqtSignal(bool)
+    properties_is_set = QtCore.pyqtSignal(bool)
 
     def __init__(self, interface, parent=None):
         super().__init__(parent)
         self.__data = copy.copy(SIMULATION_DESCRIPTION)
-        self.__init_data = copy.copy(self.__data)
+        self.unsaved_data = {}
         self.__indices = list(self.__data.keys())
         self.__indices.sort()
-        interface.request_simulation_view.connect(self.update_data)
-        self.request_simulation_update.connect(interface.update_simulation_properties)
-        self.request_simulation_start.connect(interface.get_run_simulation)
+#        interface.request_simulation_view.connect(self.update_data)
+        self.request_update_simulation.connect(interface.update_simulation_properties)
+#        self.request_simulation_start.connect(interface.get_run_simulation)
         self.__simulation = Simulation('None')
 
 
@@ -585,35 +646,46 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         return self.__data, self.__indices
 
     @QtCore.pyqtSlot()
-    def apply_properties(self):
-        self.__data['MC_ready'][0] = True
-        self.__init_data = self.__data
-        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-        self.unsaved_data_changed.emit(False)
+    def reset_properties(self):
+        self.unsaved_data = {}
+        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
+        self.test_for_unsaved_changes()
 
     @QtCore.pyqtSlot()
-    def run_simulation(self):
-        self.__data['MC_running'][0] = True
-        self.__data['MC_ready'][0] = True
-        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-        self.unsaved_data_changed.emit(False)
-        self.request_simulation_start.emit()
+    def apply_properties(self):
+        self.__init_data = self.__data
+        self.unsaved_data['name'] = self.__data['name'][0]
+        self.unsaved_data['MC_ready'] = True
+        self.unsaved_data['MC_finished'] = False
+        self.unsaved_data['MC_running'] = False
+        self.request_update_simulation.emit(self.unsaved_data, {}, True, True)
+        self.properties_is_set.emit(True)
+#        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+        self.unsaved_data = {}
+        self.test_for_unsaved_changes()
+
+#    @QtCore.pyqtSlot()
+#    def run_simulation(self):
+#        self.__data['MC_running'][0] = True
+#        self.__data['MC_ready'][0] = True
+##        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+#        self.unsaved_data_changed.emit(False)
+##        self.request_simulation_start.emit()
 
     def test_for_unsaved_changes(self):
-        for key, value in self.__data.items():
-            if self.__init_data[key] != value:
-                self.unsaved_data_changed.emit(True)
-                return
-        self.unsaved_data_changed.emit(False)
+        self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
 
-    @QtCore.pyqtSlot(Simulation)
-    def update_data(self, sim):
+    @QtCore.pyqtSlot(dict)
+    def update_data(self, sim_description):
+        self.unsaved_data = {}
         self.layoutAboutToBeChanged.emit()
-        for key, value in sim.description.items():
+        for key, value in sim_description.items():
             self.__data[key][0] = value
+
         self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
         self.layoutChanged.emit()
-        self.unsaved_data_changed.emit(False)
+        self.test_for_unsaved_changes()
+        self.properties_is_set.emit(self.__data['MC_running'][0])
 
     def rowCount(self, index):
         if not index.isValid():
@@ -638,13 +710,17 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             return None
 
         var = self.__indices[row]
+        if column == 0:
+            value = self.__data[var][4]
+        else:
+            value = self.unsaved_data.get(var, self.__data[var][0])
 
         if role == QtCore.Qt.DisplayRole:
-            if (column == 1) and isinstance(self.__data[var][0], np.ndarray):
-                return ', '.join([str(round(p, 3)) for p in self.__data[var][pos]])
-            elif (column == 1) and isinstance(self.__data[var][0], bool):
+            if (column == 1) and isinstance(value, np.ndarray):
+                return ' '.join([str(round(p, 3)) for p in value])
+            elif (column == 1) and isinstance(value, bool):
                 return ''
-            return self.__data[var][pos]
+            return value
         elif role == QtCore.Qt.DecorationRole:
             pass
         elif role == QtCore.Qt.ToolTipRole:
@@ -655,8 +731,8 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         elif role == QtCore.Qt.ForegroundRole:
             pass
         elif role == QtCore.Qt.CheckStateRole:
-            if (column == 1) and isinstance(self.__data[var][0], bool):
-                if self.__data[var][0]:
+            if (column == 1) and isinstance(value, bool):
+                if value:
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
@@ -668,8 +744,8 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         if index.column() != 1:
             return False
         if role == QtCore.Qt.DisplayRole:
-            self.__data[self.__indices[index.row()]][0] = value
-
+            var = self.__indices[index.row()]
+            self.unsaved_data[var] = value
             self.dataChanged.emit(index, index)
             return True
         elif role == QtCore.Qt.EditRole:
@@ -677,15 +753,22 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             try:
                 setattr(self.__simulation, var, value)
             except Exception as e:
-                self.error_setting_value.emit(str(e))
+                logger.error(str(e))
+#                self.error_setting_value.emit(str(e))
                 return False
             else:
-                self.__data[var][0] = value
+                if value != self.__data[var][0]:
+                    self.unsaved_data[var] = value
             self.dataChanged.emit(index, index)
             self.test_for_unsaved_changes()
             return True
         elif role == QtCore.Qt.CheckStateRole:
-            self.__data[self.__indices[index.row()]][0] = bool(value == QtCore.Qt.Checked)
+            var = self.__indices[index.row()]
+            if self.__data[var][0] != bool(value == QtCore.Qt.Checked):
+                self.unsaved_data[var] = bool(value == QtCore.Qt.Checked)
+            else:
+                if var in self.unsaved_data:
+                    del self.unsaved_data[var]
             self.test_for_unsaved_changes()
             self.dataChanged.emit(index, index)
             return True
@@ -696,6 +779,8 @@ class PropertiesModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         if index.isValid():
             if self.__data[self.__indices[index.row()]][3] and index.column() == 1:
+                if self.unsaved_data.get('MC_running', False):
+                    return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
                 if isinstance(self.__data[self.__indices[index.row()]][0], bool):
                     return  QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable# | QtCore.Qt.ItemIsEditable
                 return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
@@ -770,9 +855,9 @@ class PropertiesDelegate(QtGui.QItemDelegate):
 ##        self.itemEditorFactory().setDefaultFactory(QtGui.QItemEditorFactory())
 
 class PropertiesView(QtGui.QTableView):
-    def __init__(self, interface, parent=None):
+    def __init__(self, properties_model, parent=None):
         super().__init__(parent)
-        self.setModel(PropertiesModel(interface))
+        self.setModel(properties_model)
         self.setItemDelegateForColumn(1, PropertiesDelegate())
 
         self.setWordWrap(False)
@@ -789,24 +874,28 @@ class PropertiesView(QtGui.QTableView):
         super().resizeEvent(ev)
 
 class PropertiesWidget(QtGui.QWidget):
-    def __init__(self, interface, parent=None):
+    def __init__(self, properties_model, parent=None):
         super().__init__(parent)
         self.setLayout(QtGui.QVBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
-        view = PropertiesView(interface)
-        model = view.model()
+        view = PropertiesView(properties_model)
         self.layout().addWidget(view)
 
         apply_button = QtGui.QPushButton()
-        apply_button.setText('Apply')
-        apply_button.clicked.connect(model.apply_properties)
+        apply_button.setText('Reset')
+        apply_button.clicked.connect(properties_model.reset_properties)
         apply_button.setEnabled(False)
-        model.unsaved_data_changed.connect(apply_button.setDisabled)
-
+        properties_model.unsaved_data_changed.connect(apply_button.setEnabled)
 
         run_button = QtGui.QPushButton()
-        run_button.setText('Run')
-        run_button.clicked.connect(model.request_simulation_start)
+        run_button.setText('Apply and Run')
+        run_button.clicked.connect(properties_model.apply_properties)
+        properties_model.properties_is_set.connect(run_button.setDisabled)
+
+
+#        run_button = QtGui.QPushButton()
+#        run_button.setText('Run')
+#        run_button.clicked.connect(properties_model.request_simulation_start)
 
         button_layout = QtGui.QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
