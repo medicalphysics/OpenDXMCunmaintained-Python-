@@ -103,7 +103,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
     # total number of exposures + one total rotation
     exposures = int(exposures)
-    e = int((abs(start - stop) / total_collimation + 1) * exposures)
+    e = int((abs(start - stop) / (pitch * total_collimation) + 1) * exposures)
 
     if start < stop:
         d_col = total_collimation / 2.
@@ -113,6 +113,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     t = np.linspace(start-d_col, stop + d_col, e)
 #    # we shuffle the positions to take generate conservative ETA estimates
     t = half_shuffle(t)
+#    print('whole t', t)
     # angle for each z position , i.e the x, y coordinates
     ang = t / (pitch * total_collimation) * np.pi * 2.
 
@@ -163,11 +164,12 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         ret[1, ind_b:ind_s] = 0
         ret[0, ind_b:ind_s] = -sdd/2.
         ret[2, ind_b:ind_s] = t[i]
+#        print('t', t[i])
         ret[0:3, ind_b:ind_s] = np.dot(R, ret[0:3, ind_b:ind_s])
 
         ret[3, ind_b:ind_s] = sdd / 2.
         ret[4, ind_b:ind_s] = scan_fov * np.random.uniform(-1., 1., histories)
-        ret[5, ind_b:ind_s] = t[i] + d_col * np.random.uniform(-1., 1.,
+        ret[5, ind_b:ind_s] = d_col / 2. * np.random.uniform(-1., 1.,
                                                                histories)
         ret[3:6, ind_b:ind_s] = np.dot(R, ret[3:6, ind_b:ind_s])
         lenght = np.sqrt(np.sum(ret[3:6, ind_b:ind_s]**2, axis=0))
@@ -179,6 +181,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             ret[6, :] = np.random.choice(energy_specter[0],
                                          batch_size,
                                          p=energy_specter[1])
+#            print('phase space pos', ret[2, :])
             yield ret, i, e
             teller = 0
         else:

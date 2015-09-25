@@ -128,7 +128,8 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                     patient.ctdi_w100 = ctdi / exposure / patient.pitch * 100.
                 else:
                     patient.ctdi_w100 = ctdi / exposure * 100.
-
+        patient.start_scan = patient.exposure_modulation[0, 0]
+        patient.stop_scan = patient.exposure_modulation[-1, 0]
         patient.start = patient.exposure_modulation[0, 0]
         patient.stop = patient.exposure_modulation[-1, 0]
         yield patient

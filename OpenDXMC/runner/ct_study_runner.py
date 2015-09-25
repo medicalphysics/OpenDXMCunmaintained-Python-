@@ -232,7 +232,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
     N = np.array(simulation.material.shape, dtype=np.double)
 
     offset = - N * simulation.spacing / 2.
-    offset[-1] = simulation.start
+    offset[-1] = min([simulation.start_scan, simulation.stop_scan])
     logger.warning('Offset not properly corrected for, currently using center '
                    'of reconstruction FOV as isocenter.')
 
@@ -246,7 +246,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
     if tot_histories > 1e6:
         coffe_msg = ', go get coffe!'
     else:
-        coffe_msg = ''
+        coffe_msg = '.'
     logger.info('{0}: Starting simulation with {1} histories per '
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
 

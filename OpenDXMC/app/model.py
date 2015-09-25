@@ -13,7 +13,7 @@ from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
 import logging
 logger = logging.getLogger('OpenDXMC')
-
+import time
 
 class DatabaseInterface(QtCore.QObject):
     """ Async database interface, async provided with signal/slots resulting in
@@ -179,18 +179,33 @@ class Runner(QtCore.QThread):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.timer_interval = 1000 * 60 * 10
-        self.timer = QtCore.QBasicTimer()
+        self.request_save = False
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(600000)
+#        self.time_interval = 600000 # saving data every 10 minutes
+        self.started.connect(self.timer.start)
+        self.timer.setSingleShot(False)
+        self.terminated.connect(self.timer.stop)
+        self.finished.connect(self.timer.stop)
+
+        self.timer.timeout.connect(self.set_time_to_save)
+
         self.simulation = None
         self.material_list = None
+
+    @QtCore.pyqtSlot()
+    def set_time_to_save(self):
+        ## mutex here?
+        self.request_save = True
 
     def update_simulation_iteration(self, name, energy_imparted, exposure_number):
         desc = {'name': name,
                 'start_at_exposure_no': exposure_number}
         arrs = {'energy_imparted': energy_imparted}
-        if not self.timer.isActive():
+        if self.request_save:
             self.request_update_simulation.emit(desc, arrs, False, False)
-            self.timer.start(self.timer_interval, self)
+            self.timer.start()
+            self.request_save = False
         else:
             self.request_view_update.emit(desc, arrs)
 
@@ -199,7 +214,6 @@ class Runner(QtCore.QThread):
                                              'MC_running': True},
                                             {},
                                             False, False)
-        self.timer.start(self.timer_interval, self)
         ct_runner(self.simulation, self.material_list,
                   energy_imparted_to_dose_conversion=True,
                   callback=self.update_simulation_iteration)

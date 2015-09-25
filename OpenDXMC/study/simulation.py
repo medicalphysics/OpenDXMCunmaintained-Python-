@@ -35,6 +35,8 @@ SIMULATION_DESCRIPTION = {
     'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
     'histories': [10, np.int, True, True, 'Number of photon histories per exposure'],
     'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
+    'start_scan': [0, np.double, False, False, 'CT scan start position [cm]'],
+    'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]'],
     'start': [0, np.double, True, True, 'Start position [cm]'],
     'stop': [0, np.double, True, True, 'Stop position [cm]'],
     'step': [0, np.int, True, True, 'Sequential aqusition step size [cm]'],
@@ -353,10 +355,26 @@ class Simulation(object):
         self.__description['batch_size'] = int(value)
 
     @property
+    def start_scan(self):
+        return self.__description['start_scan']
+    @start_scan.setter
+    def start_scan(self, value):
+        self.__description['start_scan'] = float(value)
+
+    @property
+    def stop_scan(self):
+        return self.__description['stop_scan']
+    @stop_scan.setter
+    def stop_scan(self, value):
+        self.__description['stop_scan'] = float(value)
+
+    @property
     def start(self):
         return self.__description['start']
     @start.setter
     def start(self, value):
+        rng = [self.start_scan, self.stop_scan]
+        assert min(rng) <= value <= max(rng)
         self.__description['start'] = float(value)
 
     @property
@@ -364,6 +382,8 @@ class Simulation(object):
         return self.__description['stop']
     @stop.setter
     def stop(self, value):
+        rng = [self.start_scan, self.stop_scan]
+        assert min(rng) <= value <= max(rng)
         self.__description['stop'] = float(value)
 
     @property

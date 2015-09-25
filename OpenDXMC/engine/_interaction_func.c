@@ -5,8 +5,8 @@
     "distutils": {
         "depends": [
             "opendxmc\\engine\\_random.c",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h"
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h",
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h"
         ],
         "extra_compile_args": [
             "-fopenmp",
@@ -1735,10 +1735,10 @@ static char __pyx_k_itemsize_0_for_cython_array[] = "itemsize <= 0 for cython.ar
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static char __pyx_k_unable_to_allocate_array_data[] = "unable to allocate array data.";
 static char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or indirect>";
+static char __pyx_k_C_test_OpenDXMC_opendxmc_engine[] = "C:\\test\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_All_dimensions_preceding_dimensi[] = "All dimensions preceding dimension %d must be indexed and not sliced";
 static char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does not expose strides";
-static char __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin[] = "C:\\GitHub\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
 static char __pyx_k_Can_only_create_a_buffer_that_is[] = "Can only create a buffer that is contiguous in memory.";
 static char __pyx_k_Cannot_transpose_memoryview_with[] = "Cannot transpose memoryview with indirect dimensions";
 static char __pyx_k_Empty_shape_tuple_for_cython_arr[] = "Empty shape tuple for cython.array";
@@ -1754,7 +1754,7 @@ static char __pyx_k_opendxmc_engine__interaction_fun[] = "opendxmc.engine._inter
 static char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
 static char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
-static PyObject *__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin;
+static PyObject *__pyx_kp_s_C_test_OpenDXMC_opendxmc_engine;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
 static PyObject *__pyx_kp_s_Cannot_index_with_type_s;
 static PyObject *__pyx_n_s_Ellipsis;
@@ -18360,7 +18360,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_Buffer_view_does_not_expose_stri, __pyx_k_Buffer_view_does_not_expose_stri, sizeof(__pyx_k_Buffer_view_does_not_expose_stri), 0, 0, 1, 0},
-  {&__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin, sizeof(__pyx_k_C_GitHub_OpenDXMC_opendxmc_engin), 0, 0, 1, 0},
+  {&__pyx_kp_s_C_test_OpenDXMC_opendxmc_engine, __pyx_k_C_test_OpenDXMC_opendxmc_engine, sizeof(__pyx_k_C_test_OpenDXMC_opendxmc_engine), 0, 0, 1, 0},
   {&__pyx_kp_s_Can_only_create_a_buffer_that_is, __pyx_k_Can_only_create_a_buffer_that_is, sizeof(__pyx_k_Can_only_create_a_buffer_that_is), 0, 0, 1, 0},
   {&__pyx_kp_s_Cannot_index_with_type_s, __pyx_k_Cannot_index_with_type_s, sizeof(__pyx_k_Cannot_index_with_type_s), 0, 0, 1, 0},
   {&__pyx_n_s_Ellipsis, __pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 0, 1, 1},
@@ -18674,7 +18674,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__19 = PyTuple_Pack(11, __pyx_n_s_particles, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_material_map, __pyx_n_s_density_map, __pyx_n_s_attinuation_lut, __pyx_n_s_dose, __pyx_n_s_num_threads, __pyx_n_s_i, __pyx_n_s_n); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_n_s_score_energy, 402, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_test_OpenDXMC_opendxmc_engine, __pyx_n_s_score_energy, 402, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "View.MemoryView":276
  *         return self.name
