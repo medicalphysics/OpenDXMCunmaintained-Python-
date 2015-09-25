@@ -126,7 +126,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     if batch_size < 1:
         batch_size = 1
     batch_size *= histories
-    
+
     assert batch_size % histories == 0
 
     if energy_specter is None:
@@ -183,7 +183,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             teller = 0
         else:
             teller += 1
-    teller -= 1
+    if teller > 0:
+        teller -= 1
     if teller > 0:
         ret[6, :] = np.random.choice(energy_specter[0],
                                      batch_size,

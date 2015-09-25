@@ -170,7 +170,7 @@ hot_metal_blue = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 _names = ['gray', 'hot_metal_blue', 'pet', 'hot_iron']
 _tables = [gray, hot_metal_blue, pet, hot_iron]
 
-def get_lut(name, alpha=0):
+def get_lut(name, alpha=255):
     ind = _names.index(name)
     tb = _tables[ind]
     return [QtGui.QColor(tb[0][i], tb[1][i], tb[2][i], alpha).rgba()

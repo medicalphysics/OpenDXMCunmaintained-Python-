@@ -15,22 +15,34 @@ import logging
 logger = logging.getLogger('OpenDXMC')
 
 
-class SceneSelectButton(QtGui.QPushButton):
+class SceneSelectGroup(QtGui.QActionGroup):
     scene_selected = QtCore.pyqtSignal(str)
 
-    def __init__(self, name, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.name = name
-        self.setFlat(True)
-        self.setText(self.name)
+        self.setExclusive(True)
+        self.triggered.connect(self.relay_clicked)
 
-    @QtCore.pyqtSlot()
-    def relay_clicked(self):
-        self.scene_selected.emit(self.name)
+    def addAction(self, name, pretty_name=None):
+        if pretty_name is None:
+            pretty_name = name
+        action = super().addAction(pretty_name)
+        action.scene_name = name
 
+    @QtCore.pyqtSlot(QtGui.QAction)
+    def relay_clicked(self, action):
+        self.scene_selected.emit(action.scene_name)
+
+    @QtCore.pyqtSlot(str)
+    def sceneSelected(self, name):
+        for action in self.actions():
+            if action.scene_name == name:
+                action.setChecked()
+                return
 
 class ViewController(QtCore.QObject):
     simulation_properties_data = QtCore.pyqtSignal(dict)
+    scene_selected = QtCore.pyqtSignal(str)
     def __init__(self, database_interface, properties_model, parent=None):
         super().__init__(parent)
         database_interface.request_simulation_view.connect(self.applySimulation)
@@ -42,17 +54,17 @@ class ViewController(QtCore.QObject):
         self.current_simulation = None
         self.current_scene = 'planning'
         self.current_view_orientation = 2
-        self.graphicsview = View()
-        self.graphicsview.setScene(self.scenes['planning'])
-        self.properties_widget = PropertiesWidget(properties_model)
 
+        self.graphicsview = View()
+
+
+        self.properties_widget = PropertiesWidget(properties_model)
         properties_model.request_update_simulation.connect(self.updateSimulation)
         self.simulation_properties_data.connect(properties_model.update_data)
 
-        self.scene_change_buttons = {}
-        for key, value in self.scenes.items():
-            self.scene_change_buttons[key] = SceneSelectButton(key)
-            self.scene_change_buttons[key].scene_selected.connect(self.selectScene)
+
+        self.selectScene('planning')
+
 
     def view_widget(self):
         wid = QtGui.QWidget()
@@ -71,6 +83,15 @@ class ViewController(QtCore.QObject):
         orientation_action.triggered.connect(self.selectViewOrientation)
 
         menu_widget.addAction(orientation_action)
+
+        sceneSelect = SceneSelectGroup(wid)
+        for scene_name in self.scenes.keys():
+            sceneSelect.addAction(scene_name)
+        sceneSelect.scene_selected.connect(self.selectScene)
+        self.scene_selected.connect(sceneSelect.sceneSelected)
+        for action in sceneSelect.actions():
+            menu_widget.addAction(action)
+
         view_layout.addWidget(menu_widget)
 
         view_layout.addWidget(self.graphicsview)
@@ -88,35 +109,58 @@ class ViewController(QtCore.QObject):
 
     @QtCore.pyqtSlot(str)
     def selectScene(self, scene_name):
-        self.current_scene = scene_name
-        self.graphicsview.setScene(self.scenes[self.current_scene])
+        if scene_name in self.scenes:
+            self.current_scene = scene_name
+            self.graphicsview.setScene(self.scenes[self.current_scene])
+            self.update_scene_data(scene_name)
 
+        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
+                                    QtCore.Qt.KeepAspectRatio)
+
+        self.properties_widget.setVisible(scene_name == 'planning')
+        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+
+    def update_scene_data(self, name):
+        if self.current_simulation is None:
+            return
+        if not name in self.scenes:
+            return
+
+        if name == 'planning':
+            if self.current_simulation.ctarray is not None:
+                self.scenes[name].setCtArray(self.current_simulation.ctarray,
+                                             self.current_simulation.spacing,
+                                             self.current_simulation.exposure_modulation)
+            elif self.current_simulation.material is not None:
+                self.scenes[name].setCtArray(self.current_simulation.material,
+                                             self.current_simulation.spacing,
+                                             self.current_simulation.exposure_modulation)
+
+        elif name == 'running':
+            if self.current_simulation.energy_imparted is not None:
+                self.scenes[name].setArray(self.current_simulation.energy_imparted,
+                                           self.current_simulation.spacing)
+        elif name == 'energy_imparted':
+            if self.current_simulation.energy_imparted is not None and self.current_simulation.ctarray is not None:
+                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
+                                                  self.current_simulation.energy_imparted,
+                                                  self.current_simulation.spacing)
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
         self.current_simulation = sim
         self.simulation_properties_data.emit(sim.description)
         logger.debug('Got signal request to view Simulation {}'.format(sim.name))
-        if sim.energy_imparted is not None:
 
-            logger.debug('View request for Simulation {} denied: No dose array available'.format(sim.name))
-        if sim.ctarray is not None:
-            self.scenes['planning'].setCtArray(sim.ctarray, sim.spacing, sim.exposure_modulation)
-            logger.debug('Populating planning scene'.format(sim.name))
+
+        if sim.MC_running: ##############################################!!!!!!!!
+            scene = 'running'
+            self.selectScene(scene)
         else:
-            pass
-
-        if sim.MC_running or True:
-            self.current_scene = 'running'
-            if self.current_simulation.energy_imparted is not None:
-                self.scenes[self.current_scene].setArray(self.current_simulation.energy_imparted, self.current_simulation.spacing)
-        else:
-            self.current_scene = 'planning'
-
-        self.graphicsview.setScene(self.scenes[self.current_scene])
-
-#        self.graphicsview.fitInView(scene.sceneRect(),
-#                                    QtCore.Qt.KeepAspectRatio)
+            self.update_scene_data(self.current_scene)
+            self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+            self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
+                                        QtCore.Qt.KeepAspectRatio)
 
     @QtCore.pyqtSlot(dict, dict)
     def updateSimulation(self, description, volatiles):
@@ -128,13 +172,7 @@ class ViewController(QtCore.QObject):
             self.simulation_properties_data.emit(self.current_simulation.description)
 
             if self.current_simulation.MC_running:
-                self.current_scene = 'running'
-                self.graphicsview.setScene(self.scenes[self.current_scene])
-                if self.current_simulation.energy_imparted is not None:
-                    self.scenes[self.current_scene].setArray(self.current_simulation.energy_imparted, self.current_simulation.spacing)
-
-
-#            self.applySimulation(self.current_simulation)
+                self.selectScene('running')
 
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level,
@@ -183,7 +221,7 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     return back_qim
 
 
-def arrayToQImage(array, level, lut):
+def arrayToQImage(array_un, level, lut):
     """Convert the 2D numpy array `gray` into a 8-bit QImage with a gray
     colormap.  The first dimension represents the vertical image axis.
     ATTENTION: This QImage carries an attribute `ndimage` with a
@@ -192,10 +230,13 @@ def arrayToQImage(array, level, lut):
     that you have to take care that the QImage does not get garbage
     collected (otherwise PyQt will throw away the wrapper, effectively
     freeing the underlying memory - boom!)."""
+
     WC, WW = level[0], level[1]
-    np.clip(array, WC-WW, WC+WW, out=array)
+    array = np.clip(array_un, WC-WW, WC+WW)
+
     array -= (WC - WW)
     array *= 255./(WW*2)
+
 
 #    array = (np.clip(array, WC - 0.5 - (WW-1) / 2, WC - 0.5 + (WW - 1) / 2) -
 #             (WC - 0.5 - (WW - 1) / 2)) * 255 / ((WC - 0.5 + (WW - 1) / 2) -
@@ -204,8 +245,8 @@ def arrayToQImage(array, level, lut):
     h, w = array.shape
     result = QtGui.QImage(array.data, w, h, QtGui.QImage.Format_Indexed8)
 #    result.ndarray = array
-#    result.setColorTable(lut)
-    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, lut)
+    result.setColorTable(lut)
+#    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, lut)
     result.ndarray = array
     return result
 
@@ -215,7 +256,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
         super().__init__(parent)
 
         self.back_image = np.zeros((512, 512))
-        self.back_level = (500, 1000)
+        self.back_level = (0, 500)
         self.front_image = np.zeros((512, 512))
         self.front_level = (1000000, 10000)
 
@@ -312,10 +353,9 @@ class ImageItem(QtGui.QGraphicsItem):
         self.prepareGeometryChange()
         self.qimage = None
 
-        self.lut = get_lut(lut, 255)
-
+        self.lut = get_lut(lut)
         self.setImage(np.random.normal(size=(512, 512)) * 500.)
-#        self.setLevels((0., 1.))
+        self.setLevels((0., 1.))
 
     def qImage(self):
         if self.qimage is None:
@@ -326,14 +366,15 @@ class ImageItem(QtGui.QGraphicsItem):
         return QtCore.QRectF(self.qImage().rect())
 
     def setImage(self, image):
-        self.image = image.view(np.ndarray)
+        self.image = image
         self.prepareGeometryChange()
         self.qimage = None
         self.update(self.boundingRect())
 
     def setLevels(self, level=None):
         if level is None:
-            level = (np.median(self.image), (self.image.max() - self.image.min())/ 2.)
+            p = self.image.max() - self.image.min()
+            level = (p/2., p / 2. * .75)
         self.level = level
         self.qimage = None
         self.update(self.boundingRect())
@@ -449,6 +490,8 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.index = 0
         self.view_orientation = 2
 
+        self.image_item.setLevels((0, 500))
+
     def setCtArray(self, ct, spacing, aec):
         self.array = ct
         self.shape = ct.shape
@@ -498,10 +541,11 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.reloadImages()
         ev.accept()
 
+
 class RunningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.image_item = ImageItem(lut='pet')
+        self.image_item = ImageItem(lut='hot_iron')
         self.addItem(self.image_item)
 
         self.array = np.random.uniform(size=(8, 8, 8))
@@ -509,12 +553,19 @@ class RunningScene(QtGui.QGraphicsScene):
         self.spacing = np.array((1., 1., 1.))
         self.view_orientation = 2
 
+    def defaultLevels(self, array):
+        p = array.max() - array.min()
+        return (p/2., p / 2. * .75)
+
     def setArray(self, energy_imparted, spacing):
         self.array = energy_imparted
         self.shape = energy_imparted.shape
         self.spacing = spacing
         self.reloadImages()
+        self.image_item.setLevels(self.defaultLevels(self.array))
         self.updateSceneTransform()
+
+
 
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
@@ -530,7 +581,6 @@ class RunningScene(QtGui.QGraphicsScene):
 
     def reloadImages(self):
         self.image_item.setImage(self.array.max(axis=self.view_orientation))
-        self.image_item.setLevels()
 
 
 
@@ -540,35 +590,39 @@ class DoseScene(QtGui.QGraphicsScene):
 
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
-
-        self.dose_array = None
-        self.ct_array = None
-        self.view_orientation = 2  # value 0, 1, 2
-        self.shape = (0, 0, 0)
+        self.dose_array = np.random.uniform(size=(8, 8, 8))
+        self.ct_array = np.random.uniform(size=(8, 8, 8))
+        self.shape = np.array((8, 8, 8))
+        self.spacing = np.array((1., 1., 1.))
         self.index = 0
-        self.spacing = (1., 1., 1.)
+        self.view_orientation = 2
+
+    def defaultLevels(self, array):
+        p = array.max() - array.min()
+        return (p/2., p / 2. * .75)
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing):
-        self.dose_array = gaussian_filter(dose, 1.)
-        # setting transform
-        sx, sy = [spacing[i] for i in range(3) if i != self.view_orientation]
-        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-        self.image_item.setTransform(transform)
-        self.image_item.setLevels(front=(self.dose_array.max()/2.,
-                                         self.dose_array.max()/2.))
+        self.dose_array = gaussian_filter(dose, .5)
         self.ct_array = ct
         self.shape = ct.shape
         self.spacing = spacing
-        self.index = 0
-
-        rect = transform.mapRect(self.image_item.boundingRect())
-
-        self.setSceneRect(rect)
-        for view in self.views():
-            view.fitInView(rect, QtCore.Qt.KeepAspectRatio)
-        logger.debug('Dosescene is setting image data')
+        self.index = self.index % self.shape[self.view_orientation]
         self.reloadImages()
+        self.updateSceneTransform()
+        self.image_item.setLevels(front=self.defaultLevels(self.dose_array))
+
+    def updateSceneTransform(self):
+        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.setSceneRect(self.itemsBoundingRect())
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation % 3
+        self.reloadImages()
+        self.updateSceneTransform()
 
     @QtCore.pyqtSlot(np.ndarray)
     def setDoseArray(self, dose):
