@@ -177,6 +177,7 @@ class Runner(QtCore.QThread):
     request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
     request_view_update = QtCore.pyqtSignal(dict, dict)
 
+    start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
         self.request_save = False
@@ -188,15 +189,16 @@ class Runner(QtCore.QThread):
         self.terminated.connect(self.timer.stop)
         self.finished.connect(self.timer.stop)
 
-        self.timer.timeout.connect(self.set_time_to_save)
-
+        self.timer.timeout.connect(self.set_request_save)
+        self.mutex = QtCore.QMutex()
         self.simulation = None
         self.material_list = None
 
     @QtCore.pyqtSlot()
-    def set_time_to_save(self):
-        ## mutex here?
+    def set_request_save(self):
+        self.mutex.lock()
         self.request_save = True
+        self.mutex.unlock()
 
     def update_simulation_iteration(self, name, energy_imparted, exposure_number):
         desc = {'name': name,
@@ -204,12 +206,18 @@ class Runner(QtCore.QThread):
         arrs = {'energy_imparted': energy_imparted}
         if self.request_save:
             self.request_update_simulation.emit(desc, arrs, False, False)
-            self.timer.start()
+            self.mutex.lock()
             self.request_save = False
+            self.mutex.unlock()
         else:
             self.request_view_update.emit(desc, arrs)
 
     def run(self):
+        if self.simulation is None:
+            return
+        if self.material_list is None:
+            return
+        
         self.request_update_simulation.emit({'name': self.simulation.name,
                                              'MC_running': True},
                                             {},
@@ -225,7 +233,7 @@ class Runner(QtCore.QThread):
                                             False, False)
 
         self.mc_calculation_finished.emit()
-        self.timer.stop()
+       
 
 
 class RunManager(QtCore.QObject):

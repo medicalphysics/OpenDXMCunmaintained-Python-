@@ -20,6 +20,9 @@ from cyrandom cimport Random
 cdef Random random
 random = Random()
 
+cimport openmp
+cdef openmp.omp_lock_t mylock
+openmp.omp_init_lock(&mylock)
 
 ###TODO###
 ##rename density_map and material_map too density_array, material_array
@@ -358,14 +361,18 @@ cdef void transport_particle(double[:,:] particles, long particle_index, double[
         r1 = random.random() * total
 
         if r1 <= photo:
+            openmp.omp_set_lock(&mylock)
             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
+            openmp.omp_unset_lock(&mylock)
             valid = 0
 
         elif r1 <= (compton + photo):
             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
             azimutal_angle = random.random() * PI * 2.
             particle[7] = weight
+            openmp.omp_set_lock(&mylock)
             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+            openmp.omp_unset_lock(&mylock)
             for i in range(3):
                 particle[i] = stop[i]
             particle[6] = scatter_energy

@@ -4,9 +4,9 @@
 {
     "distutils": {
         "depends": [
+            "C:\\Users\\ander\\WinPython-64bit-3.4.3.5\\python-3.4.3.amd64\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h",
             "opendxmc\\engine\\_random.c",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h"
+            "C:\\Users\\ander\\WinPython-64bit-3.4.3.5\\python-3.4.3.amd64\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h"
         ],
         "extra_compile_args": [
             "-fopenmp",
@@ -16,7 +16,7 @@
             "-fopenmp"
         ],
         "include_dirs": [
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include"
+            "C:\\Users\\ander\\WinPython-64bit-3.4.3.5\\python-3.4.3.amd64\\lib\\site-packages\\numpy\\core\\include"
         ]
     }
 }
@@ -279,6 +279,7 @@ class __Pyx_FakeReference {
 #include "numpy/arrayobject.h"
 #include "numpy/ufuncobject.h"
 #include "_random.c"
+#include "omp.h"
 #include "math.h"
 #include "pythread.h"
 #include "pystate.h"
@@ -590,7 +591,7 @@ typedef volatile __pyx_atomic_int_type __pyx_atomic_int;
 #endif
 
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":726
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":726
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -599,7 +600,7 @@ typedef volatile __pyx_atomic_int_type __pyx_atomic_int;
  */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":727
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":727
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -608,7 +609,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
  */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":728
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":728
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -617,7 +618,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
  */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":729
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":729
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -626,7 +627,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
  */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":733
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":733
  * #ctypedef npy_int128     int128_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -635,7 +636,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
  */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":734
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":734
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -644,7 +645,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
  */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":735
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":735
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -653,7 +654,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
  */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":736
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":736
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -662,7 +663,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
  */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":740
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":740
  * #ctypedef npy_uint128    uint128_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -671,7 +672,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
  */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":741
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":741
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -680,7 +681,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
  */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":750
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":750
  * # The int types are mapped a bit surprising --
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t             # <<<<<<<<<<<<<<
@@ -689,7 +690,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
  */
 typedef npy_long __pyx_t_5numpy_int_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":751
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":751
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t             # <<<<<<<<<<<<<<
@@ -698,7 +699,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  */
 typedef npy_longlong __pyx_t_5numpy_long_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":752
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":752
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -707,7 +708,7 @@ typedef npy_longlong __pyx_t_5numpy_long_t;
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":754
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":754
  * ctypedef npy_longlong   longlong_t
  * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
@@ -716,7 +717,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
  */
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":755
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":755
  * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t             # <<<<<<<<<<<<<<
@@ -725,7 +726,7 @@ typedef npy_ulong __pyx_t_5numpy_uint_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":756
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":756
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -734,7 +735,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":758
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":758
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -743,7 +744,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":759
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":759
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -752,7 +753,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":761
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":761
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -761,7 +762,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
  */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":762
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":762
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -770,7 +771,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":763
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":763
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -806,7 +807,7 @@ struct __pyx_MemviewEnum_obj;
 struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":765
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":765
  * ctypedef npy_longdouble longdouble_t
  * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
@@ -815,7 +816,7 @@ struct __pyx_memoryviewslice_obj;
  */
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":766
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":766
  * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
@@ -824,7 +825,7 @@ typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":767
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":767
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
@@ -833,7 +834,7 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":769
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":769
  * ctypedef npy_clongdouble clongdouble_t
  * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
@@ -1534,12 +1535,15 @@ static int (*__pyx_f_8opendxmc_6engine_12_siddon_func_array_indices)(double *, _
 /* Module declarations from 'opendxmc.engine.cyrandom' */
 static PyTypeObject *__pyx_ptype_8opendxmc_6engine_8cyrandom_Random = 0;
 
+/* Module declarations from 'openmp' */
+
 /* Module declarations from 'opendxmc.engine._interaction_func' */
 static PyTypeObject *__pyx_array_type = 0;
 static PyTypeObject *__pyx_MemviewEnum_type = 0;
 static PyTypeObject *__pyx_memoryview_type = 0;
 static PyTypeObject *__pyx_memoryviewslice_type = 0;
 static struct __pyx_obj_8opendxmc_6engine_8cyrandom_Random *__pyx_v_8opendxmc_6engine_17_interaction_func_random = 0;
+static omp_lock_t __pyx_v_8opendxmc_6engine_17_interaction_func_mylock;
 static double __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF;
 static double __pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS;
 static double __pyx_v_8opendxmc_6engine_17_interaction_func_PI;
@@ -1735,10 +1739,10 @@ static char __pyx_k_itemsize_0_for_cython_array[] = "itemsize <= 0 for cython.ar
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static char __pyx_k_unable_to_allocate_array_data[] = "unable to allocate array data.";
 static char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or indirect>";
-static char __pyx_k_C_test_OpenDXMC_opendxmc_engine[] = "C:\\test\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_All_dimensions_preceding_dimensi[] = "All dimensions preceding dimension %d must be indexed and not sliced";
 static char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does not expose strides";
+static char __pyx_k_C_Users_ander_Documents_GitHub_O[] = "C:\\Users\\ander\\Documents\\GitHub\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
 static char __pyx_k_Can_only_create_a_buffer_that_is[] = "Can only create a buffer that is contiguous in memory.";
 static char __pyx_k_Cannot_transpose_memoryview_with[] = "Cannot transpose memoryview with indirect dimensions";
 static char __pyx_k_Empty_shape_tuple_for_cython_arr[] = "Empty shape tuple for cython.array";
@@ -1754,7 +1758,7 @@ static char __pyx_k_opendxmc_engine__interaction_fun[] = "opendxmc.engine._inter
 static char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
 static char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
-static PyObject *__pyx_kp_s_C_test_OpenDXMC_opendxmc_engine;
+static PyObject *__pyx_kp_s_C_Users_ander_Documents_GitHub_O;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
 static PyObject *__pyx_kp_s_Cannot_index_with_type_s;
 static PyObject *__pyx_n_s_Ellipsis;
@@ -1865,7 +1869,7 @@ static PyObject *__pyx_tuple__24;
 static PyObject *__pyx_tuple__25;
 static PyObject *__pyx_codeobj__20;
 
-/* "opendxmc\engine\_interaction_func.pyx":51
+/* "opendxmc\engine\_interaction_func.pyx":54
  * 
  * 
  * cdef inline double sign(double a) nogil: return -1 if a > 0 else 1             # <<<<<<<<<<<<<<
@@ -1889,7 +1893,7 @@ static CYTHON_INLINE double __pyx_f_8opendxmc_6engine_17_interaction_func_sign(d
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":52
+/* "opendxmc\engine\_interaction_func.pyx":55
  * 
  * cdef inline double sign(double a) nogil: return -1 if a > 0 else 1
  * cdef inline double interpolate(double x, double x1, double x2, double y1, double y2) nogil: return y1 + (y2-y1) * (x - x1) / (x2 - x1)             # <<<<<<<<<<<<<<
@@ -1907,7 +1911,7 @@ static CYTHON_INLINE double __pyx_f_8opendxmc_6engine_17_interaction_func_interp
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":55
+/* "opendxmc\engine\_interaction_func.pyx":58
  * 
  * 
  * cdef int argmin(double* u) nogil:             # <<<<<<<<<<<<<<
@@ -1923,7 +1927,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_interaction_func.pyx":57
+  /* "opendxmc\engine\_interaction_func.pyx":60
  * cdef int argmin(double* u) nogil:
  *     cdef double v0, v1, v2
  *     v0 = fabs(u[0])             # <<<<<<<<<<<<<<
@@ -1932,7 +1936,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
  */
   __pyx_v_v0 = fabs((__pyx_v_u[0]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":58
+  /* "opendxmc\engine\_interaction_func.pyx":61
  *     cdef double v0, v1, v2
  *     v0 = fabs(u[0])
  *     v1 = fabs(u[1])             # <<<<<<<<<<<<<<
@@ -1941,7 +1945,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
  */
   __pyx_v_v1 = fabs((__pyx_v_u[1]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":59
+  /* "opendxmc\engine\_interaction_func.pyx":62
  *     v0 = fabs(u[0])
  *     v1 = fabs(u[1])
  *     v2 = fabs(u[2])             # <<<<<<<<<<<<<<
@@ -1950,7 +1954,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
  */
   __pyx_v_v2 = fabs((__pyx_v_u[2]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":60
+  /* "opendxmc\engine\_interaction_func.pyx":63
  *     v1 = fabs(u[1])
  *     v2 = fabs(u[2])
  *     if (v0 <= v1) and (v0 <= v2):             # <<<<<<<<<<<<<<
@@ -1968,7 +1972,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":61
+    /* "opendxmc\engine\_interaction_func.pyx":64
  *     v2 = fabs(u[2])
  *     if (v0 <= v1) and (v0 <= v2):
  *         return <int>0             # <<<<<<<<<<<<<<
@@ -1979,7 +1983,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":62
+  /* "opendxmc\engine\_interaction_func.pyx":65
  *     if (v0 <= v1) and (v0 <= v2):
  *         return <int>0
  *     if (v1 <= v0) and (v1 <= v2):             # <<<<<<<<<<<<<<
@@ -1997,7 +2001,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
   __pyx_L7_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":63
+    /* "opendxmc\engine\_interaction_func.pyx":66
  *         return <int>0
  *     if (v1 <= v0) and (v1 <= v2):
  *         return <int>1             # <<<<<<<<<<<<<<
@@ -2008,7 +2012,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":64
+  /* "opendxmc\engine\_interaction_func.pyx":67
  *     if (v1 <= v0) and (v1 <= v2):
  *         return <int>1
  *     if (v2 <= v0) and (v2 <= v1):             # <<<<<<<<<<<<<<
@@ -2026,7 +2030,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
   __pyx_L10_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":65
+    /* "opendxmc\engine\_interaction_func.pyx":68
  *         return <int>1
  *     if (v2 <= v0) and (v2 <= v1):
  *         return <int>2             # <<<<<<<<<<<<<<
@@ -2037,7 +2041,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":55
+  /* "opendxmc\engine\_interaction_func.pyx":58
  * 
  * 
  * cdef int argmin(double* u) nogil:             # <<<<<<<<<<<<<<
@@ -2051,7 +2055,7 @@ static int __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(double *__pyx_v_
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":67
+/* "opendxmc\engine\_interaction_func.pyx":70
  *         return <int>2
  * 
  * cdef void normalize_vector(double* v) nogil:             # <<<<<<<<<<<<<<
@@ -2065,7 +2069,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_interaction_func.pyx":69
+  /* "opendxmc\engine\_interaction_func.pyx":72
  * cdef void normalize_vector(double* v) nogil:
  *     cdef int i
  *     cdef double s = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])             # <<<<<<<<<<<<<<
@@ -2074,7 +2078,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
  */
   __pyx_v_s = sqrt(((((__pyx_v_v[0]) * (__pyx_v_v[0])) + ((__pyx_v_v[1]) * (__pyx_v_v[1]))) + ((__pyx_v_v[2]) * (__pyx_v_v[2]))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":70
+  /* "opendxmc\engine\_interaction_func.pyx":73
  *     cdef int i
  *     cdef double s = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2084,7 +2088,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":71
+    /* "opendxmc\engine\_interaction_func.pyx":74
  *     cdef double s = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
  *     for i in range(3):
  *         v[i] /= s             # <<<<<<<<<<<<<<
@@ -2095,7 +2099,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
     (__pyx_v_v[__pyx_t_2]) = ((__pyx_v_v[__pyx_t_2]) / __pyx_v_s);
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":67
+  /* "opendxmc\engine\_interaction_func.pyx":70
  *         return <int>2
  * 
  * cdef void normalize_vector(double* v) nogil:             # <<<<<<<<<<<<<<
@@ -2106,7 +2110,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
   /* function exit code */
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":74
+/* "opendxmc\engine\_interaction_func.pyx":77
  * #    return <int>1
  * 
  * cdef void normal_vector(double* v, double* u) nogil:             # <<<<<<<<<<<<<<
@@ -2117,7 +2121,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(doubl
 static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *__pyx_v_v, double *__pyx_v_u) {
   int __pyx_v_i;
 
-  /* "opendxmc\engine\_interaction_func.pyx":75
+  /* "opendxmc\engine\_interaction_func.pyx":78
  * 
  * cdef void normal_vector(double* v, double* u) nogil:
  *     cdef int i  = argmin(v)             # <<<<<<<<<<<<<<
@@ -2126,7 +2130,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
   __pyx_v_i = __pyx_f_8opendxmc_6engine_17_interaction_func_argmin(__pyx_v_v);
 
-  /* "opendxmc\engine\_interaction_func.pyx":85
+  /* "opendxmc\engine\_interaction_func.pyx":88
  *         u[i] = 0
  *         u[2] = -v[0]
  *     elif i ==2:             # <<<<<<<<<<<<<<
@@ -2135,7 +2139,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
   switch (__pyx_v_i) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":77
+    /* "opendxmc\engine\_interaction_func.pyx":80
  *     cdef int i  = argmin(v)
  * 
  *     if i == 0:             # <<<<<<<<<<<<<<
@@ -2144,7 +2148,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     case 0:
 
-    /* "opendxmc\engine\_interaction_func.pyx":78
+    /* "opendxmc\engine\_interaction_func.pyx":81
  * 
  *     if i == 0:
  *         u[0] = 0             # <<<<<<<<<<<<<<
@@ -2153,7 +2157,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[0]) = 0.0;
 
-    /* "opendxmc\engine\_interaction_func.pyx":79
+    /* "opendxmc\engine\_interaction_func.pyx":82
  *     if i == 0:
  *         u[0] = 0
  *         u[1] = v[2]             # <<<<<<<<<<<<<<
@@ -2162,7 +2166,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[1]) = (__pyx_v_v[2]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":80
+    /* "opendxmc\engine\_interaction_func.pyx":83
  *         u[0] = 0
  *         u[1] = v[2]
  *         u[2] = -v[1]             # <<<<<<<<<<<<<<
@@ -2172,7 +2176,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
     (__pyx_v_u[2]) = (-(__pyx_v_v[1]));
     break;
 
-    /* "opendxmc\engine\_interaction_func.pyx":81
+    /* "opendxmc\engine\_interaction_func.pyx":84
  *         u[1] = v[2]
  *         u[2] = -v[1]
  *     elif i ==1:             # <<<<<<<<<<<<<<
@@ -2181,7 +2185,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     case 1:
 
-    /* "opendxmc\engine\_interaction_func.pyx":82
+    /* "opendxmc\engine\_interaction_func.pyx":85
  *         u[2] = -v[1]
  *     elif i ==1:
  *         u[0] = v[2]             # <<<<<<<<<<<<<<
@@ -2190,7 +2194,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[0]) = (__pyx_v_v[2]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":83
+    /* "opendxmc\engine\_interaction_func.pyx":86
  *     elif i ==1:
  *         u[0] = v[2]
  *         u[i] = 0             # <<<<<<<<<<<<<<
@@ -2199,7 +2203,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[__pyx_v_i]) = 0.0;
 
-    /* "opendxmc\engine\_interaction_func.pyx":84
+    /* "opendxmc\engine\_interaction_func.pyx":87
  *         u[0] = v[2]
  *         u[i] = 0
  *         u[2] = -v[0]             # <<<<<<<<<<<<<<
@@ -2209,7 +2213,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
     (__pyx_v_u[2]) = (-(__pyx_v_v[0]));
     break;
 
-    /* "opendxmc\engine\_interaction_func.pyx":85
+    /* "opendxmc\engine\_interaction_func.pyx":88
  *         u[i] = 0
  *         u[2] = -v[0]
  *     elif i ==2:             # <<<<<<<<<<<<<<
@@ -2218,7 +2222,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     case 2:
 
-    /* "opendxmc\engine\_interaction_func.pyx":86
+    /* "opendxmc\engine\_interaction_func.pyx":89
  *         u[2] = -v[0]
  *     elif i ==2:
  *         u[0] = v[1]             # <<<<<<<<<<<<<<
@@ -2227,7 +2231,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[0]) = (__pyx_v_v[1]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":87
+    /* "opendxmc\engine\_interaction_func.pyx":90
  *     elif i ==2:
  *         u[0] = v[1]
  *         u[1] = -v[0]             # <<<<<<<<<<<<<<
@@ -2236,7 +2240,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
     (__pyx_v_u[1]) = (-(__pyx_v_v[0]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":88
+    /* "opendxmc\engine\_interaction_func.pyx":91
  *         u[0] = v[1]
  *         u[1] = -v[0]
  *         u[2] = 0             # <<<<<<<<<<<<<<
@@ -2248,7 +2252,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
     default: break;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":89
+  /* "opendxmc\engine\_interaction_func.pyx":92
  *         u[1] = -v[0]
  *         u[2] = 0
  *     normalize_vector(u)             # <<<<<<<<<<<<<<
@@ -2257,7 +2261,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
  */
   __pyx_f_8opendxmc_6engine_17_interaction_func_normalize_vector(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":74
+  /* "opendxmc\engine\_interaction_func.pyx":77
  * #    return <int>1
  * 
  * cdef void normal_vector(double* v, double* u) nogil:             # <<<<<<<<<<<<<<
@@ -2268,7 +2272,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
   /* function exit code */
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":92
+/* "opendxmc\engine\_interaction_func.pyx":95
  * 
  * 
  * cdef void full_basis(double* v, double* u, double* n) nogil:             # <<<<<<<<<<<<<<
@@ -2278,7 +2282,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(double *
 
 static void __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(double *__pyx_v_v, double *__pyx_v_u, double *__pyx_v_n) {
 
-  /* "opendxmc\engine\_interaction_func.pyx":93
+  /* "opendxmc\engine\_interaction_func.pyx":96
  * 
  * cdef void full_basis(double* v, double* u, double* n) nogil:
  *     n[0] = v[1]*u[2] - v[2]*u[1]             # <<<<<<<<<<<<<<
@@ -2287,7 +2291,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(double *__p
  */
   (__pyx_v_n[0]) = (((__pyx_v_v[1]) * (__pyx_v_u[2])) - ((__pyx_v_v[2]) * (__pyx_v_u[1])));
 
-  /* "opendxmc\engine\_interaction_func.pyx":94
+  /* "opendxmc\engine\_interaction_func.pyx":97
  * cdef void full_basis(double* v, double* u, double* n) nogil:
  *     n[0] = v[1]*u[2] - v[2]*u[1]
  *     n[1] = -v[0]*u[2] + v[2]*u[0]             # <<<<<<<<<<<<<<
@@ -2296,7 +2300,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(double *__p
  */
   (__pyx_v_n[1]) = (((-(__pyx_v_v[0])) * (__pyx_v_u[2])) + ((__pyx_v_v[2]) * (__pyx_v_u[0])));
 
-  /* "opendxmc\engine\_interaction_func.pyx":95
+  /* "opendxmc\engine\_interaction_func.pyx":98
  *     n[0] = v[1]*u[2] - v[2]*u[1]
  *     n[1] = -v[0]*u[2] + v[2]*u[0]
  *     n[2] = v[0]*u[1] - v[1]*u[0]             # <<<<<<<<<<<<<<
@@ -2305,7 +2309,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(double *__p
  */
   (__pyx_v_n[2]) = (((__pyx_v_v[0]) * (__pyx_v_u[1])) - ((__pyx_v_v[1]) * (__pyx_v_u[0])));
 
-  /* "opendxmc\engine\_interaction_func.pyx":92
+  /* "opendxmc\engine\_interaction_func.pyx":95
  * 
  * 
  * cdef void full_basis(double* v, double* u, double* n) nogil:             # <<<<<<<<<<<<<<
@@ -2316,7 +2320,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(double *__p
   /* function exit code */
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":98
+/* "opendxmc\engine\_interaction_func.pyx":101
  * 
  * 
  * cdef void rot_particle(double* particle, double theta) nogil:             # <<<<<<<<<<<<<<
@@ -2336,7 +2340,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
   double __pyx_v_s_r1;
   int __pyx_t_1;
 
-  /* "opendxmc\engine\_interaction_func.pyx":99
+  /* "opendxmc\engine\_interaction_func.pyx":102
  * 
  * cdef void rot_particle(double* particle, double theta) nogil:
  *     cdef double* u = <double *>malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2345,7 +2349,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_u = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":100
+  /* "opendxmc\engine\_interaction_func.pyx":103
  * cdef void rot_particle(double* particle, double theta) nogil:
  *     cdef double* u = <double *>malloc(3 * sizeof(double))
  *     cdef double* v = <double *>malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2354,7 +2358,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_v = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":101
+  /* "opendxmc\engine\_interaction_func.pyx":104
  *     cdef double* u = <double *>malloc(3 * sizeof(double))
  *     cdef double* v = <double *>malloc(3 * sizeof(double))
  *     cdef double* w = <double *>malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2363,7 +2367,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_w = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":103
+  /* "opendxmc\engine\_interaction_func.pyx":106
  *     cdef double* w = <double *>malloc(3 * sizeof(double))
  * 
  *     cdef double r1 = random.random() * 2. * PI             # <<<<<<<<<<<<<<
@@ -2372,7 +2376,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_r1 = ((((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * 2.) * __pyx_v_8opendxmc_6engine_17_interaction_func_PI);
 
-  /* "opendxmc\engine\_interaction_func.pyx":105
+  /* "opendxmc\engine\_interaction_func.pyx":108
  *     cdef double r1 = random.random() * 2. * PI
  *     cdef int i
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2382,7 +2386,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":106
+    /* "opendxmc\engine\_interaction_func.pyx":109
  *     cdef int i
  *     for i in range(3):
  *         v[i] = particle[i+3]             # <<<<<<<<<<<<<<
@@ -2392,7 +2396,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
     (__pyx_v_v[__pyx_v_i]) = (__pyx_v_particle[(__pyx_v_i + 3)]);
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":107
+  /* "opendxmc\engine\_interaction_func.pyx":110
  *     for i in range(3):
  *         v[i] = particle[i+3]
  *     normal_vector(v, u)             # <<<<<<<<<<<<<<
@@ -2401,7 +2405,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_f_8opendxmc_6engine_17_interaction_func_normal_vector(__pyx_v_v, __pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":108
+  /* "opendxmc\engine\_interaction_func.pyx":111
  *         v[i] = particle[i+3]
  *     normal_vector(v, u)
  *     full_basis(v, u, w)             # <<<<<<<<<<<<<<
@@ -2410,7 +2414,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_f_8opendxmc_6engine_17_interaction_func_full_basis(__pyx_v_v, __pyx_v_u, __pyx_v_w);
 
-  /* "opendxmc\engine\_interaction_func.pyx":111
+  /* "opendxmc\engine\_interaction_func.pyx":114
  * 
  *     cdef double c_theta, s_theta, c_r1, s_r1
  *     c_theta = cos(theta)             # <<<<<<<<<<<<<<
@@ -2419,7 +2423,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_c_theta = cos(__pyx_v_theta);
 
-  /* "opendxmc\engine\_interaction_func.pyx":112
+  /* "opendxmc\engine\_interaction_func.pyx":115
  *     cdef double c_theta, s_theta, c_r1, s_r1
  *     c_theta = cos(theta)
  *     s_theta = sin(theta)             # <<<<<<<<<<<<<<
@@ -2428,7 +2432,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_s_theta = sin(__pyx_v_theta);
 
-  /* "opendxmc\engine\_interaction_func.pyx":113
+  /* "opendxmc\engine\_interaction_func.pyx":116
  *     c_theta = cos(theta)
  *     s_theta = sin(theta)
  *     c_r1 = cos(r1)             # <<<<<<<<<<<<<<
@@ -2437,7 +2441,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_c_r1 = cos(__pyx_v_r1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":114
+  /* "opendxmc\engine\_interaction_func.pyx":117
  *     s_theta = sin(theta)
  *     c_r1 = cos(r1)
  *     s_r1 = sin(r1)             # <<<<<<<<<<<<<<
@@ -2446,7 +2450,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   __pyx_v_s_r1 = sin(__pyx_v_r1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":116
+  /* "opendxmc\engine\_interaction_func.pyx":119
  *     s_r1 = sin(r1)
  * 
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2456,7 +2460,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":117
+    /* "opendxmc\engine\_interaction_func.pyx":120
  * 
  *     for i in range(3):
  *         particle[i+3] = c_theta * v[i] + s_theta * (s_r1 * u[i] + c_r1 * w[i])             # <<<<<<<<<<<<<<
@@ -2466,7 +2470,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
     (__pyx_v_particle[(__pyx_v_i + 3)]) = ((__pyx_v_c_theta * (__pyx_v_v[__pyx_v_i])) + (__pyx_v_s_theta * ((__pyx_v_s_r1 * (__pyx_v_u[__pyx_v_i])) + (__pyx_v_c_r1 * (__pyx_v_w[__pyx_v_i])))));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":118
+  /* "opendxmc\engine\_interaction_func.pyx":121
  *     for i in range(3):
  *         particle[i+3] = c_theta * v[i] + s_theta * (s_r1 * u[i] + c_r1 * w[i])
  *     free(u)             # <<<<<<<<<<<<<<
@@ -2475,7 +2479,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   free(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":119
+  /* "opendxmc\engine\_interaction_func.pyx":122
  *         particle[i+3] = c_theta * v[i] + s_theta * (s_r1 * u[i] + c_r1 * w[i])
  *     free(u)
  *     free(v)             # <<<<<<<<<<<<<<
@@ -2484,7 +2488,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   free(__pyx_v_v);
 
-  /* "opendxmc\engine\_interaction_func.pyx":120
+  /* "opendxmc\engine\_interaction_func.pyx":123
  *     free(u)
  *     free(v)
  *     free(w)             # <<<<<<<<<<<<<<
@@ -2493,7 +2497,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   free(__pyx_v_w);
 
-  /* "opendxmc\engine\_interaction_func.pyx":121
+  /* "opendxmc\engine\_interaction_func.pyx":124
  *     free(v)
  *     free(w)
  *     return             # <<<<<<<<<<<<<<
@@ -2502,7 +2506,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":98
+  /* "opendxmc\engine\_interaction_func.pyx":101
  * 
  * 
  * cdef void rot_particle(double* particle, double theta) nogil:             # <<<<<<<<<<<<<<
@@ -2514,7 +2518,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(double *_
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":123
+/* "opendxmc\engine\_interaction_func.pyx":126
  *     return
  * 
  * cdef double att_linear(double[:,:,:] atts, int tissue_ind, int interaction, double energy) nogil:             # <<<<<<<<<<<<<<
@@ -2550,7 +2554,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
   int __pyx_t_18;
   long __pyx_t_19;
 
-  /* "opendxmc\engine\_interaction_func.pyx":126
+  /* "opendxmc\engine\_interaction_func.pyx":129
  *     cdef double x1, y1, x2, y2
  *     cdef int i, N
  *     N = <int>atts.shape[2]             # <<<<<<<<<<<<<<
@@ -2559,7 +2563,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
  */
   __pyx_v_N = ((int)(__pyx_v_atts.shape[2]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":128
+  /* "opendxmc\engine\_interaction_func.pyx":131
  *     N = <int>atts.shape[2]
  * 
  *     for i in range(1, N):             # <<<<<<<<<<<<<<
@@ -2570,7 +2574,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
   for (__pyx_t_2 = 1; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":129
+    /* "opendxmc\engine\_interaction_func.pyx":132
  * 
  *     for i in range(1, N):
  *         if energy < atts[tissue_ind, 0, i]:             # <<<<<<<<<<<<<<
@@ -2583,7 +2587,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
     __pyx_t_6 = ((__pyx_v_energy < (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_3 * __pyx_v_atts.strides[0]) ) + __pyx_t_4 * __pyx_v_atts.strides[1]) ) + __pyx_t_5 * __pyx_v_atts.strides[2]) )))) != 0);
     if (__pyx_t_6) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":130
+      /* "opendxmc\engine\_interaction_func.pyx":133
  *     for i in range(1, N):
  *         if energy < atts[tissue_ind, 0, i]:
  *             y1 = atts[tissue_ind, interaction, i-1]             # <<<<<<<<<<<<<<
@@ -2595,7 +2599,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
       __pyx_t_9 = (__pyx_v_i - 1);
       __pyx_v_y1 = (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_7 * __pyx_v_atts.strides[0]) ) + __pyx_t_8 * __pyx_v_atts.strides[1]) ) + __pyx_t_9 * __pyx_v_atts.strides[2]) )));
 
-      /* "opendxmc\engine\_interaction_func.pyx":131
+      /* "opendxmc\engine\_interaction_func.pyx":134
  *         if energy < atts[tissue_ind, 0, i]:
  *             y1 = atts[tissue_ind, interaction, i-1]
  *             y2 = atts[tissue_ind, interaction, i]             # <<<<<<<<<<<<<<
@@ -2607,7 +2611,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
       __pyx_t_12 = __pyx_v_i;
       __pyx_v_y2 = (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_10 * __pyx_v_atts.strides[0]) ) + __pyx_t_11 * __pyx_v_atts.strides[1]) ) + __pyx_t_12 * __pyx_v_atts.strides[2]) )));
 
-      /* "opendxmc\engine\_interaction_func.pyx":132
+      /* "opendxmc\engine\_interaction_func.pyx":135
  *             y1 = atts[tissue_ind, interaction, i-1]
  *             y2 = atts[tissue_ind, interaction, i]
  *             x1 = atts[tissue_ind, 0, i-1]             # <<<<<<<<<<<<<<
@@ -2619,7 +2623,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
       __pyx_t_15 = (__pyx_v_i - 1);
       __pyx_v_x1 = (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_13 * __pyx_v_atts.strides[0]) ) + __pyx_t_14 * __pyx_v_atts.strides[1]) ) + __pyx_t_15 * __pyx_v_atts.strides[2]) )));
 
-      /* "opendxmc\engine\_interaction_func.pyx":133
+      /* "opendxmc\engine\_interaction_func.pyx":136
  *             y2 = atts[tissue_ind, interaction, i]
  *             x1 = atts[tissue_ind, 0, i-1]
  *             x2 = atts[tissue_ind, 0, i]             # <<<<<<<<<<<<<<
@@ -2631,7 +2635,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
       __pyx_t_18 = __pyx_v_i;
       __pyx_v_x2 = (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_16 * __pyx_v_atts.strides[0]) ) + __pyx_t_17 * __pyx_v_atts.strides[1]) ) + __pyx_t_18 * __pyx_v_atts.strides[2]) )));
 
-      /* "opendxmc\engine\_interaction_func.pyx":134
+      /* "opendxmc\engine\_interaction_func.pyx":137
  *             x1 = atts[tissue_ind, 0, i-1]
  *             x2 = atts[tissue_ind, 0, i]
  *             return y1 + (y2-y1) * (energy - x1) / (x2 - x1)             # <<<<<<<<<<<<<<
@@ -2643,7 +2647,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
     }
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":135
+  /* "opendxmc\engine\_interaction_func.pyx":138
  *             x2 = atts[tissue_ind, 0, i]
  *             return y1 + (y2-y1) * (energy - x1) / (x2 - x1)
  *     return atts[tissue_ind, interaction, N-1]             # <<<<<<<<<<<<<<
@@ -2656,7 +2660,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
   __pyx_r = (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_atts.data + __pyx_t_1 * __pyx_v_atts.strides[0]) ) + __pyx_t_2 * __pyx_v_atts.strides[1]) ) + __pyx_t_19 * __pyx_v_atts.strides[2]) )));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":123
+  /* "opendxmc\engine\_interaction_func.pyx":126
  *     return
  * 
  * cdef double att_linear(double[:,:,:] atts, int tissue_ind, int interaction, double energy) nogil:             # <<<<<<<<<<<<<<
@@ -2669,7 +2673,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":138
+/* "opendxmc\engine\_interaction_func.pyx":141
  * 
  * 
  * cdef double compton_event_draw_energy_theta(double energy, double* theta) nogil:             # <<<<<<<<<<<<<<
@@ -2691,7 +2695,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   double __pyx_r;
   int __pyx_t_1;
 
-  /* "opendxmc\engine\_interaction_func.pyx":143
+  /* "opendxmc\engine\_interaction_func.pyx":146
  *     """
  *     cdef double epsilon_0, alpha1, alpha2, r1, r2, r3, epsilon, qsin_theta, t, k
  *     k = energy / ELECTRON_MASS             # <<<<<<<<<<<<<<
@@ -2700,7 +2704,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_k = (__pyx_v_energy / __pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS);
 
-  /* "opendxmc\engine\_interaction_func.pyx":144
+  /* "opendxmc\engine\_interaction_func.pyx":147
  *     cdef double epsilon_0, alpha1, alpha2, r1, r2, r3, epsilon, qsin_theta, t, k
  *     k = energy / ELECTRON_MASS
  *     epsilon_0 = 1. / (1. + 2. * k)             # <<<<<<<<<<<<<<
@@ -2709,7 +2713,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_epsilon_0 = (1. / (1. + (2. * __pyx_v_k)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":147
+  /* "opendxmc\engine\_interaction_func.pyx":150
  * 
  * 
  *     alpha1 = log(1. / epsilon_0)             # <<<<<<<<<<<<<<
@@ -2718,7 +2722,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_alpha1 = log((1. / __pyx_v_epsilon_0));
 
-  /* "opendxmc\engine\_interaction_func.pyx":148
+  /* "opendxmc\engine\_interaction_func.pyx":151
  * 
  *     alpha1 = log(1. / epsilon_0)
  *     alpha2 = (1. - epsilon_0**2) / 2.             # <<<<<<<<<<<<<<
@@ -2727,7 +2731,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_alpha2 = ((1. - pow(__pyx_v_epsilon_0, 2.0)) / 2.);
 
-  /* "opendxmc\engine\_interaction_func.pyx":149
+  /* "opendxmc\engine\_interaction_func.pyx":152
  *     alpha1 = log(1. / epsilon_0)
  *     alpha2 = (1. - epsilon_0**2) / 2.
  *     while True:             # <<<<<<<<<<<<<<
@@ -2736,7 +2740,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   while (1) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":150
+    /* "opendxmc\engine\_interaction_func.pyx":153
  *     alpha2 = (1. - epsilon_0**2) / 2.
  *     while True:
  *         r1 = random.random()             # <<<<<<<<<<<<<<
@@ -2745,7 +2749,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":151
+    /* "opendxmc\engine\_interaction_func.pyx":154
  *     while True:
  *         r1 = random.random()
  *         r2 = random.random()             # <<<<<<<<<<<<<<
@@ -2754,7 +2758,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r2 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":152
+    /* "opendxmc\engine\_interaction_func.pyx":155
  *         r1 = random.random()
  *         r2 = random.random()
  *         r3 = random.random()             # <<<<<<<<<<<<<<
@@ -2763,7 +2767,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r3 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":154
+    /* "opendxmc\engine\_interaction_func.pyx":157
  *         r3 = random.random()
  * 
  *         if r1 < alpha1 / (alpha1 + alpha2):             # <<<<<<<<<<<<<<
@@ -2773,7 +2777,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     __pyx_t_1 = ((__pyx_v_r1 < (__pyx_v_alpha1 / (__pyx_v_alpha1 + __pyx_v_alpha2))) != 0);
     if (__pyx_t_1) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":155
+      /* "opendxmc\engine\_interaction_func.pyx":158
  * 
  *         if r1 < alpha1 / (alpha1 + alpha2):
  *             epsilon = exp(-r2 * alpha1)             # <<<<<<<<<<<<<<
@@ -2785,7 +2789,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":157
+      /* "opendxmc\engine\_interaction_func.pyx":160
  *             epsilon = exp(-r2 * alpha1)
  *         else:
  *             epsilon = sqrt((epsilon_0**2 + (1. - epsilon_0**2) * r2))             # <<<<<<<<<<<<<<
@@ -2796,7 +2800,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     }
     __pyx_L5:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":159
+    /* "opendxmc\engine\_interaction_func.pyx":162
  *             epsilon = sqrt((epsilon_0**2 + (1. - epsilon_0**2) * r2))
  * 
  *         t = ELECTRON_MASS * (1. - epsilon) / (energy * epsilon)             # <<<<<<<<<<<<<<
@@ -2805,7 +2809,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_t = ((__pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS * (1. - __pyx_v_epsilon)) / (__pyx_v_energy * __pyx_v_epsilon));
 
-    /* "opendxmc\engine\_interaction_func.pyx":160
+    /* "opendxmc\engine\_interaction_func.pyx":163
  * 
  *         t = ELECTRON_MASS * (1. - epsilon) / (energy * epsilon)
  *         qsin_theta = t * (2. - t)             # <<<<<<<<<<<<<<
@@ -2814,7 +2818,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_qsin_theta = (__pyx_v_t * (2. - __pyx_v_t));
 
-    /* "opendxmc\engine\_interaction_func.pyx":162
+    /* "opendxmc\engine\_interaction_func.pyx":165
  *         qsin_theta = t * (2. - t)
  * 
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:             # <<<<<<<<<<<<<<
@@ -2824,7 +2828,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     __pyx_t_1 = (((1. - ((__pyx_v_epsilon / (1. + pow(__pyx_v_epsilon, 2.0))) * __pyx_v_qsin_theta)) >= __pyx_v_r3) != 0);
     if (__pyx_t_1) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":163
+      /* "opendxmc\engine\_interaction_func.pyx":166
  * 
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:
  *             break             # <<<<<<<<<<<<<<
@@ -2836,7 +2840,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   }
   __pyx_L4_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":164
+  /* "opendxmc\engine\_interaction_func.pyx":167
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:
  *             break
  *     theta[0] = acos(1. + 1./k - 1./epsilon/k)             # <<<<<<<<<<<<<<
@@ -2845,7 +2849,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   (__pyx_v_theta[0]) = acos(((1. + (1. / __pyx_v_k)) - ((1. / __pyx_v_epsilon) / __pyx_v_k)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":165
+  /* "opendxmc\engine\_interaction_func.pyx":168
  *             break
  *     theta[0] = acos(1. + 1./k - 1./epsilon/k)
  *     return epsilon * energy             # <<<<<<<<<<<<<<
@@ -2855,7 +2859,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   __pyx_r = (__pyx_v_epsilon * __pyx_v_energy);
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":138
+  /* "opendxmc\engine\_interaction_func.pyx":141
  * 
  * 
  * cdef double compton_event_draw_energy_theta(double energy, double* theta) nogil:             # <<<<<<<<<<<<<<
@@ -2868,7 +2872,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":169
+/* "opendxmc\engine\_interaction_func.pyx":172
  * 
  * 
  * cdef double rayleigh_event_draw_theta() nogil:             # <<<<<<<<<<<<<<
@@ -2882,7 +2886,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   double __pyx_v_A;
   double __pyx_r;
 
-  /* "opendxmc\engine\_interaction_func.pyx":171
+  /* "opendxmc\engine\_interaction_func.pyx":174
  * cdef double rayleigh_event_draw_theta() nogil:
  *     cdef double r, c, A
  *     r = random.random()             # <<<<<<<<<<<<<<
@@ -2891,7 +2895,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_r = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-  /* "opendxmc\engine\_interaction_func.pyx":172
+  /* "opendxmc\engine\_interaction_func.pyx":175
  *     cdef double r, c, A
  *     r = random.random()
  *     c = 4. - 8. * r             # <<<<<<<<<<<<<<
@@ -2900,7 +2904,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_c = (4. - (8. * __pyx_v_r));
 
-  /* "opendxmc\engine\_interaction_func.pyx":173
+  /* "opendxmc\engine\_interaction_func.pyx":176
  *     r = random.random()
  *     c = 4. - 8. * r
  *     A = -sign(c) * ((fabs(c) + (c**2 + 4.)**.5) / 2.)**(1./3.)             # <<<<<<<<<<<<<<
@@ -2909,7 +2913,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_A = ((-__pyx_f_8opendxmc_6engine_17_interaction_func_sign(__pyx_v_c)) * pow(((fabs(__pyx_v_c) + pow((pow(__pyx_v_c, 2.0) + 4.), .5)) / 2.), (1. / 3.)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":174
+  /* "opendxmc\engine\_interaction_func.pyx":177
  *     c = 4. - 8. * r
  *     A = -sign(c) * ((fabs(c) + (c**2 + 4.)**.5) / 2.)**(1./3.)
  *     return acos(A - 1. / A)             # <<<<<<<<<<<<<<
@@ -2919,7 +2923,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   __pyx_r = acos((__pyx_v_A - (1. / __pyx_v_A)));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":169
+  /* "opendxmc\engine\_interaction_func.pyx":172
  * 
  * 
  * cdef double rayleigh_event_draw_theta() nogil:             # <<<<<<<<<<<<<<
@@ -2932,7 +2936,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":177
+/* "opendxmc\engine\_interaction_func.pyx":180
  * 
  * 
  * cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double energy, double* cum_prob) nogil:             # <<<<<<<<<<<<<<
@@ -2972,7 +2976,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   int __pyx_t_23;
   int __pyx_t_24;
 
-  /* "opendxmc\engine\_interaction_func.pyx":180
+  /* "opendxmc\engine\_interaction_func.pyx":183
  *     cdef double att, cum_sum
  *     cdef int e_index, N_energy, material, i
  *     N_energy = <int>attinuation_lut.shape[2]             # <<<<<<<<<<<<<<
@@ -2981,7 +2985,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
  */
   __pyx_v_N_energy = ((int)(__pyx_v_attinuation_lut.shape[2]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":182
+  /* "opendxmc\engine\_interaction_func.pyx":185
  *     N_energy = <int>attinuation_lut.shape[2]
  *     #finding upper energy
  *     for e_index in range(N_energy):             # <<<<<<<<<<<<<<
@@ -2992,7 +2996,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_e_index = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":183
+    /* "opendxmc\engine\_interaction_func.pyx":186
  *     #finding upper energy
  *     for e_index in range(N_energy):
  *         if energy < attinuation_lut[0, 0, e_index]:             # <<<<<<<<<<<<<<
@@ -3005,7 +3009,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_6 = ((__pyx_v_energy < (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_3 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_4 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_5 * __pyx_v_attinuation_lut.strides[2]) )))) != 0);
     if (__pyx_t_6) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":184
+      /* "opendxmc\engine\_interaction_func.pyx":187
  *     for e_index in range(N_energy):
  *         if energy < attinuation_lut[0, 0, e_index]:
  *             break             # <<<<<<<<<<<<<<
@@ -3017,7 +3021,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   }
   /*else*/ {
 
-    /* "opendxmc\engine\_interaction_func.pyx":186
+    /* "opendxmc\engine\_interaction_func.pyx":189
  *             break
  *     else:
  *         for i in range(N):             # <<<<<<<<<<<<<<
@@ -3028,7 +3032,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_2; __pyx_t_7+=1) {
       __pyx_v_i = __pyx_t_7;
 
-      /* "opendxmc\engine\_interaction_func.pyx":187
+      /* "opendxmc\engine\_interaction_func.pyx":190
  *     else:
  *         for i in range(N):
  *             cum_prob[i] = 0             # <<<<<<<<<<<<<<
@@ -3038,7 +3042,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
       (__pyx_v_cum_prob[__pyx_v_i]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":188
+    /* "opendxmc\engine\_interaction_func.pyx":191
  *         for i in range(N):
  *             cum_prob[i] = 0
  *         return             # <<<<<<<<<<<<<<
@@ -3049,7 +3053,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   }
   __pyx_L4_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":189
+  /* "opendxmc\engine\_interaction_func.pyx":192
  *             cum_prob[i] = 0
  *         return
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3058,7 +3062,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":190
+  /* "opendxmc\engine\_interaction_func.pyx":193
  *         return
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3069,7 +3073,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":191
+    /* "opendxmc\engine\_interaction_func.pyx":194
  *     cum_sum = 0
  *     for i in range(N):
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]             # <<<<<<<<<<<<<<
@@ -3081,7 +3085,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_9 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_material = (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_7 * __pyx_v_material_map.strides[0]) ) + __pyx_t_8 * __pyx_v_material_map.strides[1]) ) + __pyx_t_9 * __pyx_v_material_map.strides[2]) )));
 
-    /* "opendxmc\engine\_interaction_func.pyx":192
+    /* "opendxmc\engine\_interaction_func.pyx":195
  *     for i in range(N):
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])             # <<<<<<<<<<<<<<
@@ -3102,7 +3106,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_21 = __pyx_v_e_index;
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_interpolate(__pyx_v_energy, (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_10 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_11 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_12 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_13 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_14 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_15 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_16 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_17 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_18 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_19 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_20 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_21 * __pyx_v_attinuation_lut.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":193
+    /* "opendxmc\engine\_interaction_func.pyx":196
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])
  *         cum_sum += att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3114,7 +3118,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_24 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_22 * __pyx_v_density_map.strides[0]) ) + __pyx_t_23 * __pyx_v_density_map.strides[1]) ) + __pyx_t_24 * __pyx_v_density_map.strides[2]) )))) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":194
+    /* "opendxmc\engine\_interaction_func.pyx":197
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])
  *         cum_sum += att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]] * lenghts[i]
  *         cum_prob[i] = 1 - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3124,7 +3128,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     (__pyx_v_cum_prob[__pyx_v_i]) = (1.0 - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":177
+  /* "opendxmc\engine\_interaction_func.pyx":180
  * 
  * 
  * cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double energy, double* cum_prob) nogil:             # <<<<<<<<<<<<<<
@@ -3136,7 +3140,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":197
+/* "opendxmc\engine\_interaction_func.pyx":200
  * 
  * 
  * cdef void interaction_point(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3165,7 +3169,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   int __pyx_t_9;
   int __pyx_t_10;
 
-  /* "opendxmc\engine\_interaction_func.pyx":202
+  /* "opendxmc\engine\_interaction_func.pyx":205
  *     cdef double att, cum_sum, r1, delta_r, dist
  * 
  *     cdef double* u = <double*> malloc(N*sizeof(double))             # <<<<<<<<<<<<<<
@@ -3174,7 +3178,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_u = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":203
+  /* "opendxmc\engine\_interaction_func.pyx":206
  * 
  *     cdef double* u = <double*> malloc(N*sizeof(double))
  *     cdef double* cum_prob = <double*> malloc(N*sizeof(double))             # <<<<<<<<<<<<<<
@@ -3183,7 +3187,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_cum_prob = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":206
+  /* "opendxmc\engine\_interaction_func.pyx":209
  * 
  * #    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3192,7 +3196,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":207
+  /* "opendxmc\engine\_interaction_func.pyx":210
  * #    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3203,7 +3207,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":208
+    /* "opendxmc\engine\_interaction_func.pyx":211
  *     cum_sum = 0
  *     for i in range(N):
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])             # <<<<<<<<<<<<<<
@@ -3215,7 +3219,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_5 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_3 * __pyx_v_material_map.strides[0]) ) + __pyx_t_4 * __pyx_v_material_map.strides[1]) ) + __pyx_t_5 * __pyx_v_material_map.strides[2]) ))), 1, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":209
+    /* "opendxmc\engine\_interaction_func.pyx":212
  *     for i in range(N):
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]             # <<<<<<<<<<<<<<
@@ -3227,7 +3231,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_8 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     (__pyx_v_u[__pyx_v_i]) = (__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_6 * __pyx_v_density_map.strides[0]) ) + __pyx_t_7 * __pyx_v_density_map.strides[1]) ) + __pyx_t_8 * __pyx_v_density_map.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":210
+    /* "opendxmc\engine\_interaction_func.pyx":213
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
  *         cum_sum += u[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3236,7 +3240,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_u[__pyx_v_i]) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":211
+    /* "opendxmc\engine\_interaction_func.pyx":214
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
  *         cum_sum += u[i] * lenghts[i]
  *         cum_prob[i] = 1 - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3246,7 +3250,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     (__pyx_v_cum_prob[__pyx_v_i]) = (1.0 - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":214
+  /* "opendxmc\engine\_interaction_func.pyx":217
  * 
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:             # <<<<<<<<<<<<<<
@@ -3256,7 +3260,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   __pyx_t_9 = (((__pyx_v_cum_prob[(__pyx_v_N - 1)]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF) != 0);
   if (__pyx_t_9) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":215
+    /* "opendxmc\engine\_interaction_func.pyx":218
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):             # <<<<<<<<<<<<<<
@@ -3266,7 +3270,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
       __pyx_v_j = __pyx_t_1;
 
-      /* "opendxmc\engine\_interaction_func.pyx":216
+      /* "opendxmc\engine\_interaction_func.pyx":219
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):
  *             stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3276,7 +3280,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       (__pyx_v_stop[__pyx_v_j]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":217
+    /* "opendxmc\engine\_interaction_func.pyx":220
  *         for j in range(3):
  *             stop[j] = 0
  *         index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3285,7 +3289,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     (__pyx_v_index[0]) = ((int)-1);
 
-    /* "opendxmc\engine\_interaction_func.pyx":218
+    /* "opendxmc\engine\_interaction_func.pyx":221
  *             stop[j] = 0
  *         index[0] = <int>-1
  *         weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3294,7 +3298,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     (__pyx_v_weight[0]) = ((int)0);
 
-    /* "opendxmc\engine\_interaction_func.pyx":219
+    /* "opendxmc\engine\_interaction_func.pyx":222
  *         index[0] = <int>-1
  *         weight[0] = <int>0
  *         free(u)             # <<<<<<<<<<<<<<
@@ -3303,7 +3307,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     free(__pyx_v_u);
 
-    /* "opendxmc\engine\_interaction_func.pyx":220
+    /* "opendxmc\engine\_interaction_func.pyx":223
  *         weight[0] = <int>0
  *         free(u)
  *         free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3312,7 +3316,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     free(__pyx_v_cum_prob);
 
-    /* "opendxmc\engine\_interaction_func.pyx":221
+    /* "opendxmc\engine\_interaction_func.pyx":224
  *         free(u)
  *         free(cum_prob)
  *         return             # <<<<<<<<<<<<<<
@@ -3322,7 +3326,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":223
+  /* "opendxmc\engine\_interaction_func.pyx":226
  *         return
  * 
  *     weight[0] = <int>1             # <<<<<<<<<<<<<<
@@ -3331,7 +3335,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_weight[0]) = ((int)1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":225
+  /* "opendxmc\engine\_interaction_func.pyx":228
  *     weight[0] = <int>1
  * 
  *     r1 = random.random()             # <<<<<<<<<<<<<<
@@ -3340,7 +3344,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-  /* "opendxmc\engine\_interaction_func.pyx":227
+  /* "opendxmc\engine\_interaction_func.pyx":230
  *     r1 = random.random()
  * 
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3351,7 +3355,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":228
+    /* "opendxmc\engine\_interaction_func.pyx":231
  * 
  *     for i in range(N):
  *         if r1 < cum_prob[i]:             # <<<<<<<<<<<<<<
@@ -3361,7 +3365,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_9 = ((__pyx_v_r1 < (__pyx_v_cum_prob[__pyx_v_i])) != 0);
     if (__pyx_t_9) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":229
+      /* "opendxmc\engine\_interaction_func.pyx":232
  *     for i in range(N):
  *         if r1 < cum_prob[i]:
  *             if i > 0:             # <<<<<<<<<<<<<<
@@ -3371,7 +3375,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       __pyx_t_9 = ((__pyx_v_i > 0) != 0);
       if (__pyx_t_9) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":230
+        /* "opendxmc\engine\_interaction_func.pyx":233
  *         if r1 < cum_prob[i]:
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])             # <<<<<<<<<<<<<<
@@ -3380,7 +3384,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
         __pyx_v_delta_r = (__pyx_v_r1 - (__pyx_v_cum_prob[(__pyx_v_i - 1)]));
 
-        /* "opendxmc\engine\_interaction_func.pyx":231
+        /* "opendxmc\engine\_interaction_func.pyx":234
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3392,7 +3396,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":233
+        /* "opendxmc\engine\_interaction_func.pyx":236
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]
  *             else:
  *                 delta_r = r1             # <<<<<<<<<<<<<<
@@ -3401,7 +3405,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
         __pyx_v_delta_r = __pyx_v_r1;
 
-        /* "opendxmc\engine\_interaction_func.pyx":234
+        /* "opendxmc\engine\_interaction_func.pyx":237
  *             else:
  *                 delta_r = r1
  *                 dist = delta_r / cum_prob[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3412,7 +3416,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       }
       __pyx_L11:;
 
-      /* "opendxmc\engine\_interaction_func.pyx":236
+      /* "opendxmc\engine\_interaction_func.pyx":239
  *                 dist = delta_r / cum_prob[i] * lenghts[i]
  * 
  *             index[0] = <int>i             # <<<<<<<<<<<<<<
@@ -3421,7 +3425,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       (__pyx_v_index[0]) = ((int)__pyx_v_i);
 
-      /* "opendxmc\engine\_interaction_func.pyx":237
+      /* "opendxmc\engine\_interaction_func.pyx":240
  * 
  *             index[0] = <int>i
  *             for j in range(3):             # <<<<<<<<<<<<<<
@@ -3431,7 +3435,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       for (__pyx_t_10 = 0; __pyx_t_10 < 3; __pyx_t_10+=1) {
         __pyx_v_j = __pyx_t_10;
 
-        /* "opendxmc\engine\_interaction_func.pyx":238
+        /* "opendxmc\engine\_interaction_func.pyx":241
  *             index[0] = <int>i
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3+j]) + dist * particle[j+3]             # <<<<<<<<<<<<<<
@@ -3441,7 +3445,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
         (__pyx_v_stop[__pyx_v_j]) = (__pyx_f_8opendxmc_6engine_12_siddon_func_plane(__pyx_v_spacing, __pyx_v_offset, __pyx_v_j, (__pyx_v_ind[((__pyx_v_i * 3) + __pyx_v_j)])) + (__pyx_v_dist * (__pyx_v_particle[(__pyx_v_j + 3)])));
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":240
+      /* "opendxmc\engine\_interaction_func.pyx":243
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3+j]) + dist * particle[j+3]
  * #            print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist, cum_prob
  *             free(u)             # <<<<<<<<<<<<<<
@@ -3450,7 +3454,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       free(__pyx_v_u);
 
-      /* "opendxmc\engine\_interaction_func.pyx":241
+      /* "opendxmc\engine\_interaction_func.pyx":244
  * #            print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist, cum_prob
  *             free(u)
  *             free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3459,7 +3463,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       free(__pyx_v_cum_prob);
 
-      /* "opendxmc\engine\_interaction_func.pyx":242
+      /* "opendxmc\engine\_interaction_func.pyx":245
  *             free(u)
  *             free(cum_prob)
  *             return             # <<<<<<<<<<<<<<
@@ -3470,7 +3474,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     }
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":244
+  /* "opendxmc\engine\_interaction_func.pyx":247
  *             return
  * 
  *     for j in range(3):             # <<<<<<<<<<<<<<
@@ -3480,7 +3484,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_j = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":245
+    /* "opendxmc\engine\_interaction_func.pyx":248
  * 
  *     for j in range(3):
  *         stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3490,7 +3494,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     (__pyx_v_stop[__pyx_v_j]) = 0.0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":246
+  /* "opendxmc\engine\_interaction_func.pyx":249
  *     for j in range(3):
  *         stop[j] = 0
  *     index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3499,7 +3503,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_index[0]) = ((int)-1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":247
+  /* "opendxmc\engine\_interaction_func.pyx":250
  *         stop[j] = 0
  *     index[0] = <int>-1
  *     weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3508,7 +3512,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_weight[0]) = ((int)0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":248
+  /* "opendxmc\engine\_interaction_func.pyx":251
  *     index[0] = <int>-1
  *     weight[0] = <int>0
  *     free(u)             # <<<<<<<<<<<<<<
@@ -3517,7 +3521,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   free(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":249
+  /* "opendxmc\engine\_interaction_func.pyx":252
  *     weight[0] = <int>0
  *     free(u)
  *     free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3526,7 +3530,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   free(__pyx_v_cum_prob);
 
-  /* "opendxmc\engine\_interaction_func.pyx":250
+  /* "opendxmc\engine\_interaction_func.pyx":253
  *     free(u)
  *     free(cum_prob)
  *     return             # <<<<<<<<<<<<<<
@@ -3535,7 +3539,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":197
+  /* "opendxmc\engine\_interaction_func.pyx":200
  * 
  * 
  * cdef void interaction_point(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3547,7 +3551,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":254
+/* "opendxmc\engine\_interaction_func.pyx":257
  * 
  * 
  * cdef void interaction_point_forced(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3576,7 +3580,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   int __pyx_t_9;
   int __pyx_t_10;
 
-  /* "opendxmc\engine\_interaction_func.pyx":258
+  /* "opendxmc\engine\_interaction_func.pyx":261
  *     cdef int i, j
  *     cdef double att, cum_sum, r1, delta_r, dist
  *     cdef double* u = <double*> malloc(N * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3585,7 +3589,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_u = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":259
+  /* "opendxmc\engine\_interaction_func.pyx":262
  *     cdef double att, cum_sum, r1, delta_r, dist
  *     cdef double* u = <double*> malloc(N * sizeof(double))
  *     cdef double* cum_prob = <double*> malloc(N * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3594,7 +3598,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_cum_prob = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":261
+  /* "opendxmc\engine\_interaction_func.pyx":264
  *     cdef double* cum_prob = <double*> malloc(N * sizeof(double))
  * 
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3603,7 +3607,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":262
+  /* "opendxmc\engine\_interaction_func.pyx":265
  * 
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3614,7 +3618,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":263
+    /* "opendxmc\engine\_interaction_func.pyx":266
  *     cum_sum = 0
  *     for i in range(N):
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])             # <<<<<<<<<<<<<<
@@ -3626,7 +3630,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_5 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_3 * __pyx_v_material_map.strides[0]) ) + __pyx_t_4 * __pyx_v_material_map.strides[1]) ) + __pyx_t_5 * __pyx_v_material_map.strides[2]) ))), 1, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":264
+    /* "opendxmc\engine\_interaction_func.pyx":267
  *     for i in range(N):
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]             # <<<<<<<<<<<<<<
@@ -3638,7 +3642,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_8 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     (__pyx_v_u[__pyx_v_i]) = (__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_6 * __pyx_v_density_map.strides[0]) ) + __pyx_t_7 * __pyx_v_density_map.strides[1]) ) + __pyx_t_8 * __pyx_v_density_map.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":265
+    /* "opendxmc\engine\_interaction_func.pyx":268
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
  *         cum_sum += u[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3647,7 +3651,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_u[__pyx_v_i]) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":266
+    /* "opendxmc\engine\_interaction_func.pyx":269
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
  *         cum_sum += u[i] * lenghts[i]
  *         cum_prob[i] = 1. - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3657,7 +3661,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     (__pyx_v_cum_prob[__pyx_v_i]) = (1. - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":270
+  /* "opendxmc\engine\_interaction_func.pyx":273
  * 
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:             # <<<<<<<<<<<<<<
@@ -3667,7 +3671,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   __pyx_t_9 = (((__pyx_v_cum_prob[(__pyx_v_N - 1)]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF) != 0);
   if (__pyx_t_9) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":271
+    /* "opendxmc\engine\_interaction_func.pyx":274
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):             # <<<<<<<<<<<<<<
@@ -3677,7 +3681,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
       __pyx_v_j = __pyx_t_1;
 
-      /* "opendxmc\engine\_interaction_func.pyx":272
+      /* "opendxmc\engine\_interaction_func.pyx":275
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):
  *             stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3687,7 +3691,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       (__pyx_v_stop[__pyx_v_j]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":273
+    /* "opendxmc\engine\_interaction_func.pyx":276
  *         for j in range(3):
  *             stop[j] = 0
  *         index[0] = -1             # <<<<<<<<<<<<<<
@@ -3696,7 +3700,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     (__pyx_v_index[0]) = -1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":274
+    /* "opendxmc\engine\_interaction_func.pyx":277
  *             stop[j] = 0
  *         index[0] = -1
  *         weight[0] = 0             # <<<<<<<<<<<<<<
@@ -3705,7 +3709,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     (__pyx_v_weight[0]) = 0.0;
 
-    /* "opendxmc\engine\_interaction_func.pyx":275
+    /* "opendxmc\engine\_interaction_func.pyx":278
  *         index[0] = -1
  *         weight[0] = 0
  *         free(u)             # <<<<<<<<<<<<<<
@@ -3714,7 +3718,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     free(__pyx_v_u);
 
-    /* "opendxmc\engine\_interaction_func.pyx":276
+    /* "opendxmc\engine\_interaction_func.pyx":279
  *         weight[0] = 0
  *         free(u)
  *         free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3723,7 +3727,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     free(__pyx_v_cum_prob);
 
-    /* "opendxmc\engine\_interaction_func.pyx":277
+    /* "opendxmc\engine\_interaction_func.pyx":280
  *         free(u)
  *         free(cum_prob)
  *         return             # <<<<<<<<<<<<<<
@@ -3733,7 +3737,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":279
+  /* "opendxmc\engine\_interaction_func.pyx":282
  *         return
  * 
  *     r1 = random.random() * cum_prob[N-1]             # <<<<<<<<<<<<<<
@@ -3742,7 +3746,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_r1 = (((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * (__pyx_v_cum_prob[(__pyx_v_N - 1)]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":280
+  /* "opendxmc\engine\_interaction_func.pyx":283
  * 
  *     r1 = random.random() * cum_prob[N-1]
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3753,7 +3757,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":281
+    /* "opendxmc\engine\_interaction_func.pyx":284
  *     r1 = random.random() * cum_prob[N-1]
  *     for i in range(N):
  *         if r1 < cum_prob[i]:             # <<<<<<<<<<<<<<
@@ -3763,7 +3767,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_9 = ((__pyx_v_r1 < (__pyx_v_cum_prob[__pyx_v_i])) != 0);
     if (__pyx_t_9) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":282
+      /* "opendxmc\engine\_interaction_func.pyx":285
  *     for i in range(N):
  *         if r1 < cum_prob[i]:
  *             if i > 0:             # <<<<<<<<<<<<<<
@@ -3773,7 +3777,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       __pyx_t_9 = ((__pyx_v_i > 0) != 0);
       if (__pyx_t_9) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":283
+        /* "opendxmc\engine\_interaction_func.pyx":286
  *         if r1 < cum_prob[i]:
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])             # <<<<<<<<<<<<<<
@@ -3782,7 +3786,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
         __pyx_v_delta_r = (__pyx_v_r1 - (__pyx_v_cum_prob[(__pyx_v_i - 1)]));
 
-        /* "opendxmc\engine\_interaction_func.pyx":284
+        /* "opendxmc\engine\_interaction_func.pyx":287
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3794,7 +3798,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":286
+        /* "opendxmc\engine\_interaction_func.pyx":289
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]
  *             else:
  *                 delta_r = r1             # <<<<<<<<<<<<<<
@@ -3803,7 +3807,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
         __pyx_v_delta_r = __pyx_v_r1;
 
-        /* "opendxmc\engine\_interaction_func.pyx":287
+        /* "opendxmc\engine\_interaction_func.pyx":290
  *             else:
  *                 delta_r = r1
  *                 dist = delta_r / cum_prob[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3814,7 +3818,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       }
       __pyx_L11:;
 
-      /* "opendxmc\engine\_interaction_func.pyx":289
+      /* "opendxmc\engine\_interaction_func.pyx":292
  *                 dist = delta_r / cum_prob[i] * lenghts[i]
  * 
  *             index[0] = 3*i             # <<<<<<<<<<<<<<
@@ -3823,7 +3827,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       (__pyx_v_index[0]) = (3 * __pyx_v_i);
 
-      /* "opendxmc\engine\_interaction_func.pyx":290
+      /* "opendxmc\engine\_interaction_func.pyx":293
  * 
  *             index[0] = 3*i
  *             for j in range(3):             # <<<<<<<<<<<<<<
@@ -3833,7 +3837,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       for (__pyx_t_10 = 0; __pyx_t_10 < 3; __pyx_t_10+=1) {
         __pyx_v_j = __pyx_t_10;
 
-        /* "opendxmc\engine\_interaction_func.pyx":291
+        /* "opendxmc\engine\_interaction_func.pyx":294
  *             index[0] = 3*i
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]             # <<<<<<<<<<<<<<
@@ -3843,7 +3847,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
         (__pyx_v_stop[__pyx_v_j]) = (__pyx_f_8opendxmc_6engine_12_siddon_func_plane(__pyx_v_spacing, __pyx_v_offset, __pyx_v_j, (__pyx_v_ind[((__pyx_v_i * 3) + __pyx_v_j)])) + (__pyx_v_dist * (__pyx_v_particle[(__pyx_v_j + 3)])));
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":292
+      /* "opendxmc\engine\_interaction_func.pyx":295
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
  *             weight[0] = particle[7] * cum_prob[N-1]             # <<<<<<<<<<<<<<
@@ -3852,7 +3856,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       (__pyx_v_weight[0]) = ((__pyx_v_particle[7]) * (__pyx_v_cum_prob[(__pyx_v_N - 1)]));
 
-      /* "opendxmc\engine\_interaction_func.pyx":293
+      /* "opendxmc\engine\_interaction_func.pyx":296
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
  *             weight[0] = particle[7] * cum_prob[N-1]
  *             free(u)             # <<<<<<<<<<<<<<
@@ -3861,7 +3865,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       free(__pyx_v_u);
 
-      /* "opendxmc\engine\_interaction_func.pyx":294
+      /* "opendxmc\engine\_interaction_func.pyx":297
  *             weight[0] = particle[7] * cum_prob[N-1]
  *             free(u)
  *             free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3870,7 +3874,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       free(__pyx_v_cum_prob);
 
-      /* "opendxmc\engine\_interaction_func.pyx":295
+      /* "opendxmc\engine\_interaction_func.pyx":298
  *             free(u)
  *             free(cum_prob)
  *             return             # <<<<<<<<<<<<<<
@@ -3881,7 +3885,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     }
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":297
+  /* "opendxmc\engine\_interaction_func.pyx":300
  *             return
  * 
  *     for j in range(3):             # <<<<<<<<<<<<<<
@@ -3891,7 +3895,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_j = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":298
+    /* "opendxmc\engine\_interaction_func.pyx":301
  * 
  *     for j in range(3):
  *         stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3901,7 +3905,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     (__pyx_v_stop[__pyx_v_j]) = 0.0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":299
+  /* "opendxmc\engine\_interaction_func.pyx":302
  *     for j in range(3):
  *         stop[j] = 0
  *     index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3910,7 +3914,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   (__pyx_v_index[0]) = ((int)-1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":300
+  /* "opendxmc\engine\_interaction_func.pyx":303
  *         stop[j] = 0
  *     index[0] = <int>-1
  *     weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3919,7 +3923,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   (__pyx_v_weight[0]) = ((int)0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":301
+  /* "opendxmc\engine\_interaction_func.pyx":304
  *     index[0] = <int>-1
  *     weight[0] = <int>0
  *     free(u)             # <<<<<<<<<<<<<<
@@ -3928,7 +3932,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   free(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":302
+  /* "opendxmc\engine\_interaction_func.pyx":305
  *     weight[0] = <int>0
  *     free(u)
  *     free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3937,7 +3941,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   free(__pyx_v_cum_prob);
 
-  /* "opendxmc\engine\_interaction_func.pyx":303
+  /* "opendxmc\engine\_interaction_func.pyx":306
  *     free(u)
  *     free(cum_prob)
  *     return             # <<<<<<<<<<<<<<
@@ -3946,7 +3950,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":254
+  /* "opendxmc\engine\_interaction_func.pyx":257
  * 
  * 
  * cdef void interaction_point_forced(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3958,7 +3962,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":306
+/* "opendxmc\engine\_interaction_func.pyx":309
  * 
  * 
  * cdef void transport_particle(double[:,:] particles, long particle_index, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose) nogil:             # <<<<<<<<<<<<<<
@@ -4010,7 +4014,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   int __pyx_t_17;
   long __pyx_t_18;
 
-  /* "opendxmc\engine\_interaction_func.pyx":313
+  /* "opendxmc\engine\_interaction_func.pyx":316
  *     cdef int valid, force_interaction, index, material, i, n_indices, n_max
  * 
  *     cdef double weight_cutoff = WEIGHT_CUTOFF             # <<<<<<<<<<<<<<
@@ -4019,7 +4023,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_weight_cutoff = __pyx_v_8opendxmc_6engine_17_interaction_func_WEIGHT_CUTOFF;
 
-  /* "opendxmc\engine\_interaction_func.pyx":314
+  /* "opendxmc\engine\_interaction_func.pyx":317
  * 
  *     cdef double weight_cutoff = WEIGHT_CUTOFF
  *     cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE             # <<<<<<<<<<<<<<
@@ -4028,7 +4032,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_russian_rulette_chance = __pyx_v_8opendxmc_6engine_17_interaction_func_RUSSIAN_RULETTE_CHANCE;
 
-  /* "opendxmc\engine\_interaction_func.pyx":316
+  /* "opendxmc\engine\_interaction_func.pyx":319
  *     cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE
  * 
  *     n_max = <int>(N[0] + N[1] + N[2] + 3)             # <<<<<<<<<<<<<<
@@ -4040,7 +4044,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   __pyx_t_3 = 2;
   __pyx_v_n_max = ((int)((((*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_1 * __pyx_v_N.strides[0]) ))) + (*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_2 * __pyx_v_N.strides[0]) )))) + (*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_3 * __pyx_v_N.strides[0]) )))) + 3.0));
 
-  /* "opendxmc\engine\_interaction_func.pyx":318
+  /* "opendxmc\engine\_interaction_func.pyx":321
  *     n_max = <int>(N[0] + N[1] + N[2] + 3)
  * 
  *     cdef double* particle = <double*>malloc(8*sizeof(double))             # <<<<<<<<<<<<<<
@@ -4049,7 +4053,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_particle = ((double *)malloc((8 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":319
+  /* "opendxmc\engine\_interaction_func.pyx":322
  * 
  *     cdef double* particle = <double*>malloc(8*sizeof(double))
  *     for i in range(8):             # <<<<<<<<<<<<<<
@@ -4059,7 +4063,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   for (__pyx_t_4 = 0; __pyx_t_4 < 8; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "opendxmc\engine\_interaction_func.pyx":320
+    /* "opendxmc\engine\_interaction_func.pyx":323
  *     cdef double* particle = <double*>malloc(8*sizeof(double))
  *     for i in range(8):
  *         particle[i] = particles[i, particle_index]             # <<<<<<<<<<<<<<
@@ -4071,7 +4075,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     (__pyx_v_particle[__pyx_v_i]) = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_particles.data + __pyx_t_5 * __pyx_v_particles.strides[0]) ) + __pyx_t_6 * __pyx_v_particles.strides[1]) )));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":323
+  /* "opendxmc\engine\_interaction_func.pyx":326
  * 
  * 
  *     cdef double* stop = <double*> malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -4080,7 +4084,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_stop = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":325
+  /* "opendxmc\engine\_interaction_func.pyx":328
  *     cdef double* stop = <double*> malloc(3 * sizeof(double))
  * 
  *     cdef double* weight_p = <double*> malloc(sizeof(double))             # <<<<<<<<<<<<<<
@@ -4089,7 +4093,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_weight_p = ((double *)malloc((sizeof(double))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":326
+  /* "opendxmc\engine\_interaction_func.pyx":329
  * 
  *     cdef double* weight_p = <double*> malloc(sizeof(double))
  *     cdef int* index_p = <int*> malloc(sizeof(int))             # <<<<<<<<<<<<<<
@@ -4098,7 +4102,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_index_p = ((int *)malloc((sizeof(int))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":328
+  /* "opendxmc\engine\_interaction_func.pyx":331
  *     cdef int* index_p = <int*> malloc(sizeof(int))
  * 
  *     cdef double* l =<double*> malloc(n_max * sizeof(double))             # <<<<<<<<<<<<<<
@@ -4107,7 +4111,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_l = ((double *)malloc((__pyx_v_n_max * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":329
+  /* "opendxmc\engine\_interaction_func.pyx":332
  * 
  *     cdef double* l =<double*> malloc(n_max * sizeof(double))
  *     cdef int* ind=<int*> malloc(n_max * 3 * sizeof(int))             # <<<<<<<<<<<<<<
@@ -4116,7 +4120,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_ind = ((int *)malloc(((__pyx_v_n_max * 3) * (sizeof(int)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":331
+  /* "opendxmc\engine\_interaction_func.pyx":334
  *     cdef int* ind=<int*> malloc(n_max * 3 * sizeof(int))
  * 
  *     force_interaction = 1             # <<<<<<<<<<<<<<
@@ -4125,7 +4129,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_force_interaction = 1;
 
-  /* "opendxmc\engine\_interaction_func.pyx":332
+  /* "opendxmc\engine\_interaction_func.pyx":335
  * 
  *     force_interaction = 1
  *     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4134,7 +4138,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_valid = __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset);
 
-  /* "opendxmc\engine\_interaction_func.pyx":333
+  /* "opendxmc\engine\_interaction_func.pyx":336
  *     force_interaction = 1
  *     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
  *     while valid == 1:             # <<<<<<<<<<<<<<
@@ -4145,7 +4149,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_valid == 1) != 0);
     if (!__pyx_t_7) break;
 
-    /* "opendxmc\engine\_interaction_func.pyx":335
+    /* "opendxmc\engine\_interaction_func.pyx":338
  *     while valid == 1:
  * 
  *         if particle[6] < ENERGY_CUTOFF:             # <<<<<<<<<<<<<<
@@ -4155,7 +4159,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = (((__pyx_v_particle[6]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ENERGY_CUTOFF) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":336
+      /* "opendxmc\engine\_interaction_func.pyx":339
  * 
  *         if particle[6] < ENERGY_CUTOFF:
  *             break             # <<<<<<<<<<<<<<
@@ -4165,7 +4169,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L6_break;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":338
+    /* "opendxmc\engine\_interaction_func.pyx":341
  *             break
  * 
  *         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)             # <<<<<<<<<<<<<<
@@ -4174,7 +4178,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_n_indices = __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset, (&__pyx_v_ind), (&__pyx_v_l));
 
-    /* "opendxmc\engine\_interaction_func.pyx":340
+    /* "opendxmc\engine\_interaction_func.pyx":343
  *         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)
  * 
  *         if force_interaction == 1:             # <<<<<<<<<<<<<<
@@ -4184,7 +4188,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_force_interaction == 1) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":342
+      /* "opendxmc\engine\_interaction_func.pyx":345
  *         if force_interaction == 1:
  * #            interaction_point_forced(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point_forced(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)             # <<<<<<<<<<<<<<
@@ -4196,7 +4200,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":345
+      /* "opendxmc\engine\_interaction_func.pyx":348
  *         else:
  * #            interaction_point(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)             # <<<<<<<<<<<<<<
@@ -4207,7 +4211,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     __pyx_L8:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":346
+    /* "opendxmc\engine\_interaction_func.pyx":349
  * #            interaction_point(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
  *         index = index_p[0]             # <<<<<<<<<<<<<<
@@ -4216,7 +4220,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_index = (__pyx_v_index_p[0]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":347
+    /* "opendxmc\engine\_interaction_func.pyx":350
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
  *         index = index_p[0]
  *         weight = weight_p[0]             # <<<<<<<<<<<<<<
@@ -4225,7 +4229,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_weight = (__pyx_v_weight_p[0]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":349
+    /* "opendxmc\engine\_interaction_func.pyx":352
  *         weight = weight_p[0]
  * 
  *         if index < 0:             # <<<<<<<<<<<<<<
@@ -4235,7 +4239,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_index < 0) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":350
+      /* "opendxmc\engine\_interaction_func.pyx":353
  * 
  *         if index < 0:
  *             break             # <<<<<<<<<<<<<<
@@ -4245,7 +4249,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L6_break;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":352
+    /* "opendxmc\engine\_interaction_func.pyx":355
  *             break
  * 
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]             # <<<<<<<<<<<<<<
@@ -4257,7 +4261,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_9 = (__pyx_v_ind[(__pyx_v_index + 2)]);
     __pyx_v_material = (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_4 * __pyx_v_material_map.strides[0]) ) + __pyx_t_8 * __pyx_v_material_map.strides[1]) ) + __pyx_t_9 * __pyx_v_material_map.strides[2]) )));
 
-    /* "opendxmc\engine\_interaction_func.pyx":353
+    /* "opendxmc\engine\_interaction_func.pyx":356
  * 
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])             # <<<<<<<<<<<<<<
@@ -4266,7 +4270,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_compton = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 4, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":354
+    /* "opendxmc\engine\_interaction_func.pyx":357
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])             # <<<<<<<<<<<<<<
@@ -4275,7 +4279,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_photo = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 3, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":355
+    /* "opendxmc\engine\_interaction_func.pyx":358
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])
  *         rayleigh = att_linear(attinuation_lut, material, 2, particle[6])             # <<<<<<<<<<<<<<
@@ -4284,7 +4288,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_rayleigh = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 2, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":356
+    /* "opendxmc\engine\_interaction_func.pyx":359
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])
  *         rayleigh = att_linear(attinuation_lut, material, 2, particle[6])
  *         total = compton + rayleigh + photo             # <<<<<<<<<<<<<<
@@ -4293,7 +4297,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_total = ((__pyx_v_compton + __pyx_v_rayleigh) + __pyx_v_photo);
 
-    /* "opendxmc\engine\_interaction_func.pyx":358
+    /* "opendxmc\engine\_interaction_func.pyx":361
  *         total = compton + rayleigh + photo
  * #
  *         r1 = random.random() * total             # <<<<<<<<<<<<<<
@@ -4302,31 +4306,49 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_r1 = (((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_total);
 
-    /* "opendxmc\engine\_interaction_func.pyx":360
+    /* "opendxmc\engine\_interaction_func.pyx":363
  *         r1 = random.random() * total
  * 
  *         if r1 <= photo:             # <<<<<<<<<<<<<<
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
- *             valid = 0
  */
     __pyx_t_7 = ((__pyx_v_r1 <= __pyx_v_photo) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":361
+      /* "opendxmc\engine\_interaction_func.pyx":364
  * 
  *         if r1 <= photo:
+ *             openmp.omp_set_lock(&mylock)             # <<<<<<<<<<<<<<
+ *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
+ *             openmp.omp_unset_lock(&mylock)
+ */
+      omp_set_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
+
+      /* "opendxmc\engine\_interaction_func.pyx":365
+ *         if r1 <= photo:
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]             # <<<<<<<<<<<<<<
+ *             openmp.omp_unset_lock(&mylock)
  *             valid = 0
- * 
  */
       __pyx_t_10 = (__pyx_v_ind[__pyx_v_index]);
       __pyx_t_11 = (__pyx_v_ind[(__pyx_v_index + 1)]);
       __pyx_t_12 = (__pyx_v_ind[(__pyx_v_index + 2)]);
       *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dose.data + __pyx_t_10 * __pyx_v_dose.strides[0]) ) + __pyx_t_11 * __pyx_v_dose.strides[1]) ) + __pyx_t_12 * __pyx_v_dose.strides[2]) )) += (__pyx_v_weight * (__pyx_v_particle[6]));
 
-      /* "opendxmc\engine\_interaction_func.pyx":362
- *         if r1 <= photo:
+      /* "opendxmc\engine\_interaction_func.pyx":366
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
+ *             openmp.omp_unset_lock(&mylock)             # <<<<<<<<<<<<<<
+ *             valid = 0
+ * 
+ */
+      omp_unset_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
+
+      /* "opendxmc\engine\_interaction_func.pyx":367
+ *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
+ *             openmp.omp_unset_lock(&mylock)
  *             valid = 0             # <<<<<<<<<<<<<<
  * 
  *         elif r1 <= (compton + photo):
@@ -4335,7 +4357,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L10;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":364
+    /* "opendxmc\engine\_interaction_func.pyx":369
  *             valid = 0
  * 
  *         elif r1 <= (compton + photo):             # <<<<<<<<<<<<<<
@@ -4345,7 +4367,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_r1 <= (__pyx_v_compton + __pyx_v_photo)) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":365
+      /* "opendxmc\engine\_interaction_func.pyx":370
  * 
  *         elif r1 <= (compton + photo):
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)             # <<<<<<<<<<<<<<
@@ -4354,39 +4376,57 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_scatter_energy = __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_energy_theta((__pyx_v_particle[6]), (&__pyx_v_scatter_angle));
 
-      /* "opendxmc\engine\_interaction_func.pyx":366
+      /* "opendxmc\engine\_interaction_func.pyx":371
  *         elif r1 <= (compton + photo):
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
  *             azimutal_angle = random.random() * PI * 2.             # <<<<<<<<<<<<<<
  *             particle[7] = weight
- *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+ *             openmp.omp_set_lock(&mylock)
  */
       __pyx_v_azimutal_angle = ((((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_8opendxmc_6engine_17_interaction_func_PI) * 2.);
 
-      /* "opendxmc\engine\_interaction_func.pyx":367
+      /* "opendxmc\engine\_interaction_func.pyx":372
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
  *             azimutal_angle = random.random() * PI * 2.
  *             particle[7] = weight             # <<<<<<<<<<<<<<
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
- *             for i in range(3):
  */
       (__pyx_v_particle[7]) = __pyx_v_weight;
 
-      /* "opendxmc\engine\_interaction_func.pyx":368
+      /* "opendxmc\engine\_interaction_func.pyx":373
  *             azimutal_angle = random.random() * PI * 2.
  *             particle[7] = weight
+ *             openmp.omp_set_lock(&mylock)             # <<<<<<<<<<<<<<
+ *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+ *             openmp.omp_unset_lock(&mylock)
+ */
+      omp_set_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
+
+      /* "opendxmc\engine\_interaction_func.pyx":374
+ *             particle[7] = weight
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)             # <<<<<<<<<<<<<<
+ *             openmp.omp_unset_lock(&mylock)
  *             for i in range(3):
- *                 particle[i] = stop[i]
  */
       __pyx_t_13 = (__pyx_v_ind[__pyx_v_index]);
       __pyx_t_14 = (__pyx_v_ind[(__pyx_v_index + 1)]);
       __pyx_t_15 = (__pyx_v_ind[(__pyx_v_index + 2)]);
       *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dose.data + __pyx_t_13 * __pyx_v_dose.strides[0]) ) + __pyx_t_14 * __pyx_v_dose.strides[1]) ) + __pyx_t_15 * __pyx_v_dose.strides[2]) )) += (__pyx_v_weight * ((__pyx_v_particle[6]) - __pyx_v_scatter_energy));
 
-      /* "opendxmc\engine\_interaction_func.pyx":369
- *             particle[7] = weight
+      /* "opendxmc\engine\_interaction_func.pyx":375
+ *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+ *             openmp.omp_unset_lock(&mylock)             # <<<<<<<<<<<<<<
+ *             for i in range(3):
+ *                 particle[i] = stop[i]
+ */
+      omp_unset_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
+
+      /* "opendxmc\engine\_interaction_func.pyx":376
+ *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+ *             openmp.omp_unset_lock(&mylock)
  *             for i in range(3):             # <<<<<<<<<<<<<<
  *                 particle[i] = stop[i]
  *             particle[6] = scatter_energy
@@ -4394,8 +4434,8 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       for (__pyx_t_16 = 0; __pyx_t_16 < 3; __pyx_t_16+=1) {
         __pyx_v_i = __pyx_t_16;
 
-        /* "opendxmc\engine\_interaction_func.pyx":370
- *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
+        /* "opendxmc\engine\_interaction_func.pyx":377
+ *             openmp.omp_unset_lock(&mylock)
  *             for i in range(3):
  *                 particle[i] = stop[i]             # <<<<<<<<<<<<<<
  *             particle[6] = scatter_energy
@@ -4404,7 +4444,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
         (__pyx_v_particle[__pyx_v_i]) = (__pyx_v_stop[__pyx_v_i]);
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":371
+      /* "opendxmc\engine\_interaction_func.pyx":378
  *             for i in range(3):
  *                 particle[i] = stop[i]
  *             particle[6] = scatter_energy             # <<<<<<<<<<<<<<
@@ -4413,7 +4453,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       (__pyx_v_particle[6]) = __pyx_v_scatter_energy;
 
-      /* "opendxmc\engine\_interaction_func.pyx":372
+      /* "opendxmc\engine\_interaction_func.pyx":379
  *                 particle[i] = stop[i]
  *             particle[6] = scatter_energy
  *             rot_particle(particle, scatter_angle)             # <<<<<<<<<<<<<<
@@ -4422,7 +4462,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(__pyx_v_particle, __pyx_v_scatter_angle);
 
-      /* "opendxmc\engine\_interaction_func.pyx":373
+      /* "opendxmc\engine\_interaction_func.pyx":380
  *             particle[6] = scatter_energy
  *             rot_particle(particle, scatter_angle)
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4434,7 +4474,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":376
+      /* "opendxmc\engine\_interaction_func.pyx":383
  * 
  *         else:
  *             scatter_angle = rayleigh_event_draw_theta()             # <<<<<<<<<<<<<<
@@ -4443,7 +4483,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_scatter_angle = __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_theta();
 
-      /* "opendxmc\engine\_interaction_func.pyx":377
+      /* "opendxmc\engine\_interaction_func.pyx":384
  *         else:
  *             scatter_angle = rayleigh_event_draw_theta()
  *             azimutal_angle = random.random() * PI * 2.             # <<<<<<<<<<<<<<
@@ -4452,7 +4492,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_azimutal_angle = ((((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_8opendxmc_6engine_17_interaction_func_PI) * 2.);
 
-      /* "opendxmc\engine\_interaction_func.pyx":378
+      /* "opendxmc\engine\_interaction_func.pyx":385
  *             scatter_angle = rayleigh_event_draw_theta()
  *             azimutal_angle = random.random() * PI * 2.
  *             for i in range(3):             # <<<<<<<<<<<<<<
@@ -4462,7 +4502,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       for (__pyx_t_16 = 0; __pyx_t_16 < 3; __pyx_t_16+=1) {
         __pyx_v_i = __pyx_t_16;
 
-        /* "opendxmc\engine\_interaction_func.pyx":379
+        /* "opendxmc\engine\_interaction_func.pyx":386
  *             azimutal_angle = random.random() * PI * 2.
  *             for i in range(3):
  *                 particle[i] = stop[i]             # <<<<<<<<<<<<<<
@@ -4472,7 +4512,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
         (__pyx_v_particle[__pyx_v_i]) = (__pyx_v_stop[__pyx_v_i]);
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":380
+      /* "opendxmc\engine\_interaction_func.pyx":387
  *             for i in range(3):
  *                 particle[i] = stop[i]
  *             particle[7] = weight             # <<<<<<<<<<<<<<
@@ -4481,7 +4521,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       (__pyx_v_particle[7]) = __pyx_v_weight;
 
-      /* "opendxmc\engine\_interaction_func.pyx":381
+      /* "opendxmc\engine\_interaction_func.pyx":388
  *                 particle[i] = stop[i]
  *             particle[7] = weight
  *             rot_particle(particle, scatter_angle)             # <<<<<<<<<<<<<<
@@ -4490,7 +4530,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(__pyx_v_particle, __pyx_v_scatter_angle);
 
-      /* "opendxmc\engine\_interaction_func.pyx":382
+      /* "opendxmc\engine\_interaction_func.pyx":389
  *             particle[7] = weight
  *             rot_particle(particle, scatter_angle)
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4501,7 +4541,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     __pyx_L10:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":384
+    /* "opendxmc\engine\_interaction_func.pyx":391
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
  * 
  *         if weight < WEIGHT_CUTOFF and valid == 1:             # <<<<<<<<<<<<<<
@@ -4519,7 +4559,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_L16_bool_binop_done:;
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":386
+      /* "opendxmc\engine\_interaction_func.pyx":393
  *         if weight < WEIGHT_CUTOFF and valid == 1:
  *             # Russion rulette photon termination
  *             r1 = random.random()             # <<<<<<<<<<<<<<
@@ -4528,7 +4568,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-      /* "opendxmc\engine\_interaction_func.pyx":387
+      /* "opendxmc\engine\_interaction_func.pyx":394
  *             # Russion rulette photon termination
  *             r1 = random.random()
  *             if russian_rulette_chance * r1 <= 1:             # <<<<<<<<<<<<<<
@@ -4538,7 +4578,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       __pyx_t_7 = (((__pyx_v_russian_rulette_chance * __pyx_v_r1) <= 1.0) != 0);
       if (__pyx_t_7) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":388
+        /* "opendxmc\engine\_interaction_func.pyx":395
  *             r1 = random.random()
  *             if russian_rulette_chance * r1 <= 1:
  *                 particle[7] *= russian_rulette_chance             # <<<<<<<<<<<<<<
@@ -4551,7 +4591,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":390
+        /* "opendxmc\engine\_interaction_func.pyx":397
  *                 particle[7] *= russian_rulette_chance
  *             else:
  *                 valid = 0             # <<<<<<<<<<<<<<
@@ -4567,7 +4607,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   }
   __pyx_L6_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":393
+  /* "opendxmc\engine\_interaction_func.pyx":400
  * #        force_interaction = 0
  * 
  *     free(l)             # <<<<<<<<<<<<<<
@@ -4576,7 +4616,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_l);
 
-  /* "opendxmc\engine\_interaction_func.pyx":394
+  /* "opendxmc\engine\_interaction_func.pyx":401
  * 
  *     free(l)
  *     free(ind)             # <<<<<<<<<<<<<<
@@ -4585,7 +4625,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_ind);
 
-  /* "opendxmc\engine\_interaction_func.pyx":395
+  /* "opendxmc\engine\_interaction_func.pyx":402
  *     free(l)
  *     free(ind)
  *     free(stop)             # <<<<<<<<<<<<<<
@@ -4594,7 +4634,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_stop);
 
-  /* "opendxmc\engine\_interaction_func.pyx":396
+  /* "opendxmc\engine\_interaction_func.pyx":403
  *     free(ind)
  *     free(stop)
  *     free(particle)             # <<<<<<<<<<<<<<
@@ -4603,7 +4643,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_particle);
 
-  /* "opendxmc\engine\_interaction_func.pyx":397
+  /* "opendxmc\engine\_interaction_func.pyx":404
  *     free(stop)
  *     free(particle)
  *     free(index_p)             # <<<<<<<<<<<<<<
@@ -4612,7 +4652,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_index_p);
 
-  /* "opendxmc\engine\_interaction_func.pyx":398
+  /* "opendxmc\engine\_interaction_func.pyx":405
  *     free(particle)
  *     free(index_p)
  *     free(weight_p)             # <<<<<<<<<<<<<<
@@ -4621,7 +4661,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_weight_p);
 
-  /* "opendxmc\engine\_interaction_func.pyx":399
+  /* "opendxmc\engine\_interaction_func.pyx":406
  *     free(index_p)
  *     free(weight_p)
  *     return             # <<<<<<<<<<<<<<
@@ -4630,7 +4670,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":306
+  /* "opendxmc\engine\_interaction_func.pyx":309
  * 
  * 
  * cdef void transport_particle(double[:,:] particles, long particle_index, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose) nogil:             # <<<<<<<<<<<<<<
@@ -4642,7 +4682,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":402
+/* "opendxmc\engine\_interaction_func.pyx":409
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
@@ -4698,37 +4738,37 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_N)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_spacing)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  4:
         if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_material_map)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  5:
         if (likely((values[5] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_density_map)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  6:
         if (likely((values[6] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_attinuation_lut)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  7:
         if (likely((values[7] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_dose)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  8:
         if (kw_args > 0) {
@@ -4737,7 +4777,7 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "score_energy") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "score_energy") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4754,19 +4794,19 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_particles = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0]); if (unlikely(!__pyx_v_particles.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_N = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1]); if (unlikely(!__pyx_v_N.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_spacing = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2]); if (unlikely(!__pyx_v_spacing.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_offset = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3]); if (unlikely(!__pyx_v_offset.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_material_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_int(values[4]); if (unlikely(!__pyx_v_material_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_density_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[5]); if (unlikely(!__pyx_v_density_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_attinuation_lut = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[6]); if (unlikely(!__pyx_v_attinuation_lut.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_dose = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[7]); if (unlikely(!__pyx_v_dose.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_particles = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0]); if (unlikely(!__pyx_v_particles.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_N = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1]); if (unlikely(!__pyx_v_N.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_spacing = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2]); if (unlikely(!__pyx_v_spacing.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_offset = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3]); if (unlikely(!__pyx_v_offset.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_material_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_int(values[4]); if (unlikely(!__pyx_v_material_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_density_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[5]); if (unlikely(!__pyx_v_density_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_attinuation_lut = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[6]); if (unlikely(!__pyx_v_attinuation_lut.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_dose = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[7]); if (unlikely(!__pyx_v_dose.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_num_threads = values[8];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("opendxmc.engine._interaction_func.score_energy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4796,7 +4836,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("score_energy", 0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":443
+  /* "opendxmc\engine\_interaction_func.pyx":450
  *     cdef long i
  *     cdef int n
  *     if num_threads is None:             # <<<<<<<<<<<<<<
@@ -4807,7 +4847,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":444
+    /* "opendxmc\engine\_interaction_func.pyx":451
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4824,7 +4864,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           if (1 == 0) abort();
           {
 
-              /* "opendxmc\engine\_interaction_func.pyx":444
+              /* "opendxmc\engine\_interaction_func.pyx":451
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4852,7 +4892,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
                           {
                               __pyx_v_i = 0 + 1 * __pyx_t_4;
 
-                              /* "opendxmc\engine\_interaction_func.pyx":445
+                              /* "opendxmc\engine\_interaction_func.pyx":452
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)             # <<<<<<<<<<<<<<
@@ -4873,7 +4913,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           #endif
         }
 
-        /* "opendxmc\engine\_interaction_func.pyx":444
+        /* "opendxmc\engine\_interaction_func.pyx":451
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4891,7 +4931,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
         }
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":446
+    /* "opendxmc\engine\_interaction_func.pyx":453
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
  *         return             # <<<<<<<<<<<<<<
@@ -4904,20 +4944,20 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   }
   /*else*/ {
 
-    /* "opendxmc\engine\_interaction_func.pyx":448
+    /* "opendxmc\engine\_interaction_func.pyx":455
  *         return
  *     else:
  *         n = int(num_threads)             # <<<<<<<<<<<<<<
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  */
-    __pyx_t_7 = PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_7); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 448; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_7); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __pyx_v_n = __pyx_t_6;
 
-    /* "opendxmc\engine\_interaction_func.pyx":450
+    /* "opendxmc\engine\_interaction_func.pyx":457
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -4934,7 +4974,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           if (1 == 0) abort();
           {
 
-              /* "opendxmc\engine\_interaction_func.pyx":450
+              /* "opendxmc\engine\_interaction_func.pyx":457
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -4962,7 +5002,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
                           {
                               __pyx_v_i = 0 + 1 * __pyx_t_4;
 
-                              /* "opendxmc\engine\_interaction_func.pyx":451
+                              /* "opendxmc\engine\_interaction_func.pyx":458
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)             # <<<<<<<<<<<<<<
@@ -4983,7 +5023,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           #endif
         }
 
-        /* "opendxmc\engine\_interaction_func.pyx":450
+        /* "opendxmc\engine\_interaction_func.pyx":457
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -5001,7 +5041,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
         }
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":452
+    /* "opendxmc\engine\_interaction_func.pyx":459
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
  *         return             # <<<<<<<<<<<<<<
@@ -5013,7 +5053,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":402
+  /* "opendxmc\engine\_interaction_func.pyx":409
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
@@ -5040,7 +5080,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":197
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":197
  *         # experimental exception made for __getbuffer__ and __releasebuffer__
  *         # -- the details of this may change.
  *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
@@ -5090,7 +5130,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __Pyx_GIVEREF(__pyx_v_info->obj);
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":203
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":203
  *             # of flags
  * 
  *             if info == NULL: return             # <<<<<<<<<<<<<<
@@ -5103,7 +5143,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L0;
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":206
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":206
  * 
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -5112,7 +5152,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_endian_detector = 1;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":207
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":207
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -5121,7 +5161,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":209
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":209
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
  * 
  *             ndim = PyArray_NDIM(self)             # <<<<<<<<<<<<<<
@@ -5130,7 +5170,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_ndim = PyArray_NDIM(__pyx_v_self);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":211
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":211
  *             ndim = PyArray_NDIM(self)
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -5140,7 +5180,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = (((sizeof(npy_intp)) != (sizeof(Py_ssize_t))) != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":212
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":212
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 copy_shape = 1             # <<<<<<<<<<<<<<
@@ -5152,7 +5192,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":214
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":214
  *                 copy_shape = 1
  *             else:
  *                 copy_shape = 0             # <<<<<<<<<<<<<<
@@ -5163,7 +5203,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L4:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":216
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":216
  *                 copy_shape = 0
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -5177,7 +5217,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L6_bool_binop_done;
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":217
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":217
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -5189,7 +5229,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_L6_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":218
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":218
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
@@ -5203,7 +5243,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     {__pyx_filename = __pyx_f[1]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":220
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":220
  *                 raise ValueError(u"ndarray is not C contiguous")
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -5217,7 +5257,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     goto __pyx_L9_bool_binop_done;
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":221
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":221
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -5229,7 +5269,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_L9_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":222
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":222
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
@@ -5243,7 +5283,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     {__pyx_filename = __pyx_f[1]; __pyx_lineno = 222; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":224
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":224
  *                 raise ValueError(u"ndarray is not Fortran contiguous")
  * 
  *             info.buf = PyArray_DATA(self)             # <<<<<<<<<<<<<<
@@ -5252,7 +5292,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->buf = PyArray_DATA(__pyx_v_self);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":225
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":225
  * 
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim             # <<<<<<<<<<<<<<
@@ -5261,7 +5301,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->ndim = __pyx_v_ndim;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":226
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":226
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim
  *             if copy_shape:             # <<<<<<<<<<<<<<
@@ -5271,7 +5311,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = (__pyx_v_copy_shape != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":229
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":229
  *                 # Allocate new buffer for strides and shape info.
  *                 # This is allocated as one block, strides first.
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * <size_t>ndim * 2)             # <<<<<<<<<<<<<<
@@ -5280,7 +5320,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->strides = ((Py_ssize_t *)malloc((((sizeof(Py_ssize_t)) * ((size_t)__pyx_v_ndim)) * 2)));
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":230
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":230
  *                 # This is allocated as one block, strides first.
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * <size_t>ndim * 2)
  *                 info.shape = info.strides + ndim             # <<<<<<<<<<<<<<
@@ -5289,7 +5329,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->shape = (__pyx_v_info->strides + __pyx_v_ndim);
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":231
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":231
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * <size_t>ndim * 2)
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):             # <<<<<<<<<<<<<<
@@ -5300,7 +5340,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
       __pyx_v_i = __pyx_t_5;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":232
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":232
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]             # <<<<<<<<<<<<<<
@@ -5309,7 +5349,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
       (__pyx_v_info->strides[__pyx_v_i]) = (PyArray_STRIDES(__pyx_v_self)[__pyx_v_i]);
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":233
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":233
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]
  *                     info.shape[i] = PyArray_DIMS(self)[i]             # <<<<<<<<<<<<<<
@@ -5322,7 +5362,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":235
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":235
  *                     info.shape[i] = PyArray_DIMS(self)[i]
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)             # <<<<<<<<<<<<<<
@@ -5331,7 +5371,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->strides = ((Py_ssize_t *)PyArray_STRIDES(__pyx_v_self));
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":236
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":236
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)             # <<<<<<<<<<<<<<
@@ -5342,7 +5382,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L11:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":237
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":237
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL             # <<<<<<<<<<<<<<
@@ -5351,7 +5391,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->suboffsets = NULL;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":238
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":238
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)             # <<<<<<<<<<<<<<
@@ -5360,7 +5400,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->itemsize = PyArray_ITEMSIZE(__pyx_v_self);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":239
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":239
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)
  *             info.readonly = not PyArray_ISWRITEABLE(self)             # <<<<<<<<<<<<<<
@@ -5369,7 +5409,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_info->readonly = (!(PyArray_ISWRITEABLE(__pyx_v_self) != 0));
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":242
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":242
  * 
  *             cdef int t
  *             cdef char* f = NULL             # <<<<<<<<<<<<<<
@@ -5378,7 +5418,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_f = NULL;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":243
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":243
  *             cdef int t
  *             cdef char* f = NULL
  *             cdef dtype descr = self.descr             # <<<<<<<<<<<<<<
@@ -5390,7 +5430,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_v_descr = ((PyArray_Descr *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":247
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":247
  *             cdef int offset
  * 
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)             # <<<<<<<<<<<<<<
@@ -5399,7 +5439,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
   __pyx_v_hasfields = PyDataType_HASFIELDS(__pyx_v_descr);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":249
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":249
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
  * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
@@ -5417,7 +5457,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_L15_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":251
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":251
  *             if not hasfields and not copy_shape:
  *                 # do not call releasebuffer
  *                 info.obj = None             # <<<<<<<<<<<<<<
@@ -5433,7 +5473,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":254
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":254
  *             else:
  *                 # need to call releasebuffer
  *                 info.obj = self             # <<<<<<<<<<<<<<
@@ -5448,7 +5488,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   __pyx_L14:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":256
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":256
  *                 info.obj = self
  * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
@@ -5458,7 +5498,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   __pyx_t_1 = ((!(__pyx_v_hasfields != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":257
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":257
  * 
  *             if not hasfields:
  *                 t = descr.type_num             # <<<<<<<<<<<<<<
@@ -5468,7 +5508,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_t_4 = __pyx_v_descr->type_num;
     __pyx_v_t = __pyx_t_4;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":258
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":258
  *             if not hasfields:
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -5488,7 +5528,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     }
     __pyx_L20_next_or:;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":259
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":259
  *                 t = descr.type_num
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -5506,7 +5546,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_L19_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":260
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":260
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -5520,7 +5560,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       {__pyx_filename = __pyx_f[1]; __pyx_lineno = 260; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":277
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":277
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"
  *                 elif t == NPY_OBJECT:      f = "O"             # <<<<<<<<<<<<<<
@@ -5529,7 +5569,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     switch (__pyx_v_t) {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":261
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":261
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"             # <<<<<<<<<<<<<<
@@ -5540,7 +5580,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_b;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":262
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":262
  *                     raise ValueError(u"Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"             # <<<<<<<<<<<<<<
@@ -5551,7 +5591,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_B;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":263
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":263
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"             # <<<<<<<<<<<<<<
@@ -5562,7 +5602,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_h;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":264
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":264
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"             # <<<<<<<<<<<<<<
@@ -5573,7 +5613,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_H;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":265
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":265
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"             # <<<<<<<<<<<<<<
@@ -5584,7 +5624,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_i;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":266
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":266
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"             # <<<<<<<<<<<<<<
@@ -5595,7 +5635,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_I;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":267
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":267
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"             # <<<<<<<<<<<<<<
@@ -5606,7 +5646,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_l;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":268
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":268
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"             # <<<<<<<<<<<<<<
@@ -5617,7 +5657,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_L;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":269
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":269
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"             # <<<<<<<<<<<<<<
@@ -5628,7 +5668,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_q;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":270
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":270
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"             # <<<<<<<<<<<<<<
@@ -5639,7 +5679,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_Q;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":271
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":271
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"             # <<<<<<<<<<<<<<
@@ -5650,7 +5690,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_f;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":272
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":272
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"             # <<<<<<<<<<<<<<
@@ -5661,7 +5701,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_d;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":273
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":273
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"             # <<<<<<<<<<<<<<
@@ -5672,7 +5712,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_g;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":274
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":274
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"             # <<<<<<<<<<<<<<
@@ -5683,7 +5723,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_Zf;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":275
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":275
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"             # <<<<<<<<<<<<<<
@@ -5694,7 +5734,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_Zd;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":276
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":276
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"             # <<<<<<<<<<<<<<
@@ -5705,7 +5745,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       __pyx_v_f = __pyx_k_Zg;
       break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":277
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":277
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"
  *                 elif t == NPY_OBJECT:      f = "O"             # <<<<<<<<<<<<<<
@@ -5717,7 +5757,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       break;
       default:
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":279
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":279
  *                 elif t == NPY_OBJECT:      f = "O"
  *                 else:
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -5743,7 +5783,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
       break;
     }
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":280
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":280
  *                 else:
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f             # <<<<<<<<<<<<<<
@@ -5752,7 +5792,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->format = __pyx_v_f;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":281
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":281
  *                     raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f
  *                 return             # <<<<<<<<<<<<<<
@@ -5764,7 +5804,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":283
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":283
  *                 return
  *             else:
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)             # <<<<<<<<<<<<<<
@@ -5773,7 +5813,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_info->format = ((char *)malloc(255));
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":284
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":284
  *             else:
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)
  *                 info.format[0] = c'^' # Native data types, manual alignment             # <<<<<<<<<<<<<<
@@ -5782,7 +5822,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     (__pyx_v_info->format[0]) = '^';
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":285
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":285
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)
  *                 info.format[0] = c'^' # Native data types, manual alignment
  *                 offset = 0             # <<<<<<<<<<<<<<
@@ -5791,7 +5831,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  */
     __pyx_v_offset = 0;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":286
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":286
  *                 info.format[0] = c'^' # Native data types, manual alignment
  *                 offset = 0
  *                 f = _util_dtypestring(descr, info.format + 1,             # <<<<<<<<<<<<<<
@@ -5801,7 +5841,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     __pyx_t_7 = __pyx_f_5numpy__util_dtypestring(__pyx_v_descr, (__pyx_v_info->format + 1), (__pyx_v_info->format + 255), (&__pyx_v_offset)); if (unlikely(__pyx_t_7 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_v_f = __pyx_t_7;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":289
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":289
  *                                       info.format + _buffer_format_string_len,
  *                                       &offset)
  *                 f[0] = c'\0' # Terminate format string             # <<<<<<<<<<<<<<
@@ -5811,7 +5851,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
     (__pyx_v_f[0]) = '\x00';
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":197
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":197
  *         # experimental exception made for __getbuffer__ and __releasebuffer__
  *         # -- the details of this may change.
  *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
@@ -5843,7 +5883,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":291
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":291
  *                 f[0] = c'\0' # Terminate format string
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
@@ -5867,7 +5907,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("__releasebuffer__", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":292
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":292
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
@@ -5877,7 +5917,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __pyx_t_1 = (PyArray_HASFIELDS(__pyx_v_self) != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":293
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":293
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)             # <<<<<<<<<<<<<<
@@ -5889,7 +5929,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   }
   __pyx_L3:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":294
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":294
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -5899,7 +5939,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __pyx_t_1 = (((sizeof(npy_intp)) != (sizeof(Py_ssize_t))) != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":295
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":295
  *                 stdlib.free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 stdlib.free(info.strides)             # <<<<<<<<<<<<<<
@@ -5911,7 +5951,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   }
   __pyx_L4:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":291
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":291
  *                 f[0] = c'\0' # Terminate format string
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
@@ -5923,7 +5963,7 @@ static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_s
   __Pyx_RefNannyFinishContext();
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":771
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":771
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -5940,7 +5980,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":772
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":772
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -5954,7 +5994,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":771
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":771
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -5973,7 +6013,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":774
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":774
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -5990,7 +6030,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":775
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":775
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -6004,7 +6044,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":774
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":774
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -6023,7 +6063,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":777
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":777
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -6040,7 +6080,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":778
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":778
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -6054,7 +6094,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":777
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":777
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -6073,7 +6113,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":780
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":780
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -6090,7 +6130,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":781
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":781
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -6104,7 +6144,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":780
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":780
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -6123,7 +6163,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":783
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":783
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -6140,7 +6180,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":784
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":784
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -6154,7 +6194,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":783
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":783
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -6173,7 +6213,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":786
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":786
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
@@ -6205,7 +6245,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_util_dtypestring", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":793
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":793
  *     cdef int delta_offset
  *     cdef tuple i
  *     cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -6214,7 +6254,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
   __pyx_v_endian_detector = 1;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":794
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":794
  *     cdef tuple i
  *     cdef int endian_detector = 1
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -6223,7 +6263,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":797
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":797
  *     cdef tuple fields
  * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
@@ -6246,7 +6286,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_childname, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":798
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":798
  * 
  *     for childname in descr.names:
  *         fields = descr.fields[childname]             # <<<<<<<<<<<<<<
@@ -6263,7 +6303,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_fields, ((PyObject*)__pyx_t_3));
     __pyx_t_3 = 0;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":799
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":799
  *     for childname in descr.names:
  *         fields = descr.fields[childname]
  *         child, new_offset = fields             # <<<<<<<<<<<<<<
@@ -6302,7 +6342,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __Pyx_XDECREF_SET(__pyx_v_new_offset, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":801
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":801
  *         child, new_offset = fields
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
@@ -6319,7 +6359,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_6 = ((((__pyx_v_end - __pyx_v_f) - ((int)__pyx_t_5)) < 15) != 0);
     if (__pyx_t_6) {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":802
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":802
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
@@ -6333,7 +6373,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       {__pyx_filename = __pyx_f[1]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":804
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":804
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")
  * 
  *         if ((child.byteorder == c'>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -6353,7 +6393,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
     __pyx_L8_next_or:;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":805
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":805
  * 
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -6371,7 +6411,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_L7_bool_binop_done:;
     if (__pyx_t_6) {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":806
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":806
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -6385,7 +6425,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       {__pyx_filename = __pyx_f[1]; __pyx_lineno = 806; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":816
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":816
  * 
  *         # Output padding bytes
  *         while offset[0] < new_offset:             # <<<<<<<<<<<<<<
@@ -6401,7 +6441,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       if (!__pyx_t_6) break;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":817
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":817
  *         # Output padding bytes
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte             # <<<<<<<<<<<<<<
@@ -6410,7 +6450,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       (__pyx_v_f[0]) = 120;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":818
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":818
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte
  *             f += 1             # <<<<<<<<<<<<<<
@@ -6419,7 +6459,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  */
       __pyx_v_f = (__pyx_v_f + 1);
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":819
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":819
  *             f[0] = 120 # "x"; pad byte
  *             f += 1
  *             offset[0] += 1             # <<<<<<<<<<<<<<
@@ -6430,7 +6470,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       (__pyx_v_offset[__pyx_t_8]) = ((__pyx_v_offset[__pyx_t_8]) + 1);
     }
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":821
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":821
  *             offset[0] += 1
  * 
  *         offset[0] += child.itemsize             # <<<<<<<<<<<<<<
@@ -6440,7 +6480,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_8 = 0;
     (__pyx_v_offset[__pyx_t_8]) = ((__pyx_v_offset[__pyx_t_8]) + __pyx_v_child->elsize);
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":823
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":823
  *         offset[0] += child.itemsize
  * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
@@ -6450,7 +6490,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     __pyx_t_6 = ((!(PyDataType_HASFIELDS(__pyx_v_child) != 0)) != 0);
     if (__pyx_t_6) {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":824
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":824
  * 
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num             # <<<<<<<<<<<<<<
@@ -6462,7 +6502,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __Pyx_XDECREF_SET(__pyx_v_t, __pyx_t_4);
       __pyx_t_4 = 0;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":825
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":825
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
@@ -6472,7 +6512,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       __pyx_t_6 = (((__pyx_v_end - __pyx_v_f) < 5) != 0);
       if (__pyx_t_6) {
 
-        /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":826
+        /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":826
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
@@ -6486,7 +6526,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         {__pyx_filename = __pyx_f[1]; __pyx_lineno = 826; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":829
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":829
  * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"             # <<<<<<<<<<<<<<
@@ -6504,7 +6544,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":830
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":830
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"             # <<<<<<<<<<<<<<
@@ -6522,7 +6562,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":831
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":831
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"             # <<<<<<<<<<<<<<
@@ -6540,7 +6580,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":832
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":832
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"             # <<<<<<<<<<<<<<
@@ -6558,7 +6598,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":833
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":833
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"             # <<<<<<<<<<<<<<
@@ -6576,7 +6616,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":834
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":834
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"             # <<<<<<<<<<<<<<
@@ -6594,7 +6634,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":835
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":835
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"             # <<<<<<<<<<<<<<
@@ -6612,7 +6652,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":836
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":836
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"             # <<<<<<<<<<<<<<
@@ -6630,7 +6670,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":837
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":837
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"             # <<<<<<<<<<<<<<
@@ -6648,7 +6688,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":838
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":838
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"             # <<<<<<<<<<<<<<
@@ -6666,7 +6706,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":839
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":839
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"             # <<<<<<<<<<<<<<
@@ -6684,7 +6724,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":840
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":840
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"             # <<<<<<<<<<<<<<
@@ -6702,7 +6742,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":841
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":841
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"             # <<<<<<<<<<<<<<
@@ -6720,7 +6760,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":842
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":842
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf             # <<<<<<<<<<<<<<
@@ -6740,7 +6780,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":843
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":843
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd             # <<<<<<<<<<<<<<
@@ -6760,7 +6800,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":844
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":844
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg             # <<<<<<<<<<<<<<
@@ -6780,7 +6820,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
         goto __pyx_L15;
       }
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":845
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":845
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"             # <<<<<<<<<<<<<<
@@ -6799,7 +6839,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       }
       /*else*/ {
 
-        /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":847
+        /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":847
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"
  *             else:
  *                 raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -6822,7 +6862,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
       }
       __pyx_L15:;
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":848
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":848
  *             else:
  *                 raise ValueError(u"unknown dtype code in numpy.pxd (%d)" % t)
  *             f += 1             # <<<<<<<<<<<<<<
@@ -6834,7 +6874,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
     /*else*/ {
 
-      /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":852
+      /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":852
  *             # Cython ignores struct boundary information ("T{...}"),
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)             # <<<<<<<<<<<<<<
@@ -6846,7 +6886,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
     }
     __pyx_L13:;
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":797
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":797
  *     cdef tuple fields
  * 
  *     for childname in descr.names:             # <<<<<<<<<<<<<<
@@ -6856,7 +6896,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":853
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":853
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)
  *     return f             # <<<<<<<<<<<<<<
@@ -6866,7 +6906,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   __pyx_r = __pyx_v_f;
   goto __pyx_L0;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":786
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":786
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
@@ -6891,7 +6931,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
   return __pyx_r;
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":969
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":969
  * 
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -6906,7 +6946,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("set_array_base", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":971
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":971
  * cdef inline void set_array_base(ndarray arr, object base):
  *      cdef PyObject* baseptr
  *      if base is None:             # <<<<<<<<<<<<<<
@@ -6917,7 +6957,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":972
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":972
  *      cdef PyObject* baseptr
  *      if base is None:
  *          baseptr = NULL             # <<<<<<<<<<<<<<
@@ -6929,7 +6969,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":974
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":974
  *          baseptr = NULL
  *      else:
  *          Py_INCREF(base) # important to do this before decref below!             # <<<<<<<<<<<<<<
@@ -6938,7 +6978,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
     Py_INCREF(__pyx_v_base);
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":975
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":975
  *      else:
  *          Py_INCREF(base) # important to do this before decref below!
  *          baseptr = <PyObject*>base             # <<<<<<<<<<<<<<
@@ -6949,7 +6989,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   }
   __pyx_L3:;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":976
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":976
  *          Py_INCREF(base) # important to do this before decref below!
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)             # <<<<<<<<<<<<<<
@@ -6958,7 +6998,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   Py_XDECREF(__pyx_v_arr->base);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":977
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":977
  *          baseptr = <PyObject*>base
  *      Py_XDECREF(arr.base)
  *      arr.base = baseptr             # <<<<<<<<<<<<<<
@@ -6967,7 +7007,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   __pyx_v_arr->base = __pyx_v_baseptr;
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":969
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":969
  * 
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -6979,7 +7019,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyFinishContext();
 }
 
-/* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":979
+/* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":979
  *      arr.base = baseptr
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -6993,7 +7033,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":980
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":980
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:             # <<<<<<<<<<<<<<
@@ -7003,7 +7043,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = ((__pyx_v_arr->base == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":981
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":981
  * cdef inline object get_array_base(ndarray arr):
  *     if arr.base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -7017,7 +7057,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   }
   /*else*/ {
 
-    /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":983
+    /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":983
  *         return None
  *     else:
  *         return <object>arr.base             # <<<<<<<<<<<<<<
@@ -7028,7 +7068,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     goto __pyx_L0;
   }
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":979
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":979
  *      arr.base = baseptr
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -18360,7 +18400,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_Buffer_view_does_not_expose_stri, __pyx_k_Buffer_view_does_not_expose_stri, sizeof(__pyx_k_Buffer_view_does_not_expose_stri), 0, 0, 1, 0},
-  {&__pyx_kp_s_C_test_OpenDXMC_opendxmc_engine, __pyx_k_C_test_OpenDXMC_opendxmc_engine, sizeof(__pyx_k_C_test_OpenDXMC_opendxmc_engine), 0, 0, 1, 0},
+  {&__pyx_kp_s_C_Users_ander_Documents_GitHub_O, __pyx_k_C_Users_ander_Documents_GitHub_O, sizeof(__pyx_k_C_Users_ander_Documents_GitHub_O), 0, 0, 1, 0},
   {&__pyx_kp_s_Can_only_create_a_buffer_that_is, __pyx_k_Can_only_create_a_buffer_that_is, sizeof(__pyx_k_Can_only_create_a_buffer_that_is), 0, 0, 1, 0},
   {&__pyx_kp_s_Cannot_index_with_type_s, __pyx_k_Cannot_index_with_type_s, sizeof(__pyx_k_Cannot_index_with_type_s), 0, 0, 1, 0},
   {&__pyx_n_s_Ellipsis, __pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 0, 1, 1},
@@ -18445,7 +18485,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 70; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 73; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 142; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -18463,7 +18503,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":218
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":218
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not C contiguous")             # <<<<<<<<<<<<<<
@@ -18474,7 +18514,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":222
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":222
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError(u"ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
@@ -18485,7 +18525,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":260
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":260
  *                 if ((descr.byteorder == c'>' and little_endian) or
  *                     (descr.byteorder == c'<' and not little_endian)):
  *                     raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -18496,7 +18536,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":802
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":802
  * 
  *         if (end - f) - <int>(new_offset - offset[0]) < 15:
  *             raise RuntimeError(u"Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
@@ -18507,7 +18547,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":806
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":806
  *         if ((child.byteorder == c'>' and little_endian) or
  *             (child.byteorder == c'<' and not little_endian)):
  *             raise ValueError(u"Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -18518,7 +18558,7 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
 
-  /* "E:\WinPython-32bit-3.4.3.5\python-3.4.3\lib\site-packages\Cython\Includes\numpy\__init__.pxd":826
+  /* "..\..\..\WinPython-64bit-3.4.3.5\python-3.4.3.amd64\lib\site-packages\Cython\Includes\numpy\__init__.pxd":826
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError(u"Format string allocated too short.")             # <<<<<<<<<<<<<<
@@ -18664,17 +18704,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
 
-  /* "opendxmc\engine\_interaction_func.pyx":402
+  /* "opendxmc\engine\_interaction_func.pyx":409
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
  *     """
  *     Score dose by the Monte Carlo method. If OpenMP is available during
  */
-  __pyx_tuple__19 = PyTuple_Pack(11, __pyx_n_s_particles, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_material_map, __pyx_n_s_density_map, __pyx_n_s_attinuation_lut, __pyx_n_s_dose, __pyx_n_s_num_threads, __pyx_n_s_i, __pyx_n_s_n); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__19 = PyTuple_Pack(11, __pyx_n_s_particles, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_material_map, __pyx_n_s_density_map, __pyx_n_s_attinuation_lut, __pyx_n_s_dose, __pyx_n_s_num_threads, __pyx_n_s_i, __pyx_n_s_n); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_test_OpenDXMC_opendxmc_engine, __pyx_n_s_score_energy, 402, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_Users_ander_Documents_GitHub_O, __pyx_n_s_score_energy, 409, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "View.MemoryView":276
  *         return self.name
@@ -18909,7 +18949,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  * cdef Random random
  * random = Random()             # <<<<<<<<<<<<<<
  * 
- * 
+ * cimport openmp
  */
   __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)((PyObject*)__pyx_ptype_8opendxmc_6engine_8cyrandom_Random)), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
@@ -18918,7 +18958,16 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":41
+  /* "opendxmc\engine\_interaction_func.pyx":25
+ * cimport openmp
+ * cdef openmp.omp_lock_t mylock
+ * openmp.omp_init_lock(&mylock)             # <<<<<<<<<<<<<<
+ * 
+ * ###TODO###
+ */
+  omp_init_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
+
+  /* "opendxmc\engine\_interaction_func.pyx":44
  *     int isnan(double x) nogil
  * 
  * cdef double ERRF = 1.e-9             # <<<<<<<<<<<<<<
@@ -18927,7 +18976,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF = 1.e-9;
 
-  /* "opendxmc\engine\_interaction_func.pyx":43
+  /* "opendxmc\engine\_interaction_func.pyx":46
  * cdef double ERRF = 1.e-9
  * 
  * cdef double ELECTRON_MASS = 510998.9  # eV/c^2             # <<<<<<<<<<<<<<
@@ -18936,7 +18985,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS = 510998.9;
 
-  /* "opendxmc\engine\_interaction_func.pyx":44
+  /* "opendxmc\engine\_interaction_func.pyx":47
  * 
  * cdef double ELECTRON_MASS = 510998.9  # eV/c^2
  * cdef double PI = 3.14159265359             # <<<<<<<<<<<<<<
@@ -18945,7 +18994,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_PI = 3.14159265359;
 
-  /* "opendxmc\engine\_interaction_func.pyx":45
+  /* "opendxmc\engine\_interaction_func.pyx":48
  * cdef double ELECTRON_MASS = 510998.9  # eV/c^2
  * cdef double PI = 3.14159265359
  * cdef double ENERGY_CUTOFF = 10.e3 # eV             # <<<<<<<<<<<<<<
@@ -18954,7 +19003,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_ENERGY_CUTOFF = 10.e3;
 
-  /* "opendxmc\engine\_interaction_func.pyx":46
+  /* "opendxmc\engine\_interaction_func.pyx":49
  * cdef double PI = 3.14159265359
  * cdef double ENERGY_CUTOFF = 10.e3 # eV
  * cdef double ENERGY_MAXVAL = 300.e3 # eV             # <<<<<<<<<<<<<<
@@ -18963,7 +19012,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_ENERGY_MAXVAL = 300.e3;
 
-  /* "opendxmc\engine\_interaction_func.pyx":47
+  /* "opendxmc\engine\_interaction_func.pyx":50
  * cdef double ENERGY_CUTOFF = 10.e3 # eV
  * cdef double ENERGY_MAXVAL = 300.e3 # eV
  * cdef double WEIGHT_CUTOFF = 0.05             # <<<<<<<<<<<<<<
@@ -18972,7 +19021,7 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_WEIGHT_CUTOFF = 0.05;
 
-  /* "opendxmc\engine\_interaction_func.pyx":48
+  /* "opendxmc\engine\_interaction_func.pyx":51
  * cdef double ENERGY_MAXVAL = 300.e3 # eV
  * cdef double WEIGHT_CUTOFF = 0.05
  * cdef double RUSSIAN_RULETTE_CHANCE = 2 # 1 / CHANCE probability of photon survival             # <<<<<<<<<<<<<<
@@ -18981,16 +19030,16 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_RUSSIAN_RULETTE_CHANCE = 2.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":402
+  /* "opendxmc\engine\_interaction_func.pyx":409
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
  *     """
  *     Score dose by the Monte Carlo method. If OpenMP is available during
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_17_interaction_func_1score_energy, NULL, __pyx_n_s_opendxmc_engine__interaction_fun); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_17_interaction_func_1score_energy, NULL, __pyx_n_s_opendxmc_engine__interaction_fun); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_score_energy, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 402; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_score_energy, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "opendxmc\engine\_interaction_func.pyx":1
