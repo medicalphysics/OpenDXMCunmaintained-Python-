@@ -12,6 +12,7 @@ logger.setLevel(10)
 def test_import():
     from opendxmc.study import import_ct_series
     p = "C://GitHub//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
+    p = "C://Users//ander//Documents//GitHub//test_abdomen"
     for pat in import_ct_series([p]):
         pass
 

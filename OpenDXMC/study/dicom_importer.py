@@ -30,10 +30,10 @@ def matrix(orientation, spacing, spacing_scan):
     y = np.array(orientation[3:], dtype=np.float)
     z = np.cross(x, y)
     S = np.matrix(np.zeros((3,3)))
-    S[np.diag_indices(3)] =  1./ np.array(spacing)
+    S[np.diag_indices(3)] =  np.array(spacing)
     M = np.matrix(np.array([x, y, z]))
     V = np.matrix(np.zeros((3,3)))
-    V[np.diag_indices(3)] = 1./np.array(spacing_scan)
+    V[np.diag_indices(3)] = np.array(spacing_scan)
     return (M*S)
 
 
@@ -57,6 +57,7 @@ def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
     import pylab as plt
 #    pdb.set_trace()
     k = affine_transform(arr, M.I, output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
+    print(k.shape, out_shape,'(382, 382, 432)', M.I * np.matrix(np.array(spacing)).T)
     plt.subplot(1,3,1)
     plt.imshow(k[:,:,k.shape[2] // 2])
     plt.subplot(1,3,2)
