@@ -16,6 +16,59 @@ from opendxmc.study.simulation import Simulation
 
 logger = logging.getLogger('OpenDXMC')
 
+
+#def find_scan_spacing(orientation, spacing, shape):
+#    x = np.array(orientation[:3], dtype=np.float)
+#    y = np.array(orientation[3:], dtype=np.float)
+#    z = np.cross(x, y)
+#    M = np.matrix(np.array([x, y, z]))
+#    dim = np.dot(spacing * shape, M)
+
+
+def matrix(orientation, spacing, spacing_scan):
+    x = np.array(orientation[:3], dtype=np.float)
+    y = np.array(orientation[3:], dtype=np.float)
+    z = np.cross(x, y)
+    S = np.matrix(np.zeros((3,3)))
+    S[np.diag_indices(3)] =  1./ np.array(spacing)
+    M = np.matrix(np.array([x, y, z]))
+    V = np.matrix(np.zeros((3,3)))
+    V[np.diag_indices(3)] = 1./np.array(spacing_scan)
+    return (M*S)
+
+
+
+def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
+    import pdb
+    sh = dc_list[0].pixel_array.shape
+    n = len(dc_list)
+    arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
+    for i, dc in enumerate(dc_list):
+        arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
+                        int(dc[0x28, 0x1052].value))
+#    scan_spacing = find_scan_spacing(dc_list[0][0x20, 0x37].value, spacing, shape)
+    M = matrix(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
+#    pdb.set_trace()
+    offset = - np.squeeze(np.array(np.dot(M, np.array(arr.shape))))
+    offset *= (offset > 0)
+    out_shape = tuple((int(i) for i in np.rint(np.abs(np.squeeze(np.array(np.dot(M, np.array(arr.shape))))))))
+    print(out_shape)
+
+    import pylab as plt
+#    pdb.set_trace()
+    k = affine_transform(arr, M.I, output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
+    plt.subplot(1,3,1)
+    plt.imshow(k[:,:,k.shape[2] // 2])
+    plt.subplot(1,3,2)
+    plt.imshow(k[:,k.shape[1] // 2, :])
+    plt.subplot(1,3,3)
+    plt.imshow(k[k.shape[0] // 2, :, :])
+    plt.show(block=True)
+    pdb.set_trace()
+
+    return affine_transform(arr, M.I, output_shape=out_shape, cval=-1000, output=np.int16, offset=offset)
+
+
 def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
@@ -72,16 +125,18 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
     for name, value in series.items():
         logger.debug('Setting up data for simulation {}'.format(name))
         dc = value[0]
-        value.sort(key=lambda x: x[0x20, 0x32].value[2])
+        value.sort(key=lambda x: np.sum(np.array(x[0x20, 0x32].value)**2))
 
-        patient = Simulation(name)
-        patient.scaling = scaling
-        patient.exposure_modulation = aec_from_dicom_list(value)
-        patient.ctarray = array_from_dicom_list(value, patient.scaling).astype(np.int16)
         spacing = np.empty(3, dtype=np.float)
         spacing[:2] = np.array(dc[0x28, 0x30].value)
         spacing[2] = np.sum((np.array(value[1][0x20, 0x32].value) -
                             np.array(value[0][0x20, 0x32].value))**2)**.5
+
+        patient = Simulation(name)
+        patient.scaling = scaling
+        patient.exposure_modulation = aec_from_dicom_list(value)
+        patient.ctarray = array_from_dicom_list_affine(value, spacing).astype(np.int16)
+
         patient.spacing = spacing / 10. / patient.scaling
 
         tag_key = {'pitch': (0x18, 0x9311),
