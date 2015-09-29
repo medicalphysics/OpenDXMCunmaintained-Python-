@@ -45,6 +45,7 @@ SIMULATION_DESCRIPTION = {
     'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
     'MC_running': [False, np.bool, False, False, 'Simulation is running'],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
+    'offset': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
     }

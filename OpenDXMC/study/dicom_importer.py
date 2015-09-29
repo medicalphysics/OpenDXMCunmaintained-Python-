@@ -10,7 +10,7 @@ import dicom
 import os
 
 import logging
-from scipy.ndimage.interpolation import affine_transform
+from scipy.ndimage.interpolation import affine_transform, geometric_transform
 from opendxmc.utils import find_all_files
 from opendxmc.study.simulation import Simulation
 
@@ -29,12 +29,9 @@ def matrix(orientation, spacing, spacing_scan):
     x = np.array(orientation[:3], dtype=np.float)
     y = np.array(orientation[3:], dtype=np.float)
     z = np.cross(x, y)
-    S = np.matrix(np.zeros((3,3)))
-    S[np.diag_indices(3)] =  np.array(spacing)
-    M = np.matrix(np.array([x, y, z]))
-    V = np.matrix(np.zeros((3,3)))
-    V[np.diag_indices(3)] = np.array(spacing_scan)
-    return (M*S)
+
+    M = np.array([x * spacing, y * spacing, z * spacing])
+    return M
 
 
 
@@ -44,26 +41,43 @@ def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
     n = len(dc_list)
     arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
     for i, dc in enumerate(dc_list):
-        arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-                        int(dc[0x28, 0x1052].value))
+        try:
+            arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
+                            int(dc[0x28, 0x1052].value))
+        except ValueError:
+            arr[:, :, i] = int(dc[0x28, 0x1052].value)
+            logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
+
 #    scan_spacing = find_scan_spacing(dc_list[0][0x20, 0x37].value, spacing, shape)
     M = matrix(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
-#    pdb.set_trace()
-    offset = - np.squeeze(np.array(np.dot(M, np.array(arr.shape))))
-    offset *= (offset > 0)
-    out_shape = tuple((int(i) for i in np.rint(np.abs(np.squeeze(np.array(np.dot(M, np.array(arr.shape))))))))
-    print(out_shape)
 
+    out_dimension = M.dot(np.array(arr.shape))
+    print('in_dim', arr.shape, 'out dim', out_dimension)
+    offset = np.array(arr.shape) * (out_dimension < 0)
+#    offset[2] = 100
+#    offset=0
+    out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
+    print(out_shape, offset)
+#    pdb.set_trace()
     import pylab as plt
 #    pdb.set_trace()
-    k = affine_transform(arr, M.I, output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
-    print(k.shape, out_shape,'(382, 382, 432)', M.I * np.matrix(np.array(spacing)).T)
-    plt.subplot(1,3,1)
+
+    k = affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
+
+    plt.subplot(2,3,1)
     plt.imshow(k[:,:,k.shape[2] // 2])
-    plt.subplot(1,3,2)
+    plt.subplot(2,3,2)
     plt.imshow(k[:,k.shape[1] // 2, :])
-    plt.subplot(1,3,3)
+    plt.subplot(2,3,3)
     plt.imshow(k[k.shape[0] // 2, :, :])
+
+    plt.subplot(2,3,4)
+    plt.imshow(arr[:, :, arr.shape[2] // 2])
+    plt.subplot(2,3,5)
+    plt.imshow(arr[:,arr.shape[1] // 2, :])
+    plt.subplot(2,3,6)
+    plt.imshow(arr[arr.shape[0] // 2, :, :])
+
     plt.show(block=True)
     pdb.set_trace()
 
@@ -107,6 +121,14 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
             sop_class_uid = str(dc[0x8, 0x16].value)
 
             if sop_class_uid == "CT Image Storage":
+
+#                series_uid = str(dc[0x20, 0xe].value)
+#                if series_uid in series:
+#                    series[series_uid].append(dc)
+#                else:
+#                    series[series_uid] = [dc]
+#                logger.debug("Imported {}".format(p))
+
                 axial_image = str(dc[0x8, 0x8].value[2]).lower()
                 if axial_image == 'axial':
                     series_uid = str(dc[0x20, 0xe].value)
@@ -116,7 +138,7 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                         series[series_uid] = [dc]
                     logger.debug("Imported {}".format(p))
                 else:
-                    logger.debug("Not imported: {} -Image not axial".format(p))
+                    logger.debug("Not imported: {} -Image not axial, possible a scout".format(p))
             else:
                 logger.debug("Not imported: {0} -Not a CT image:{1}".format(p, sop_class_uid))
 
@@ -124,6 +146,9 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                 len(series), sum([len(x) for x in series.values()])))
 
     for name, value in series.items():
+        if len(value) < 2:
+            logger.info('Image series {} is skipped since it contains less than 2 images.'.format(name))
+            continue
         logger.debug('Setting up data for simulation {}'.format(name))
         dc = value[0]
         value.sort(key=lambda x: np.sum(np.array(x[0x20, 0x32].value)**2))
