@@ -26,10 +26,24 @@ def matrix(orientation, spacing):
     x = np.array(orientation[:3], dtype=np.float)
     y = np.array(orientation[3:], dtype=np.float)
     z = np.cross(x, y)
-    print('z', z)
+#    print('z', z)
     M = np.array([x * spacing, y * spacing, z * spacing])
-#    M = np.array([x, y, z])
-#    M[np.diag_indices(3)] *= spacing
+#    test = M.dot(np.ones(3))
+#    print('test', test)
+#
+#    if test[2] < 0:
+#        M = M.dot(np.array([[1, 0, 0],[0,-1, 0],[0, 0, 1]]))
+#    if test[1] < 0:
+#        M = M.dot(np.array([[1, 0, 0],[0, 1, 0],[0, 0, -1]]))
+#    if test[0] < 0:
+#        M = M.dot(np.array([[-1, 0, 0],[0, 1, 0],[0, 0, 1]]))
+#    print('test2', M.dot(np.ones(3)))
+##    M = np.array([x, y, z])
+##    M[np.diag_indices(3)] *= spacing
+##    while True:
+##        test = M.dot(np.ones(3))
+##        if
+#    pdb.set_trace()
     return M
 #    return np.dot(M, np.array([[0, 1, 0], [1, 0, 0],[0, 0, 1]]))
 
@@ -39,7 +53,7 @@ def array_from_dicom_list_affine():
 
     arr = np.zeros((50, 50, 50), dtype=np.float)
     arr[20:26, 23:26, 23:29] = 1
-    orient = [1, 0, 0, 0, 0, -1]
+    orient = [0, 1, 0, 0, 0, -1]
 #    orient = [1,0,0,0,1,0]
     spacing = np.array([2, 4, 2])
 #    spacing = np.ones(3)
@@ -51,16 +65,18 @@ def array_from_dicom_list_affine():
     print('M.I', np.linalg.inv(M))
     out_dimension = M.dot(np.array(arr.shape))
     print('out dim', out_dimension)
+    offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
+    print('offset', offset)
 
     x = np.array(orient[:3], dtype=np.float)
     y = np.array(orient[3:], dtype=np.float)
     z = np.cross(x, y)
     print(x, y, z)
 
-    offset = np.array(arr.shape) * (out_dimension < 0)
-    offset *= -1 * (offset < 0)
-    print('raw', offset)
-    offset[2] = 50
+#    offset = np.array(arr.shape) * (out_dimension < 0)
+#    offset *= -1 * (offset < 0)
+#    print('raw', offset)
+#    offset[2] = 50
 #    offset=25
 
     out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
@@ -88,5 +104,5 @@ def test_affine():
     array_from_dicom_list_affine()
 
 if __name__ == '__main__':
-#    test_import()
-    test_affine()
+    test_import()
+#    test_affine()

@@ -53,7 +53,7 @@ def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
 
     out_dimension = M.dot(np.array(arr.shape))
     print('in_dim', arr.shape, 'out dim', out_dimension)
-    offset = np.array(arr.shape) * (out_dimension < 0)
+    offset = offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
 #    offset[2] = 100
 #    offset=0
     out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
