@@ -24,19 +24,24 @@ logger = logging.getLogger('OpenDXMC')
 #    M = np.matrix(np.array([x, y, z]))
 #    dim = np.dot(spacing * shape, M)
 
+def matrix(orientation):
+    x = np.array(orientation[:3], dtype=np.float)
+    y = np.array(orientation[3:], dtype=np.float)
+    z = np.cross(x, y)
 
-def matrix(orientation, spacing, spacing_scan):
+    return np.array([x, y, z])
+    
+def matrix_scaled(orientation, spacing, spacing_scan):
     x = np.array(orientation[:3], dtype=np.float)
     y = np.array(orientation[3:], dtype=np.float)
     z = np.cross(x, y)
 
     M = np.array([x * spacing, y * spacing, z * spacing])
-    return M
+    return M.dot(np.eye(3)/spacing_scan)
 
 
 
-def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
-    import pdb
+def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
     sh = dc_list[0].pixel_array.shape
     n = len(dc_list)
     arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
@@ -47,41 +52,32 @@ def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(.2, .2, 2)):
         except ValueError:
             arr[:, :, i] = int(dc[0x28, 0x1052].value)
             logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
-
-#    scan_spacing = find_scan_spacing(dc_list[0][0x20, 0x37].value, spacing, shape)
-    M = matrix(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
-
+    arr=np.swapaxes(arr, 0, 1)
+    M = matrix_scaled(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
     out_dimension = M.dot(np.array(arr.shape))
-    print('in_dim', arr.shape, 'out dim', out_dimension)
-    offset = offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
-#    offset[2] = 100
-#    offset=0
+    offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
     out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
-    print(out_shape, offset)
-#    pdb.set_trace()
-    import pylab as plt
-#    pdb.set_trace()
 
     k = affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
+#    k = np.swapaxes(k, 0, 1)
+#    plt.subplot(2,3,1)
+#    plt.imshow(k[:,:,k.shape[2] // 2])
+#    plt.subplot(2,3,2)
+#    plt.imshow(k[:,k.shape[1] // 2, :])
+#    plt.subplot(2,3,3)
+#    plt.imshow(k[k.shape[0] // 2, :, :])
+#
+#    plt.subplot(2,3,4)
+#    plt.imshow(arr[:, :, arr.shape[2] // 2])
+#    plt.subplot(2,3,5)
+#    plt.imshow(arr[:,arr.shape[1] // 2, :])
+#    plt.subplot(2,3,6)
+#    plt.imshow(arr[arr.shape[0] // 2, :, :])
+#
+#    plt.show(block=True)
+    return np.swapaxes(k, 0, 1)
 
-    plt.subplot(2,3,1)
-    plt.imshow(k[:,:,k.shape[2] // 2])
-    plt.subplot(2,3,2)
-    plt.imshow(k[:,k.shape[1] // 2, :])
-    plt.subplot(2,3,3)
-    plt.imshow(k[k.shape[0] // 2, :, :])
-
-    plt.subplot(2,3,4)
-    plt.imshow(arr[:, :, arr.shape[2] // 2])
-    plt.subplot(2,3,5)
-    plt.imshow(arr[:,arr.shape[1] // 2, :])
-    plt.subplot(2,3,6)
-    plt.imshow(arr[arr.shape[0] // 2, :, :])
-
-    plt.show(block=True)
-    pdb.set_trace()
-
-    return affine_transform(arr, M.I, output_shape=out_shape, cval=-1000, output=np.int16, offset=offset)
+    
 
 
 def array_from_dicom_list(dc_list, scaling):
@@ -89,9 +85,6 @@ def array_from_dicom_list(dc_list, scaling):
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
     arr = np.empty((r, c, n), dtype=np.int16)
-
-
-
 
     for i, dc in enumerate(dc_list):
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
@@ -101,16 +94,18 @@ def array_from_dicom_list(dc_list, scaling):
 
 
 def aec_from_dicom_list(dc_list):
+    M = matrix(dc_list[0][0x20, 0x37].value)
     n_im = len(dc_list)
     exp = np.empty((n_im, 2), dtype=np.float)
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
-        exp[i, 0] = float(dc[0x20, 0x32].value[2]) / 10.
+        exp[i, 0] = M.dot(np.array(dc[0x20, 0x32].value))[2] / 10.
     return exp
 
 
-def import_ct_series(paths, scaling=(.5, .5, 1)):
+def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
     series = {}
+    scan_spacing = np.array(scan_spacing)
     for p in find_all_files(paths):
         try:
             dc = dicom.read_file(p)
@@ -118,17 +113,12 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
             logger.debug("Not imported: {} -Invalid dicom file".format(p))
         else:
             # test for ct image
-            sop_class_uid = str(dc[0x8, 0x16].value)
-
+            try:
+                sop_class_uid = str(dc[0x8, 0x16].value)
+            except KeyError:
+                logger.debug('Not imported: {} -No SOP UID for file.'.format(p))
+                continue
             if sop_class_uid == "CT Image Storage":
-
-#                series_uid = str(dc[0x20, 0xe].value)
-#                if series_uid in series:
-#                    series[series_uid].append(dc)
-#                else:
-#                    series[series_uid] = [dc]
-#                logger.debug("Imported {}".format(p))
-
                 axial_image = str(dc[0x8, 0x8].value[2]).lower()
                 if axial_image == 'axial':
                     series_uid = str(dc[0x20, 0xe].value)
@@ -159,11 +149,11 @@ def import_ct_series(paths, scaling=(.5, .5, 1)):
                             np.array(value[0][0x20, 0x32].value))**2)**.5
 
         patient = Simulation(name)
-        patient.scaling = scaling
+#        patient.spacing = scaling
         patient.exposure_modulation = aec_from_dicom_list(value)
-        patient.ctarray = array_from_dicom_list_affine(value, spacing).astype(np.int16)
+        patient.ctarray = array_from_dicom_list_affine(value, spacing, scan_spacing*10).astype(np.int16)
 
-        patient.spacing = spacing / 10. / patient.scaling
+        patient.spacing = scan_spacing
 
         tag_key = {'pitch': (0x18, 0x9311),
                    'scan_fov': (0x18, 0x60),

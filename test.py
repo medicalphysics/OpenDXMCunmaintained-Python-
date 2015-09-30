@@ -16,9 +16,11 @@ import pdb
 
 def test_import():
     from opendxmc.study import import_ct_series
-    p = "C://GitHub//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000A918"
-    p = "C://GitHub//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
-#    p = "C://Users//ander//Documents//GitHub//test_abdomen"
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000A918"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
     for pat in import_ct_series([p]):
         pass
 
@@ -83,6 +85,7 @@ def array_from_dicom_list_affine():
     print(out_shape, offset)
 
     k = affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1, offset=offset)
+    k=np.swapaxes(k, 0, 1)
     print(k.max(), k.min())
 
     plt.subplot(2,3,1)
