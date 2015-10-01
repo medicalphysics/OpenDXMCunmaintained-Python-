@@ -205,9 +205,9 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     front_h, front_w = front_array.shape
     back_h, back_w = back_array.shape
 
-    front_qim = QtGui.QImage(front_array.data, front_w, front_h,
+    front_qim = QtGui.QImage(front_array.data, front_w, front_h, front_w,
                              QtGui.QImage.Format_Indexed8)
-    back_qim = QtGui.QImage(back_array.data, back_w, back_h,
+    back_qim = QtGui.QImage(back_array.data, back_w, back_h, back_w,
                             QtGui.QImage.Format_Indexed8)
     front_qim.setColorTable(front_lut)
     back_qim.setColorTable(back_lut)
@@ -241,9 +241,10 @@ def arrayToQImage(array_un, level, lut):
 #    array = (np.clip(array, WC - 0.5 - (WW-1) / 2, WC - 0.5 + (WW - 1) / 2) -
 #             (WC - 0.5 - (WW - 1) / 2)) * 255 / ((WC - 0.5 + (WW - 1) / 2) -
 #                                                 (WC - 0.5 - (WW - 1) / 2))
-    array = np.require(array, np.uint8, 'C')
+    array = np.require(array, np.uint8, ['C', 'A'])
     h, w = array.shape
-    result = QtGui.QImage(array.data, w, h, QtGui.QImage.Format_Indexed8)
+
+    result = QtGui.QImage(array.data, w, h, w, QtGui.QImage.Format_Indexed8)
 #    result.ndarray = array
     result.setColorTable(lut)
 #    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, lut)

@@ -156,7 +156,7 @@ class DatabaseInterface(QtCore.QObject):
             pass
 
         try:
-            materials = self.__db.get_materials(organic_only=True)
+            materials = self.__db.get_materials(organic_only=False)
         except ValueError:
             self.database_busy.emit(False)
             logger.warning('Request to materials for a ready simulations failed for a mysterious reason.')
@@ -217,7 +217,7 @@ class Runner(QtCore.QThread):
             return
         if self.material_list is None:
             return
-        
+
         self.request_update_simulation.emit({'name': self.simulation.name,
                                              'MC_running': True},
                                             {},
@@ -233,7 +233,7 @@ class Runner(QtCore.QThread):
                                             False, False)
 
         self.mc_calculation_finished.emit()
-       
+
 
 
 class RunManager(QtCore.QObject):

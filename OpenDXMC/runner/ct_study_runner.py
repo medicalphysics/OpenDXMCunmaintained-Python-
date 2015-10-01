@@ -13,9 +13,6 @@ from opendxmc.utils import circle_mask
 import time
 from opendxmc.utils import human_time
 
-
-from matplotlib import pylab as plt
-import pdb
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -233,7 +230,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     offset = - N * simulation.spacing / 2.
     offset[-1] = min([simulation.start_scan, simulation.stop_scan])
-    logger.warning('Offset not properly corrected for, currently using center '
+    logger.warning('Not yet implemented: Offset not properly corrected for, currently using center '
                    'of reconstruction FOV as isocenter.')
 
     lut = generate_attinuation_lut(materials_organic, simulation.material_map,

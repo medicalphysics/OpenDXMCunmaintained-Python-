@@ -21,33 +21,55 @@ def test_import():
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
     p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
-    for pat in import_ct_series([p]):
-        pass
+#    p = "C://test//thorax"
+#    p = "C://test//abdomen"
 
-def matrix(orientation, spacing):
-    x = np.array(orientation[:3], dtype=np.float)
-    y = np.array(orientation[3:], dtype=np.float)
-    z = np.cross(x, y)
-#    print('z', z)
-    M = np.array([x * spacing, y * spacing, z * spacing])
-#    test = M.dot(np.ones(3))
-#    print('test', test)
+    for pat in import_ct_series([p], scan_spacing=(.3, .3, .3)):
+
+
+
+        k = pat.ctarray
+        plt.subplot(1,3,1)
+        plt.imshow(k[:,:,k.shape[2] // 2])
+        plt.subplot(1,3,2)
+        plt.imshow(k[:,k.shape[1] // 2, :])
+        plt.subplot(1,3,3)
+        plt.imshow(k[k.shape[0] // 2, :, :])
 #
-#    if test[2] < 0:
-#        M = M.dot(np.array([[1, 0, 0],[0,-1, 0],[0, 0, 1]]))
-#    if test[1] < 0:
-#        M = M.dot(np.array([[1, 0, 0],[0, 1, 0],[0, 0, -1]]))
-#    if test[0] < 0:
-#        M = M.dot(np.array([[-1, 0, 0],[0, 1, 0],[0, 0, 1]]))
-#    print('test2', M.dot(np.ones(3)))
-##    M = np.array([x, y, z])
-##    M[np.diag_indices(3)] *= spacing
-##    while True:
-##        test = M.dot(np.ones(3))
-##        if
-#    pdb.set_trace()
-    return M
-#    return np.dot(M, np.array([[0, 1, 0], [1, 0, 0],[0, 0, 1]]))
+#        plt.subplot(2,3,4)
+#        plt.imshow(arr[:, :, arr.shape[2] // 2])
+#        plt.subplot(2,3,5)
+#        plt.imshow(arr[:,arr.shape[1] // 2, :])
+#        plt.subplot(2,3,6)
+#        plt.imshow(arr[arr.shape[0] // 2, :, :])
+#
+        plt.show(block=True)
+
+#def matrix(orientation, spacing):
+#    y = np.array(orientation[:3], dtype=np.float)
+#    x = np.array(orientation[3:], dtype=np.float)
+#    z = np.cross(x, y)
+##    print('z', z)
+#    M = np.array([x * spacing, y * spacing, z * spacing])
+#    M = np.array([x, y, z])
+##    test = M.dot(np.ones(3))
+##    print('test', test)
+##
+##    if test[2] < 0:
+##        M = M.dot(np.array([[1, 0, 0],[0,-1, 0],[0, 0, 1]]))
+##    if test[1] < 0:
+##        M = M.dot(np.array([[1, 0, 0],[0, 1, 0],[0, 0, -1]]))
+##    if test[0] < 0:
+##        M = M.dot(np.array([[-1, 0, 0],[0, 1, 0],[0, 0, 1]]))
+##    print('test2', M.dot(np.ones(3)))
+###    M = np.array([x, y, z])
+###    M[np.diag_indices(3)] *= spacing
+###    while True:
+###        test = M.dot(np.ones(3))
+###        if
+##    pdb.set_trace()
+#    return M
+##    return np.dot(M, np.array([[0, 1, 0], [1, 0, 0],[0, 0, 1]]))
 
 
 

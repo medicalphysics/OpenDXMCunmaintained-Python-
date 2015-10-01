@@ -10,7 +10,7 @@ import dicom
 import os
 
 import logging
-from scipy.ndimage.interpolation import affine_transform, geometric_transform
+from scipy.ndimage.interpolation import affine_transform, spline_filter
 from opendxmc.utils import find_all_files
 from opendxmc.study.simulation import Simulation
 
@@ -24,60 +24,68 @@ logger = logging.getLogger('OpenDXMC')
 #    M = np.matrix(np.array([x, y, z]))
 #    dim = np.dot(spacing * shape, M)
 
+def matrix_scaled(orientation, spacing, spacing_scan):
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    M = np.eye(3)
+    M[:3, :3] = R*spacing
+    return M.dot(np.eye(3)/spacing_scan)
+
 def matrix(orientation):
     x = np.array(orientation[:3], dtype=np.float)
     y = np.array(orientation[3:], dtype=np.float)
     z = np.cross(x, y)
 
     return np.array([x, y, z])
-    
-def matrix_scaled(orientation, spacing, spacing_scan):
-    x = np.array(orientation[:3], dtype=np.float)
-    y = np.array(orientation[3:], dtype=np.float)
-    z = np.cross(x, y)
 
-    M = np.array([x * spacing, y * spacing, z * spacing])
-    return M.dot(np.eye(3)/spacing_scan)
+#def matrix_scaled(orientation, spacing, spacing_scan):
+#    y = np.array(orientation[:3], dtype=np.float)
+#    x = np.array(orientation[3:], dtype=np.float)
+#    z = np.cross(x, y)
+#
+##    M = np.array([x * spacing[0], y * spacing[1], z * spacing[2]]).T
+#    M = np.array([x * spacing, y * spacing, z * spacing])
+#    M = np.array([x, y, z])
+#    M=np.zeros((3, 3))
+#    for i, v in enumerate([x, y, z]):
+#        M[:, i] = v[:]
+#    return M.dot(np.eye(3)/spacing_scan)
 
 
 
 def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
     sh = dc_list[0].pixel_array.shape
     n = len(dc_list)
+#    arr = np.empty((sh[1], sh[0], n), dtype=np.int16)
     arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
     for i, dc in enumerate(dc_list):
         try:
-            arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-                            int(dc[0x28, 0x1052].value))
+            arr[:, :, i] = dc.pixel_array * int(dc[0x28, 0x1053].value) + int(dc[0x28, 0x1052].value)
         except ValueError:
             arr[:, :, i] = int(dc[0x28, 0x1052].value)
             logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
-    arr=np.swapaxes(arr, 0, 1)
+#    arr=np.swapaxes(arr, 0, 1)
     M = matrix_scaled(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
     out_dimension = M.dot(np.array(arr.shape))
     offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
     out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
 
-    k = affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000, offset=offset, output=np.int16)
-#    k = np.swapaxes(k, 0, 1)
-#    plt.subplot(2,3,1)
-#    plt.imshow(k[:,:,k.shape[2] // 2])
-#    plt.subplot(2,3,2)
-#    plt.imshow(k[:,k.shape[1] // 2, :])
-#    plt.subplot(2,3,3)
-#    plt.imshow(k[k.shape[0] // 2, :, :])
-#
-#    plt.subplot(2,3,4)
-#    plt.imshow(arr[:, :, arr.shape[2] // 2])
-#    plt.subplot(2,3,5)
-#    plt.imshow(arr[:,arr.shape[1] // 2, :])
-#    plt.subplot(2,3,6)
-#    plt.imshow(arr[arr.shape[0] // 2, :, :])
-#
-#    plt.show(block=True)
+    logger.info('Align and scale CT series from {0} to {1} voxels. '
+                'Voxel spacing changed from {2} to {3}'.format(sh + (n,),
+                                                               out_shape,
+                                                               spacing,
+                                                               scan_spacing))
+    k = np.empty(out_shape, dtype=np.int16)
+    arr = spline_filter(arr, order=3, output=np.int16)
+    affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000,
+                     offset=offset, output=k, order=3, prefilter=False)
     return np.swapaxes(k, 0, 1)
 
-    
+
+
 
 
 def array_from_dicom_list(dc_list, scaling):
@@ -123,9 +131,9 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
                 if axial_image == 'axial':
                     series_uid = str(dc[0x20, 0xe].value)
                     if series_uid in series:
-                        series[series_uid].append(dc)
+                        series[series_uid].append(p)
                     else:
-                        series[series_uid] = [dc]
+                        series[series_uid] = [p]
                     logger.debug("Imported {}".format(p))
                 else:
                     logger.debug("Not imported: {} -Image not axial, possible a scout".format(p))
@@ -135,23 +143,29 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
     logger.info("Imported {0} CT series with total {1} images".format(
                 len(series), sum([len(x) for x in series.values()])))
 
-    for name, value in series.items():
-        if len(value) < 2:
+    for name, series_paths in series.items():
+
+        if len(series_paths) < 2:
             logger.info('Image series {} is skipped since it contains less than 2 images.'.format(name))
             continue
         logger.debug('Setting up data for simulation {}'.format(name))
-        dc = value[0]
-        value.sort(key=lambda x: np.sum(np.array(x[0x20, 0x32].value)**2))
+        dc_list = [dicom.read_file(p) for p in series_paths]
+        dc_list.sort(key=lambda x: x[0x20, 0x13].value)
+        dc = dc_list[0]
+        dc_list.sort(key=lambda x: np.sum((np.array(x[0x20, 0x32].value)-np.array(dc[0x20, 0x32].value))**2))
+        M = matrix(dc_list[0][0x20, 0x37].value)
+        dc_list.sort(key=lambda x: (M.dot(np.array(x[0x20, 0x32].value)))[2])
 
         spacing = np.empty(3, dtype=np.float)
         spacing[:2] = np.array(dc[0x28, 0x30].value)
-        spacing[2] = np.sum((np.array(value[1][0x20, 0x32].value) -
-                            np.array(value[0][0x20, 0x32].value))**2)**.5
+        spacing[2] = np.sum((np.array(dc_list[1][0x20, 0x32].value) -
+                            np.array(dc_list[0][0x20, 0x32].value))**2)**.5
 
+        #Creating transforrmation matrix
         patient = Simulation(name)
 #        patient.spacing = scaling
-        patient.exposure_modulation = aec_from_dicom_list(value)
-        patient.ctarray = array_from_dicom_list_affine(value, spacing, scan_spacing*10).astype(np.int16)
+        patient.exposure_modulation = aec_from_dicom_list(dc_list)
+        patient.ctarray = array_from_dicom_list_affine(dc_list, spacing, scan_spacing*10).astype(np.int16)
 
         patient.spacing = scan_spacing
 
@@ -178,8 +192,8 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
 
         patient.is_spiral = patient.pitch != 0.
         if not patient.is_spiral:
-            patient.step = abs(value[0][0x20, 0x32].value[2] -
-                               value[1][0x20, 0x32].value[2])
+            patient.step = abs(dc_list[0][0x20, 0x32].value[2] -
+                               dc_list[1][0x20, 0x32].value[2])
 
         try:
             total_collimation = dc[0x18, 0x9307].value / 10.
