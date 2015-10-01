@@ -169,8 +169,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
         ret[3, ind_b:ind_s] = sdd / 2.
         ret[4, ind_b:ind_s] = scan_fov * np.random.uniform(-1., 1., histories)
-        ret[5, ind_b:ind_s] = d_col / 2. * np.random.uniform(-1., 1.,
-                                                               histories)
+        ret[5, ind_b:ind_s] = d_col * np.random.uniform(-1., 1.,
+                                                        histories)
         ret[3:6, ind_b:ind_s] = np.dot(R, ret[3:6, ind_b:ind_s])
         lenght = np.sqrt(np.sum(ret[3:6, ind_b:ind_s]**2, axis=0))
         ret[3:6, ind_b:ind_s] /= lenght

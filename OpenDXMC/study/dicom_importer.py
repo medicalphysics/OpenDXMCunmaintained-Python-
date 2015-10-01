@@ -35,11 +35,12 @@ def matrix_scaled(orientation, spacing, spacing_scan):
     return M.dot(np.eye(3)/spacing_scan)
 
 def matrix(orientation):
-    x = np.array(orientation[:3], dtype=np.float)
-    y = np.array(orientation[3:], dtype=np.float)
-    z = np.cross(x, y)
-
-    return np.array([x, y, z])
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    return R
 
 #def matrix_scaled(orientation, spacing, spacing_scan):
 #    y = np.array(orientation[:3], dtype=np.float)
@@ -82,7 +83,14 @@ def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
     arr = spline_filter(arr, order=3, output=np.int16)
     affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000,
                      offset=offset, output=k, order=3, prefilter=False)
-    return np.swapaxes(k, 0, 1)
+    k = np.swapaxes(k, 0, 1)
+#    if offset[0] != 0:
+#        k = k[::-1,:,:]
+#    if offset[1] != 0:
+#        k = k[:, ::-1, :]
+#    if offset[2] != 0:
+#        k = k[:, :, ::-1]
+    return k
 
 
 
@@ -108,6 +116,9 @@ def aec_from_dicom_list(dc_list):
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
         exp[i, 0] = M.dot(np.array(dc[0x20, 0x32].value))[2] / 10.
+#    import pylab as plt
+#    plt.plot(exp[:,0], exp[:, 1])
+#    plt.show(block=True)
     return exp
 
 

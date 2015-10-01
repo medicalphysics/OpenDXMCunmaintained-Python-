@@ -30,10 +30,11 @@ class DatabaseInterface(QtCore.QObject):
 
     simulation_updated = QtCore.pyqtSignal(dict, dict)
 
-    def __init__(self, database_qurl, parent=None):
+    def __init__(self, database_qurl, importer, parent=None):
         super().__init__(parent)
         self.__db = None
 
+        importer.request_add_sim_to_database.connect(self.import_simulation)
         self.set_database(database_qurl)
 
     @QtCore.pyqtSlot(QtCore.QUrl)
@@ -82,6 +83,20 @@ class DatabaseInterface(QtCore.QObject):
         self.database_busy.emit(True)
         mats = self.__db.material_list()
         self.recive_material_list.emit(mats)
+        self.database_busy.emit(False)
+
+    @QtCore.pyqtSlot(Simulation)
+    def import_simulation(self, sim):
+        self.database_busy.emit(True)
+        try:
+            self.__db.add_simulation(sim, overwrite=False)
+        except ValueError:
+           name = self.__db.get_unique_simulation_name()
+           logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
+           sim.name = name
+           self.__db.add_simulation(sim, overwrite=False)
+
+        self.get_simulation_list()
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(list)
@@ -172,6 +187,20 @@ class DatabaseInterface(QtCore.QObject):
 #        self.__db.add_simulation(sim)
 #        self.database_busy.emit(False)
 #        self.get_run_simulation()
+class Importer(QtCore.QObject):
+    request_add_sim_to_database = QtCore.pyqtSignal(Simulation)
+    running = QtCore.pyqtSignal(bool)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @QtCore.pyqtSlot(list)
+    def import_urls(self, qurl_list):
+        self.running.emit(True)
+        paths = [url.toLocalFile() for url in qurl_list]
+        for sim in import_ct_series(paths):
+            self.request_add_sim_to_database.emit(sim)
+        self.running.emit(False)
+
 class Runner(QtCore.QThread):
     mc_calculation_finished = QtCore.pyqtSignal()
     request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
@@ -275,7 +304,7 @@ class ListModel(QtCore.QAbstractListModel):
     request_import_dicom = QtCore.pyqtSignal(list)
     request_viewing = QtCore.pyqtSignal(str)
     request_copy_elements = QtCore.pyqtSignal(list)
-    def __init__(self, interface, parent=None, simulations=False,
+    def __init__(self, interface, importer=None, parent=None, simulations=False,
                  materials=False):
         super().__init__(parent)
         self.__data = []
@@ -286,10 +315,12 @@ class ListModel(QtCore.QAbstractListModel):
             self.request_viewing.connect(interface.select_simulation)
             self.request_data_list.connect(interface.get_simulation_list)
             self.request_copy_elements.connect(interface.copy_simulation)
+            if importer:
+                self.request_import_dicom.connect(importer.import_urls)
         elif materials:
             self.request_viewing.connect(interface.select_material)
             self.request_data_list.connect(interface.get_material_list)
-        self.request_import_dicom.connect(interface.import_dicom)
+
 
         # inbound signals
         if simulations:

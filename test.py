@@ -10,40 +10,33 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(10)
 import pylab as plt
 import numpy as np
-from scipy.ndimage.interpolation import affine_transform, map_coordinates
+from scipy.ndimage.interpolation import affine_transform
 
 import pdb
 
 def test_import():
     from opendxmc.study import import_ct_series
     p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000A918"
-#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
-    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
-#    p = "C://test//thorax"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
+    p = "C://test//thorax"
 #    p = "C://test//abdomen"
 
+
     for pat in import_ct_series([p], scan_spacing=(.3, .3, .3)):
+        plt.plot(pat.exposure_modulation[:,0], pat.exposure_modulation[:,1])
+    plt.show()
 
-
-
-        k = pat.ctarray
-        plt.subplot(1,3,1)
-        plt.imshow(k[:,:,k.shape[2] // 2])
-        plt.subplot(1,3,2)
-        plt.imshow(k[:,k.shape[1] // 2, :])
-        plt.subplot(1,3,3)
-        plt.imshow(k[k.shape[0] // 2, :, :])
-#
-#        plt.subplot(2,3,4)
-#        plt.imshow(arr[:, :, arr.shape[2] // 2])
-#        plt.subplot(2,3,5)
-#        plt.imshow(arr[:,arr.shape[1] // 2, :])
-#        plt.subplot(2,3,6)
-#        plt.imshow(arr[arr.shape[0] // 2, :, :])
-#
-        plt.show(block=True)
+#        k = pat.ctarray
+#        plt.subplot(1,3,1)
+#        plt.imshow(k[:,:,k.shape[2] // 2])
+#        plt.subplot(1,3,2)
+#        plt.imshow(k[:,k.shape[1] // 2, :])
+#        plt.subplot(1,3,3)
+#        plt.imshow(k[k.shape[0] // 2, :, :])
+#        plt.show(block=True)
 
 #def matrix(orientation, spacing):
 #    y = np.array(orientation[:3], dtype=np.float)

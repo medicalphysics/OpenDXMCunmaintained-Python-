@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController, PropertiesModel
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -113,10 +113,12 @@ class MainWindow(QtGui.QMainWindow):
 
         database_busywidget = BusyWidget(tooltip='Writing or Reading to Database')
         simulation_busywidget = BusyWidget(tooltip='Monte Carlo simulation in progress')
+        importer_busywidget = BusyWidget(tooltip='Importing DICOM files')
 
         # statusbar
         status_bar = QtGui.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
+        status_bar.addPermanentWidget(importer_busywidget)
         status_bar.addPermanentWidget(simulation_busywidget)
         status_bar.addPermanentWidget(database_busywidget)
         status_bar.addPermanentWidget(statusbar_log_button)
@@ -140,9 +142,14 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.addWidget(central_splitter)
         central_layout.setContentsMargins(0, 0, 0, 0)
 
+
+        # importer
+        self.importer = Importer()
+        self.importer.running.connect(importer_busywidget.busy)
+
         # Databse interface
 #        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'), self.importer)
         self.interface.database_busy.connect(database_busywidget.busy)
 
         self.properties_model = PropertiesModel(self.interface)
@@ -156,7 +163,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
         # Models
-        self.simulation_list_model = ListModel(self.interface, self,
+        self.simulation_list_model = ListModel(self.interface, self.importer, self,
                                                simulations=True)
         simulation_list_view = ListView()
         simulation_list_view.setModel(self.simulation_list_model)
@@ -189,15 +196,21 @@ class MainWindow(QtGui.QMainWindow):
         self.database_thread = QtCore.QThread(self)
         self.interface.moveToThread(self.database_thread)
 
+
         self.mc_thread = QtCore.QThread(self)
         self.mcrunner.moveToThread(self.mc_thread)
 
         self.properties_thread = QtCore.QThread(self)
         self.properties_model.moveToThread(self.properties_thread)
 
+        self.import_thread = QtCore.QThread(self)
+        self.importer.moveToThread(self.import_thread)
+
+        self.import_thread.start()
         self.mc_thread.start()
         self.properties_thread.start()
         self.database_thread.start()
+
 
         self.mcrunner.runner.mc_calculation_finished.emit()
 

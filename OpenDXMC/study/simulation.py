@@ -44,8 +44,7 @@ SIMULATION_DESCRIPTION = {
     'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
     'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
     'MC_running': [False, np.bool, False, False, 'Simulation is running'],
-    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
-    'offset': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix scaling'],
+    'spacing_native': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Native image matrix spacing'],
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
     }
@@ -423,17 +422,17 @@ class Simulation(object):
         self.__description['MC_ready'] = bool(value)
 
     @property
-    def scaling(self):
-        return self.__description['scaling']
-    @scaling.setter
-    def scaling(self, value):
+    def spacing_native(self):
+        return self.__description['spacing_native']
+    @spacing_native.setter
+    def spacing_native(self, value):
         if isinstance(value, np.ndarray):
-            self.__description['scaling'] = value.astype(np.double)
+            self.__description['spacing_native'] = value.astype(np.double)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
             assert len(value) == 3
-            self.__description['scaling'] = value.astype(np.double)
+            self.__description['spacing_native'] = value.astype(np.double)
 
     @property
     def spacing(self):
