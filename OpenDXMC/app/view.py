@@ -171,7 +171,7 @@ class ViewController(QtCore.QObject):
                 setattr(self.current_simulation, key, value)
             self.simulation_properties_data.emit(self.current_simulation.description)
 
-            if self.current_simulation.MC_running:
+            if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
                 self.selectScene('running')
 
 
@@ -604,7 +604,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing):
-        self.dose_array = gaussian_filter(dose, .5)
+        self.dose_array = gaussian_filter(dose, 1.)
         self.ct_array = ct
         self.shape = ct.shape
         self.spacing = spacing

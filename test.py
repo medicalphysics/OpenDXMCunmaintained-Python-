@@ -9,10 +9,107 @@ logger = logging.getLogger('OpenDXMC')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(10)
 import pylab as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform
 
 import pdb
+
+
+def test_spiral_transformation():
+    sdd = 1200.
+    pos = [-23.19, -190.79, -551.70]
+    orientation = [1, 0, 0, 0, 0, -1]
+    spacing = np.array([0.76, .76, 2])
+    shape = np.array([512, 631, 99])
+    pitch = 1.
+    collimation = 40.
+    data_collection_center = [.5, -165., -747.]
+    
+    #generating rotation matrix from voxels to world
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+
+    R_nfl = np.eye(3)
+    R_nfl[:, :2] = iop
+    R_nfl[:, 2] = s_norm
+    
+    #matrix from voxel indces to world
+    M = np.eye(3)
+    M[:3, :3] = R*spacing    
+    print(R, M)
+
+
+
+    box = np.zeros((10, 3))
+    box[0, :] = np.dot(M, np.zeros(3)) + np.array(pos)
+    box[1, :] = np.dot(M, np.array([shape[0], 0, 0])) + np.array(pos)
+    box[2, :] = np.dot(M, np.array([shape[0], shape[1], 0])) + np.array(pos)
+    box[3, :] = np.dot(M, np.array([0, shape[1], 0])) + np.array(pos)
+    box[4, :] = np.dot(M, np.array([0, 0, 0])) + np.array(pos)
+#    pos_fin = pos + np.dot(M, shape)
+    box[5, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
+    box[6, :] = np.dot(M, np.array([shape[0], 0, shape[2]])) + np.array(pos)
+    box[7, :] = np.dot(M, np.array([shape[0], shape[1], shape[2]])) + np.array(pos)
+    box[8, :] = np.dot(M, np.array([0, shape[1], shape[2]])) + np.array(pos)
+    box[9, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
+    
+
+    start = np.array(pos)
+    stop = start + np.dot(M, shape)
+    n_spiral = 500
+    spiral_z = np.linspace(start[2], stop[2], n_spiral)
+    angle = spiral_z / (pitch * collimation) * np.pi * 2.
+
+    R_a = lambda x: np.array([[np.cos(x), - np.sin(x), 0],
+                              [np.sin(x), np.cos(x), 0],
+                              [0, 0, 1]], dtype=np.double)    
+    spiral_center = np.array(data_collection_center)
+    spiral_center = np.array(pos) + np.dot(M, shape) / 2.
+#    spiral_center[2] = 0
+    spiral = np.zeros((3, n_spiral))
+    spiral[1, :] = -sdd/2
+#    spiral[1, :] = spiral_center[1]
+    spiral[2,:] = spiral_z[:]
+    RI = np.linalg.inv(R_nfl)
+    for i in range(n_spiral):
+#        pdb.set_trace()
+        spiral[:, i] = np.dot(RI, np.dot(R_a(angle[i]), spiral[:, i]) +spiral_center) 
+        
+    
+    
+    
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
+    ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
+    ax.plot(spiral[0, :], spiral[1, :],spiral[2, :], label='spiral')
+    ax.legend()
+#    pdb.set_trace()
+    plt.show()
+    pdb.set_trace()
+    
+
+#
+#    x = np.array(orientation[:3])
+#    y = np.array(orientation[3:])
+#    
+#    
+#    
+    R_a = lambda x: np.array([[np.cos(x), - np.sin(x), 0],
+                              [np.sin(x), np.cos(x), 0],
+                              [0, 0, 1]], dtype=np.double)
+#    v = np.array([0, -sdd/2, 50])
+#    print(np.dot(np.linalg.inv(R), v))
+#    
+#
+
+  
+    
+
 
 def test_import():
     from opendxmc.study import import_ct_series
@@ -122,5 +219,6 @@ def test_affine():
     array_from_dicom_list_affine()
 
 if __name__ == '__main__':
-    test_import()
+    test_spiral_transformation()
+#    test_import()
 #    test_affine()

@@ -121,8 +121,16 @@ def aec_from_dicom_list(dc_list):
 #    plt.show(block=True)
     return exp
 
+def dc_slice_indicator(dc):
+    """Returns a number indicating slce z position"""
+    pos = np.array(x[0x20, 0x32].value)
+    iop = np.array(dc[0x20, 0x37].value).reshape((2, 3)).T
+    return np.inner(pos, np.cross(*iop.T[:]))
+    
+    
+    
 
-def import_ct_series(paths, scan_spacing=(.15, .15, .15)):
+def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
     series = {}
     scan_spacing = np.array(scan_spacing)
     for p in find_all_files(paths):
@@ -164,8 +172,9 @@ def import_ct_series(paths, scan_spacing=(.15, .15, .15)):
         dc_list.sort(key=lambda x: x[0x20, 0x13].value)
         dc = dc_list[0]
         dc_list.sort(key=lambda x: np.sum((np.array(x[0x20, 0x32].value)-np.array(dc[0x20, 0x32].value))**2))
-        M = matrix(dc_list[0][0x20, 0x37].value)
-        dc_list.sort(key=lambda x: (M.dot(np.array(x[0x20, 0x32].value)))[2])
+#        M = matrix(dc_list[0][0x20, 0x37].value)
+#        dc_list.sort(key=lambda x: (M.dot(np.array(x[0x20, 0x32].value)))[2])
+        dc_list.sort(key=lambda x: dc_slice_indicator(x))
 
         spacing = np.empty(3, dtype=np.float)
         spacing[:2] = np.array(dc[0x28, 0x30].value)

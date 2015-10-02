@@ -225,8 +225,7 @@ def ct_seq(scan_fov, sdd, total_collimation,
             [ndarray(energy), ndarray(intensity)] list/tuple of
             two ndarrays of lenght one, with energy [eV] and intensity of specter
         batch_size : int
-            number of histories per batch, must be greater than
-            histories
+            number of exposures per batch
         exposure_modulation : [(N,), (N,)]
             tube current modulation z axis, list/tuple of
             (ndarray(position), ndarray(scale_factors))
@@ -270,11 +269,10 @@ def ct_seq(scan_fov, sdd, total_collimation,
                               [0, 0, 1]], dtype=np.double)
 
     if batch_size is None:
-        batch_size = histories
-    if batch_size < histories:
-        batch_size = histories
-    batch_size += (batch_size % histories)
-    assert batch_size % histories == 0
+        batch_size = 1
+    if batch_size < 1:
+        batch_size =1
+    batch_size *= histories
 
 
     if energy_specter is None:
