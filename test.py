@@ -18,13 +18,14 @@ import pdb
 
 def test_spiral_transformation():
     sdd = 1200.
-    pos = [-23.19, -190.79, -551.70]
-    orientation = [1, 0, 0, 0, 0, -1]
-    spacing = np.array([0.76, .76, 2])
-    shape = np.array([512, 631, 99])
+    pos = [-77.36, -374.4, -119.33]
+#    pos = [0, 0, 0]
+    orientation = [.99355, .087918, .071490, -.076963, .986621, -.143718]
+    spacing = np.array([0.367, .367, 4.])
+    shape = np.array([626, 512, 45])
     pitch = 1.
     collimation = 40.
-    data_collection_center = [.5, -165., -747.]
+    data_collection_center = [.2, -240.8, -93.6]
     
     #generating rotation matrix from voxels to world
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
@@ -32,17 +33,10 @@ def test_spiral_transformation():
     R = np.eye(3)
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
-
-    R_nfl = np.eye(3)
-    R_nfl[:, :2] = iop
-    R_nfl[:, 2] = s_norm
-    
+   
     #matrix from voxel indces to world
     M = np.eye(3)
-    M[:3, :3] = R*spacing    
-    print(R, M)
-
-
+    M[:3, :3] = R*spacing
 
     box = np.zeros((10, 3))
     box[0, :] = np.dot(M, np.zeros(3)) + np.array(pos)
@@ -50,37 +44,59 @@ def test_spiral_transformation():
     box[2, :] = np.dot(M, np.array([shape[0], shape[1], 0])) + np.array(pos)
     box[3, :] = np.dot(M, np.array([0, shape[1], 0])) + np.array(pos)
     box[4, :] = np.dot(M, np.array([0, 0, 0])) + np.array(pos)
-#    pos_fin = pos + np.dot(M, shape)
     box[5, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
     box[6, :] = np.dot(M, np.array([shape[0], 0, shape[2]])) + np.array(pos)
     box[7, :] = np.dot(M, np.array([shape[0], shape[1], shape[2]])) + np.array(pos)
     box[8, :] = np.dot(M, np.array([0, shape[1], shape[2]])) + np.array(pos)
     box[9, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
+
+
+
     
 
     start = np.array(pos)
     stop = start + np.dot(M, shape)
     n_spiral = 500
-    spiral_z = np.linspace(start[2], stop[2], n_spiral)
-    angle = spiral_z / (pitch * collimation) * np.pi * 2.
-
-    R_a = lambda x: np.array([[np.cos(x), - np.sin(x), 0],
-                              [np.sin(x), np.cos(x), 0],
-                              [0, 0, 1]], dtype=np.double)    
-    spiral_center = np.array(data_collection_center)
-    spiral_center = np.array(pos) + np.dot(M, shape) / 2.
-#    spiral_center[2] = 0
     spiral = np.zeros((3, n_spiral))
-    spiral[1, :] = -sdd/2
-#    spiral[1, :] = spiral_center[1]
-    spiral[2,:] = spiral_z[:]
-    RI = np.linalg.inv(R_nfl)
+    
+    spiral[2, :] = np.linspace(start[2]-collimation/2, stop[2]+collimation/2, n_spiral)
+    angle = spiral[2, :] / (pitch * collimation) * np.pi * 2.
+    spiral[0, :] = -sdd/2 * np.cos(angle)
+    spiral[1, :] = -sdd/2 * np.sin(angle)
+    
+    spiral_center = np.array(data_collection_center)
+    for i in range(2):
+        spiral[i, :] += spiral_center[i]
+   
+   
+    #image_space
+    RI = np.linalg.inv(R)   
+    im_space = lambda x: np.dot(RI, x.ravel() - np.array(pos))    
+    
     for i in range(n_spiral):
-#        pdb.set_trace()
-        spiral[:, i] = np.dot(RI, np.dot(R_a(angle[i]), spiral[:, i]) +spiral_center) 
-        
+        spiral[:, i] = im_space(spiral[:, i])
+    for i in range(box.shape[0]):
+        box[i, :] = im_space(box[i, :])
     
     
+#    
+#    
+#    spiral_center = np.array(pos) - 
+##    spiral_center = (np.array(pos) + np.dot(M, shape)) / 2.
+#    spiral_center[2] = start[2]
+#    spiral = np.zeros((3, n_spiral))
+#    spiral[0, :] = sdd/2
+#    spiral[2,:] = spiral_z[:]
+#    RI = np.linalg.inv(R)   
+#
+#    for i in range(n_spiral):
+#        spiral[:, i] = np.dot(R_a(angle[i]), np.squeeze(spiral[:, i]))+spiral_center
+#  
+#    for i in range(n_spiral):
+#        spiral[:, i] = np.dot(RI, spiral[:, i] - spiral_center)
+#    for i in range(box.shape[0]):
+#        box[i, :] = np.dot(RI, box[i, :].ravel() - np.array(pos))
+#    
     
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -93,19 +109,6 @@ def test_spiral_transformation():
     pdb.set_trace()
     
 
-#
-#    x = np.array(orientation[:3])
-#    y = np.array(orientation[3:])
-#    
-#    
-#    
-    R_a = lambda x: np.array([[np.cos(x), - np.sin(x), 0],
-                              [np.sin(x), np.cos(x), 0],
-                              [0, 0, 1]], dtype=np.double)
-#    v = np.array([0, -sdd/2, 50])
-#    print(np.dot(np.linalg.inv(R), v))
-#    
-#
 
   
     
