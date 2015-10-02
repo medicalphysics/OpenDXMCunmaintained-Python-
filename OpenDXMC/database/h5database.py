@@ -336,7 +336,7 @@ class Database(object):
 
                 for item in meta_table.colnames:
                     ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
-                    if description_array['editable'][ind] or item in ['MC_ready', 'MC_running', 'MC_finished']:
+                    if description_array['editable'][ind] or item in ['MC_ready', 'MC_running', 'MC_finished', 'conversion_factor_ctdiair', 'conversion_factor_ctdiw']:
                         try:
                             value = description_dict[item]
                         except KeyError:

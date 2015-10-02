@@ -268,11 +268,11 @@ def generate_dose_conversion_factor(simulation, materials):
             pmma = m
         elif m.name == 'air':
             air = m
-
-    if (simulation.ctdi_air100 > 0) and (air is not None):
+    
+    if (simulation.ctdi_air100 > 0.) and (air is not None):
         obtain_ctdiair_conversion_factor(simulation, air)
-    elif (simulation.ctdi_w100 > 0) and (pmma is not None):
-        obtain_ctdiair_conversion_factor(simulation, air)
+    elif (simulation.ctdi_w100 > 0.) and (pmma is not None) and (air is not None):
+        obtain_ctdiw_conversion_factor(simulation, pmma, air)
     else:
         msg = """Need a combination of air material and ctdi air or ctdi_w100
                  pmma material and ctdiw_100 to generate energy to dose
@@ -283,7 +283,7 @@ def generate_dose_conversion_factor(simulation, materials):
 def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     logger.info('Starting simulating CTDIair100 measurement for '
-                '{}'.format(simulation.name))
+                '{0}. CTDIair100 is {1}mGy'.format(simulation.name, simulation.ctdi_air100))
     spacing = np.array((1, 1, 10), dtype=np.double)
 
     N = np.rint(np.array((simulation.sdd / spacing[0],
@@ -303,8 +303,10 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     phase_space = ct_seq(simulation.scan_fov, simulation.sdd,
                          simulation.total_collimation, start=0, stop=0, step=0,
-                         exposures=1200, histories=1000,
-                         energy_specter=en_specter, batch_size=500000)
+                         exposures=simulation.exposures,
+                         histories=simulation.histories,
+                         energy_specter=en_specter, 
+                         batch_size=simulation.batch_size)
 
     t0 = time.clock()
     for batch, i, n in phase_space:
@@ -314,8 +316,6 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]]
-    d *= float(n * 1000) / 1.e6
-
     simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d
 
 
@@ -372,8 +372,10 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     phase_space = ct_seq(simulation.scan_fov, simulation.sdd,
                          simulation.total_collimation, start=0, stop=0, step=0,
-                         exposures=1200, histories=1000,
-                         energy_specter=en_specter, batch_size=500000)
+                         exposures=simulation.exposures,
+                         histories=simulation.histories,
+                         energy_specter=en_specter, 
+                         batch_size=simulation.batch_size)
 
     t0 = time.clock()
     for batch, i, n in phase_space:
@@ -384,9 +386,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     d = []
     for p in meas_pos:
         x, y = int(p[0]), int(p[1])
-
         d.append(dose[x, y, 1:-1].sum())
-        d[-1] /= (float(n * 1000) / 1.e6)
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.

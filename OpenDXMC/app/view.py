@@ -713,6 +713,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         self.unsaved_data['MC_ready'] = True
         self.unsaved_data['MC_finished'] = False
         self.unsaved_data['MC_running'] = False
+        self.test_for_unsaved_changes()
         self.request_update_simulation.emit(self.unsaved_data, {}, True, True)
         self.properties_is_set.emit(True)
 #        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
@@ -728,8 +729,13 @@ class PropertiesModel(QtCore.QAbstractTableModel):
 ##        self.request_simulation_start.emit()
 
     def test_for_unsaved_changes(self):
+        for key, value in self.__simulation.description.items():
+            if self.__data[key][3]:
+                if self.__data[key][0] != value:
+                    self.unsaved_data[key] = value
         self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
-
+        self.layoutAboutToBeChanged.emit()
+        self.layoutChanged.emit()
     @QtCore.pyqtSlot(dict)
     def update_data(self, sim_description):
         self.unsaved_data = {}
@@ -798,22 +804,27 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             return False
         if index.column() != 1:
             return False
-        if role == QtCore.Qt.DisplayRole:
-            var = self.__indices[index.row()]
-            self.unsaved_data[var] = value
-            self.dataChanged.emit(index, index)
-            return True
-        elif role == QtCore.Qt.EditRole:
+        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+#            var = self.__indices[index.row()]
+#            self.unsaved_data[var] = value
+#            self.dataChanged.emit(index, index)
+#            return True
+#        elif role == QtCore.Qt.EditRole:
             var = self.__indices[index.row()]
             try:
                 setattr(self.__simulation, var, value)
             except Exception as e:
                 logger.error(str(e))
-#                self.error_setting_value.emit(str(e))
                 return False
             else:
                 if value != self.__data[var][0]:
                     self.unsaved_data[var] = value
+                else:
+                    try:
+                        del self.unsaved_data[var]
+                    except KeyError:
+                        pass
+            
             self.dataChanged.emit(index, index)
             self.test_for_unsaved_changes()
             return True

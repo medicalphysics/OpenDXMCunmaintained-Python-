@@ -32,7 +32,7 @@ def matrix_scaled(orientation, spacing, spacing_scan):
     R[:, 2] = s_norm
     M = np.eye(3)
     M[:3, :3] = R*spacing
-    return M.dot(np.eye(3)/spacing_scan)
+    return (np.eye(3)/spacing_scan).dot(M)
 
 def matrix(orientation):
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
@@ -122,7 +122,7 @@ def aec_from_dicom_list(dc_list):
     return exp
 
 
-def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
+def import_ct_series(paths, scan_spacing=(.15, .15, .15)):
     series = {}
     scan_spacing = np.array(scan_spacing)
     for p in find_all_files(paths):
@@ -179,9 +179,10 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
         patient.ctarray = array_from_dicom_list_affine(dc_list, spacing, scan_spacing*10).astype(np.int16)
 
         patient.spacing = scan_spacing
+        patient.spacing_native = spacing
 
         tag_key = {'pitch': (0x18, 0x9311),
-                   'scan_fov': (0x18, 0x60),
+                   'scan_fov': (0x18, 0x90),
                    'sdd': (0x18, 0x1110),
                    'detector_width': (0x18, 0x9306),
                    'region': (0x18, 0x15)
@@ -212,7 +213,7 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
             pass
         else:
             patient.detector_rows = (total_collimation /
-                                      patient.detector_width) / 10.
+                                      patient.detector_width)
         try:
             exposure = float(dc[0x18, 0x1152].value)
             ctdi = float(dc[0x18, 0x9345].value)

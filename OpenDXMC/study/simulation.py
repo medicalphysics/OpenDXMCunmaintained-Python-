@@ -319,8 +319,10 @@ class Simulation(object):
         return self.__description['pitch']
     @pitch.setter
     def pitch(self, value):
+        assert value > 0
         if float(value) > 0:
             self.__description['is_spiral'] = True
+        self.__description['ctdi_vol100'] =  self.ctdi_w100 / value
         self.__description['pitch'] = float(value)
 
     @property
