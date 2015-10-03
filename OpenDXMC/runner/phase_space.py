@@ -41,6 +41,8 @@ def ct_phase_space(simulation, batch_size=None):
 
     if simulation.is_spiral:
         kwargs['pitch'] = simulation.pitch
+        kwargs['rotation_center'] = simulation.data_center
+        kwargs['rotation_plane_cosines'] = simulation.image_orientation
         phase_func = ct_spiral
     else:
         kwargs['step'] = simulation.step
@@ -52,11 +54,24 @@ def ct_phase_space(simulation, batch_size=None):
 
     return phase_func(*args, **kwargs)
 
-
+def world_image_matrix(orientation):
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    return np.linalg.inv(R)
+    
+def rotation_z_matrix(alpha):
+    return np.array([[np.cos(alpha), - np.sin(alpha), 0],
+                     [np.sin(alpha), np.cos(alpha), 0],
+                     [0, 0, 1]], dtype=np.double)
+    
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
-              batch_size=0,
+              batch_size=0, rotation_center=None,
+              rotation_plane_cosines = None,
               exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
 
@@ -100,7 +115,12 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         direction_y, direction_z, energy, weight)
     """
     logger.debug('Generating CT spiral phase space')
-
+    if rotation_center is None:
+        rotation_center = np.zeros(3, dtype=np.double)
+    rotation_center[2] = 0  # we start spiral at start not center
+    if rotation_plane_cosines is None:
+        rotation_plane_cosines = np.array([1, 0, 0, 0, 1, 0], dtype=np.double)
+    
     # total number of exposures + one total rotation
     exposures = int(exposures)
     e = int((abs(start - stop) / (pitch * total_collimation) + 1) * exposures)
@@ -118,9 +138,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     ang = t / (pitch * total_collimation) * np.pi * 2.
 
     # rotation matrix along z-axis for an angle x
-    rot = lambda x: np.array([[np.cos(x), - np.sin(x), 0],
-                              [np.sin(x), np.cos(x), 0],
-                              [0, 0, 1]], dtype=np.double)
+    
 
     if batch_size is None:
         batch_size = 1
@@ -154,24 +172,28 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
-
+    M = world_image_matrix(rotation_plane_cosines)
+    rotation_center_image = np.dot(M, rotation_center)
     for i in range(start_at_exposure_no, e):
-        R = rot(ang[i])
-#        pdb.set_trace()
+        R = np.dot(M, rotation_z_matrix(ang[i]))
+#        R = rotation_z_matrix(ang[i])
         ind_b = teller * histories
         ind_s = (teller + 1) * histories
 
-        ret[1, ind_b:ind_s] = 0
         ret[0, ind_b:ind_s] = -sdd/2.
+        ret[1, ind_b:ind_s] = 0 
         ret[2, ind_b:ind_s] = t[i]
 #        print('t', t[i])
         ret[0:3, ind_b:ind_s] = np.dot(R, ret[0:3, ind_b:ind_s])
-
+        for j in range(2):
+            ret[j, ind_b:ind_s] += rotation_center_image[j]
+        
         ret[3, ind_b:ind_s] = sdd / 2.
-        ret[4, ind_b:ind_s] = scan_fov * np.random.uniform(-1., 1., histories)
+        ret[4, ind_b:ind_s] = scan_fov /2 * np.random.uniform(-1., 1., histories)
         ret[5, ind_b:ind_s] = d_col * np.random.uniform(-1., 1.,
                                                         histories)
         ret[3:6, ind_b:ind_s] = np.dot(R, ret[3:6, ind_b:ind_s])
+        
         lenght = np.sqrt(np.sum(ret[3:6, ind_b:ind_s]**2, axis=0))
         ret[3:6, ind_b:ind_s] /= lenght
 

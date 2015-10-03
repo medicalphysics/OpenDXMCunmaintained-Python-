@@ -57,46 +57,53 @@ def matrix(orientation):
 
 
 
-def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
-    sh = dc_list[0].pixel_array.shape
-    n = len(dc_list)
-#    arr = np.empty((sh[1], sh[0], n), dtype=np.int16)
-    arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
-    for i, dc in enumerate(dc_list):
-        try:
-            arr[:, :, i] = dc.pixel_array * int(dc[0x28, 0x1053].value) + int(dc[0x28, 0x1052].value)
-        except ValueError:
-            arr[:, :, i] = int(dc[0x28, 0x1052].value)
-            logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
-#    arr=np.swapaxes(arr, 0, 1)
-    M = matrix_scaled(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
-    out_dimension = M.dot(np.array(arr.shape))
-    offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
-    out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
-
-    logger.info('Align and scale CT series from {0} to {1} voxels. '
-                'Voxel spacing changed from {2} to {3}'.format(sh + (n,),
-                                                               out_shape,
-                                                               spacing,
-                                                               scan_spacing))
-    k = np.empty(out_shape, dtype=np.int16)
-    arr = spline_filter(arr, order=3, output=np.int16)
-    affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000,
-                     offset=offset, output=k, order=3, prefilter=False)
-    k = np.swapaxes(k, 0, 1)
-#    if offset[0] != 0:
-#        k = k[::-1,:,:]
-#    if offset[1] != 0:
-#        k = k[:, ::-1, :]
-#    if offset[2] != 0:
-#        k = k[:, :, ::-1]
-    return k
-
-
+#def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
+#    sh = dc_list[0].pixel_array.shape
+#    n = len(dc_list)
+##    arr = np.empty((sh[1], sh[0], n), dtype=np.int16)
+#    arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
+#    for i, dc in enumerate(dc_list):
+#        try:
+#            arr[:, :, i] = dc.pixel_array * int(dc[0x28, 0x1053].value) + int(dc[0x28, 0x1052].value)
+#        except ValueError:
+#            arr[:, :, i] = int(dc[0x28, 0x1052].value)
+#            logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
+##    arr=np.swapaxes(arr, 0, 1)
+#    M = matrix_scaled(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
+#    out_dimension = M.dot(np.array(arr.shape))
+#    offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
+#    out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
+#
+#    logger.info('Align and scale CT series from {0} to {1} voxels. '
+#                'Voxel spacing changed from {2} to {3}'.format(sh + (n,),
+#                                                               out_shape,
+#                                                               spacing,
+#                                                               scan_spacing))
+#    k = np.empty(out_shape, dtype=np.int16)
+#    arr = spline_filter(arr, order=3, output=np.int16)
+#    affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000,
+#                     offset=offset, output=k, order=3, prefilter=False)
+#    k = np.swapaxes(k, 0, 1)
+##    if offset[0] != 0:
+##        k = k[::-1,:,:]
+##    if offset[1] != 0:
+##        k = k[:, ::-1, :]
+##    if offset[2] != 0:
+##        k = k[:, :, ::-1]
+#    return k
 
 
 
-def array_from_dicom_list(dc_list, scaling):
+def image_to_world_transform(image_vector, position, orientation, spacing):
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    R[:3, :3] *= spacing
+    return np.dot(R, image_vector) + position
+
+def array_from_dicom_list(dc_list):#, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
@@ -105,8 +112,9 @@ def array_from_dicom_list(dc_list, scaling):
     for i, dc in enumerate(dc_list):
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
                         int(dc[0x28, 0x1052].value))
-    out_shape = np.round(np.array([r, c, n]) * scaling).astype(np.int)
-    return affine_transform(arr, 1./scaling.astype(np.float), output_shape=out_shape, cval=-1000)
+    return arr
+#    out_shape = np.round(np.array([r, c, n]) * scaling).astype(np.int)
+#    return affine_transform(arr, 1./scaling.astype(np.float), output_shape=out_shape, cval=-1000)
 
 
 def aec_from_dicom_list(dc_list):
@@ -115,7 +123,7 @@ def aec_from_dicom_list(dc_list):
     exp = np.empty((n_im, 2), dtype=np.float)
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
-        exp[i, 0] = M.dot(np.array(dc[0x20, 0x32].value))[2] / 10.
+        exp[i, 0] = dc_slice_indicator(dc) / 10.
 #    import pylab as plt
 #    plt.plot(exp[:,0], exp[:, 1])
 #    plt.show(block=True)
@@ -123,16 +131,15 @@ def aec_from_dicom_list(dc_list):
 
 def dc_slice_indicator(dc):
     """Returns a number indicating slce z position"""
-    pos = np.array(x[0x20, 0x32].value)
+    pos = np.array(dc[0x20, 0x32].value)
     iop = np.array(dc[0x20, 0x37].value).reshape((2, 3)).T
     return np.inner(pos, np.cross(*iop.T[:]))
     
     
     
 
-def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
+def import_ct_series(paths, scaling=(2, 2, 1)):
     series = {}
-    scan_spacing = np.array(scan_spacing)
     for p in find_all_files(paths):
         try:
             dc = dicom.read_file(p)
@@ -169,9 +176,9 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
             continue
         logger.debug('Setting up data for simulation {}'.format(name))
         dc_list = [dicom.read_file(p) for p in series_paths]
-        dc_list.sort(key=lambda x: x[0x20, 0x13].value)
+#        dc_list.sort(key=lambda x: x[0x20, 0x13].value)
         dc = dc_list[0]
-        dc_list.sort(key=lambda x: np.sum((np.array(x[0x20, 0x32].value)-np.array(dc[0x20, 0x32].value))**2))
+#        dc_list.sort(key=lambda x: np.sum((np.array(x[0x20, 0x32].value)-np.array(dc[0x20, 0x32].value))**2))
 #        M = matrix(dc_list[0][0x20, 0x37].value)
 #        dc_list.sort(key=lambda x: (M.dot(np.array(x[0x20, 0x32].value)))[2])
         dc_list.sort(key=lambda x: dc_slice_indicator(x))
@@ -183,12 +190,20 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
 
         #Creating transforrmation matrix
         patient = Simulation(name)
-#        patient.spacing = scaling
+        patient.scaling = scaling
         patient.exposure_modulation = aec_from_dicom_list(dc_list)
-        patient.ctarray = array_from_dicom_list_affine(dc_list, spacing, scan_spacing*10).astype(np.int16)
+        patient.ctarray = array_from_dicom_list(dc_list)
 
-        patient.spacing = scan_spacing
-        patient.spacing_native = spacing
+        patient.spacing = spacing / 10.
+        patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
+        patient.image_orientation = np.array(dc[0x20, 0x37].value)
+        try:
+            patient.data_center = np.array(dc[0x18, 0x9313].value) / 10. - patient.image_position
+        except KeyError:
+            patient.data_center = image_to_world_transform(np.array(patient.ctarray.shape) / 2., 
+                                                           patient.image_position,
+                                                           patient.image_orientation, 
+                                                           patient.spacing) 
 
         tag_key = {'pitch': (0x18, 0x9311),
                    'scan_fov': (0x18, 0x90),
@@ -210,6 +225,11 @@ def import_ct_series(paths, scan_spacing=(.2, .2, .2)):
                     setattr(patient, key, float(dc[tag].value) / 10.)
                 else:
                     setattr(patient, key, dc[tag].value)
+        # correction for sdd
+        try:
+            patient.sdd = dc[0x18, 0x1111].value * 2 / 10.
+        except KeyError:
+            pass
 
         patient.is_spiral = patient.pitch != 0.
         if not patient.is_spiral:

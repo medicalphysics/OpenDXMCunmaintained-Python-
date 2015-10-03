@@ -12,7 +12,8 @@ import pylab as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform
-
+from opendxmc.study import import_ct_series
+from opendxmc.runner import ct_phase_space
 import pdb
 
 
@@ -108,9 +109,86 @@ def test_spiral_transformation():
     plt.show()
     pdb.set_trace()
     
+def image_world_matrix(orientation, spacing):
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    M = R*spacing
+    return M
+
+def world_image_matrix(orientation):
+    iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
+    s_norm = np.cross(*iop.T[:])
+    R = np.eye(3)
+    R[:, :2] = np.fliplr(iop)
+    R[:, 2] = s_norm
+    return np.linalg.inv(R)
 
 
-  
+def test_spiral_phase_space():
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000A918"
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
+    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
+#    p = "C://test//thorax"
+#    p = "C://test//abdomen"
+
+    for pat in import_ct_series([p]):
+        pat.exposures = 36
+        pat.histories = 2
+        pat.batch_size = 1e6
+        pat.pitch = 1
+#        pdb.set_trace()
+        shape = np.array(pat.ctarray.shape)
+        M = image_world_matrix(pat.image_orientation, pat.spacing)
+        M = np.eye(3) * pat.spacing
+        pos = pat.image_position * 0
+        print(pos)
+        box = np.zeros((10, 3))
+        box[0, :] = np.dot(M, np.zeros(3)) + np.array(pos)
+        box[1, :] = np.dot(M, np.array([shape[0], 0, 0])) + np.array(pos)
+        box[2, :] = np.dot(M, np.array([shape[0], shape[1], 0])) + np.array(pos)
+        box[3, :] = np.dot(M, np.array([0, shape[1], 0])) + np.array(pos)
+        box[4, :] = np.dot(M, np.array([0, 0, 0])) + np.array(pos)
+        box[5, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
+        box[6, :] = np.dot(M, np.array([shape[0], 0, shape[2]])) + np.array(pos)
+        box[7, :] = np.dot(M, np.array([shape[0], shape[1], shape[2]])) + np.array(pos)
+        box[8, :] = np.dot(M, np.array([0, shape[1], shape[2]])) + np.array(pos)
+        box[9, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
+        
+#        R = world_image_matrix(pat.image_orientation)
+#        for i in range(box.shape[0]):
+#            box[i, :] = np.dot(R, box[i,:])
+#        
+        
+        
+        
+        
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+                
+        ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
+        ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
+       
+        
+        for arr, i, e in ct_phase_space(pat):
+#            pdb.set_trace()
+            print(i, e) 
+            ax.plot(arr[0, :].ravel(), arr[1, :].ravel(),arr[2, :].ravel(), 'o', label=i)
+            ax.plot(arr[0, :] + arr[3,:]*30, arr[1, :]+arr[4,:]*30,arr[2, :]+arr[5,:]*30, 'o',label=i)
+            
+#            for i in range(arr.shape[1]):
+#                ax.plot([arr[0,0], arr[0,0]+arr[3,0]*30],
+#                        [arr[1,0], arr[1,0]+arr[4,0]*30],
+#                        [arr[2,0], arr[2,0]+arr[5,0]*30])
+#                
+        ax.legend()
+    #    pdb.set_trace()
+        plt.show()
+        pdb.set_trace() 
     
 
 
@@ -126,8 +204,12 @@ def test_import():
 
 
     for pat in import_ct_series([p], scan_spacing=(.3, .3, .3)):
-        plt.plot(pat.exposure_modulation[:,0], pat.exposure_modulation[:,1])
-    plt.show()
+        pass
+        
+
+               
+        
+        
 
 #        k = pat.ctarray
 #        plt.subplot(1,3,1)
@@ -222,6 +304,7 @@ def test_affine():
     array_from_dicom_list_affine()
 
 if __name__ == '__main__':
-    test_spiral_transformation()
+#    test_spiral_transformation()
+    test_spiral_phase_space()
 #    test_import()
 #    test_affine()

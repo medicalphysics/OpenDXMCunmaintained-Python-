@@ -47,6 +47,11 @@ SIMULATION_DESCRIPTION = {
     'spacing_native': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Native image matrix spacing'],
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
+    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Calculation matrix scaling [cm]'],
+    'image_orientation': [np.zeros(6, dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
+    'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position [cm]'],
+    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],
+                       
     }
 
 # Generating a recarray for SIMULATION_DESCRIPTION to insert in database
@@ -424,19 +429,6 @@ class Simulation(object):
         self.__description['MC_ready'] = bool(value)
 
     @property
-    def spacing_native(self):
-        return self.__description['spacing_native']
-    @spacing_native.setter
-    def spacing_native(self, value):
-        if isinstance(value, np.ndarray):
-            self.__description['spacing_native'] = value.astype(np.double)
-        else:
-            value=np.array(value)
-            assert isinstance(value, np.ndarray)
-            assert len(value) == 3
-            self.__description['spacing_native'] = value.astype(np.double)
-
-    @property
     def spacing(self):
         return self.__description['spacing']
     @spacing.setter
@@ -448,6 +440,56 @@ class Simulation(object):
             assert isinstance(value, np.ndarray)
             assert len(value) == 3
             self.__description['spacing'] = value.astype(np.double)
+    @property
+    def scaling(self):
+        return self.__description['scaling']
+    @scaling.setter
+    def scaling(self, value):
+        if isinstance(value, np.ndarray):
+            self.__description['scaling'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert len(value) == 3
+            self.__description['scaling'] = value.astype(np.double)
+    
+    @property
+    def image_orientation(self):
+        return self.__description['image_orientation']
+    @image_orientation.setter
+    def image_orientation(self, value):
+        if isinstance(value, np.ndarray):
+            self.__description['image_orientation'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert len(value) == 3
+            self.__description['image_orientation'] = value.astype(np.double)
+    @property
+    def image_position(self):
+        return self.__description['image_position']
+    @image_position.setter
+    def image_position(self, value):
+        if isinstance(value, np.ndarray):
+            self.__description['image_position'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert len(value) == 3
+            self.__description['image_position'] = value.astype(np.double)
+    @property
+    def data_center(self):
+        return self.__description['data_center']
+    @data_center.setter
+    def data_center(self, value):
+        if isinstance(value, np.ndarray):
+            self.__description['data_center'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert len(value) == 3
+            self.__description['data_center'] = value.astype(np.double)
+
 
     @property
     def ignore_air(self):

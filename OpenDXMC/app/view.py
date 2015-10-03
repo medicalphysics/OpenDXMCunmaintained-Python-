@@ -216,7 +216,7 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
 
     p = QtGui.QPainter(back_qim)
 
-    p.drawImage(QtCore.QPointF(0., 0.), front_qim)
+    p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
 
     return back_qim
 

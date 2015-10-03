@@ -5,6 +5,7 @@ Created on Fri Aug 28 14:30:02 2015
 @author: erlean
 """
 import numpy as np
+from scipy.ndimage.interpolation import affine_transform, spline_filter
 from opendxmc.engine import score_energy
 from opendxmc.tube.tungsten import specter as tungsten_specter
 from opendxmc.runner.phase_space import ct_phase_space
@@ -88,7 +89,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
     return lut
 
 
-def prepare_geometry_from_ct_array(ctarray, specter, materials):
+def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
            INPUT:
@@ -99,6 +100,13 @@ def prepare_geometry_from_ct_array(ctarray, specter, materials):
         """
         if ctarray is None:
             return
+
+        ctarray = affine_transform(spline_filter(ctarray, order=3, 
+                                                 output=np.int16), 
+                                   scale, 
+                                   output_shape=np.array(ctarray.shape)/scale,
+                                   cval=-1000, output=np.int16)        
+        
         specter = (specter[0], specter[1]/specter[1].sum())
 
         water_key = None
@@ -138,7 +146,7 @@ def prepare_geometry_from_ct_array(ctarray, specter, materials):
 
 def ct_runner_validate_simulation(simulation, materials, second_try=False):
     """
-    validating and performs a ct mc simulation
+    validating a ct mc simulation
     """
 
     # testing for required attributes
@@ -156,6 +164,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
                                        filtration_materials='al',
                                        filtration_mm=simulation.al_filtration)
             vals = prepare_geometry_from_ct_array(simulation.ctarray,
+                                                  simulation.scaling,
                                                   specter,
                                                   materials)
             simulation.material_map = vals[0]
@@ -228,8 +237,8 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     N = np.array(simulation.material.shape, dtype=np.double)
 
-    offset = - N * simulation.spacing / 2.
-    offset[-1] = min([simulation.start_scan, simulation.stop_scan])
+    offset = np.zeros(3, dtype=np.double)
+    
     logger.warning('Not yet implemented: Offset not properly corrected for, currently using center '
                    'of reconstruction FOV as isocenter.')
 
