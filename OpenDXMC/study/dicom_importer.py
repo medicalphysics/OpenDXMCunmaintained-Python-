@@ -101,7 +101,7 @@ def image_to_world_transform(image_vector, position, orientation, spacing):
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
     R[:3, :3] *= spacing
-    return np.dot(R, image_vector) + position
+    return np.dot(R, image_vector) + position    
 
 def array_from_dicom_list(dc_list):#, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
@@ -123,7 +123,7 @@ def aec_from_dicom_list(dc_list):
     exp = np.empty((n_im, 2), dtype=np.float)
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
-        exp[i, 0] = dc_slice_indicator(dc) / 10.
+        exp[i, 0] = dc[0x20, 0x32].value[2]
 #    import pylab as plt
 #    plt.plot(exp[:,0], exp[:, 1])
 #    plt.show(block=True)
@@ -135,6 +135,15 @@ def dc_slice_indicator(dc):
     iop = np.array(dc[0x20, 0x37].value).reshape((2, 3)).T
     return np.inner(pos, np.cross(*iop.T[:]))
     
+def z_stop_estimator(iop, spacing, shape):
+    choices = []
+    pos = np.zeros(3)
+    for i in [0, shape[0]]:
+        for j in [0, shape[1]]:
+            for k in [0, shape[2]]:
+                choices.append(image_to_world_transform(np.array([i, j, k]), pos, iop, spacing)[2])
+    print(choices)    
+    return min(choices), max(choices)
     
     
 
@@ -254,10 +263,13 @@ def import_ct_series(paths, scaling=(2, 2, 1)):
                     patient.ctdi_w100 = ctdi / exposure / patient.pitch * 100.
                 else:
                     patient.ctdi_w100 = ctdi / exposure * 100.
-        patient.start_scan = patient.exposure_modulation[0, 0]
-        patient.stop_scan = patient.exposure_modulation[-1, 0]
-        patient.start = patient.exposure_modulation[0, 0]
-        patient.stop = patient.exposure_modulation[-1, 0]
+#        patient.start_scan = patient.exposure_modulation[0, 0]
+#        patient.stop_scan = patient.exposure_modulation[-1, 0]
+        start, stop = z_stop_estimator(patient.image_orientation, patient.spacing, patient.ctarray.shape)
+        patient.start_scan = start
+        patient.stop_scan = stop
+        patient.start =start
+        patient.stop=stop
         yield patient
 
 

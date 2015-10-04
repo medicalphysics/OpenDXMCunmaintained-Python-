@@ -20,7 +20,7 @@ import pdb
 def test_spiral_transformation():
     sdd = 1200.
     pos = [-77.36, -374.4, -119.33]
-#    pos = [0, 0, 0]
+    pos = [0, 0, 0]
     orientation = [.99355, .087918, .071490, -.076963, .986621, -.143718]
     spacing = np.array([0.367, .367, 4.])
     shape = np.array([626, 512, 45])
@@ -136,6 +136,8 @@ def test_spiral_phase_space():
 #    p = "C://test//thorax"
 #    p = "C://test//abdomen"
 
+    p = "C://test//caput//DICOM//000085FC//AA2CF108//AA661CAC//0000423E"
+
     for pat in import_ct_series([p]):
         pat.exposures = 36
         pat.histories = 2
@@ -165,7 +167,8 @@ def test_spiral_phase_space():
 #        
         
         
-        
+#        plt.plot(pat.exposure_modulation[:, 0], pat.exposure_modulation[:, 1])
+#        plt.show()
         
         fig = plt.figure()
         ax = fig.gca(projection='3d')

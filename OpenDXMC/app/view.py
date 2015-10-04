@@ -139,12 +139,14 @@ class ViewController(QtCore.QObject):
         elif name == 'running':
             if self.current_simulation.energy_imparted is not None:
                 self.scenes[name].setArray(self.current_simulation.energy_imparted,
-                                           self.current_simulation.spacing)
+                                           self.current_simulation.spacing, 
+                                           self.current_simulation.scaling)
         elif name == 'energy_imparted':
             if self.current_simulation.energy_imparted is not None and self.current_simulation.ctarray is not None:
                 self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
                                                   self.current_simulation.energy_imparted,
-                                                  self.current_simulation.spacing)
+                                                  self.current_simulation.spacing,
+                                                  self.current_simulation.scaling)
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
@@ -558,10 +560,10 @@ class RunningScene(QtGui.QGraphicsScene):
         p = array.max() - array.min()
         return (p/2., p / 2. * .75)
 
-    def setArray(self, energy_imparted, spacing):
+    def setArray(self, energy_imparted, spacing, scaling):
         self.array = energy_imparted
         self.shape = energy_imparted.shape
-        self.spacing = spacing
+        self.spacing = spacing * scaling
         self.reloadImages()
         self.image_item.setLevels(self.defaultLevels(self.array))
         self.updateSceneTransform()
@@ -595,6 +597,7 @@ class DoseScene(QtGui.QGraphicsScene):
         self.ct_array = np.random.uniform(size=(8, 8, 8))
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
+        self.dose_scale = np.ones(3)
         self.index = 0
         self.view_orientation = 2
 
@@ -603,11 +606,12 @@ class DoseScene(QtGui.QGraphicsScene):
         return (p/2., p / 2. * .75)
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
-    def setCtDoseArrays(self, ct, dose, spacing):
+    def setCtDoseArrays(self, ct, dose, spacing, scaling):
         self.dose_array = gaussian_filter(dose, 1.)
         self.ct_array = ct
-        self.shape = ct.shape
+        self.shape = np.array(ct.shape)
         self.spacing = spacing
+        self.dose_scale = scaling
         self.index = self.index % self.shape[self.view_orientation]
         self.reloadImages()
         self.updateSceneTransform()
@@ -632,15 +636,15 @@ class DoseScene(QtGui.QGraphicsScene):
 
     def getSlice(self, array, index):
         if self.view_orientation == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[2]]))
         elif self.view_orientation == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
+            return np.copy(np.squeeze(array[:, index % self.shape[1], :]))
         elif self.view_orientation == 0:
-            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
+            return np.copy(np.squeeze(array[index % self.shape[0], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
 
     def reloadImages(self):
-        self.image_item.setImage(self.getSlice(self.dose_array, self.index),
+        self.image_item.setImage(self.getSlice(self.dose_array, int(self.index // self.dose_scale[self.view_orientation])),
                                  self.getSlice(self.ct_array, self.index))
 
     def wheelEvent(self, ev):
