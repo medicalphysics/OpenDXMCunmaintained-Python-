@@ -238,7 +238,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
     N = np.array(simulation.material.shape, dtype=np.double)
 
     offset = np.zeros(3, dtype=np.double)
-    
+    spacing = simulation.spacing * simulation.scaling
     logger.warning('Not yet implemented: Offset not properly corrected for, currently using center '
                    'of reconstruction FOV as isocenter.')
 
@@ -258,7 +258,44 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     time_start = time.clock()
     for p, e, n in phase_space:
-        score_energy(p, N, simulation.spacing, offset, simulation.material,
+#        ###test
+#        import pylab as plt
+#        from mpl_toolkits.mplot3d import Axes3D
+#        shape = simulation.ctarray.shape
+#        box = np.zeros((10, 3))
+#        box[0, :] = np.zeros(3)
+#        box[1, :] = np.array([shape[0], 0, 0]) * simulation.spacing
+#        box[2, :] = np.array([shape[0], shape[1], 0]) * simulation.spacing
+#        box[3, :] = np.array([0, shape[1], 0]) * simulation.spacing
+#        box[4, :] = np.array([0, 0, 0]) * simulation.spacing
+#        box[5, :] = np.array([0, 0, shape[2]]) * simulation.spacing
+#        box[6, :] = np.array([shape[0], 0, shape[2]]) * simulation.spacing
+#        box[7, :] = np.array([shape[0], shape[1], shape[2]]) * simulation.spacing
+#        box[8, :] = np.array([0, shape[1], shape[2]]) * simulation.spacing
+#        box[9, :] = np.array([0, 0, shape[2]]) * simulation.spacing
+#        fig = plt.figure()
+#        ax = fig.gca(projection='3d')
+#                
+#        ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
+#        ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
+#       
+#        l = []        
+#    
+#        ax.plot(p[0, :].ravel(), p[1, :].ravel(),p[2, :].ravel(), 'o', label='spiral')
+#        ax.plot(p[0, :] + p[3,:]*30, p[1, :]+p[4,:]*30,p[2, :]+p[5,:]*30, 'o',label='spiral')
+##        for k in range(p.shape[1]):
+##            v = np.empty((3, 2))
+##            v[:, 0] = p[:3, k] 
+##            v[:, 1] = p[3:6, k]*30 + v[:, 0]
+##            l.append(ax.plot(v[0, :], v[1, :], v[2,:]))
+##            
+#        ax.legend()
+#  
+#        plt.show(block=True)
+        ######TEST
+        
+#        import pdb; pdb.set_trace()
+        score_energy(p, N, spacing, offset, simulation.material,
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
         if callback and time.clock()-time_start:

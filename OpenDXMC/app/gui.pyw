@@ -209,11 +209,8 @@ class MainWindow(QtGui.QMainWindow):
         self.mc_thread.start()
         self.properties_thread.start()
         self.database_thread.start()
-#
 
         self.mcrunner.runner.mc_calculation_finished.emit()
-
-
 
 
 def main(args):

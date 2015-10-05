@@ -605,7 +605,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
-        return (p/2., p / 2.)
+        return (p/2., p / 2.*.75)
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing, scaling):

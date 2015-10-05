@@ -292,6 +292,7 @@ class RunManager(QtCore.QObject):
             self.runner.simulation = sim
             self.runner.material_list = mat_list
             self.runner.start()
+#            self.runner.run2()
             logger.debug('MC thread started')
 
 
