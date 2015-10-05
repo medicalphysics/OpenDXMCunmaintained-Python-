@@ -104,7 +104,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         ctarray = affine_transform(spline_filter(ctarray, order=3, 
                                                  output=np.int16), 
                                    scale, 
-                                   output_shape=np.array(ctarray.shape)/scale,
+                                   output_shape=np.floor(np.array(ctarray.shape)/scale), 
                                    cval=-1000, output=np.int16)        
         
         specter = (specter[0], specter[1]/specter[1].sum())

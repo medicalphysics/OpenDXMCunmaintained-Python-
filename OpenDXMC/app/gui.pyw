@@ -196,7 +196,6 @@ class MainWindow(QtGui.QMainWindow):
         self.database_thread = QtCore.QThread(self)
         self.interface.moveToThread(self.database_thread)
 
-
         self.mc_thread = QtCore.QThread(self)
         self.mcrunner.moveToThread(self.mc_thread)
 
@@ -210,7 +209,7 @@ class MainWindow(QtGui.QMainWindow):
         self.mc_thread.start()
         self.properties_thread.start()
         self.database_thread.start()
-
+#
 
         self.mcrunner.runner.mc_calculation_finished.emit()
 

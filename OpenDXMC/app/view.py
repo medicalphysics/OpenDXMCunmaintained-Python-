@@ -6,6 +6,7 @@ Created on Thu Jul 30 10:38:15 2015
 """
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
+from scipy.interpolate import interp1d
 from PyQt4 import QtGui, QtCore
 from opendxmc.study import Simulation, SIMULATION_DESCRIPTION
 from .dicom_lut import get_lut
@@ -411,6 +412,7 @@ class AecItem(QtGui.QGraphicsItem):
 
         self.aec = aec
         self.aec[:, 0] -= self.aec[:, 0].min()
+        
         self.aec[:, 0] /= self.aec[:, 0].max()
 
         self.aec[:, 1] -= self.aec[:, 1].min()
@@ -603,11 +605,12 @@ class DoseScene(QtGui.QGraphicsScene):
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
-        return (p/2., p / 2. * .75)
+        return (p/2., p / 2.)
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing, scaling):
         self.dose_array = gaussian_filter(dose, 1.)
+#        self.dose_array = dose
         self.ct_array = ct
         self.shape = np.array(ct.shape)
         self.spacing = spacing
@@ -616,7 +619,17 @@ class DoseScene(QtGui.QGraphicsScene):
         self.reloadImages()
         self.updateSceneTransform()
         self.image_item.setLevels(front=self.defaultLevels(self.dose_array))
-
+#
+#    def doseInterpolator(self, index):
+#        interp = interp1d(np.arange(self.dose_array.shape[self.view_orientation]), 
+#                          self.dose_array, 
+#                          axis=self.view_orientation, 
+#                          bounds_error=False,
+#                          fill_value=-1000.,
+#                          copy=False)
+#        return interp(index / self.dose_scale[self.view_orientation])
+        
+        
     def updateSceneTransform(self):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
@@ -631,7 +644,8 @@ class DoseScene(QtGui.QGraphicsScene):
 
     @QtCore.pyqtSlot(np.ndarray)
     def setDoseArray(self, dose):
-        self.dose_array = dose
+        self.dose_array = gaussian_filter(dose, 1.)
+#        self.dose_array = dose
         self.reloadImages()
 
     def getSlice(self, array, index):
@@ -644,7 +658,12 @@ class DoseScene(QtGui.QGraphicsScene):
         raise ValueError('view must select one of 0,1,2 dimensions')
 
     def reloadImages(self):
-        self.image_item.setImage(self.getSlice(self.dose_array, int(self.index // self.dose_scale[self.view_orientation])),
+        n = self.shape[self.view_orientation]
+        dose_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.dose_array.shape[self.view_orientation])
+        
+#        self.image_item.setImage(self.doseInterpolator(self.index),
+#                                 self.getSlice(self.ct_array, self.index))
+        self.image_item.setImage(self.getSlice(self.dose_array, dose_index),
                                  self.getSlice(self.ct_array, self.index))
 
     def wheelEvent(self, ev):
@@ -735,7 +754,10 @@ class PropertiesModel(QtCore.QAbstractTableModel):
     def test_for_unsaved_changes(self):
         for key, value in self.__simulation.description.items():
             if self.__data[key][3]:
-                if self.__data[key][0] != value:
+                if isinstance(self.__data[key][0], np.ndarray):
+                    if (value - self.__data[key][0]).sum() != 0.0:
+                        self.unsaved_data[key] = value    
+                elif self.__data[key][0] != value:
                     self.unsaved_data[key] = value
         self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
         self.layoutAboutToBeChanged.emit()
@@ -857,6 +879,13 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         return QtCore.Qt.NoItemFlags
 
+class ArrayEdit(QtGui.QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def set_data(self, value):
+        self.setText(' '.join([str(r) for r in value]))
+
 
 class LineEdit(QtGui.QLineEdit):
     def __init__(self, parent=None):
@@ -904,6 +933,8 @@ class PropertiesDelegate(QtGui.QItemDelegate):
             return DoubleSpinBox(parent)
         elif data[var][1] is np.int:
             return IntSpinBox(parent)
+        elif isinstance(data[var][0], np.ndarray):
+            return ArrayEdit(parent)
         return None
 
     def setEditorData(self, editor, index):

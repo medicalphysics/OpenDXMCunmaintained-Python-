@@ -4,9 +4,9 @@
 {
     "distutils": {
         "depends": [
+            "opendxmc\\engine\\_random.c",
             "C:\\test\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h",
-            "C:\\test\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h",
-            "opendxmc\\engine\\_random.c"
+            "C:\\test\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h"
         ],
         "extra_compile_args": [
             "-O3"

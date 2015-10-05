@@ -44,14 +44,12 @@ SIMULATION_DESCRIPTION = {
     'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
     'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
     'MC_running': [False, np.bool, False, False, 'Simulation is running'],
-    'spacing_native': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Native image matrix spacing'],
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
-    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Calculation matrix scaling [cm]'],
+    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling'],
     'image_orientation': [np.zeros(6, dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
     'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position [cm]'],
-    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],
-                       
+    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],                     
     }
 
 # Generating a recarray for SIMULATION_DESCRIPTION to insert in database
@@ -446,10 +444,19 @@ class Simulation(object):
     @scaling.setter
     def scaling(self, value):
         if isinstance(value, np.ndarray):
+            assert len(value.shape) == 1
+            assert value.shape[0] == 3
+            self.__description['scaling'] = value.astype(np.double)        
+        elif isinstance(value, str):
+            value = np.array([float(s) for s in value.split()], dtype=np.double)
+            assert isinstance(value, np.ndarray)
+            assert value.shape[0] == 3
+            assert len(value) == 3
             self.__description['scaling'] = value.astype(np.double)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
+            assert value.shape[0] == 3
             assert len(value) == 3
             self.__description['scaling'] = value.astype(np.double)
     

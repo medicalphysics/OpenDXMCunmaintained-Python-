@@ -342,7 +342,11 @@ class Database(object):
                         except KeyError:
                             pass
                         else:
-                            if row[item] != value:
+                            if isinstance(row[item], np.ndarray):
+                                np.equal(row[item], value)
+                            else:
+                                is_equal = row[item] == value
+                            if not is_equal:
                                 row[item] = value
                                 row_updated = True
                                 logger.debug('Updated {0} value to {1} for simulation {2}'.format(item, value, name))

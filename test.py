@@ -132,15 +132,15 @@ def test_spiral_phase_space():
     p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
-    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
+#    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
 #    p = "C://test//thorax"
 #    p = "C://test//abdomen"
 
-    p = "C://test//caput//DICOM//000085FC//AA2CF108//AA661CAC//0000423E"
+#    p = "C://test//caput//DICOM//000085FC//AA2CF108//AA661CAC//0000423E"
 
     for pat in import_ct_series([p]):
         pat.exposures = 36
-        pat.histories = 2
+        pat.histories = 1
         pat.batch_size = 1e6
         pat.pitch = 1
 #        pdb.set_trace()
@@ -176,13 +176,18 @@ def test_spiral_phase_space():
         ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
         ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
        
-        
+        l = []        
         for arr, i, e in ct_phase_space(pat):
 #            pdb.set_trace()
             print(i, e) 
             ax.plot(arr[0, :].ravel(), arr[1, :].ravel(),arr[2, :].ravel(), 'o', label=i)
             ax.plot(arr[0, :] + arr[3,:]*30, arr[1, :]+arr[4,:]*30,arr[2, :]+arr[5,:]*30, 'o',label=i)
-            
+            for k in range(arr.shape[1]):
+                v = np.empty((3, 2))
+                v[:, 0] = arr[:3, k] 
+                v[:, 1] = arr[3:6, k]*30 + v[:, 0]
+                l.append(ax.plot(v[0, :], v[1, :], v[2,:]))
+                
 #            for i in range(arr.shape[1]):
 #                ax.plot([arr[0,0], arr[0,0]+arr[3,0]*30],
 #                        [arr[1,0], arr[1,0]+arr[4,0]*30],

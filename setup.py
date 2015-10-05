@@ -15,6 +15,16 @@ from Cython.Build import cythonize
 import numpy
 
 
+#attempting to clean up old files
+import os
+
+try:
+    os.remove(".//opendxmc//engine//_interaction_func.pyd")
+    os.remove(".//opendxmc//engine//_siddon_func.pyd")
+    os.remove(".//opendxmc//engine//cyrandom.pyd")
+except Exception as e:
+    print(e)
+
 numpy_dirs=numpy.get_include()
 
 #ext_modules = [Extension("_siddon", ["_siddon.pyx"], include_dirs=[numpy_dirs])]

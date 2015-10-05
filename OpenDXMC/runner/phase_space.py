@@ -164,7 +164,9 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     if exposure_modulation is None:
         mod_z = lambda x: 1.0
     else:
-        exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
+        if np.abs(np.mean(exposure_modulation[:, 1])) > 0.000001:
+            exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
+        
         mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
                                            exposure_modulation[:, 1],
                                            copy=True, bounds_error=False,
