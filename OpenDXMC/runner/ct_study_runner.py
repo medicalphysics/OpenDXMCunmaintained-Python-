@@ -239,9 +239,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     offset = np.zeros(3, dtype=np.double)
     spacing = simulation.spacing * simulation.scaling
-    logger.warning('Not yet implemented: Offset not properly corrected for, currently using center '
-                   'of reconstruction FOV as isocenter.')
-
+   
     lut = generate_attinuation_lut(materials_organic, simulation.material_map,
                                    max_eV=500.e3,
                                    ignore_air=simulation.ignore_air)
@@ -298,7 +296,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
         score_energy(p, N, spacing, offset, simulation.material,
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
-        if callback and time.clock()-time_start:
+        if callback is not None:
             callback(simulation.name, energy_imparted, e + 1)
         simulation.start_at_exposure_no = e + 1
 
