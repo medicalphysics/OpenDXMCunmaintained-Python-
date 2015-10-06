@@ -364,7 +364,7 @@ class Database(object):
             meta_table.flush()
         if array_dict is not None:
             for key, value in array_dict.items():
-                if self.test_node('/simulations/{}'.format(key), name):
+                if self.test_node('/simulations/{}'.format(name), key):
                     self.remove_node('/simulations/{}'.format(name), key)
                     self.get_node('/simulations/{}'.format(name), key, create=True, obj=value)
                     logger.info('Updated {0} for simulation node {1}'.format(key, name))

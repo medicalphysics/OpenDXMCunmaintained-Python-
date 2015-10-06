@@ -587,7 +587,100 @@ class RunningScene(QtGui.QGraphicsScene):
     def reloadImages(self):
         self.image_item.setImage(self.array.max(axis=self.view_orientation))
 
+class MaterialMapItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.set_map({0: 'Air'})
+        self.map = []
+        self.view_orientation = 2
+        self.lut = get_lut('pet')
 
+    def set_map(self, mapping):
+        self.map = [(key, item)]
+        
+    def set_lut(self, lut):
+        self.lut = get_lut(lut)
+        
+        
+    def boundingRect(self):
+
+        return QtCore.QRectF(0, 0, shape[1], shape[0]*.1)
+
+    def paint(self, painter, style, widget=None):
+        painter.setPen(QtGui.QPen(QtCore.Qt.white))
+        painter.setRenderHint(painter.Antialiasing, True)
+        painter.drawPath(self.aec_path())
+
+class MaterialScene(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.image_item = BlendImageItem()
+        self.addItem(self.image_item)
+        self.material_array = np.zeros(8, 8, 8)
+        self.ct_array = np.random.uniform(size=(8, 8, 8))
+        self.material_map = {0: 'Air'}
+        self.shape = np.array((8, 8, 8))
+        self.spacing = np.array((1., 1., 1.))
+        self.material_scale = np.ones(3)
+        self.index = 0
+        self.view_orientation = 2
+
+    def defaultLevels(self, array):
+        p = array.max() - array.min()
+        return (p/2., p / 2.*.75)
+
+    @QtCore.pyqtSlot(np.ndarray, np.ndarray, dict, np.ndarray)
+    def setCtMaterialArrays(self, ct, material, material_map, spacing, scaling):
+        self.material_array = material
+        self.ct_array = ct
+        self.material_map = material_map
+        self.shape = np.array(ct.shape)
+        self.spacing = spacing
+        self.material_scale = scaling
+        self.index = self.index % self.shape[self.view_orientation]
+        self.reloadImages()
+        self.updateSceneTransform()
+        self.image_item.setLevels(front=self.defaultLevels(self.dose_array))
+
+    def updateSceneTransform(self):
+        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.setSceneRect(self.itemsBoundingRect())
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation % 3
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def getSlice(self, array, index):
+        if self.view_orientation == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[2]]))
+        elif self.view_orientation == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[1], :]))
+        elif self.view_orientation == 0:
+            return np.copy(np.squeeze(array[index % self.shape[0], :, :]))
+        raise ValueError('view must select one of 0,1,2 dimensions')
+
+    def reloadImages(self):
+        n = self.shape[self.view_orientation]
+        material_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.material_array.shape[self.view_orientation])
+        self.image_item.setImage(self.getSlice(self.dose_array, material_index),
+                                 self.getSlice(self.ct_array, self.index))
+
+    def wheelEvent(self, ev):
+        if ev.delta() > 0:
+            self.index += 1
+        elif ev.delta() < 0:
+            self.index -= 1
+        self.reloadImages()
+        ev.accept()
+
+#    def mouseMoveEvent(self, ev):
+#        if ev.button() == QtCore.Qt.LeftButton:
+#        elif ev.button() == QtCore.Qt.RightButton:
 
 class DoseScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
@@ -674,8 +767,11 @@ class DoseScene(QtGui.QGraphicsScene):
         self.reloadImages()
         ev.accept()
 
+#    def mouseClickEvent()
 #    def mouseMoveEvent(self, ev):
 #        if ev.button() == QtCore.Qt.LeftButton:
+#            
+#            
 #        elif ev.button() == QtCore.Qt.RightButton:
 
 class Scene(QtGui.QGraphicsScene):
