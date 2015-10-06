@@ -594,22 +594,42 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         self.map = []
         self.view_orientation = 2
         self.lut = get_lut('pet')
+        self.box_size = 20
+        self.fontMetrics = QtGui.QFontMetricsF(QtGui.qApp.font())
+        self.rect = QtCore.QRectF(0, 0, 1, 1)
+        
 
     def set_map(self, mapping):
-        self.map = [(key, item)]
-        
+        self.map = [(key, item) for key, item in mapping.items()]
+        self.map.sort(key=lambda x: x[0])
+        max_str_index = 0
+        max_len = 0
+        for ind, value in enumerate(self.map):
+            if len(value[1]) > max_len:
+                max_len = len(value[1])
+                max_str_index = i
+                
+        sub_rect = self.fontMetrics.boundingRect(self.map[max_str_index][1])
+        self.rect = QtCore.QRectF(0, 0, 
+                                  self.box_size * 2 + sub_rect.width(), 
+                                  sub_rect.height() * len(self.map) * 2)
     def set_lut(self, lut):
         self.lut = get_lut(lut)
         
         
     def boundingRect(self):
-
-        return QtCore.QRectF(0, 0, shape[1], shape[0]*.1)
+        return self.rect
 
     def paint(self, painter, style, widget=None):
         painter.setPen(QtGui.QPen(QtCore.Qt.white))
         painter.setRenderHint(painter.Antialiasing, True)
-        painter.drawPath(self.aec_path())
+        h = self.fontMetrics.boundingRect('A').height()
+        for ind, value in enumerate(self.map):
+            key, item = value
+            print('Items painted here')
+                    
+
+        
 
 class MaterialScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
@@ -617,6 +637,7 @@ class MaterialScene(QtGui.QGraphicsScene):
 
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
+        self.map_item = MaterialMapItem(self.image_item)
         self.material_array = np.zeros(8, 8, 8)
         self.ct_array = np.random.uniform(size=(8, 8, 8))
         self.material_map = {0: 'Air'}
