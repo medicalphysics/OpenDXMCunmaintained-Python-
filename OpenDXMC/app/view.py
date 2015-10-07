@@ -50,7 +50,8 @@ class ViewController(QtCore.QObject):
         database_interface.simulation_updated.connect(self.updateSimulation)
         self.scenes = {'planning': PlanningScene(self),
                        'energy_imparted': DoseScene(self),
-                       'running': RunningScene(self), }
+                       'running': RunningScene(self), 
+                       'material': MaterialScene(self),}
 
         self.current_simulation = None
         self.current_scene = 'planning'
@@ -115,11 +116,7 @@ class ViewController(QtCore.QObject):
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_scene_data(scene_name)
 
-        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
-                                    QtCore.Qt.KeepAspectRatio)
-
-        self.properties_widget.setVisible(scene_name == 'planning')
-        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+        
 
     def update_scene_data(self, name):
         if self.current_simulation is None:
@@ -149,6 +146,18 @@ class ViewController(QtCore.QObject):
                                                   self.current_simulation.spacing,
                                                   self.current_simulation.scaling)
 
+        elif name == 'material':
+            if self.current_simulation.material is not None and self.current_simulation.material_map is not None:
+                self.scenes[name].setMaterialArray(self.current_simulation.material,
+                                                     self.current_simulation.material_map,
+                                                     self.current_simulation.spacing,
+                                                     self.current_simulation.scaling)
+          
+        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
+                                    QtCore.Qt.KeepAspectRatio)
+        self.properties_widget.setVisible(name == 'planning')
+        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
         self.current_simulation = sim
@@ -161,9 +170,6 @@ class ViewController(QtCore.QObject):
             self.selectScene(scene)
         else:
             self.update_scene_data(self.current_scene)
-            self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
-            self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
-                                        QtCore.Qt.KeepAspectRatio)
 
     @QtCore.pyqtSlot(dict, dict)
     def updateSimulation(self, description, volatiles):
@@ -177,6 +183,35 @@ class ViewController(QtCore.QObject):
             if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
                 self.selectScene('running')
 
+def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360,
+             minHue=0, sat=255, alpha=255, firstBlack=True):
+    """
+    Creates a QColor from a single index. Useful for stepping through a
+    predefined list of colors.
+
+    The argument *index* determines which color from the set will be returned.
+    All other arguments determine what the set of predefined colors will be
+
+    Colors are chosen by cycling across hues while varying the value
+    (brightness).
+    By default, this selects from a list of 9 hues."""
+    if firstBlack and index == 0:
+        return QtGui.QColor(QtCore.Qt.black)
+    hues = int(hues)
+    values = int(values)
+    ind = int(index) % (hues * values)
+    indh = ind % hues
+    indv = ind / hues
+    if values > 1:
+        v = minValue + indv * ((maxValue-minValue) / (values-1))
+    else:
+        v = maxValue
+    h = minHue + (indh * (maxHue-minHue)) / hues
+
+    c = QtGui.QColor()
+    c.setHsv(h, sat, v)
+    c.setAlpha(alpha)
+    return c
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level,
                        front_lut, back_lut):
@@ -334,6 +369,66 @@ class BlendImageItem(QtGui.QGraphicsItem):
             self.render()
         painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
 
+class BitImageItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None, image=None, shape=None):
+        super().__init__(parent)
+        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        if image is None:
+            if shape is None:
+                shape = (512, 512)
+            self.image = np.random.uniform(0, 255, size=shape)
+        else:
+            self.image = image.view(np.ndarray)
+        
+        
+        self.prepareGeometryChange()
+        self.qimage = None
+        self.lut = get_lut('gray')
+        self.setImage(np.random.normal(size=(512, 512)) * 500.)
+        self.setLevels((0., 1.))
+
+    def qImage(self):
+        if self.qimage is None:
+            self.render()
+        return self.qimage
+
+    def boundingRect(self):
+        return QtCore.QRectF(self.qImage().rect())
+
+    def set_lut(self, colors):
+        self.lut = [c.rgba() for c in colors]
+    def setImage(self, image):
+        self.image = image
+        self.prepareGeometryChange()
+        self.qimage = None
+        self.update(self.boundingRect())
+        
+
+    def setLevels(self, level=None):
+        if level is None:
+            p = self.image.max() - self.image.min()
+            level = (p/2., p / 2. * .75)
+        self.level = level
+        self.qimage = None
+        self.update(self.boundingRect())
+
+    def render(self):
+        array = np.require(self.image, np.uint8, ['C', 'A'])
+        h, w = array.shape
+
+        self.qimage = QtGui.QImage(array.data, w, h, w, QtGui.QImage.Format_Indexed8)
+#    result.ndarray = array
+        self.qimage.setColorTable(self.lut)
+#    result = result.convertToFormat(QtGui.QImage.Format_ARGB32, lut)
+        self.qimage.ndarray = array
+
+    def shape(self):
+        path = QtGui.QPainterPath()
+        path.addEllipse(self.boundingRect())
+        return path
+
+    def paint(self, painter, style, widget=None):
+        painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
 
 class ImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None, image=None, level=None, shape=None, lut='gray'):
@@ -587,36 +682,37 @@ class RunningScene(QtGui.QGraphicsScene):
     def reloadImages(self):
         self.image_item.setImage(self.array.max(axis=self.view_orientation))
 
+
+
 class MaterialMapItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_map({0: 'Air'})
-        self.map = []
-        self.view_orientation = 2
-        self.lut = get_lut('pet')
-        self.box_size = 20
         self.fontMetrics = QtGui.QFontMetricsF(QtGui.qApp.font())
-        self.rect = QtCore.QRectF(0, 0, 1, 1)
+        self.box_size = self.fontMetrics.boundingRect('A').height()
+        self.rect = QtCore.QRectF(0, 0, self.box_size, self.box_size)
+        self.map = []
+        mapping = np.recarray((1,), dtype=[('key', np.int), ('value', 'a64')])
+        mapping['key'][0] = 0
+        mapping['value'][0] = 'Air'
+#        self.set_map(mapping)
         
+    def set_map(self, mapping, colors):
+        self.map = []
+        for ind in range(len(mapping)):
+            self.map.append((colors[mapping['key'][ind]], str(mapping['value'][ind], encoding='utf-8')))
 
-    def set_map(self, mapping):
-        self.map = [(key, item) for key, item in mapping.items()]
-        self.map.sort(key=lambda x: x[0])
         max_str_index = 0
-        max_len = 0
-        for ind, value in enumerate(self.map):
-            if len(value[1]) > max_len:
-                max_len = len(value[1])
-                max_str_index = i
-                
+        max_len_str = 0
+        for ind, item in enumerate(self.map):
+            if len(item[1]) > max_len_str:
+                max_len_str = len(item[1])
+                max_str_index = ind
+            
         sub_rect = self.fontMetrics.boundingRect(self.map[max_str_index][1])
         self.rect = QtCore.QRectF(0, 0, 
                                   self.box_size * 2 + sub_rect.width(), 
-                                  sub_rect.height() * len(self.map) * 2)
-    def set_lut(self, lut):
-        self.lut = get_lut(lut)
-        
-        
+                                  sub_rect.height() * len(self.map) * 2)      
+               
     def boundingRect(self):
         return self.rect
 
@@ -626,82 +722,80 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         h = self.fontMetrics.boundingRect('A').height()
         for ind, value in enumerate(self.map):
             key, item = value
-            print('Items painted here')
-                    
-
+            painter.fillRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size), key)
+            painter.drawText(self.box_size, ind*2*h + self.box_size, item)
         
 
 class MaterialScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.image_item = BlendImageItem()
+        self.lut = get_lut('pet')        
+        self.image_item = BitImageItem()
         self.addItem(self.image_item)
-        self.map_item = MaterialMapItem(self.image_item)
-        self.material_array = np.zeros(8, 8, 8)
-        self.ct_array = np.random.uniform(size=(8, 8, 8))
-        self.material_map = {0: 'Air'}
+        self.map_item = MaterialMapItem()
+        self.addItem(self.map_item)
+        
+        self.array = np.random.uniform(size=(8, 8, 8))
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
-        self.material_scale = np.ones(3)
         self.index = 0
         self.view_orientation = 2
 
-    def defaultLevels(self, array):
-        p = array.max() - array.min()
-        return (p/2., p / 2.*.75)
+        self.image_item.setLevels((0, 500))
 
-    @QtCore.pyqtSlot(np.ndarray, np.ndarray, dict, np.ndarray)
-    def setCtMaterialArrays(self, ct, material, material_map, spacing, scaling):
-        self.material_array = material
-        self.ct_array = ct
-        self.material_map = material_map
-        self.shape = np.array(ct.shape)
-        self.spacing = spacing
-        self.material_scale = scaling
+    def setMaterialArray(self, material, mapping,spacing, scaling):
+        number_of_elements = len(mapping)
+#        qlut = [intColor(i, hues=number_of_elements) for i in range(number_of_elements)]
+        qlut = [QtGui.QColor(self.lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
+        self.image_item.set_lut(qlut)
+        
+        self.map_item.set_map(mapping, qlut)
+        self.array = material.astype(np.int8)
+        self.shape = material.shape
+        self.spacing = spacing * scaling
         self.index = self.index % self.shape[self.view_orientation]
         self.reloadImages()
         self.updateSceneTransform()
-        self.image_item.setLevels(front=self.defaultLevels(self.dose_array))
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation
+#        self.aec_item.setViewOrientation(view_orientation)
+        self.reloadImages()
+        self.updateSceneTransform()
 
     def updateSceneTransform(self):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-        self.setSceneRect(self.itemsBoundingRect())
+        self.map_item.setTransform(transform)
 
-    @QtCore.pyqtSlot(int)
-    def setViewOrientation(self, view_orientation):
-        self.view_orientation = view_orientation % 3
-        self.reloadImages()
-        self.updateSceneTransform()
+        self.map_item.prepareGeometryChange()
+        self.map_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().topRight()))
+
+        self.setSceneRect(self.itemsBoundingRect())
 
     def getSlice(self, array, index):
         if self.view_orientation == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[2]]))
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
         elif self.view_orientation == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[1], :]))
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
         elif self.view_orientation == 0:
-            return np.copy(np.squeeze(array[index % self.shape[0], :, :]))
+            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
         raise ValueError('view must select one of 0,1,2 dimensions')
 
     def reloadImages(self):
-        n = self.shape[self.view_orientation]
-        material_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.material_array.shape[self.view_orientation])
-        self.image_item.setImage(self.getSlice(self.dose_array, material_index),
-                                 self.getSlice(self.ct_array, self.index))
+        self.image_item.setImage(self.getSlice(self.array, self.index))
+#        self.aec_item.setIndex(self.index)
 
     def wheelEvent(self, ev):
         if ev.delta() > 0:
             self.index += 1
         elif ev.delta() < 0:
             self.index -= 1
+        self.index %= self.shape[self.view_orientation]
         self.reloadImages()
         ev.accept()
-
-#    def mouseMoveEvent(self, ev):
-#        if ev.button() == QtCore.Qt.LeftButton:
-#        elif ev.button() == QtCore.Qt.RightButton:
 
 class DoseScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):

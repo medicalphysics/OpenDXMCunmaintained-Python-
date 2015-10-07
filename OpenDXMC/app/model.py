@@ -256,15 +256,20 @@ class Runner(QtCore.QThread):
                       energy_imparted_to_dose_conversion=True,
                       callback=self.update_simulation_iteration)
         except MemoryError:
-            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(simulation.name))
+            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(self.simulation.name))
             self.simulation.MC_finished = False
+            self.simulation.MC_running = False
+            self.simulation.MC_ready = False
+            self.request_update_simulation.emit(self.simulation.description,
+                                                {},
+                                                True, False)
         else:
             self.simulation.MC_finished = True
-        self.simulation.MC_running = False
-        self.simulation.MC_ready = False
-        self.request_update_simulation.emit(self.simulation.description,
-                                            self.simulation.volatiles,
-                                            False, False)
+            self.simulation.MC_running = False
+            self.simulation.MC_ready = False
+            self.request_update_simulation.emit(self.simulation.description,
+                                                self.simulation.volatiles,
+                                                False, False)
         self.mc_calculation_finished.emit()
 
 

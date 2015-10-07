@@ -6,6 +6,7 @@ Created on Fri Aug 28 14:30:02 2015
 """
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform, spline_filter
+from scipy.ndimage.filters import gaussian_filter
 from opendxmc.engine import score_energy
 from opendxmc.tube.tungsten import specter as tungsten_specter
 from opendxmc.runner.phase_space import ct_phase_space
@@ -100,8 +101,9 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """
         if ctarray is None:
             return
-
-        ctarray = affine_transform(spline_filter(ctarray, order=3, 
+#        gaussian_filter(ctarray, scale, output=ctarray)
+        ctarray = affine_transform(spline_filter(ctarray, 
+                                                 order=3, 
                                                  output=np.int16), 
                                    scale, 
                                    output_shape=np.floor(np.array(ctarray.shape)/scale), 

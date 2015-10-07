@@ -103,7 +103,7 @@ def image_to_world_transform(image_vector, position, orientation, spacing):
     R[:3, :3] *= spacing
     return np.dot(R, image_vector) + position    
 
-def array_from_dicom_list(dc_list):#, scaling):
+def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
@@ -112,9 +112,11 @@ def array_from_dicom_list(dc_list):#, scaling):
     for i, dc in enumerate(dc_list):
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
                         int(dc[0x28, 0x1052].value))
-    return arr
-#    out_shape = np.round(np.array([r, c, n]) * scaling).astype(np.int)
-#    return affine_transform(arr, 1./scaling.astype(np.float), output_shape=out_shape, cval=-1000)
+#    return arr
+    out_shape = np.round(np.array([r, c, n]) * scaling).astype(np.int)
+    spline_filter(arr, order=3, output=arr)
+    return affine_transform(arr, 1./scaling.astype(np.float), output_shape=out_shape, cval=-1000, output=np.int16)
+    
 
 
 def aec_from_dicom_list(dc_list):
@@ -147,7 +149,7 @@ def z_stop_estimator(iop, spacing, shape):
     
     
 
-def import_ct_series(paths, scaling=(2, 2, 1)):
+def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 1)):
     series = {}
     for p in find_all_files(paths):
         try:
@@ -201,9 +203,9 @@ def import_ct_series(paths, scaling=(2, 2, 1)):
         patient = Simulation(name)
         patient.scaling = scaling
         patient.exposure_modulation = aec_from_dicom_list(dc_list)
-        patient.ctarray = array_from_dicom_list(dc_list)
+        patient.ctarray = array_from_dicom_list(dc_list, np.array(import_scaling))
 
-        patient.spacing = spacing / 10.
+        patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
         patient.image_orientation = np.array(dc[0x20, 0x37].value)
         try:

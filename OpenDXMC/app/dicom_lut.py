@@ -6,6 +6,8 @@ Created on Tue Aug  4 11:12:55 2015
 """
 
 from PyQt4 import QtGui
+import logging
+logger = logging.getLogger('OpenDXMC')
 
 gray = [[int(i) for i in range(256)] for _ in range(3)]
 
@@ -171,6 +173,9 @@ _names = ['gray', 'hot_metal_blue', 'pet', 'hot_iron']
 _tables = [gray, hot_metal_blue, pet, hot_iron]
 
 def get_lut(name, alpha=255):
+    if not name in _names:
+        logger.warning('Incorrect LUT name. Could not find lut {0}, using gray'.format(name))
+        name = 'gray'
     ind = _names.index(name)
     tb = _tables[ind]
     return [QtGui.QColor(tb[0][i], tb[1][i], tb[2][i], alpha).rgba()

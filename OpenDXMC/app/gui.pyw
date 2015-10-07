@@ -232,7 +232,7 @@ def start():
     try:
         while main(sys.argv) == 1:
             continue
-    except MemoryError as e:
+    except MemoryError:
         msg = QtGui.QMessageBox()
         msg.setText("Ouch, OpenDXMC ran out of memory.")
         msg.setIcon(msg.Critical)
