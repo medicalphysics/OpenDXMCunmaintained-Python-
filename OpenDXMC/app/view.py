@@ -151,8 +151,11 @@ class ViewController(QtCore.QObject):
                 self.scenes[name].setMaterialArray(self.current_simulation.material,
                                                      self.current_simulation.material_map,
                                                      self.current_simulation.spacing,
-                                                     self.current_simulation.scaling)
-          
+                                                     self.current_simulation.scaling)          
+            else:
+                self.scenes[name].setNoData()
+ 
+            
         self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
                                     QtCore.Qt.KeepAspectRatio)
         self.properties_widget.setVisible(name == 'planning')
@@ -182,6 +185,7 @@ class ViewController(QtCore.QObject):
 
             if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
                 self.selectScene('running')
+
 
 def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360,
              minHue=0, sat=255, alpha=255, firstBlack=True):
@@ -289,6 +293,18 @@ def arrayToQImage(array_un, level, lut):
     result.ndarray = array
     return result
 
+
+class NoDataItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None, title=''):
+        super().__init__(parent)
+        self._size = 150.
+        self.msg = "{}\nSorry, no data here yet\nrun a simulation to update".format(title)
+    def boundingRect(self):
+        return QtCore.QRectF(0, 0, self._size, self._size)
+        
+    def paint(self, painter, style, widget=None):
+        painter.setPen(QtCore.Qt.white)
+        painter.drawText(self.boundingRect(), QtCore.Qt.AlignCenter, self.msg)
 
 class BlendImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -734,6 +750,8 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.addItem(self.image_item)
         self.map_item = MaterialMapItem()
         self.addItem(self.map_item)
+        self.nodata_item = NoDataItem()
+        self.addItem(self.nodata_item)
         
         self.array = np.random.uniform(size=(8, 8, 8))
         self.shape = np.array((8, 8, 8))
@@ -743,7 +761,18 @@ class MaterialScene(QtGui.QGraphicsScene):
 
         self.image_item.setLevels((0, 500))
 
-    def setMaterialArray(self, material, mapping,spacing, scaling):
+
+    def setNoData(self):
+        self.nodata_item.setVisible(True)
+        self.map_item.setVisible(False)
+        self.image_item.setVisible(False)
+        self.setSceneRect(self.nodata_item.boundingRect())
+        
+
+    def setMaterialArray(self, material, mapping, spacing, scaling):
+        self.nodata_item.setVisible(False)
+        self.map_item.setVisible(True)
+        self.image_item.setVisible(True)
         number_of_elements = len(mapping)
 #        qlut = [intColor(i, hues=number_of_elements) for i in range(number_of_elements)]
         qlut = [QtGui.QColor(self.lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
@@ -760,7 +789,6 @@ class MaterialScene(QtGui.QGraphicsScene):
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
         self.view_orientation = view_orientation
-#        self.aec_item.setViewOrientation(view_orientation)
         self.reloadImages()
         self.updateSceneTransform()
 
@@ -768,7 +796,7 @@ class MaterialScene(QtGui.QGraphicsScene):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-#        self.map_item.setTransform(transform)
+        self.map_item.setScale(self.image_item.boundingRect().height() / self.map_item.boundingRect().height())
 
         self.map_item.prepareGeometryChange()
         self.map_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().topRight()))
@@ -869,8 +897,6 @@ class DoseScene(QtGui.QGraphicsScene):
         n = self.shape[self.view_orientation]
         dose_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.dose_array.shape[self.view_orientation])
         
-#        self.image_item.setImage(self.doseInterpolator(self.index),
-#                                 self.getSlice(self.ct_array, self.index))
         self.image_item.setImage(self.getSlice(self.dose_array, dose_index),
                                  self.getSlice(self.ct_array, self.index))
 
@@ -882,12 +908,7 @@ class DoseScene(QtGui.QGraphicsScene):
         self.reloadImages()
         ev.accept()
 
-#    def mouseClickEvent()
-#    def mouseMoveEvent(self, ev):
-#        if ev.button() == QtCore.Qt.LeftButton:
-#            
-#            
-#        elif ev.button() == QtCore.Qt.RightButton:
+
 
 class Scene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):

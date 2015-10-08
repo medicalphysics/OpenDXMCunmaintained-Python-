@@ -119,17 +119,23 @@ def array_from_dicom_list(dc_list, scaling):
 #    return arr
     out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
     spline_filter(arr, order=3, output=arr)
-    return affine_transform(arr, scaling, prefilter=False, output_shape=out_shape, cval=-1000, output=np.int16)
+    return affine_transform(arr, scaling, prefilter=False, 
+                            output_shape=out_shape, cval=-1000, 
+                            output=np.int16)
     
 
 
-def aec_from_dicom_list(dc_list):
-    M = matrix(dc_list[0][0x20, 0x37].value)
+def aec_from_dicom_list(dc_list, iop, spacing):
+#    M = matrix(dc_list[0][0x20, 0x37].value)
     n_im = len(dc_list)
     exp = np.empty((n_im, 2), dtype=np.float)
+    pos = np.zeros(3)
+    
+    
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
-        exp[i, 0] = dc[0x20, 0x32].value[2]
+        exp[i, 0] = image_to_world_transform(np.array([0, 0, i]), pos, iop, spacing)[2]
+#        exp[i, 0] = dc[0x20, 0x32].value[2]
 #    import pylab as plt
 #    plt.plot(exp[:,0], exp[:, 1])
 #    plt.show(block=True)
@@ -152,7 +158,7 @@ def z_stop_estimator(iop, spacing, shape):
     
     
 
-def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 1)):
+def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 2)):
     series = {}
     for p in find_all_files(paths):
         try:
@@ -206,12 +212,17 @@ def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 1)):
         patient = Simulation(name)
         patient.scaling = scaling
         patient.import_scaling = import_scaling
-        patient.exposure_modulation = aec_from_dicom_list(dc_list)
+        
         patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
 
         patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
         patient.image_orientation = np.array(dc[0x20, 0x37].value)
+        
+        patient.exposure_modulation = aec_from_dicom_list(dc_list, 
+                                                          np.array(dc[0x20, 0x37].value), 
+                                                          spacing)
+        
         try:
             patient.data_center = np.array(dc[0x18, 0x9313].value) / 10. - patient.image_position
         except KeyError:
@@ -274,7 +285,7 @@ def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 1)):
         start, stop = z_stop_estimator(patient.image_orientation, patient.spacing, patient.ctarray.shape)
         patient.start_scan = start
         patient.stop_scan = stop
-        patient.start =start
+        patient.start = start
         patient.stop=stop
         yield patient
 

@@ -52,6 +52,10 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
 
     if isinstance(material_map, np.recarray):
         material_map = recarray_to_dict(material_map, value_is_string=True)
+    elif isinstance(material_map, np.ndarray):
+        material_map = recarray_to_dict(material_map, value_is_string=True)
+        import pdb
+        pdb.set_trace()
     if min_eV is None:
         min_eV = 0.
     if max_eV is None:

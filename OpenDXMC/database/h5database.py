@@ -65,6 +65,7 @@ class Database(object):
         try:
             node = self.db_instance.get_node(where, name=name)
         except tb.NoSuchNodeError:
+            
 
             if not create:
                 raise ValueError("Node {0} do not exist in {1}. Was not allowed to create a new node".format(name, where))
@@ -77,8 +78,13 @@ class Database(object):
                                                      description=obj,
                                                      createparents=True)
             elif isinstance(obj, np.ndarray):
-                node = self.db_instance.create_carray(where, name, obj=obj,
-                                                      createparents=True)
+                if obj.dtype.names is not None:
+                    node = self.db_instance.create_table(where, name,
+                                                         description=obj,
+                                                         createparents=True)
+                else:
+                    node = self.db_instance.create_carray(where, name, obj=obj,
+                                                          createparents=True)
             else:
                 raise ValueError("Node {0} do not exist in {1}. Unable to create new node, did not understand obj type".format(name, where))
 

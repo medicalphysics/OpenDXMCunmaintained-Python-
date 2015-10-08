@@ -124,20 +124,24 @@ class Simulation(object):
 #               'scaling': np.dtype((np.double, 3)),
 #               'ignore_air': np.bool
 #               }
-    __description = {}
-    __dtype = {}
-    __arrays = {'organ': None,
-                'ctarray': None,
-                'exposure_modulation': None,
-                'organ_map': None
-                }
-    __volatiles = {'material': None,
-                   'density': None,
-                   'energy_imparted': None,
-                   'material_map': None,
-                   }
+
 
     def __init__(self, name, description=None):
+
+        self.__description = {}
+        self.__dtype = {}
+        self.__arrays = {'organ': None,
+                         'ctarray': None,
+                         'exposure_modulation': None,
+                         'organ_map': None
+                    }
+        self.__volatiles = {'material': None,
+                            'density': None,
+                            'energy_imparted': None,
+                            'material_map': None,
+                            }
+    
+        
         for key, value in SIMULATION_DESCRIPTION.items():
             self.__description[key] = value[0]
             self.__dtype[key] = value[1]
