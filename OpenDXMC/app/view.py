@@ -768,7 +768,7 @@ class MaterialScene(QtGui.QGraphicsScene):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-        self.map_item.setTransform(transform)
+#        self.map_item.setTransform(transform)
 
         self.map_item.prepareGeometryChange()
         self.map_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().topRight()))

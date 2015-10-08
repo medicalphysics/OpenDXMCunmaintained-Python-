@@ -47,6 +47,7 @@ SIMULATION_DESCRIPTION = {
     'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling'],
+    'import_scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix prescaling'],
     'image_orientation': [np.zeros(6, dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
     'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position [cm]'],
     'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],                     
@@ -438,6 +439,29 @@ class Simulation(object):
             assert isinstance(value, np.ndarray)
             assert len(value) == 3
             self.__description['spacing'] = value.astype(np.double)
+    
+    @property
+    def import_scaling(self):
+        return self.__description['import_scaling']
+    @import_scaling.setter
+    def import_scaling(self, value):
+        if isinstance(value, np.ndarray):
+            assert len(value.shape) == 1
+            assert value.shape[0] == 3
+            self.__description['import_scaling'] = value.astype(np.double)        
+        elif isinstance(value, str):
+            value = np.array([float(s) for s in value.split()], dtype=np.double)
+            assert isinstance(value, np.ndarray)
+            assert value.shape[0] == 3
+            assert len(value) == 3
+            self.__description['import_scaling'] = value.astype(np.double)
+        else:
+            value=np.array(value)
+            assert isinstance(value, np.ndarray)
+            assert value.shape[0] == 3
+            assert len(value) == 3
+            self.__description['import_scaling'] = value.astype(np.double)    
+    
     @property
     def scaling(self):
         return self.__description['scaling']

@@ -219,7 +219,7 @@ class Database(object):
         for key, value in iter(simulation.volatiles.items()):
             if value is not None:
                 self.get_node('/simulations/{0}/volatiles'.format(simulation.name),
-                              key, obj=value)
+                              key, obj=value, create=True)
         logger.info('Successfully wrote simulation {} to database'.format(simulation.name))
         self.close()
 
@@ -344,7 +344,7 @@ class Database(object):
                             pass
                         else:
                             if isinstance(row[item], np.ndarray):
-                                np.equal(row[item], value)
+                                is_equal = np.all(np.equal(row[item], value))
                             else:
                                 is_equal = row[item] == value
                             if not is_equal:
@@ -363,17 +363,20 @@ class Database(object):
 #            raise ValueError('No simulation named {} in database'.format(name))
         else:
             meta_table.flush()
+
+        if purge_simulation and purge_volatiles:
+            self.purge_simulation(name)            
+            
         if array_dict is not None:
             for key, value in array_dict.items():
-                if self.test_node('/simulations/{}'.format(name), key):
-                    self.remove_node('/simulations/{}'.format(name), key)
-                    self.get_node('/simulations/{}'.format(name), key, create=True, obj=value)
+                if self.test_node('/simulations/{}/volatiles'.format(name), key):
+                    self.remove_node('/simulations/{}/volatiles'.format(name), key)
+                    self.get_node('/simulations/{}/volatiles'.format(name), key, create=True, obj=value)
                     logger.info('Updated {0} for simulation node {1}'.format(key, name))
                 else:
-                    self.get_node('/simulations/{}'.format(name), key, create=True, obj=value)
+                    self.get_node('/simulations/{}/volatiles'.format(name), key, create=True, obj=value)
                     logger.info('Created {0} for simulation node {1}'.format(key, name))
-        if purge_simulation and purge_volatiles:
-            self.purge_simulation(name)
+        
         self.close()
         logger.debug('Updated metadata for simulation {}'.format(name))
 

@@ -59,7 +59,6 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
 
     names = [m.name for m in materials]
     atts = {}
-
     for key, value in list(material_map.items()):
         key = int(key)
         try:
@@ -101,13 +100,13 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """
         if ctarray is None:
             return
-#        gaussian_filter(ctarray, scale, output=ctarray)
+        ctarray = gaussian_filter(ctarray, scale)
         ctarray = affine_transform(spline_filter(ctarray, 
                                                  order=3, 
                                                  output=np.int16), 
                                    scale, 
                                    output_shape=np.floor(np.array(ctarray.shape)/scale), 
-                                   cval=-1000, output=np.int16)        
+                                   cval=-1000, output=np.int16, prefilter=False)        
         
         specter = (specter[0], specter[1]/specter[1].sum())
 

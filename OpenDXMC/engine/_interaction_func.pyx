@@ -438,7 +438,7 @@ def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:
             Example:
             attinuation_lut[0, 0, :] gives energies for material 0
             attinuation_lut[0, 1, :] gives total attinuation coefficient for
-            material 0 at corresponding energies
+            material 0 at corresponding energies (See material_map)
         dose : ndarray (N[0], N[1], N[2]), dtype=double
             Array to score energy, same shape as material_map and density_map
 

@@ -107,15 +107,19 @@ def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
+    shape = (i // s for i, s in zip([r, c, n], scaling))
+#    arr = np.empty(shape, dtype=np.int16)
     arr = np.empty((r, c, n), dtype=np.int16)
 
     for i, dc in enumerate(dc_list):
+#        arr[:, :, i] = affine_transform(dc.pixel_array * int(dc[0x28, 0x1053].value) +
+#                        int(dc[0x28, 0x1052].value), scaling[:2], out_shape=shape[:2], cval=-1000, output=np.int16)
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
                         int(dc[0x28, 0x1052].value))
 #    return arr
-    out_shape = np.round(np.array([r, c, n]) * scaling).astype(np.int)
+    out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
     spline_filter(arr, order=3, output=arr)
-    return affine_transform(arr, 1./scaling.astype(np.float), output_shape=out_shape, cval=-1000, output=np.int16)
+    return affine_transform(arr, scaling, prefilter=False, output_shape=out_shape, cval=-1000, output=np.int16)
     
 
 
@@ -143,8 +147,7 @@ def z_stop_estimator(iop, spacing, shape):
     for i in [0, shape[0]]:
         for j in [0, shape[1]]:
             for k in [0, shape[2]]:
-                choices.append(image_to_world_transform(np.array([i, j, k]), pos, iop, spacing)[2])
-    print(choices)    
+                choices.append(image_to_world_transform(np.array([i, j, k]), pos, iop, spacing)[2])  
     return min(choices), max(choices)
     
     
@@ -202,8 +205,9 @@ def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 1)):
         #Creating transforrmation matrix
         patient = Simulation(name)
         patient.scaling = scaling
+        patient.import_scaling = import_scaling
         patient.exposure_modulation = aec_from_dicom_list(dc_list)
-        patient.ctarray = array_from_dicom_list(dc_list, np.array(import_scaling))
+        patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
 
         patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
