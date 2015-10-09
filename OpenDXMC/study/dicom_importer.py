@@ -158,7 +158,7 @@ def z_stop_estimator(iop, spacing, shape):
     
     
 
-def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 2)):
+def import_ct_series(paths, import_scaling=(2, 2, 2)):
     series = {}
     for p in find_all_files(paths):
         try:
@@ -210,7 +210,6 @@ def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 2)):
 
         #Creating transforrmation matrix
         patient = Simulation(name)
-        patient.scaling = scaling
         patient.import_scaling = import_scaling
         
         patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
@@ -286,7 +285,7 @@ def import_ct_series(paths, scaling=(2, 2, 1), import_scaling=(2, 2, 2)):
         patient.start_scan = start
         patient.stop_scan = stop
         patient.start = start
-        patient.stop=stop
+        patient.stop = stop
         yield patient
 
 

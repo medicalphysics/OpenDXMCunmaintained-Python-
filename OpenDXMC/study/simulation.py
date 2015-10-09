@@ -33,7 +33,7 @@ SIMULATION_DESCRIPTION = {
     'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
     'pitch': [.9, np.double, True, True, 'Pitch'],
     'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
-    'histories': [10, np.int, True, True, 'Number of photon histories per exposure'],
+    'histories': [100, np.int, True, True, 'Number of photon histories per exposure'],
     'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
     'start_scan': [0, np.double, False, False, 'CT scan start position [cm]'],
     'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]'],

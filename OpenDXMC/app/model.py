@@ -15,6 +15,97 @@ import logging
 logger = logging.getLogger('OpenDXMC')
 import time
 
+class ImportScalingValidator(QtGui.QValidator):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def fixup(self, instr):
+        instr = ''.join([b for b in instr.replace(',', ' ') if b in "1234567890. "])
+
+        fstr = ""        
+        d_in_word = False
+        for s in instr:
+            if s == '.':
+                if not d_in_word:
+                    fstr += s
+                else:
+                    fstr += ' '
+                d_in_word = True
+            elif s == ' ':
+                d_in_word = False
+                fstr += ' '
+            else:
+                fstr += s
+            
+            
+        return fstr
+#        nums = [float(a) for a in instr.split()]
+#        return ' '.join([str(n) for n in nums]) 
+        
+    def validate(self, rawstr, pos):
+        instr = ''.join([b for b in rawstr.replace(',', ' ') if b in "1234567890. "])
+        pos -= (len(instr) - len(rawstr))
+
+        if len(instr) < 5:
+            return self.Intermediate, instr, pos
+        numbers = []
+        state = self.Acceptable
+        last = instr[-1]
+        for word in instr.split():
+            try:
+                float(word)
+            except:
+                state = self.Intermediate
+            numbers.append(word)
+        if len(numbers) > 3:
+            rstr = ' '.join(numbers[:3])
+        else:
+            rstr = ' '.join(numbers)
+        if last == ' ':
+            rstr += last
+        return state, rstr, pos
+        
+        
+class ImportScalingEdit(QtGui.QLineEdit):
+    request_set_import_scaling = QtCore.pyqtSignal(tuple)
+    def __init__(self, importer, parent=None):
+        super().__init__(parent)
+        self.base_color = self.palette().color(self.palette().Base)
+        
+        self.request_set_import_scaling.connect(importer.set_import_scaling)
+        
+        self.editingFinished.connect(self.set_import_scaling)
+        self.textEdited.connect(self.text_was_edited)
+        self.setValidator(ImportScalingValidator(self))
+        self.setText("2.0 2.0 1.0")
+        self.set_import_scaling()
+        
+        
+        
+
+    @QtCore.pyqtSlot(str)
+    def text_was_edited(self, txt):
+        palette = self.palette()
+        palette.setColor(palette.Base, QtCore.Qt.red)
+        self.setPalette(palette)
+        
+        
+    
+    @QtCore.pyqtSlot()
+    def set_import_scaling(self):
+        txt = self.text()
+        d = tuple(float(s) for s in txt.split())
+        self.request_set_import_scaling.emit(d)
+        self.setText(' '.join([str(n) for n in d]))
+        palette = self.palette()
+        palette.setColor(palette.Base, self.base_color)
+        self.setPalette(palette)
+        
+    
+    
+        
+        
+
 class DatabaseInterface(QtCore.QObject):
     """ Async database interface, async provided with signal/slots resulting in
     two connections per task wished to be done, ie, signal/slot hell
@@ -33,7 +124,6 @@ class DatabaseInterface(QtCore.QObject):
     def __init__(self, database_qurl, importer, parent=None):
         super().__init__(parent)
         self.__db = None
-
         importer.request_add_sim_to_database.connect(self.import_simulation)
         self.set_database(database_qurl)
 
@@ -192,12 +282,17 @@ class Importer(QtCore.QObject):
     running = QtCore.pyqtSignal(bool)
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.__import_scaling = (1, 1, 1)
+
+    @QtCore.pyqtSlot(tuple)
+    def set_import_scaling(self, im_scaling):
+        self.__import_scaling = im_scaling
 
     @QtCore.pyqtSlot(list)
     def import_urls(self, qurl_list):
         self.running.emit(True)
         paths = [url.toLocalFile() for url in qurl_list]
-        for sim in import_ct_series(paths):
+        for sim in import_ct_series(paths, import_scaling=self.__import_scaling):
             self.request_add_sim_to_database.emit(sim)
         self.running.emit(False)
 

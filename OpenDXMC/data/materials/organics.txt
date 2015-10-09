@@ -1,9 +1,6 @@
 hardbone
-skin
 muscle
 soft
-redbonemarrow
-yellowbonemarrow
 adipose
 lung
 air

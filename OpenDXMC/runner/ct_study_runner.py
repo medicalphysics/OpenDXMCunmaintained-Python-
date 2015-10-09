@@ -138,13 +138,16 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         material_HU_list.sort(key=lambda x: x[1])
         HU_bins = (np.array(material_HU_list)[:-1, 1] +
                    np.array(material_HU_list)[1:, 1]) / 2.
+        
+        HU_bins[-1] = HU_bins[-2] + 300
 
         material_array = np.digitize(
             ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
-
+#        import pdb
+#        pdb.set_trace()
         density_array = np.asarray(material_array, dtype=np.float)
         np.choose(material_array,
-                  [material_dens[i] for i in range(len(material_dens))],
+                  [material_dens[i] for i, _ in material_HU_list],
                   out=density_array)
         return material_map, material_array, density_array
 
@@ -336,7 +339,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
     spacing = np.array((1, 1, 10), dtype=np.double)
 
     N = np.rint(np.array((simulation.sdd / spacing[0],
-                          simulation.sdd / spacing[1], 1),
+                          simulation.sdd / spacing[1], 3),
                          dtype=np.double))
 
     offset = -N * spacing / 2.
@@ -364,7 +367,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
         log_elapsed_time(t0, i+1, n)
 
     center = np.floor(N / 2).astype(np.int)
-    d = dose[center[0], center[1], center[2]]
+    d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing)) 
     simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d
 
 
@@ -435,7 +438,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     d = []
     for p in meas_pos:
         x, y = int(p[0]), int(p[1])
-        d.append(dose[x, y, 1:-1].sum())
+        d.append(dose[x, y, 1:-1].sum() / (air.density * np.prod(spacing) * (N[2] - 2)))
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.

@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController, PropertiesModel
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -147,6 +147,10 @@ class MainWindow(QtGui.QMainWindow):
         self.importer = Importer()
         self.importer.running.connect(importer_busywidget.busy)
 
+        ## import scaling setter
+        import_scaling_widget = ImportScalingEdit(self.importer, self)
+        
+
         # Databse interface
 #        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
         self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'), self.importer)
@@ -179,6 +183,7 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.setContentsMargins(0, 0, 0, 0)
         list_view_collection_widget.setLayout(QtGui.QVBoxLayout())
         list_view_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
+        list_view_collection_widget.layout().addWidget(import_scaling_widget, 1)
         list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)

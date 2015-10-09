@@ -994,10 +994,12 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
+
     @QtCore.pyqtSlot(dict)
     def update_data(self, sim_description):
         self.unsaved_data = {}
         self.layoutAboutToBeChanged.emit()
+        self.__simulation = Simulation('None', sim_description)
         for key, value in sim_description.items():
             self.__data[key][0] = value
 
