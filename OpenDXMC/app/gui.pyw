@@ -36,6 +36,7 @@ class LogWidget(QtGui.QTextEdit):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setReadOnly(True)
 
     def closeEvent(self, event):
         self.closed.emit(False)

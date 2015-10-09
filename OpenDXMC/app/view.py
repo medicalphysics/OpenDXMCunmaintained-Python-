@@ -297,10 +297,12 @@ def arrayToQImage(array_un, level, lut):
 class NoDataItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None, title=''):
         super().__init__(parent)
-        self._size = 150.
-        self.msg = "{}\nSorry, no data here yet\nrun a simulation to update".format(title)
+        
+        self.msg = "Sorry, no data here yet. Run a simulation to compute.".format(title)
+        
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, self._size, self._size)
+        return QtGui.QFontMetricsF(QtGui.qApp.fontMetrics()).boundingRect(self.msg)
+#        return QtCore.QRectF(QtCore.QPointF(0, 0), QtCore.QSizeF(self._size))
         
     def paint(self, painter, style, widget=None):
         painter.setPen(QtCore.Qt.white)
@@ -671,7 +673,7 @@ class RunningScene(QtGui.QGraphicsScene):
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
-        return (p/2., p / 2. * .75)
+        return (p/2., p / 2. )
 
     def setArray(self, energy_imparted, spacing, scaling):
         self.array = energy_imparted
@@ -703,7 +705,7 @@ class RunningScene(QtGui.QGraphicsScene):
 class MaterialMapItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.fontMetrics = QtGui.QFontMetricsF(QtGui.qApp.font())
+        self.fontMetrics = QtGui.qApp.fontMetrics()
         self.box_size = self.fontMetrics.boundingRect('A').height()
         self.rect = QtCore.QRectF(0, 0, self.box_size, self.box_size)
         self.map = []
@@ -841,7 +843,7 @@ class DoseScene(QtGui.QGraphicsScene):
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
-        return (p/2., p / 2.*.75)
+        return (p/2., p / 2.)
 
     @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing, scaling):
