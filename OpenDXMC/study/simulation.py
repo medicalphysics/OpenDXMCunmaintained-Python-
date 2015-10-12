@@ -639,10 +639,16 @@ class Simulation(object):
                 raise ValueError('Simulation {0} do not have defined {1} '
                                  'property, dose array is not available'
                                  ''.format(self.name, var))
-        if self.conversion_factor_ctdiair > 0.:
+        if self.conversion_factor_ctdiw > 0.:
+            factor = self.conversion_factor_ctdiw
+        elif self.conversion_factor_ctdiair > 0.:
             factor = self.conversion_factor_ctdiair
+        else:
+            raise ValueError('Simulation {0} do not have a dose conversion '
+                             'factor, dose array is not available'
+                             ''.format(self.name,))
 
-        return self.energy_imparted / (self.density * np.prod(self.spacing)) * ev_to_J
+        return self.energy_imparted / (self.density * (np.prod(self.spacing)*factor))
 
 
 
