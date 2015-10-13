@@ -54,8 +54,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
         material_map = recarray_to_dict(material_map, value_is_string=True)
     elif isinstance(material_map, np.ndarray):
         material_map = recarray_to_dict(material_map, value_is_string=True)
-        import pdb
-        pdb.set_trace()
+    assert isinstance(material_map, dict)
     if min_eV is None:
         min_eV = 0.
     if max_eV is None:
@@ -92,7 +91,92 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
                 lut[i, j+1, :] = np.interp(energies, a['energy'], a[key])
     return lut
 
+def prepare_geometry_from_organ_array(organ, organ_material_map, scale, materials):
+        """genereate material and density arrays and material map from
+           a list of materials to use
+           INPUT:
+               specter for this study
+               list of materials
+           OUTPUT :
+               material_map, material_array, density_array
+        """
+        if organ is None:
+            raise ValueError('No organ definitions in phantom')
 
+
+        #testing if we have the materials we need
+        material_names = {m.name: m for m in materials}
+        for value in organ_material_map.values():
+            if not value in material_names:
+                raise ValueError('Phantom requires missing material {}'.format(value))
+
+        organ = affine_transform(spline_filter(organ,
+                                                 order=0,
+                                                 output=np.uint8),
+                                   scale,
+                                   output_shape=np.floor(np.array(organ.shape)/scale),
+                                   cval=0, output=np.uint8, prefilter=False, order=0)
+
+        material_array = np.zeros(organ.shape, dtype=np.uint8)
+        density_array = np.zeros(organ.shape, dtype=np.double)
+        # list of materials in organ order
+        material_map = {}
+        material_choices = []
+        key = 0
+        for i in np.unique(organ):
+            material_name = organ_material_map[i]
+            if material_name not in material_map:
+                material_map[key] = material_name
+                key += 1
+            material_choices.append(key)
+
+
+        density_mapping = [material_names[organ_material_map[i]].density for i in np.unique(organ)]
+        np.choose(organ, density_mapping, out=density_array)
+        np.choose(organ, [m.density for m in material_mapping], out=material_array)
+
+        for organ in np.unique(organ):
+            organ_indices = np.where()
+        material_map = {}
+        material_dens = {}
+
+
+        water_key = None
+        material_map = {}
+        material_att = {}
+        material_dens = {}
+        materials.sort(key=lambda x: x.density)
+        for i, mat in enumerate(materials):
+            material_map[i] = mat.name
+            material_dens[i] = float(mat.density)
+            # interpolationg and integrating attinuation coefficient
+            material_att[i] = np.trapz(np.interp(specter[0],
+                                                 mat.attinuation['energy'],
+                                                 mat.attinuation['total']),
+                                       specter[0])
+            material_att[i] *= mat.density
+            if mat.name == 'water':
+                water_key = i
+        assert water_key is not None  # we need to include water in materials
+
+        # getting a list of attinuation
+        material_HU_list = [(key, (att / material_att[water_key] - 1.)*1000.)
+                            for key, att in material_att.items()]
+        material_HU_list.sort(key=lambda x: x[1])
+        HU_bins = (np.array(material_HU_list)[:-1, 1] +
+                   np.array(material_HU_list)[1:, 1]) / 2.
+
+        HU_bins[-1] = HU_bins[-2] + 300
+
+        material_array = np.digitize(
+            ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
+#        import pdb
+#        pdb.set_trace()
+        density_array = np.asarray(material_array, dtype=np.float)
+        np.choose(material_array,
+                  [material_dens[i] for i, _ in material_HU_list],
+                  out=density_array)
+        return material_map, material_array, density_array
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
@@ -105,13 +189,13 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         if ctarray is None:
             return
         ctarray = gaussian_filter(ctarray, scale)
-        ctarray = affine_transform(spline_filter(ctarray, 
-                                                 order=3, 
-                                                 output=np.int16), 
-                                   scale, 
-                                   output_shape=np.floor(np.array(ctarray.shape)/scale), 
-                                   cval=-1000, output=np.int16, prefilter=False)        
-        
+        ctarray = affine_transform(spline_filter(ctarray,
+                                                 order=3,
+                                                 output=np.int16),
+                                   scale,
+                                   output_shape=np.floor(np.array(ctarray.shape)/scale),
+                                   cval=-1000, output=np.int16, prefilter=False)
+
         specter = (specter[0], specter[1]/specter[1].sum())
 
         water_key = None
@@ -138,7 +222,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         material_HU_list.sort(key=lambda x: x[1])
         HU_bins = (np.array(material_HU_list)[:-1, 1] +
                    np.array(material_HU_list)[1:, 1]) / 2.
-        
+
         HU_bins[-1] = HU_bins[-2] + 300
 
         material_array = np.digitize(
@@ -238,16 +322,12 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     phase_space = ct_phase_space(simulation)
     n_histories = simulation.histories
-#    del simulation
-
-#    plt.imshow(material_array[:,:,20])
-#    plt.show(block=True)
 
     N = np.array(simulation.material.shape, dtype=np.double)
 
     offset = np.zeros(3, dtype=np.double)
     spacing = simulation.spacing * simulation.scaling
-   
+
     lut = generate_attinuation_lut(materials_organic, simulation.material_map,
                                    max_eV=500.e3,
                                    ignore_air=simulation.ignore_air)
@@ -264,43 +344,6 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     time_start = time.clock()
     for p, e, n in phase_space:
-#        ###test
-#        import pylab as plt
-#        from mpl_toolkits.mplot3d import Axes3D
-#        shape = simulation.ctarray.shape
-#        box = np.zeros((10, 3))
-#        box[0, :] = np.zeros(3)
-#        box[1, :] = np.array([shape[0], 0, 0]) * simulation.spacing
-#        box[2, :] = np.array([shape[0], shape[1], 0]) * simulation.spacing
-#        box[3, :] = np.array([0, shape[1], 0]) * simulation.spacing
-#        box[4, :] = np.array([0, 0, 0]) * simulation.spacing
-#        box[5, :] = np.array([0, 0, shape[2]]) * simulation.spacing
-#        box[6, :] = np.array([shape[0], 0, shape[2]]) * simulation.spacing
-#        box[7, :] = np.array([shape[0], shape[1], shape[2]]) * simulation.spacing
-#        box[8, :] = np.array([0, shape[1], shape[2]]) * simulation.spacing
-#        box[9, :] = np.array([0, 0, shape[2]]) * simulation.spacing
-#        fig = plt.figure()
-#        ax = fig.gca(projection='3d')
-#                
-#        ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
-#        ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
-#       
-#        l = []        
-#    
-#        ax.plot(p[0, :].ravel(), p[1, :].ravel(),p[2, :].ravel(), 'o', label='spiral')
-#        ax.plot(p[0, :] + p[3,:]*30, p[1, :]+p[4,:]*30,p[2, :]+p[5,:]*30, 'o',label='spiral')
-##        for k in range(p.shape[1]):
-##            v = np.empty((3, 2))
-##            v[:, 0] = p[:3, k] 
-##            v[:, 1] = p[3:6, k]*30 + v[:, 0]
-##            l.append(ax.plot(v[0, :], v[1, :], v[2,:]))
-##            
-#        ax.legend()
-#  
-#        plt.show(block=True)
-        ######TEST
-        
-#        import pdb; pdb.set_trace()
         score_energy(p, N, spacing, offset, simulation.material,
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
@@ -320,7 +363,7 @@ def generate_dose_conversion_factor(simulation, materials):
             pmma = m
         elif m.name == 'air':
             air = m
-    
+
     if (simulation.ctdi_air100 > 0.) and (air is not None):
         obtain_ctdiair_conversion_factor(simulation, air)
     elif (simulation.ctdi_w100 > 0.) and (pmma is not None) and (air is not None):
@@ -357,7 +400,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
                          simulation.total_collimation, start=0, stop=0, step=0,
                          exposures=simulation.exposures,
                          histories=simulation.histories,
-                         energy_specter=en_specter, 
+                         energy_specter=en_specter,
                          batch_size=simulation.batch_size)
 
     t0 = time.clock()
@@ -367,7 +410,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
         log_elapsed_time(t0, i+1, n)
 
     center = np.floor(N / 2).astype(np.int)
-    d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing)) 
+    d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
     simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d
 
 
@@ -426,7 +469,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                          simulation.total_collimation, start=0, stop=0, step=0,
                          exposures=simulation.exposures,
                          histories=simulation.histories,
-                         energy_specter=en_specter, 
+                         energy_specter=en_specter,
                          batch_size=simulation.batch_size)
 
     t0 = time.clock()

@@ -61,12 +61,12 @@ def world_image_matrix(orientation):
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
     return np.linalg.inv(R)
-    
+
 def rotation_z_matrix(alpha):
     return np.array([[np.cos(alpha), - np.sin(alpha), 0],
                      [np.sin(alpha), np.cos(alpha), 0],
                      [0, 0, 1]], dtype=np.double)
-    
+
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
@@ -120,7 +120,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     rotation_center[2] = 0  # we start spiral at start not center
     if rotation_plane_cosines is None:
         rotation_plane_cosines = np.array([1, 0, 0, 0, 1, 0], dtype=np.double)
-    
+
     # total number of exposures + one total rotation
     exposures = int(exposures)
     e = int((abs(start - stop) / (pitch * total_collimation) + 1) * exposures)
@@ -138,7 +138,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     ang = t / (pitch * total_collimation) * np.pi * 2.
 
     # rotation matrix along z-axis for an angle x
-    
+
 
     if batch_size is None:
         batch_size = 1
@@ -166,11 +166,13 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     else:
         if np.abs(np.mean(exposure_modulation[:, 1])) > 0.000001:
             exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
-        
-        mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
-                                           exposure_modulation[:, 1],
-                                           copy=True, bounds_error=False,
-                                           fill_value=1.0, kind='nearest')
+
+            mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
+                                               exposure_modulation[:, 1],
+                                               copy=True, bounds_error=False,
+                                               fill_value=1.0, kind='nearest')
+        else:
+            mod_z = lambda x: 1.0
 
     teller = 0
     ret = np.zeros((8, batch_size), dtype=np.double)
@@ -183,19 +185,19 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         ind_s = (teller + 1) * histories
 
         ret[0, ind_b:ind_s] = -sdd/2.
-        ret[1, ind_b:ind_s] = 0 
+        ret[1, ind_b:ind_s] = 0
         ret[2, ind_b:ind_s] = t[i]
 #        print('t', t[i])
         ret[0:3, ind_b:ind_s] = np.dot(R, ret[0:3, ind_b:ind_s])
         for j in range(2):
             ret[j, ind_b:ind_s] += rotation_center_image[j]
-        
+
         ret[3, ind_b:ind_s] = sdd / 2.
         ret[4, ind_b:ind_s] = scan_fov /2 * np.random.uniform(-1., 1., histories)
         ret[5, ind_b:ind_s] = d_col * np.random.uniform(-1., 1.,
                                                         histories)
         ret[3:6, ind_b:ind_s] = np.dot(R, ret[3:6, ind_b:ind_s])
-        
+
         lenght = np.sqrt(np.sum(ret[3:6, ind_b:ind_s]**2, axis=0))
         ret[3:6, ind_b:ind_s] /= lenght
 

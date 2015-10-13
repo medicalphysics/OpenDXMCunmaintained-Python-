@@ -28,7 +28,7 @@ def get_stored_materials():
         # test for valid material name
         if re.match('^[\w-]+$', name) is None:
             logger.warning(
-                "material file {0} contains illegal characters"
+                "Material file {0} contains illegal characters"
                 ", only alphanummeric characters and "
                 "dashes are allowed.".format(p)
                 )

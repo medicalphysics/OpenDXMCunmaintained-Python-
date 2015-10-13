@@ -50,7 +50,7 @@ class ViewController(QtCore.QObject):
         database_interface.simulation_updated.connect(self.updateSimulation)
         self.scenes = {'planning': PlanningScene(self),
                        'energy_imparted': DoseScene(self),
-                       'running': RunningScene(self), 
+                       'running': RunningScene(self),
                        'material': MaterialScene(self),
                        'dose': DoseScene(self) }
 
@@ -117,7 +117,7 @@ class ViewController(QtCore.QObject):
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_scene_data(scene_name)
 
-        
+
 
     def update_scene_data(self, name):
         if self.current_simulation is None:
@@ -130,15 +130,16 @@ class ViewController(QtCore.QObject):
                 self.scenes[name].setCtArray(self.current_simulation.ctarray,
                                              self.current_simulation.spacing,
                                              self.current_simulation.exposure_modulation)
-            elif self.current_simulation.material is not None:
-                self.scenes[name].setCtArray(self.current_simulation.material,
+
+            elif self.current_simulation.organ is not None:
+                self.scenes[name].setBitArray(self.current_simulation.organ,
                                              self.current_simulation.spacing,
                                              self.current_simulation.exposure_modulation)
 
         elif name == 'running':
             if self.current_simulation.energy_imparted is not None:
                 self.scenes[name].setArray(self.current_simulation.energy_imparted,
-                                           self.current_simulation.spacing, 
+                                           self.current_simulation.spacing,
                                            self.current_simulation.scaling)
             else:
                 self.scenes[name].setNoData()
@@ -155,10 +156,10 @@ class ViewController(QtCore.QObject):
                 self.scenes[name].setMaterialArray(self.current_simulation.material,
                                                      self.current_simulation.material_map,
                                                      self.current_simulation.spacing,
-                                                     self.current_simulation.scaling)          
+                                                     self.current_simulation.scaling)
             else:
                 self.scenes[name].setNoData()
- 
+
         elif name == 'dose':
             try:
                 dose = self.current_simulation.dose
@@ -174,7 +175,7 @@ class ViewController(QtCore.QObject):
         self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
                                     QtCore.Qt.KeepAspectRatio)
         self.properties_widget.setVisible(name == 'planning')
-        
+
 
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
@@ -313,18 +314,18 @@ class NoDataItem(QtGui.QGraphicsTextItem):
     def __init__(self, parent=None, title=''):
         self.msg = "Sorry, no data here yet.\nRun a simulation to compute.".format(title)
         super().__init__(self.msg, parent)
-        
+
         self.setPlainText(self.msg)
         self.setDefaultTextColor(QtCore.Qt.white)
-        
+
 
 class BlendImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.back_image = np.zeros((512, 512))
+        self.back_image = np.zeros((8, 8))
         self.back_level = (0, 500)
-        self.front_image = np.zeros((512, 512))
+        self.front_image = np.zeros((8, 8))
         self.front_level = (1000000, 10000)
 
         self.back_alpha = 255
@@ -403,17 +404,14 @@ class BitImageItem(QtGui.QGraphicsItem):
         self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         if image is None:
             if shape is None:
-                shape = (512, 512)
+                shape = (8, 8)
             self.image = np.random.uniform(0, 255, size=shape)
         else:
             self.image = image.view(np.ndarray)
-        
-        
+
         self.prepareGeometryChange()
         self.qimage = None
-        self.lut = get_lut('gray')
-        self.setImage(np.random.normal(size=(512, 512)) * 500.)
-        self.setLevels((0., 1.))
+        self.lut = get_lut('pet')
 
     def qImage(self):
         if self.qimage is None:
@@ -428,15 +426,6 @@ class BitImageItem(QtGui.QGraphicsItem):
     def setImage(self, image):
         self.image = image
         self.prepareGeometryChange()
-        self.qimage = None
-        self.update(self.boundingRect())
-        
-
-    def setLevels(self, level=None):
-        if level is None:
-            p = self.image.max() - self.image.min()
-            level = (p/2., p / 2. * .75)
-        self.level = level
         self.qimage = None
         self.update(self.boundingRect())
 
@@ -464,7 +453,7 @@ class ImageItem(QtGui.QGraphicsItem):
         self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         if image is None:
             if shape is None:
-                shape = (512, 512)
+                shape = (8, 8)
             self.image = np.random.uniform(-500, 500, size=shape)
         else:
             self.image = image.view(np.ndarray)
@@ -479,9 +468,7 @@ class ImageItem(QtGui.QGraphicsItem):
 
         self.prepareGeometryChange()
         self.qimage = None
-
         self.lut = get_lut(lut)
-        self.setImage(np.random.normal(size=(512, 512)) * 500.)
         self.setLevels((0., 1.))
 
     def qImage(self):
@@ -535,7 +522,7 @@ class AecItem(QtGui.QGraphicsItem):
 
         self.aec = aec
         self.aec[:, 0] -= self.aec[:, 0].min()
-        
+
         self.aec[:, 0] /= self.aec[:, 0].max()
 
         self.aec[:, 1] -= self.aec[:, 1].min()
@@ -608,23 +595,47 @@ class PlanningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
+        self.image_item_bit = BitImageItem()
         self.addItem(self.image_item)
+        self.addItem(self.image_item_bit)
+
         self.aec_item = AecItem()
         self.addItem(self.aec_item)
-
         self.array = np.random.uniform(size=(8, 8, 8))
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
         self.index = 0
         self.view_orientation = 2
-
         self.image_item.setLevels((0, 500))
+        self.is_bit_array = False
 
     def setCtArray(self, ct, spacing, aec):
+        self.is_bit_array = False
+        self.image_item.setVisible(True)
+        self.image_item_bit.setVisible(False)
         self.array = ct
         self.shape = ct.shape
         self.spacing = spacing
         self.index = self.index % self.shape[self.view_orientation]
+        if aec is None:
+            aec = np.ones((2,2))
+            aec[0, 0] = 0
+        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def setBitArray(self, ct, spacing, aec):
+        self.is_bit_array = True
+        self.image_item.setVisible(False)
+        self.image_item_bit.setVisible(True)
+
+        self.array = ct
+        self.shape = ct.shape
+        self.spacing = spacing
+        self.index = self.index % self.shape[self.view_orientation]
+        if aec is None:
+            aec = np.ones((2,2))
+            aec[0, 0] = 0
         self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
         self.reloadImages()
         self.updateSceneTransform()
@@ -639,13 +650,21 @@ class PlanningScene(QtGui.QGraphicsScene):
     def updateSceneTransform(self):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-        self.image_item.setTransform(transform)
+        if self.is_bit_array:
+            self.image_item_bit.setTransform(transform)
+        else:
+            self.image_item.setTransform(transform)
+
         self.aec_item.setTransform(transform)
-
         self.aec_item.prepareGeometryChange()
-        self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
+        if self.is_bit_array:
+            self.aec_item.setPos(self.image_item_bit.mapToScene(self.image_item.boundingRect().bottomLeft()))
+            self.setSceneRect(self.image_item_bit.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
+        else:
+            self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
+            self.setSceneRect(self.image_item.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
 
-        self.setSceneRect(self.itemsBoundingRect())
+#        self.setSceneRect(self.itemsBoundingRect())
 
     def getSlice(self, array, index):
         if self.view_orientation == 2:
@@ -657,7 +676,10 @@ class PlanningScene(QtGui.QGraphicsScene):
         raise ValueError('view must select one of 0,1,2 dimensions')
 
     def reloadImages(self):
-        self.image_item.setImage(self.getSlice(self.array, self.index))
+        if self.is_bit_array:
+            self.image_item_bit.setImage(self.getSlice(self.array, self.index))
+        else:
+            self.image_item.setImage(self.getSlice(self.array, self.index))
         self.aec_item.setIndex(self.index)
 
     def wheelEvent(self, ev):
@@ -691,7 +713,7 @@ class RunningScene(QtGui.QGraphicsScene):
 #        self.nodata_item.prepareGeometryChange()
 #        self.setSceneRect(QtCore.QRectF(0, 0, 500, 500))
 #        self.setSceneRect(self.nodata_item.boundingRect())
-        
+
     def defaultLevels(self, array):
         p = array.max() - array.min()
         return (p/2., p / 2. )
@@ -738,7 +760,7 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         mapping['key'][0] = 0
         mapping['value'][0] = 'Air'
 #        self.set_map(mapping)
-        
+
     def set_map(self, mapping, colors):
         self.map = []
         for ind in range(len(mapping)):
@@ -750,12 +772,12 @@ class MaterialMapItem(QtGui.QGraphicsItem):
             if len(item[1]) > max_len_str:
                 max_len_str = len(item[1])
                 max_str_index = ind
-            
+
         sub_rect = self.fontMetrics.boundingRect(self.map[max_str_index][1])
-        self.rect = QtCore.QRectF(0, 0, 
-                                  self.box_size * 1.25 + sub_rect.width(), 
-                                  sub_rect.height() * len(self.map) * 2)      
-               
+        self.rect = QtCore.QRectF(0, 0,
+                                  self.box_size * 1.25 + sub_rect.width(),
+                                  sub_rect.height() * len(self.map) * 2)
+
     def boundingRect(self):
         return self.rect
 
@@ -768,26 +790,24 @@ class MaterialMapItem(QtGui.QGraphicsItem):
             painter.fillRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size), key)
             painter.drawText(self.box_size * 1.25, ind*2*h + self.box_size, item)
             painter.drawRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size))
-        
+
 
 class MaterialScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.lut = get_lut('pet')        
+        self.lut = get_lut('pet')
         self.image_item = BitImageItem()
         self.addItem(self.image_item)
         self.map_item = MaterialMapItem()
         self.addItem(self.map_item)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
-        
+
         self.array = np.random.uniform(size=(8, 8, 8))
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
         self.index = 0
         self.view_orientation = 2
-
-        self.image_item.setLevels((0, 500))
 
 
     def setNoData(self):
@@ -796,7 +816,7 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.nodata_item.setVisible(True)
         self.map_item.setVisible(False)
         self.image_item.setVisible(False)
-        
+
 
     def setMaterialArray(self, material, mapping, spacing, scaling):
         self.nodata_item.setVisible(False)
@@ -806,7 +826,7 @@ class MaterialScene(QtGui.QGraphicsScene):
 #        qlut = [intColor(i, hues=number_of_elements) for i in range(number_of_elements)]
         qlut = [QtGui.QColor(self.lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
         self.image_item.set_lut(qlut)
-        
+
         self.map_item.set_map(mapping, qlut)
         self.array = material.astype(np.int8)
         self.shape = material.shape
@@ -880,7 +900,7 @@ class DoseScene(QtGui.QGraphicsScene):
         self.shape = self.dose_array.shape
         self.nodata_item.setVisible(True)
         self.image_item.setVisible(False)
-        
+
     def defaultLevels(self, array):
         p = array.max() - array.min()
         return (p/2., p / 2.)
@@ -927,7 +947,7 @@ class DoseScene(QtGui.QGraphicsScene):
     def reloadImages(self):
         n = self.shape[self.view_orientation]
         dose_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.dose_array.shape[self.view_orientation])
-        
+
         self.image_item.setImage(self.getSlice(self.dose_array, dose_index),
                                  self.getSlice(self.ct_array, self.index))
 
@@ -1020,7 +1040,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             if self.__data[key][3]:
                 if isinstance(self.__data[key][0], np.ndarray):
                     if (value - self.__data[key][0]).sum() != 0.0:
-                        self.unsaved_data[key] = value    
+                        self.unsaved_data[key] = value
                 elif self.__data[key][0] != value:
                     self.unsaved_data[key] = value
         self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
@@ -1116,7 +1136,7 @@ class PropertiesModel(QtCore.QAbstractTableModel):
                         del self.unsaved_data[var]
                     except KeyError:
                         pass
-            
+
             self.dataChanged.emit(index, index)
             self.test_for_unsaved_changes()
             return True

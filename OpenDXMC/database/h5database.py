@@ -26,11 +26,10 @@ class Database(object):
 
     def init_new_database(self):
         # setting up materials if not exist
-
         try:
             self.get_node('/', 'meta_materials', create=False, obj=None)
         except ValueError:
-            logger.debug('Materials not found, attempting to import local materals')
+            logger.debug('Materials not found, attempting to import local materials')
             for m in get_stored_materials():
                 self.add_material(m)
         if not self.test_node('/', 'meta_description'):
@@ -65,7 +64,7 @@ class Database(object):
         try:
             node = self.db_instance.get_node(where, name=name)
         except tb.NoSuchNodeError:
-            
+
 
             if not create:
                 raise ValueError("Node {0} do not exist in {1}. Was not allowed to create a new node".format(name, where))
@@ -268,7 +267,7 @@ class Database(object):
                 node_name = data_node._v_name
                 logger.debug('Reading data node {}'.format(node_name))
                 setattr(simulation, node_name, data_node.read())
-            
+
         logger.debug('Successfully read simulation {} from database.'.format(name))
         self.close()
         return simulation
@@ -371,8 +370,8 @@ class Database(object):
             meta_table.flush()
 
         if purge_simulation and purge_volatiles:
-            self.purge_simulation(name)            
-            
+            self.purge_simulation(name)
+
         if array_dict is not None:
             for key, value in array_dict.items():
                 if self.test_node('/simulations/{}/volatiles'.format(name), key):
@@ -382,32 +381,43 @@ class Database(object):
                 else:
                     self.get_node('/simulations/{}/volatiles'.format(name), key, create=True, obj=value)
                     logger.info('Created {0} for simulation node {1}'.format(key, name))
-        
+
         self.close()
         logger.debug('Updated metadata for simulation {}'.format(name))
 
-    def get_unique_simulation_name(self):
+    def get_unique_simulation_name(self, name=None):
         logger.debug('Finding unique simulation name')
         if not self.test_node('/', 'meta_data'):
             logger.debug('No simulations in database, no names to test')
             self.close()
-            return 'NewName'
+            if not isinstance(name, str):
+                return 'NewName'
+            elif len(name) == 0:
+                return 'NewName'
+            else:
+                return name
+
 
         meta_table = self.get_node('/', 'meta_data', create=False)
         i = 1
-        name = 'NewName'
+        if name is None:
+            name = 'NewName'
+        else:
+            assert isinstance(name, str)
+            name = "".join([l for l in name.split() if len(l) > 0])
+            if len(name) == 0:
+                name = 'NewName'
         while True:
             for row in meta_table.where('name == b"{}"'.format(name)):
                 break
             else:
                 self.close()
                 return name
-            name = 'NewName{}'.format(i)
+            name = '{0}{1}'.format(name, i)
             i += 1
 
     def copy_simulation(self, source_name, dest_name=None):
-        if dest_name is None:
-            dest_name = self.get_unique_simulation_name()
+        dest_name = self.get_unique_simulation_name(dest_name)
         logger.debug('Attempting to copy simualtion {0} to {1}'.format(source_name, dest_name))
         if isinstance(dest_name, bytes):
             dest_name = str(dest_name, encoding='utf-8')

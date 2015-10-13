@@ -8,6 +8,7 @@ import numpy as np
 import copy
 from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
+from opendxmc.data.import_phantoms import read_phantoms
 from opendxmc.study import import_ct_series, Simulation, SIMULATION_DESCRIPTION
 from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
@@ -22,7 +23,7 @@ class ImportScalingValidator(QtGui.QValidator):
     def fixup(self, instr):
         instr = ''.join([b for b in instr.replace(',', ' ') if b in "1234567890. "])
 
-        fstr = ""        
+        fstr = ""
         d_in_word = False
         for s in instr:
             if s == '.':
@@ -36,12 +37,12 @@ class ImportScalingValidator(QtGui.QValidator):
                 fstr += ' '
             else:
                 fstr += s
-            
-            
+
+
         return fstr
 #        nums = [float(a) for a in instr.split()]
-#        return ' '.join([str(n) for n in nums]) 
-        
+#        return ' '.join([str(n) for n in nums])
+
     def validate(self, rawstr, pos):
         instr = ''.join([b for b in rawstr.replace(',', ' ') if b in "1234567890. "])
         pos -= (len(instr) - len(rawstr))
@@ -64,33 +65,28 @@ class ImportScalingValidator(QtGui.QValidator):
         if last == ' ':
             rstr += last
         return state, rstr, pos
-        
-        
+
+
 class ImportScalingEdit(QtGui.QLineEdit):
     request_set_import_scaling = QtCore.pyqtSignal(tuple)
     def __init__(self, importer, parent=None):
         super().__init__(parent)
         self.base_color = self.palette().color(self.palette().Base)
-        
+
         self.request_set_import_scaling.connect(importer.set_import_scaling)
-        
+
         self.editingFinished.connect(self.set_import_scaling)
         self.textEdited.connect(self.text_was_edited)
         self.setValidator(ImportScalingValidator(self))
         self.setText("2.0 2.0 1.0")
         self.set_import_scaling()
-        
-        
-        
 
     @QtCore.pyqtSlot(str)
     def text_was_edited(self, txt):
         palette = self.palette()
         palette.setColor(palette.Base, QtCore.Qt.red)
         self.setPalette(palette)
-        
-        
-    
+
     @QtCore.pyqtSlot()
     def set_import_scaling(self):
         txt = self.text()
@@ -100,11 +96,7 @@ class ImportScalingEdit(QtGui.QLineEdit):
         palette = self.palette()
         palette.setColor(palette.Base, self.base_color)
         self.setPalette(palette)
-        
-    
-    
-        
-        
+
 
 class DatabaseInterface(QtCore.QObject):
     """ Async database interface, async provided with signal/slots resulting in
@@ -160,6 +152,9 @@ class DatabaseInterface(QtCore.QObject):
 
         self.__db = Database(path.absoluteFilePath())
         self.database_busy.emit(False)
+        self.get_material_list()
+        self.get_simulation_list()
+
 
     @QtCore.pyqtSlot()
     def get_simulation_list(self):
@@ -189,21 +184,21 @@ class DatabaseInterface(QtCore.QObject):
         self.get_simulation_list()
         self.database_busy.emit(False)
 
-    @QtCore.pyqtSlot(list)
-    def import_dicom(self, qurl_list):
-        paths = [url.toLocalFile() for url in qurl_list]
-        for sim in import_ct_series(paths):
-            self.database_busy.emit(True)
-            try:
-                self.__db.add_simulation(sim, overwrite=False)
-            except ValueError:
-               name = self.__db.get_unique_simulation_name()
-               logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
-               sim.name = name
-               self.__db.add_simulation(sim, overwrite=False)
-
-            self.get_simulation_list()
-            self.database_busy.emit(False)
+#    @QtCore.pyqtSlot(list)
+#    def import_dicom(self, qurl_list):
+#        paths = [url.toLocalFile() for url in qurl_list]
+#        for sim in import_ct_series(paths):
+#            self.database_busy.emit(True)
+#            try:
+#                self.__db.add_simulation(sim, overwrite=False)
+#            except ValueError:
+#               name = self.__db.get_unique_simulation_name()
+#               logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
+#               sim.name = name
+#               self.__db.add_simulation(sim, overwrite=False)
+#
+#            self.get_simulation_list()
+#            self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str)
     def select_simulation(self, name):
@@ -271,12 +266,7 @@ class DatabaseInterface(QtCore.QObject):
         self.request_simulation_run.emit(sim, materials)
         self.database_busy.emit(False)
 
-#    @QtCore.pyqtSlot(Simulation)
-#    def set_run_simulation(self, sim):
-#        self.database_busy.emit(True)
-#        self.__db.add_simulation(sim)
-#        self.database_busy.emit(False)
-#        self.get_run_simulation()
+
 class Importer(QtCore.QObject):
     request_add_sim_to_database = QtCore.pyqtSignal(Simulation)
     running = QtCore.pyqtSignal(bool)
@@ -293,6 +283,13 @@ class Importer(QtCore.QObject):
         self.running.emit(True)
         paths = [url.toLocalFile() for url in qurl_list]
         for sim in import_ct_series(paths, import_scaling=self.__import_scaling):
+            self.request_add_sim_to_database.emit(sim)
+        self.running.emit(False)
+
+    @QtCore.pyqtSlot()
+    def import_phantoms(self):
+        self.running.emit(True)
+        for sim in read_phantoms():
             self.request_add_sim_to_database.emit(sim)
         self.running.emit(False)
 
@@ -358,6 +355,15 @@ class Runner(QtCore.QThread):
             self.request_update_simulation.emit(self.simulation.description,
                                                 {},
                                                 True, False)
+        except ValueError or AssertionError:
+            logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation.name))
+            self.simulation.MC_finished = False
+            self.simulation.MC_running = False
+            self.simulation.MC_ready = False
+            self.request_update_simulation.emit(self.simulation.description,
+                                                {},
+                                                True, False)
+
         else:
             self.simulation.MC_finished = True
             self.simulation.MC_running = False

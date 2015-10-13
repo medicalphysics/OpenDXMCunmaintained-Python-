@@ -48,10 +48,10 @@ SIMULATION_DESCRIPTION = {
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling'],
     'import_scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix prescaling'],
-    'image_orientation': [np.zeros(6, dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
+    'image_orientation': [np.array([1, 0, 0, 0, 1, 0], dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
     'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position [cm]'],
-    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],                     
-    }
+    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],
+    'is_phantom': [False, np.bool, False, False, 'Matematical phantom'],}
 
 # Generating a recarray for SIMULATION_DESCRIPTION to insert in database
 DESCRIPTION_RECARRAY = np.array([(k, v[2], v[3], v[4])
@@ -133,15 +133,16 @@ class Simulation(object):
         self.__arrays = {'organ': None,
                          'ctarray': None,
                          'exposure_modulation': None,
-                         'organ_map': None
+                         'organ_map': None,
+                         'organ_material_map': None
                     }
         self.__volatiles = {'material': None,
                             'density': None,
                             'energy_imparted': None,
                             'material_map': None,
                             }
-    
-        
+
+
         for key, value in SIMULATION_DESCRIPTION.items():
             self.__description[key] = value[0]
             self.__dtype[key] = value[1]
@@ -443,7 +444,7 @@ class Simulation(object):
             assert isinstance(value, np.ndarray)
             assert len(value) == 3
             self.__description['spacing'] = value.astype(np.double)
-    
+
     @property
     def import_scaling(self):
         return self.__description['import_scaling']
@@ -452,7 +453,7 @@ class Simulation(object):
         if isinstance(value, np.ndarray):
             assert len(value.shape) == 1
             assert value.shape[0] == 3
-            self.__description['import_scaling'] = value.astype(np.double)        
+            self.__description['import_scaling'] = value.astype(np.double)
         elif isinstance(value, str):
             value = np.array([float(s) for s in value.split()], dtype=np.double)
             assert isinstance(value, np.ndarray)
@@ -464,8 +465,8 @@ class Simulation(object):
             assert isinstance(value, np.ndarray)
             assert value.shape[0] == 3
             assert len(value) == 3
-            self.__description['import_scaling'] = value.astype(np.double)    
-    
+            self.__description['import_scaling'] = value.astype(np.double)
+
     @property
     def scaling(self):
         return self.__description['scaling']
@@ -474,7 +475,7 @@ class Simulation(object):
         if isinstance(value, np.ndarray):
             assert len(value.shape) == 1
             assert value.shape[0] == 3
-            self.__description['scaling'] = value.astype(np.double)        
+            self.__description['scaling'] = value.astype(np.double)
         elif isinstance(value, str):
             value = np.array([float(s) for s in value.split()], dtype=np.double)
             assert isinstance(value, np.ndarray)
@@ -487,7 +488,7 @@ class Simulation(object):
             assert value.shape[0] == 3
             assert len(value) == 3
             self.__description['scaling'] = value.astype(np.double)
-    
+
     @property
     def image_orientation(self):
         return self.__description['image_orientation']
@@ -512,6 +513,7 @@ class Simulation(object):
             assert isinstance(value, np.ndarray)
             assert len(value) == 3
             self.__description['image_position'] = value.astype(np.double)
+
     @property
     def data_center(self):
         return self.__description['data_center']
@@ -525,13 +527,19 @@ class Simulation(object):
             assert len(value) == 3
             self.__description['data_center'] = value.astype(np.double)
 
-
     @property
     def ignore_air(self):
         return self.__description['ignore_air']
     @ignore_air.setter
     def ignore_air(self, value):
         self.__description['ignore_air'] = bool(value)
+
+    @property
+    def is_phantom(self):
+        return self.__description['is_phantom']
+    @is_phantom.setter
+    def is_phantom(self, value):
+        self.__description['is_phantom'] = bool(value)
 
     @property
     def material(self):
@@ -541,6 +549,7 @@ class Simulation(object):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
         self.__volatiles['material'] = value
+
     @property
     def density(self):
         return self.__volatiles['density']
@@ -549,6 +558,7 @@ class Simulation(object):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
         self.__volatiles['density'] = value.astype(np.double)
+
     @property
     def organ(self):
         return self.__arrays['organ']
@@ -631,6 +641,31 @@ class Simulation(object):
             return
         assert isinstance(value, np.recarray)
         self.__arrays['organ_map'] = value
+
+
+
+    @property
+    def organ_material_map(self):
+        return self.__arrays['organ_material_map']
+    @organ_material_map.setter
+    def organ_material_map(self, value):
+        if isinstance(value, dict):
+            value_rec = np.recarray((len(value),),
+                                    dtype=[('key', np.int), ('value', 'a64')])
+            for ind, item in enumerate(value.items()):
+                try:
+                    value_rec['key'][ind] = item[0]
+                    value_rec['value'][ind] = item[1]
+                except ValueError as e:
+                    logger.error('Did not understand setting of requested '
+                                 'material map')
+                    raise e
+            self.__arrays['organ_material_map'] = value_rec
+            return
+        assert value.dtype.names is not None
+        assert 'key' in value.dtype.names
+        assert 'value' in value.dtype.names
+        self.__arrays['organ_material_map'] = value
 
     @property
     def dose(self):
