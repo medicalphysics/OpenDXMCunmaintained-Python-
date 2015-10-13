@@ -639,7 +639,9 @@ class Simulation(object):
                     raise e
             self.__arrays['organ_map'] = value_rec
             return
-        assert isinstance(value, np.recarray)
+        assert value.dtype.names is not None
+        assert 'key' in value.dtype.names
+        assert 'value' in value.dtype.names
         self.__arrays['organ_map'] = value
 
 
@@ -658,7 +660,7 @@ class Simulation(object):
                     value_rec['value'][ind] = item[1]
                 except ValueError as e:
                     logger.error('Did not understand setting of requested '
-                                 'material map')
+                                 'organ material map')
                     raise e
             self.__arrays['organ_material_map'] = value_rec
             return

@@ -103,80 +103,41 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
         if organ is None:
             raise ValueError('No organ definitions in phantom')
 
-
+        organ_material_map = recarray_to_dict(organ_material_map,
+                                              value_is_string=True)
         #testing if we have the materials we need
         material_names = {m.name: m for m in materials}
         for value in organ_material_map.values():
             if not value in material_names:
                 raise ValueError('Phantom requires missing material {}'.format(value))
 
-        organ = affine_transform(spline_filter(organ,
-                                                 order=0,
-                                                 output=np.uint8),
-                                   scale,
-                                   output_shape=np.floor(np.array(organ.shape)/scale),
-                                   cval=0, output=np.uint8, prefilter=False, order=0)
+        organ = affine_transform(organ,
+                                 scale,
+                                 output_shape=np.floor(np.array(organ.shape)/scale),
+                                 cval=0, output=np.uint8, prefilter=True, 
+                                 order=1)
 
         material_array = np.zeros(organ.shape, dtype=np.uint8)
         density_array = np.zeros(organ.shape, dtype=np.double)
-        # list of materials in organ order
+        
         material_map = {}
         material_choices = []
+        density_choices = []
+
         key = 0
         for i in np.unique(organ):
             material_name = organ_material_map[i]
             if material_name not in material_map:
                 material_map[key] = material_name
                 key += 1
+            density_choices.append(material_names[material_name].density) 
             material_choices.append(key)
 
-
-        density_mapping = [material_names[organ_material_map[i]].density for i in np.unique(organ)]
-        np.choose(organ, density_mapping, out=density_array)
-        np.choose(organ, [m.density for m in material_mapping], out=material_array)
-
-        for organ in np.unique(organ):
-            organ_indices = np.where()
-        material_map = {}
-        material_dens = {}
-
-
-        water_key = None
-        material_map = {}
-        material_att = {}
-        material_dens = {}
-        materials.sort(key=lambda x: x.density)
-        for i, mat in enumerate(materials):
-            material_map[i] = mat.name
-            material_dens[i] = float(mat.density)
-            # interpolationg and integrating attinuation coefficient
-            material_att[i] = np.trapz(np.interp(specter[0],
-                                                 mat.attinuation['energy'],
-                                                 mat.attinuation['total']),
-                                       specter[0])
-            material_att[i] *= mat.density
-            if mat.name == 'water':
-                water_key = i
-        assert water_key is not None  # we need to include water in materials
-
-        # getting a list of attinuation
-        material_HU_list = [(key, (att / material_att[water_key] - 1.)*1000.)
-                            for key, att in material_att.items()]
-        material_HU_list.sort(key=lambda x: x[1])
-        HU_bins = (np.array(material_HU_list)[:-1, 1] +
-                   np.array(material_HU_list)[1:, 1]) / 2.
-
-        HU_bins[-1] = HU_bins[-2] + 300
-
-        material_array = np.digitize(
-            ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
-#        import pdb
-#        pdb.set_trace()
-        density_array = np.asarray(material_array, dtype=np.float)
-        np.choose(material_array,
-                  [material_dens[i] for i, _ in material_HU_list],
-                  out=density_array)
+        np.choose(organ, density_choices, out=density_array)
+        np.choose(organ, material_choices, out=material_array)
         return material_map, material_array, density_array
+        
+        
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
@@ -244,21 +205,30 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
     # testing for required attributes
     for att in ['material_map', 'material', 'density']:
         if getattr(simulation, att) is None:
-            if simulation.ctarray is None:
+            if simulation.ctarray is not None:
+                logger.info('CT study {0} do not have a {1}. Recalculating from CT'
+                        ' array.'.format(simulation.name, att))
+                specter = tungsten_specter(simulation.kV,
+                                           filtration_materials='al',
+                                           filtration_mm=simulation.al_filtration)
+                vals = prepare_geometry_from_ct_array(simulation.ctarray,
+                                                      simulation.scaling,
+                                                      specter,
+                                                      materials)
+            elif (simulation.organ is not None) and (simulation.organ_material_map is not None):
+                logger.info('CT study {0} do not have a {1}. Recalculating from organ mapping.'.format(simulation.name, att))
+    
+                vals = prepare_geometry_from_organ_array(simulation.organ, 
+                                                         simulation.organ_material_map, 
+                                                         simulation.scaling, 
+                                                         materials)    
+            else:
                 logger.warning('CT study {} has no CT images. Simulation not '
                                'started'.format(simulation.name))
                 raise ValueError('CT study {} must have CT images to run a '
                                  'simulation'.format(simulation.name))
 
-            logger.info('CT study {0} do not have a {1}. Recalculating from CT'
-                        ' array.'.format(simulation.name, att))
-            specter = tungsten_specter(simulation.kV,
-                                       filtration_materials='al',
-                                       filtration_mm=simulation.al_filtration)
-            vals = prepare_geometry_from_ct_array(simulation.ctarray,
-                                                  simulation.scaling,
-                                                  specter,
-                                                  materials)
+            
             simulation.material_map = vals[0]
             simulation.material = vals[1]
             simulation.density = vals[2]
@@ -299,6 +269,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
 
 
 def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, callback=None):
+    print(simulation.organ_material_map)
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 

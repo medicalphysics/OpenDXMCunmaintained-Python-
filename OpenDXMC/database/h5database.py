@@ -264,6 +264,7 @@ class Database(object):
         if not ignore_arrays:
             pat_node = self.get_node('/simulations', name, create=False)
             for data_node in itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table')):
+#            for data_node in pat_node._f_walknodes():
                 node_name = data_node._v_name
                 logger.debug('Reading data node {}'.format(node_name))
                 setattr(simulation, node_name, data_node.read())
@@ -299,7 +300,7 @@ class Database(object):
 
 
         pat_node = self.get_node('/simulations', simulation.name, create=False)
-        for data_node in pat_node._f_walknodes('Array'):
+        for data_node in itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table')):
             node_name = data_node._v_name
             logger.debug('Reading data node {}'.format(node_name))
             setattr(simulation, node_name, data_node.read())
