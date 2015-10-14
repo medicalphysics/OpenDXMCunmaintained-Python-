@@ -6,7 +6,7 @@ Created on Thu Jul 30 10:38:15 2015
 """
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, RegularGridInterpolator
 from PyQt4 import QtGui, QtCore
 from opendxmc.study import Simulation, SIMULATION_DESCRIPTION
 from .dicom_lut import get_lut
@@ -62,6 +62,7 @@ class ViewController(QtCore.QObject):
 
 
         self.properties_widget = PropertiesWidget(properties_model)
+        self.organ_dose_widget = OrganDoseWidget()
         properties_model.request_update_simulation.connect(self.updateSimulation)
         self.simulation_properties_data.connect(properties_model.update_data)
 
@@ -79,6 +80,8 @@ class ViewController(QtCore.QObject):
         main_layout.addWidget(self.properties_widget)
 
         main_layout.addLayout(view_layout)
+
+        main_layout.addWidget(self.organ_dose_widget)
 
         menu_widget = QtGui.QMenuBar(wid)
         menu_widget.setContentsMargins(0, 0, 0, 0)
@@ -144,7 +147,7 @@ class ViewController(QtCore.QObject):
             else:
                 self.scenes[name].setNoData()
         elif name == 'energy_imparted':
-            if self.current_simulation.energy_imparted is not None and self.current_simulation.ctarray is not None:
+            if self.current_simulation.energy_imparted is not None:
                 self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
                                                   self.current_simulation.energy_imparted,
                                                   self.current_simulation.spacing,
@@ -170,11 +173,14 @@ class ViewController(QtCore.QObject):
                                                   dose,
                                                   self.current_simulation.spacing,
                                                   self.current_simulation.scaling)
-
+                self.organ_dose_widget.set_data(dose,
+                                                self.current_simulation.organ,
+                                                self.current_simulation.organ_map)
         self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
         self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
                                     QtCore.Qt.KeepAspectRatio)
         self.properties_widget.setVisible(name == 'planning')
+        self.organ_dose_widget.setVisible(name == 'dose')
 
 
     @QtCore.pyqtSlot(Simulation)
@@ -905,12 +911,15 @@ class DoseScene(QtGui.QGraphicsScene):
         p = array.max() - array.min()
         return (p/2., p / 2.)
 
-    @QtCore.pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def setCtDoseArrays(self, ct, dose, spacing, scaling):
         self.dose_array = gaussian_filter(dose, 1.)
 #        self.dose_array = dose
-        self.ct_array = ct
-        self.shape = np.array(ct.shape)
+        if ct is None:
+            self.ct_array = np.zeros(dose.shape, dtype=np.int16) - 1000
+
+        else:
+            self.ct_array = ct
+        self.shape = np.array(self.ct_array.shape)
         self.spacing = spacing
         self.dose_scale = scaling
         self.nodata_item.setVisible(False)
@@ -1290,3 +1299,64 @@ class PropertiesWidget(QtGui.QWidget):
         button_layout.addWidget(run_button)
 
         self.layout().addLayout(button_layout)
+
+class OrganListModelPopulator(QtCore.QThread):
+    new_dose_item = QtCore.pyqtSignal(str, float)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.organ = None
+        self.dose = None
+        self.organ_map = None
+
+    def run(self):
+        if self.organ is None or self.dose is None or self.organ_map is None:
+            return
+        shape_scale = np.array(self.organ.shape, dtype=np.double) / np.array(self.dose.shape, dtype=np.double)
+        interp = RegularGridInterpolator(tuple(np.arange(self.dose.shape[i]) * shape_scale[i] for i in range(3)),
+                                         self.dose,
+                                         method='nearest',
+                                         bounds_error=False,
+                                         fill_value=0)
+        for key, value in zip(self.organ_map['key'], self.organ_map['value']):
+            points = np.array(np.nonzero(self.organ == key)).T
+            dose = np.mean(interp(points))
+            if np.isnan(dose):
+                dose = 0.
+            self.new_dose_item.emit(str(value, encoding='utf-8'), dose)
+
+
+class OrganListModel(QtGui.QStandardItemModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.populator = OrganListModelPopulator()
+        self.populator.new_dose_item.connect(self.add_dose_item)
+
+    @QtCore.pyqtSlot(str, float)
+    def add_dose_item(self, organ, dose):
+        item1 = QtGui.QStandardItem(organ)
+        item2 = QtGui.QStandardItem(str(dose))
+        self.appendRow([item1, item2])
+        self.sort(0)
+
+    def set_data(self, dose, organ, organ_map):
+        self.clear()
+        if self.populator.isRunning():
+            self.populator.wait()
+        self.populator.dose = dose
+        self.populator.organ = organ
+        self.populator.organ_map = organ_map
+        self.populator.start()
+
+
+
+class OrganDoseWidget(QtGui.QTableView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setModel(OrganListModel())
+        self.name = ""
+        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+
+        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+    def set_data(self, dose, organ, organ_map):
+        self.model().set_data(dose, organ, organ_map)

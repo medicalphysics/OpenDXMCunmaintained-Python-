@@ -298,9 +298,9 @@ class Database(object):
             logger.debug('No ready simulations found.')
             raise ValueError('No simulations ready')
 
-
-        pat_node = self.get_node('/simulations', simulation.name, create=False)
-        for data_node in itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table')):
+        # we do not read volatile arrays here
+        pat_node = self.get_node('/simulations/', simulation.name, create=False)
+        for data_node in itertools.chain(pat_node._f_iter_nodes('Array'), pat_node._f_iter_nodes('Table')):
             node_name = data_node._v_name
             logger.debug('Reading data node {}'.format(node_name))
             setattr(simulation, node_name, data_node.read())

@@ -114,30 +114,30 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
         organ = affine_transform(organ,
                                  scale,
                                  output_shape=np.floor(np.array(organ.shape)/scale),
-                                 cval=0, output=np.uint8, prefilter=True, 
+                                 cval=0, output=np.uint8, prefilter=True,
                                  order=1)
 
-        material_array = np.zeros(organ.shape, dtype=np.uint8)
-        density_array = np.zeros(organ.shape, dtype=np.double)
-        
-        material_map = {}
-        material_choices = []
-        density_choices = []
+        material_array = np.asarray(organ, dtype=np.int)
+        density_array = np.asarray(organ, dtype=np.double)
 
+        material_map = {}
         key = 0
         for i in np.unique(organ):
             material_name = organ_material_map[i]
             if material_name not in material_map:
-                material_map[key] = material_name
+                material_map[material_name] = key
                 key += 1
-            density_choices.append(material_names[material_name].density) 
-            material_choices.append(key)
 
-        np.choose(organ, density_choices, out=density_array)
-        np.choose(organ, material_choices, out=material_array)
+            ind = np.nonzero(organ == i)
+            density_array[ind] = material_names[material_name].density
+            material_array[ind] = material_map[material_name]
+
+
+        # reversing material_map
+        material_map = {key: value for value, key in material_map.items()}
         return material_map, material_array, density_array
-        
-        
+
+
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
@@ -190,7 +190,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
             ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
 #        import pdb
 #        pdb.set_trace()
-        density_array = np.asarray(material_array, dtype=np.float)
+        density_array = np.asarray(material_array, dtype=np.double)
         np.choose(material_array,
                   [material_dens[i] for i, _ in material_HU_list],
                   out=density_array)
@@ -217,18 +217,18 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
                                                       materials)
             elif (simulation.organ is not None) and (simulation.organ_material_map is not None):
                 logger.info('CT study {0} do not have a {1}. Recalculating from organ mapping.'.format(simulation.name, att))
-    
-                vals = prepare_geometry_from_organ_array(simulation.organ, 
-                                                         simulation.organ_material_map, 
-                                                         simulation.scaling, 
-                                                         materials)    
+
+                vals = prepare_geometry_from_organ_array(simulation.organ,
+                                                         simulation.organ_material_map,
+                                                         simulation.scaling,
+                                                         materials)
             else:
                 logger.warning('CT study {} has no CT images. Simulation not '
                                'started'.format(simulation.name))
                 raise ValueError('CT study {} must have CT images to run a '
                                  'simulation'.format(simulation.name))
 
-            
+
             simulation.material_map = vals[0]
             simulation.material = vals[1]
             simulation.density = vals[2]
@@ -269,7 +269,6 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
 
 
 def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, callback=None):
-    print(simulation.organ_material_map)
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 
@@ -437,7 +436,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                   filtration_mm=simulation.al_filtration)
 
     phase_space = ct_seq(simulation.scan_fov, simulation.sdd,
-                         simulation.total_collimation, start=0, stop=0, step=0,
+                         simulation.total_collimation, start=0, stop=0, step=1,
                          exposures=simulation.exposures,
                          histories=simulation.histories,
                          energy_specter=en_specter,
@@ -452,8 +451,9 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     d = []
     for p in meas_pos:
         x, y = int(p[0]), int(p[1])
-        d.append(dose[x, y, 1:-1].sum() / (air.density * np.prod(spacing) * (N[2] - 2)))
+        d.append(dose[x, y, 1:-1].mean() / (air.density * np.prod(spacing)))
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
+    print('Phantom dose', ctdiv)
     simulation.conversion_factor_ctdiw = simulation.ctdi_w100 / ctdiv

@@ -16,6 +16,10 @@ import logging
 logger = logging.getLogger('OpenDXMC')
 import time
 
+
+from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
+
+
 class ImportScalingValidator(QtGui.QValidator):
     def __init__(self, parent):
         super().__init__(parent)
@@ -339,6 +343,8 @@ class Runner(QtCore.QThread):
         if self.material_list is None:
             return
 
+#        ct_runner_validate_simulation(self.simulation, self.material_list)
+
         self.request_update_simulation.emit({'name': self.simulation.name,
                                              'MC_running': True},
                                             {},
@@ -355,7 +361,9 @@ class Runner(QtCore.QThread):
             self.request_update_simulation.emit(self.simulation.description,
                                                 {},
                                                 True, False)
-        except ValueError or AssertionError:
+        except ValueError or AssertionError as e:
+            print(e)
+            raise e
             logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation.name))
             self.simulation.MC_finished = False
             self.simulation.MC_running = False

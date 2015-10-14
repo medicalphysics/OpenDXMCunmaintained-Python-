@@ -31,7 +31,7 @@ SIMULATION_DESCRIPTION = {
     # per 1000000 histories to dose
     'conversion_factor_ctdiw': [0., np.double, False, False, 'CTDIw to dose conversionfactor'],
     'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
-    'pitch': [.9, np.double, True, True, 'Pitch'],
+    'pitch': [1, np.double, True, True, 'Pitch'],
     'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
     'histories': [100, np.int, True, True, 'Number of photon histories per exposure'],
     'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
@@ -39,7 +39,7 @@ SIMULATION_DESCRIPTION = {
     'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]'],
     'start': [0, np.double, True, True, 'Start position [cm]'],
     'stop': [0, np.double, True, True, 'Stop position [cm]'],
-    'step': [0, np.int, True, True, 'Sequential aqusition step size [cm]'],
+    'step': [1, np.int, True, True, 'Sequential aqusition step size [cm]'],
     'start_at_exposure_no': [0, np.int, True, True, 'Start simulating exposure number'],
     'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
     'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
@@ -603,6 +603,8 @@ class Simulation(object):
         return self.__volatiles['material_map']
     @material_map.setter
     def material_map(self, value):
+        if value is None:
+            self.__volatiles['material_map'] = None
         if isinstance(value, dict):
             value_rec = np.recarray((len(value),),
                                     dtype=[('key', np.int), ('value', 'a64')])
@@ -626,6 +628,8 @@ class Simulation(object):
         return self.__arrays['organ_map']
     @organ_map.setter
     def organ_map(self, value):
+        if value is None:
+            self.__arrays['organ_map'] = None
         if isinstance(value, dict):
             value_rec = np.recarray((len(value),), dtype=[('key', np.int),
                                                           ('value', 'a64')])
@@ -685,7 +689,7 @@ class Simulation(object):
                              'factor, dose array is not available'
                              ''.format(self.name,))
 
-        return self.energy_imparted / (self.density * (np.prod(self.spacing)*factor))
+        return self.energy_imparted / (self.density * (np.prod(self.spacing))) * factor
 
 
 
