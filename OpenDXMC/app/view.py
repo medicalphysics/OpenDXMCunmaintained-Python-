@@ -169,7 +169,13 @@ class ViewController(QtCore.QObject):
             except ValueError:
                 self.scenes[name].setNoData()
             else:
-                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
+                if self.current_simulation.ctarray is not None: 
+                    background = self.current_simulation.ctarray
+                elif self.current_simulation.organ is not None:
+                    background = self.current_simulation.organ
+                else:
+                    background=None                    
+                self.scenes[name].setCtDoseArrays(background,
                                                   dose,
                                                   self.current_simulation.spacing,
                                                   self.current_simulation.scaling)
@@ -909,13 +915,13 @@ class DoseScene(QtGui.QGraphicsScene):
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
-        return (p/2., p / 2.)
+        return (p/2., p / 2. - 1)
 
     def setCtDoseArrays(self, ct, dose, spacing, scaling):
         self.dose_array = gaussian_filter(dose, 1.)
 #        self.dose_array = dose
         if ct is None:
-            self.ct_array = np.zeros(dose.shape, dtype=np.int16) - 1000
+            self.ct_array = np.zeros(dose.shape, dtype=np.int16)
 
         else:
             self.ct_array = ct
@@ -927,7 +933,8 @@ class DoseScene(QtGui.QGraphicsScene):
         self.index = self.index % self.shape[self.view_orientation]
         self.reloadImages()
         self.updateSceneTransform()
-        self.image_item.setLevels(front=self.defaultLevels(self.dose_array))
+        self.image_item.setLevels(front=self.defaultLevels(self.dose_array),
+                                  back=self.defaultLevels(self.ct_array))
 
     def updateSceneTransform(self):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
@@ -1322,7 +1329,7 @@ class OrganListModelPopulator(QtCore.QThread):
             dose = np.mean(interp(points))
             if np.isnan(dose):
                 dose = 0.
-            self.new_dose_item.emit(str(value, encoding='utf-8'), dose)
+            self.new_dose_item.emit(str(value, encoding='utf-8'), round(dose, 2))
 
 
 class OrganListModel(QtGui.QStandardItemModel):
@@ -1330,33 +1337,45 @@ class OrganListModel(QtGui.QStandardItemModel):
         super().__init__(parent)
         self.populator = OrganListModelPopulator()
         self.populator.new_dose_item.connect(self.add_dose_item)
+        
 
     @QtCore.pyqtSlot(str, float)
     def add_dose_item(self, organ, dose):
         item1 = QtGui.QStandardItem(organ)
         item2 = QtGui.QStandardItem(str(dose))
+        self.layoutAboutToBeChanged.emit()
+        
         self.appendRow([item1, item2])
         self.sort(0)
+        item2.setData(dose, QtCore.Qt.DisplayRole)
+        self.layoutChanged.emit()
 
     def set_data(self, dose, organ, organ_map):
         self.clear()
+        self.setHorizontalHeaderLabels(['Organ', 'Dose [mGy/100mAs]'])
         if self.populator.isRunning():
             self.populator.wait()
         self.populator.dose = dose
         self.populator.organ = organ
         self.populator.organ_map = organ_map
         self.populator.start()
-
+        
 
 
 class OrganDoseWidget(QtGui.QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setModel(OrganListModel())
+        self.setModel(OrganListModel(self))
+        self.model().layoutChanged.connect(self.resizeColumnToContents)
         self.name = ""
-        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-
-        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-        self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.setWordWrap(False)
+#        self.setTextElideMode(QtCore.Qt.ElideMiddle)
+#        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+        self.horizontalHeader().setStretchLastSection(True)
+#        self.horizontalHeader().setMinimumSectionSize(-1)
+#        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+#        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.setSortingEnabled(True)
     def set_data(self, dose, organ, organ_map):
         self.model().set_data(dose, organ, organ_map)
+        
