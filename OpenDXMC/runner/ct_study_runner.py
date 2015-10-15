@@ -381,7 +381,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
-    simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d
+    simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d * simulation.total_collimation
 
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32.):
@@ -455,5 +455,4 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
-    print('Phantom dose', ctdiv)
-    simulation.conversion_factor_ctdiw = simulation.ctdi_w100 / ctdiv
+    simulation.conversion_factor_ctdiw = simulation.ctdi_w100 / ctdiv * simulation.total_collimation

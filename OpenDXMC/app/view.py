@@ -65,8 +65,6 @@ class ViewController(QtCore.QObject):
         self.organ_dose_widget = OrganDoseWidget()
         properties_model.request_update_simulation.connect(self.updateSimulation)
         self.simulation_properties_data.connect(properties_model.update_data)
-
-
         self.selectScene('planning')
 
 
@@ -169,12 +167,12 @@ class ViewController(QtCore.QObject):
             except ValueError:
                 self.scenes[name].setNoData()
             else:
-                if self.current_simulation.ctarray is not None: 
+                if self.current_simulation.ctarray is not None:
                     background = self.current_simulation.ctarray
                 elif self.current_simulation.organ is not None:
                     background = self.current_simulation.organ
                 else:
-                    background=None                    
+                    background=None
                 self.scenes[name].setCtDoseArrays(background,
                                                   dose,
                                                   self.current_simulation.spacing,
@@ -1337,14 +1335,14 @@ class OrganListModel(QtGui.QStandardItemModel):
         super().__init__(parent)
         self.populator = OrganListModelPopulator()
         self.populator.new_dose_item.connect(self.add_dose_item)
-        
+
 
     @QtCore.pyqtSlot(str, float)
     def add_dose_item(self, organ, dose):
         item1 = QtGui.QStandardItem(organ)
         item2 = QtGui.QStandardItem(str(dose))
         self.layoutAboutToBeChanged.emit()
-        
+
         self.appendRow([item1, item2])
         self.sort(0)
         item2.setData(dose, QtCore.Qt.DisplayRole)
@@ -1359,7 +1357,7 @@ class OrganListModel(QtGui.QStandardItemModel):
         self.populator.organ = organ
         self.populator.organ_map = organ_map
         self.populator.start()
-        
+
 
 
 class OrganDoseWidget(QtGui.QTableView):
@@ -1378,4 +1376,3 @@ class OrganDoseWidget(QtGui.QTableView):
         self.setSortingEnabled(True)
     def set_data(self, dose, organ, organ_map):
         self.model().set_data(dose, organ, organ_map)
-        

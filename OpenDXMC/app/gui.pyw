@@ -211,10 +211,11 @@ class MainWindow(QtGui.QMainWindow):
         self.properties_thread = QtCore.QThread(self)
         self.properties_model.moveToThread(self.properties_thread)
 
-        self.import_thread = QtCore.QThread(self)
-        self.importer.moveToThread(self.import_thread)
+#        self.import_thread = QtCore.QThread(self)
+#        self.importer.moveToThread(self.import_thread)
+        self.importer.moveToThread(self.database_thread)
 
-        self.import_thread.start()
+#        self.import_thread.start()
         self.mc_thread.start()
         self.properties_thread.start()
         self.database_thread.start()
