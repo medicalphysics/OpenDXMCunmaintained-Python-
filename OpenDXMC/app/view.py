@@ -433,6 +433,7 @@ class BitImageItem(QtGui.QGraphicsItem):
 
     def set_lut(self, colors):
         self.lut = [c.rgba() for c in colors]
+
     def setImage(self, image):
         self.image = image
         self.prepareGeometryChange()
@@ -618,6 +619,7 @@ class PlanningScene(QtGui.QGraphicsScene):
         self.view_orientation = 2
         self.image_item.setLevels((0, 500))
         self.is_bit_array = False
+        self.bit_lut = get_lut('pet')
 
     def setCtArray(self, ct, spacing, aec):
         self.is_bit_array = False
@@ -647,6 +649,9 @@ class PlanningScene(QtGui.QGraphicsScene):
             aec = np.ones((2,2))
             aec[0, 0] = 0
         self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
+        number_of_elements = self.array.max()
+        qlut = [QtGui.QColor(self.bit_lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
+        self.image_item_bit.set_lut(qlut)
         self.reloadImages()
         self.updateSceneTransform()
 
@@ -1089,12 +1094,12 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             return None
         row = index.row()
         column = index.column()
-        if column == 0:
-            pos = 4
-        elif column == 1:
-            pos = 0
-        else:
-            return None
+#        if column == 0:
+#            pos = 4
+#        elif column == 1:
+#            pos = 0
+#        else:
+#            return None
 
         var = self.__indices[row]
         if column == 0:
@@ -1323,7 +1328,7 @@ class OrganListModelPopulator(QtCore.QThread):
                                          bounds_error=False,
                                          fill_value=0)
         for key, value in zip(self.organ_map['key'], self.organ_map['value']):
-            points = np.array(np.nonzero(self.organ == key)).T
+            points = np.array(np.nonzero(self.organ == key), dtype=np.int).T
             dose = np.mean(interp(points))
             if np.isnan(dose):
                 dose = 0.
@@ -1374,5 +1379,10 @@ class OrganDoseWidget(QtGui.QTableView):
 #        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
 #        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.setSortingEnabled(True)
+
+    @QtCore.pyqtSlot()
+    def resizeColumnToContents(self, col=0):
+        super().resizeColumnToContents(col)
+
     def set_data(self, dose, organ, organ_map):
         self.model().set_data(dose, organ, organ_map)

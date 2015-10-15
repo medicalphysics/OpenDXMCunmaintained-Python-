@@ -51,7 +51,6 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     logger.debug('Attempting to read {0} phantom from {1}'.format(name, voxpath))
 
     a = np.fromfile(voxpath, dtype=np.uint8)
-    print(name, a.shape[0]-header_len)
     sim = Simulation(name)
     sim.spacing = np.array(spacing, dtype=np.double) / 10.
     sim.organ = np.rollaxis(np.reshape(a[header_len:], (-1, shape[0], shape[1])), 0, 3)#[:,:,::-1]
