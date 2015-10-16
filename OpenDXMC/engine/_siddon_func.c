@@ -4,8 +4,8 @@
 {
     "distutils": {
         "depends": [
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h"
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h",
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h"
         ],
         "extra_compile_args": [
             "-O3"
@@ -1687,7 +1687,7 @@ static char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or i
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_All_dimensions_preceding_dimensi[] = "All dimensions preceding dimension %d must be indexed and not sliced";
 static char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does not expose strides";
-static char __pyx_k_C_github_OpenDXMC_opendxmc_engin[] = "C:\\github\\OpenDXMC\\opendxmc\\engine\\_siddon_func.pyx";
+static char __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin[] = "C:\\GitHub\\OpenDXMC\\opendxmc\\engine\\_siddon_func.pyx";
 static char __pyx_k_Can_only_create_a_buffer_that_is[] = "Can only create a buffer that is contiguous in memory.";
 static char __pyx_k_Cannot_transpose_memoryview_with[] = "Cannot transpose memoryview with indirect dimensions";
 static char __pyx_k_Empty_shape_tuple_for_cython_arr[] = "Empty shape tuple for cython.array";
@@ -1702,7 +1702,7 @@ static char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran
 static char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
 static char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
-static PyObject *__pyx_kp_s_C_github_OpenDXMC_opendxmc_engin;
+static PyObject *__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
 static PyObject *__pyx_kp_s_Cannot_index_with_type_s;
 static PyObject *__pyx_n_s_Ellipsis;
@@ -1876,7 +1876,7 @@ static CYTHON_INLINE double __pyx_f_8opendxmc_6engine_12_siddon_func_min(double 
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":29
+/* "opendxmc\engine\_siddon_func.pyx":52
  * 
  * 
  * cdef void bubble_sort(double* arr, int n) nogil:             # <<<<<<<<<<<<<<
@@ -1895,7 +1895,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
   double __pyx_t_6;
   double __pyx_t_7;
 
-  /* "opendxmc\engine\_siddon_func.pyx":31
+  /* "opendxmc\engine\_siddon_func.pyx":54
  * cdef void bubble_sort(double* arr, int n) nogil:
  *     cdef int i, j
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -1906,7 +1906,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_siddon_func.pyx":32
+    /* "opendxmc\engine\_siddon_func.pyx":55
  *     cdef int i, j
  *     for i in range(n):
  *         for j in range(1, n):             # <<<<<<<<<<<<<<
@@ -1917,7 +1917,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
     for (__pyx_t_4 = 1; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_j = __pyx_t_4;
 
-      /* "opendxmc\engine\_siddon_func.pyx":33
+      /* "opendxmc\engine\_siddon_func.pyx":56
  *     for i in range(n):
  *         for j in range(1, n):
  *             if arr[j] < arr[j-1]:             # <<<<<<<<<<<<<<
@@ -1927,7 +1927,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
       __pyx_t_5 = (((__pyx_v_arr[__pyx_v_j]) < (__pyx_v_arr[(__pyx_v_j - 1)])) != 0);
       if (__pyx_t_5) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":34
+        /* "opendxmc\engine\_siddon_func.pyx":57
  *         for j in range(1, n):
  *             if arr[j] < arr[j-1]:
  *                 arr[j-1], arr[j] = arr[j], arr[j-1]             # <<<<<<<<<<<<<<
@@ -1944,7 +1944,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
     }
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":29
+  /* "opendxmc\engine\_siddon_func.pyx":52
  * 
  * 
  * cdef void bubble_sort(double* arr, int n) nogil:             # <<<<<<<<<<<<<<
@@ -1955,7 +1955,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(double *__pyx_v
   /* function exit code */
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":36
+/* "opendxmc\engine\_siddon_func.pyx":59
  *                 arr[j-1], arr[j] = arr[j], arr[j-1]
  * 
  * cdef int unique_array(double* ain, double* aout, int n) nogil:             # <<<<<<<<<<<<<<
@@ -1971,7 +1971,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
   int __pyx_t_2;
   int __pyx_t_3;
 
-  /* "opendxmc\engine\_siddon_func.pyx":38
+  /* "opendxmc\engine\_siddon_func.pyx":61
  * cdef int unique_array(double* ain, double* aout, int n) nogil:
  *     cdef int i, k
  *     bubble_sort(ain, n)             # <<<<<<<<<<<<<<
@@ -1980,7 +1980,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
  */
   __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(__pyx_v_ain, __pyx_v_n);
 
-  /* "opendxmc\engine\_siddon_func.pyx":39
+  /* "opendxmc\engine\_siddon_func.pyx":62
  *     cdef int i, k
  *     bubble_sort(ain, n)
  *     aout[0] = ain[0]             # <<<<<<<<<<<<<<
@@ -1989,7 +1989,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
  */
   (__pyx_v_aout[0]) = (__pyx_v_ain[0]);
 
-  /* "opendxmc\engine\_siddon_func.pyx":40
+  /* "opendxmc\engine\_siddon_func.pyx":63
  *     bubble_sort(ain, n)
  *     aout[0] = ain[0]
  *     k = 1             # <<<<<<<<<<<<<<
@@ -1998,7 +1998,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
  */
   __pyx_v_k = 1;
 
-  /* "opendxmc\engine\_siddon_func.pyx":41
+  /* "opendxmc\engine\_siddon_func.pyx":64
  *     aout[0] = ain[0]
  *     k = 1
  *     for i in range(1, n):             # <<<<<<<<<<<<<<
@@ -2009,7 +2009,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
   for (__pyx_t_2 = 1; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_siddon_func.pyx":42
+    /* "opendxmc\engine\_siddon_func.pyx":65
  *     k = 1
  *     for i in range(1, n):
  *         if fabs(aout[k-1] - ain[i]) > ERRF:             # <<<<<<<<<<<<<<
@@ -2019,7 +2019,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
     __pyx_t_3 = ((fabs(((__pyx_v_aout[(__pyx_v_k - 1)]) - (__pyx_v_ain[__pyx_v_i]))) > __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF) != 0);
     if (__pyx_t_3) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":43
+      /* "opendxmc\engine\_siddon_func.pyx":66
  *     for i in range(1, n):
  *         if fabs(aout[k-1] - ain[i]) > ERRF:
  *             aout[k] = ain[i]             # <<<<<<<<<<<<<<
@@ -2028,7 +2028,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
  */
       (__pyx_v_aout[__pyx_v_k]) = (__pyx_v_ain[__pyx_v_i]);
 
-      /* "opendxmc\engine\_siddon_func.pyx":44
+      /* "opendxmc\engine\_siddon_func.pyx":67
  *         if fabs(aout[k-1] - ain[i]) > ERRF:
  *             aout[k] = ain[i]
  *             k += 1             # <<<<<<<<<<<<<<
@@ -2041,7 +2041,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
     __pyx_L5:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":45
+  /* "opendxmc\engine\_siddon_func.pyx":68
  *             aout[k] = ain[i]
  *             k += 1
  *     return k - 1             # <<<<<<<<<<<<<<
@@ -2051,7 +2051,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
   __pyx_r = (__pyx_v_k - 1);
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":36
+  /* "opendxmc\engine\_siddon_func.pyx":59
  *                 arr[j-1], arr[j] = arr[j], arr[j-1]
  * 
  * cdef int unique_array(double* ain, double* aout, int n) nogil:             # <<<<<<<<<<<<<<
@@ -2064,7 +2064,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(double *__pyx_v
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":50
+/* "opendxmc\engine\_siddon_func.pyx":73
  * 
  * 
  * cdef int merge_array(double* arr1, double* arr2, double* out, int n1, int n2, int n3) nogil:             # <<<<<<<<<<<<<<
@@ -2080,7 +2080,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_siddon_func.pyx":51
+  /* "opendxmc\engine\_siddon_func.pyx":74
  * 
  * cdef int merge_array(double* arr1, double* arr2, double* out, int n1, int n2, int n3) nogil:
  *     bubble_sort(arr1, n1)             # <<<<<<<<<<<<<<
@@ -2089,7 +2089,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
   __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(__pyx_v_arr1, __pyx_v_n1);
 
-  /* "opendxmc\engine\_siddon_func.pyx":52
+  /* "opendxmc\engine\_siddon_func.pyx":75
  * cdef int merge_array(double* arr1, double* arr2, double* out, int n1, int n2, int n3) nogil:
  *     bubble_sort(arr1, n1)
  *     bubble_sort(arr2, n2)             # <<<<<<<<<<<<<<
@@ -2098,7 +2098,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
   __pyx_f_8opendxmc_6engine_12_siddon_func_bubble_sort(__pyx_v_arr2, __pyx_v_n2);
 
-  /* "opendxmc\engine\_siddon_func.pyx":55
+  /* "opendxmc\engine\_siddon_func.pyx":78
  * 
  *     cdef int i, j, k
  *     i = 0             # <<<<<<<<<<<<<<
@@ -2107,7 +2107,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
   __pyx_v_i = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":56
+  /* "opendxmc\engine\_siddon_func.pyx":79
  *     cdef int i, j, k
  *     i = 0
  *     j = 0             # <<<<<<<<<<<<<<
@@ -2116,7 +2116,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
   __pyx_v_j = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":57
+  /* "opendxmc\engine\_siddon_func.pyx":80
  *     i = 0
  *     j = 0
  *     k = 0             # <<<<<<<<<<<<<<
@@ -2125,7 +2125,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
   __pyx_v_k = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":58
+  /* "opendxmc\engine\_siddon_func.pyx":81
  *     j = 0
  *     k = 0
  *     while (i != n1) and (j != n2):             # <<<<<<<<<<<<<<
@@ -2144,7 +2144,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
     __pyx_L5_bool_binop_done:;
     if (!__pyx_t_1) break;
 
-    /* "opendxmc\engine\_siddon_func.pyx":59
+    /* "opendxmc\engine\_siddon_func.pyx":82
  *     k = 0
  *     while (i != n1) and (j != n2):
  *         if fabs(arr1[i] - arr2[j]) > ERRF:             # <<<<<<<<<<<<<<
@@ -2154,7 +2154,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
     __pyx_t_1 = ((fabs(((__pyx_v_arr1[__pyx_v_i]) - (__pyx_v_arr2[__pyx_v_j]))) > __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF) != 0);
     if (__pyx_t_1) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":60
+      /* "opendxmc\engine\_siddon_func.pyx":83
  *     while (i != n1) and (j != n2):
  *         if fabs(arr1[i] - arr2[j]) > ERRF:
  *             if arr1[i] < arr2[j]:             # <<<<<<<<<<<<<<
@@ -2164,7 +2164,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
       __pyx_t_1 = (((__pyx_v_arr1[__pyx_v_i]) < (__pyx_v_arr2[__pyx_v_j])) != 0);
       if (__pyx_t_1) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":61
+        /* "opendxmc\engine\_siddon_func.pyx":84
  *         if fabs(arr1[i] - arr2[j]) > ERRF:
  *             if arr1[i] < arr2[j]:
  *                 out[k] = arr1[i]             # <<<<<<<<<<<<<<
@@ -2173,7 +2173,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
         (__pyx_v_out[__pyx_v_k]) = (__pyx_v_arr1[__pyx_v_i]);
 
-        /* "opendxmc\engine\_siddon_func.pyx":62
+        /* "opendxmc\engine\_siddon_func.pyx":85
  *             if arr1[i] < arr2[j]:
  *                 out[k] = arr1[i]
  *                 k += 1             # <<<<<<<<<<<<<<
@@ -2182,7 +2182,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
         __pyx_v_k = (__pyx_v_k + 1);
 
-        /* "opendxmc\engine\_siddon_func.pyx":63
+        /* "opendxmc\engine\_siddon_func.pyx":86
  *                 out[k] = arr1[i]
  *                 k += 1
  *                 i += 1             # <<<<<<<<<<<<<<
@@ -2194,7 +2194,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_siddon_func.pyx":65
+        /* "opendxmc\engine\_siddon_func.pyx":88
  *                 i += 1
  *             else:
  *                 out[k] = arr2[j]             # <<<<<<<<<<<<<<
@@ -2203,7 +2203,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
         (__pyx_v_out[__pyx_v_k]) = (__pyx_v_arr2[__pyx_v_j]);
 
-        /* "opendxmc\engine\_siddon_func.pyx":66
+        /* "opendxmc\engine\_siddon_func.pyx":89
  *             else:
  *                 out[k] = arr2[j]
  *                 k += 1             # <<<<<<<<<<<<<<
@@ -2212,7 +2212,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
         __pyx_v_k = (__pyx_v_k + 1);
 
-        /* "opendxmc\engine\_siddon_func.pyx":67
+        /* "opendxmc\engine\_siddon_func.pyx":90
  *                 out[k] = arr2[j]
  *                 k += 1
  *                 j += 1             # <<<<<<<<<<<<<<
@@ -2226,7 +2226,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_siddon_func.pyx":69
+      /* "opendxmc\engine\_siddon_func.pyx":92
  *                 j += 1
  *         else:
  *             out[k] = arr1[i]             # <<<<<<<<<<<<<<
@@ -2235,7 +2235,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       (__pyx_v_out[__pyx_v_k]) = (__pyx_v_arr1[__pyx_v_i]);
 
-      /* "opendxmc\engine\_siddon_func.pyx":70
+      /* "opendxmc\engine\_siddon_func.pyx":93
  *         else:
  *             out[k] = arr1[i]
  *             k += 1             # <<<<<<<<<<<<<<
@@ -2244,7 +2244,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       __pyx_v_k = (__pyx_v_k + 1);
 
-      /* "opendxmc\engine\_siddon_func.pyx":71
+      /* "opendxmc\engine\_siddon_func.pyx":94
  *             out[k] = arr1[i]
  *             k += 1
  *             i += 1             # <<<<<<<<<<<<<<
@@ -2253,7 +2253,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       __pyx_v_i = (__pyx_v_i + 1);
 
-      /* "opendxmc\engine\_siddon_func.pyx":72
+      /* "opendxmc\engine\_siddon_func.pyx":95
  *             k += 1
  *             i += 1
  *             j += 1             # <<<<<<<<<<<<<<
@@ -2265,7 +2265,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
     __pyx_L7:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":74
+  /* "opendxmc\engine\_siddon_func.pyx":97
  *             j += 1
  * 
  *     if i == n1:             # <<<<<<<<<<<<<<
@@ -2275,7 +2275,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   __pyx_t_1 = ((__pyx_v_i == __pyx_v_n1) != 0);
   if (__pyx_t_1) {
 
-    /* "opendxmc\engine\_siddon_func.pyx":75
+    /* "opendxmc\engine\_siddon_func.pyx":98
  * 
  *     if i == n1:
  *         while j != n2:             # <<<<<<<<<<<<<<
@@ -2286,7 +2286,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
       __pyx_t_1 = ((__pyx_v_j != __pyx_v_n2) != 0);
       if (!__pyx_t_1) break;
 
-      /* "opendxmc\engine\_siddon_func.pyx":76
+      /* "opendxmc\engine\_siddon_func.pyx":99
  *     if i == n1:
  *         while j != n2:
  *             out[k] = arr2[j]             # <<<<<<<<<<<<<<
@@ -2295,7 +2295,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       (__pyx_v_out[__pyx_v_k]) = (__pyx_v_arr2[__pyx_v_j]);
 
-      /* "opendxmc\engine\_siddon_func.pyx":77
+      /* "opendxmc\engine\_siddon_func.pyx":100
  *         while j != n2:
  *             out[k] = arr2[j]
  *             j += 1             # <<<<<<<<<<<<<<
@@ -2304,7 +2304,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       __pyx_v_j = (__pyx_v_j + 1);
 
-      /* "opendxmc\engine\_siddon_func.pyx":78
+      /* "opendxmc\engine\_siddon_func.pyx":101
  *             out[k] = arr2[j]
  *             j += 1
  *             k += 1             # <<<<<<<<<<<<<<
@@ -2317,7 +2317,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   }
   /*else*/ {
 
-    /* "opendxmc\engine\_siddon_func.pyx":80
+    /* "opendxmc\engine\_siddon_func.pyx":103
  *             k += 1
  *     else:
  *         while i != n1:             # <<<<<<<<<<<<<<
@@ -2328,7 +2328,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
       __pyx_t_1 = ((__pyx_v_i != __pyx_v_n1) != 0);
       if (!__pyx_t_1) break;
 
-      /* "opendxmc\engine\_siddon_func.pyx":81
+      /* "opendxmc\engine\_siddon_func.pyx":104
  *     else:
  *         while i != n1:
  *             out[k] = arr1[i]             # <<<<<<<<<<<<<<
@@ -2337,7 +2337,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       (__pyx_v_out[__pyx_v_k]) = (__pyx_v_arr1[__pyx_v_i]);
 
-      /* "opendxmc\engine\_siddon_func.pyx":82
+      /* "opendxmc\engine\_siddon_func.pyx":105
  *         while i != n1:
  *             out[k] = arr1[i]
  *             i += 1             # <<<<<<<<<<<<<<
@@ -2346,7 +2346,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
  */
       __pyx_v_i = (__pyx_v_i + 1);
 
-      /* "opendxmc\engine\_siddon_func.pyx":83
+      /* "opendxmc\engine\_siddon_func.pyx":106
  *             out[k] = arr1[i]
  *             i += 1
  *             k += 1             # <<<<<<<<<<<<<<
@@ -2358,7 +2358,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   }
   __pyx_L9:;
 
-  /* "opendxmc\engine\_siddon_func.pyx":84
+  /* "opendxmc\engine\_siddon_func.pyx":107
  *             i += 1
  *             k += 1
  *     return k             # <<<<<<<<<<<<<<
@@ -2368,7 +2368,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   __pyx_r = __pyx_v_k;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":50
+  /* "opendxmc\engine\_siddon_func.pyx":73
  * 
  * 
  * cdef int merge_array(double* arr1, double* arr2, double* out, int n1, int n2, int n3) nogil:             # <<<<<<<<<<<<<<
@@ -2381,7 +2381,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_merge_array(double *__pyx_v_
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":87
+/* "opendxmc\engine\_siddon_func.pyx":110
  * 
  * 
  * cdef double plane(double[:] spacing, double[:] offset, int axis, int plane_number) nogil:             # <<<<<<<<<<<<<<
@@ -2394,7 +2394,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_plane(__Pyx_memviewslice 
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_siddon_func.pyx":88
+  /* "opendxmc\engine\_siddon_func.pyx":111
  * 
  * cdef double plane(double[:] spacing, double[:] offset, int axis, int plane_number) nogil:
  *     return offset[axis] + plane_number * spacing[axis]             # <<<<<<<<<<<<<<
@@ -2406,7 +2406,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_plane(__Pyx_memviewslice 
   __pyx_r = ((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_1 * __pyx_v_offset.strides[0]) ))) + (__pyx_v_plane_number * (*((double *) ( /* dim=0 */ (__pyx_v_spacing.data + __pyx_t_2 * __pyx_v_spacing.strides[0]) )))));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":87
+  /* "opendxmc\engine\_siddon_func.pyx":110
  * 
  * 
  * cdef double plane(double[:] spacing, double[:] offset, int axis, int plane_number) nogil:             # <<<<<<<<<<<<<<
@@ -2419,7 +2419,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_plane(__Pyx_memviewslice 
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":91
+/* "opendxmc\engine\_siddon_func.pyx":114
  * 
  * 
  * cdef int point_inside(double* particle, double t, double [:] N, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2441,7 +2441,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
   int __pyx_t_6;
   int __pyx_t_7;
 
-  /* "opendxmc\engine\_siddon_func.pyx":94
+  /* "opendxmc\engine\_siddon_func.pyx":117
  *     cdef int i
  *     cdef double stop, llim, ulim
  *     for i in xrange(3):             # <<<<<<<<<<<<<<
@@ -2451,7 +2451,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":95
+    /* "opendxmc\engine\_siddon_func.pyx":118
  *     cdef double stop, llim, ulim
  *     for i in xrange(3):
  *         ulim = offset[i] + N[i] * spacing[i] + ERRF             # <<<<<<<<<<<<<<
@@ -2463,7 +2463,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
     __pyx_t_4 = __pyx_v_i;
     __pyx_v_ulim = (((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_2 * __pyx_v_offset.strides[0]) ))) + ((*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_3 * __pyx_v_N.strides[0]) ))) * (*((double *) ( /* dim=0 */ (__pyx_v_spacing.data + __pyx_t_4 * __pyx_v_spacing.strides[0]) ))))) + __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF);
 
-    /* "opendxmc\engine\_siddon_func.pyx":96
+    /* "opendxmc\engine\_siddon_func.pyx":119
  *     for i in xrange(3):
  *         ulim = offset[i] + N[i] * spacing[i] + ERRF
  *         llim = offset[i] - ERRF             # <<<<<<<<<<<<<<
@@ -2473,7 +2473,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
     __pyx_t_5 = __pyx_v_i;
     __pyx_v_llim = ((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_5 * __pyx_v_offset.strides[0]) ))) - __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF);
 
-    /* "opendxmc\engine\_siddon_func.pyx":97
+    /* "opendxmc\engine\_siddon_func.pyx":120
  *         ulim = offset[i] + N[i] * spacing[i] + ERRF
  *         llim = offset[i] - ERRF
  *         stop = particle[i] + t * particle[i+3]             # <<<<<<<<<<<<<<
@@ -2482,7 +2482,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
  */
     __pyx_v_stop = ((__pyx_v_particle[__pyx_v_i]) + (__pyx_v_t * (__pyx_v_particle[(__pyx_v_i + 3)])));
 
-    /* "opendxmc\engine\_siddon_func.pyx":98
+    /* "opendxmc\engine\_siddon_func.pyx":121
  *         llim = offset[i] - ERRF
  *         stop = particle[i] + t * particle[i+3]
  *         if not  (llim <= stop <= ulim):             # <<<<<<<<<<<<<<
@@ -2496,7 +2496,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
     __pyx_t_7 = ((!(__pyx_t_6 != 0)) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":99
+      /* "opendxmc\engine\_siddon_func.pyx":122
  *         stop = particle[i] + t * particle[i+3]
  *         if not  (llim <= stop <= ulim):
  *             return 0             # <<<<<<<<<<<<<<
@@ -2508,7 +2508,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
     }
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":100
+  /* "opendxmc\engine\_siddon_func.pyx":123
  *         if not  (llim <= stop <= ulim):
  *             return 0
  *     return 1             # <<<<<<<<<<<<<<
@@ -2518,7 +2518,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
   __pyx_r = 1;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":91
+  /* "opendxmc\engine\_siddon_func.pyx":114
  * 
  * 
  * cdef int point_inside(double* particle, double t, double [:] N, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2531,7 +2531,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(double *__pyx_v
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":103
+/* "opendxmc\engine\_siddon_func.pyx":126
  * 
  * 
  * cdef void get_stop(double* particle, double [:] N, double [:] spacing, double [:] offset, double* s) nogil:             # <<<<<<<<<<<<<<
@@ -2550,7 +2550,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
   int __pyx_t_5;
   int __pyx_t_6;
 
-  /* "opendxmc\engine\_siddon_func.pyx":108
+  /* "opendxmc\engine\_siddon_func.pyx":131
  * #    cdef double[:] s
  * #    s = np.empty(3, dtype=np.double)
  *     t_max = 0.0             # <<<<<<<<<<<<<<
@@ -2559,7 +2559,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
  */
   __pyx_v_t_max = 0.0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":110
+  /* "opendxmc\engine\_siddon_func.pyx":133
  *     t_max = 0.0
  * 
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2569,7 +2569,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":111
+    /* "opendxmc\engine\_siddon_func.pyx":134
  * 
  *     for i in range(3):
  *         if fabs(particle[i+3]) > ERRF:             # <<<<<<<<<<<<<<
@@ -2579,7 +2579,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
     __pyx_t_2 = ((fabs((__pyx_v_particle[(__pyx_v_i + 3)])) > __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":112
+      /* "opendxmc\engine\_siddon_func.pyx":135
  *     for i in range(3):
  *         if fabs(particle[i+3]) > ERRF:
  *             t_cand = (offset[i] - particle[i]) / particle[i+3]             # <<<<<<<<<<<<<<
@@ -2589,7 +2589,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
       __pyx_t_3 = __pyx_v_i;
       __pyx_v_t_cand = (((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_3 * __pyx_v_offset.strides[0]) ))) - (__pyx_v_particle[__pyx_v_i])) / (__pyx_v_particle[(__pyx_v_i + 3)]));
 
-      /* "opendxmc\engine\_siddon_func.pyx":113
+      /* "opendxmc\engine\_siddon_func.pyx":136
  *         if fabs(particle[i+3]) > ERRF:
  *             t_cand = (offset[i] - particle[i]) / particle[i+3]
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:             # <<<<<<<<<<<<<<
@@ -2599,7 +2599,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
       __pyx_t_2 = ((__pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(__pyx_v_particle, __pyx_v_t_cand, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset) == 1) != 0);
       if (__pyx_t_2) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":114
+        /* "opendxmc\engine\_siddon_func.pyx":137
  *             t_cand = (offset[i] - particle[i]) / particle[i+3]
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:
  *                 t_max = max(t_max, t_cand)             # <<<<<<<<<<<<<<
@@ -2611,7 +2611,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
       }
       __pyx_L6:;
 
-      /* "opendxmc\engine\_siddon_func.pyx":115
+      /* "opendxmc\engine\_siddon_func.pyx":138
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:
  *                 t_max = max(t_max, t_cand)
  *             t_cand = (offset[i] + N[i] * spacing[i] - particle[i]) / particle[i+3]             # <<<<<<<<<<<<<<
@@ -2623,7 +2623,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
       __pyx_t_6 = __pyx_v_i;
       __pyx_v_t_cand = ((((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_4 * __pyx_v_offset.strides[0]) ))) + ((*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_5 * __pyx_v_N.strides[0]) ))) * (*((double *) ( /* dim=0 */ (__pyx_v_spacing.data + __pyx_t_6 * __pyx_v_spacing.strides[0]) ))))) - (__pyx_v_particle[__pyx_v_i])) / (__pyx_v_particle[(__pyx_v_i + 3)]));
 
-      /* "opendxmc\engine\_siddon_func.pyx":116
+      /* "opendxmc\engine\_siddon_func.pyx":139
  *                 t_max = max(t_max, t_cand)
  *             t_cand = (offset[i] + N[i] * spacing[i] - particle[i]) / particle[i+3]
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:             # <<<<<<<<<<<<<<
@@ -2633,7 +2633,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
       __pyx_t_2 = ((__pyx_f_8opendxmc_6engine_12_siddon_func_point_inside(__pyx_v_particle, __pyx_v_t_cand, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset) == 1) != 0);
       if (__pyx_t_2) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":117
+        /* "opendxmc\engine\_siddon_func.pyx":140
  *             t_cand = (offset[i] + N[i] * spacing[i] - particle[i]) / particle[i+3]
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:
  *                 t_max = max(t_max, t_cand)             # <<<<<<<<<<<<<<
@@ -2649,7 +2649,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
     __pyx_L5:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":118
+  /* "opendxmc\engine\_siddon_func.pyx":141
  *             if point_inside(particle, t_cand, N, spacing, offset) == 1:
  *                 t_max = max(t_max, t_cand)
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2659,7 +2659,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":119
+    /* "opendxmc\engine\_siddon_func.pyx":142
  *                 t_max = max(t_max, t_cand)
  *     for i in range(3):
  *         s[i] = particle[i] + particle[i+3] * t_max             # <<<<<<<<<<<<<<
@@ -2669,7 +2669,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
     (__pyx_v_s[__pyx_v_i]) = ((__pyx_v_particle[__pyx_v_i]) + ((__pyx_v_particle[(__pyx_v_i + 3)]) * __pyx_v_t_max));
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":103
+  /* "opendxmc\engine\_siddon_func.pyx":126
  * 
  * 
  * cdef void get_stop(double* particle, double [:] N, double [:] spacing, double [:] offset, double* s) nogil:             # <<<<<<<<<<<<<<
@@ -2680,7 +2680,7 @@ static void __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(double *__pyx_v_pa
   /* function exit code */
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":122
+/* "opendxmc\engine\_siddon_func.pyx":145
  * 
  * 
  * cdef int is_intersecting(double* particle, double [:] N, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2695,7 +2695,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_siddon_func.pyx":124
+  /* "opendxmc\engine\_siddon_func.pyx":147
  * cdef int is_intersecting(double* particle, double [:] N, double [:] spacing, double [:] offset) nogil:
  * 
  *     cdef double *stop = <double *>malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2704,7 +2704,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
  */
   __pyx_v_stop = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":127
+  /* "opendxmc\engine\_siddon_func.pyx":150
  *     cdef int i
  * 
  *     get_stop(particle, N, spacing, offset, stop)             # <<<<<<<<<<<<<<
@@ -2713,7 +2713,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
  */
   __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset, __pyx_v_stop);
 
-  /* "opendxmc\engine\_siddon_func.pyx":129
+  /* "opendxmc\engine\_siddon_func.pyx":152
  *     get_stop(particle, N, spacing, offset, stop)
  * 
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2723,7 +2723,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":130
+    /* "opendxmc\engine\_siddon_func.pyx":153
  * 
  *     for i in range(3):
  *         if fabs(particle[i] - stop[i]) > ERRF:             # <<<<<<<<<<<<<<
@@ -2733,7 +2733,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
     __pyx_t_2 = ((fabs(((__pyx_v_particle[__pyx_v_i]) - (__pyx_v_stop[__pyx_v_i]))) > __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":131
+      /* "opendxmc\engine\_siddon_func.pyx":154
  *     for i in range(3):
  *         if fabs(particle[i] - stop[i]) > ERRF:
  *             free(stop)             # <<<<<<<<<<<<<<
@@ -2742,7 +2742,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
  */
       free(__pyx_v_stop);
 
-      /* "opendxmc\engine\_siddon_func.pyx":132
+      /* "opendxmc\engine\_siddon_func.pyx":155
  *         if fabs(particle[i] - stop[i]) > ERRF:
  *             free(stop)
  *             return 1             # <<<<<<<<<<<<<<
@@ -2754,7 +2754,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
     }
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":133
+  /* "opendxmc\engine\_siddon_func.pyx":156
  *             free(stop)
  *             return 1
  *     free(stop)             # <<<<<<<<<<<<<<
@@ -2763,7 +2763,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
  */
   free(__pyx_v_stop);
 
-  /* "opendxmc\engine\_siddon_func.pyx":134
+  /* "opendxmc\engine\_siddon_func.pyx":157
  *             return 1
  *     free(stop)
  *     return 0             # <<<<<<<<<<<<<<
@@ -2773,7 +2773,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":122
+  /* "opendxmc\engine\_siddon_func.pyx":145
  * 
  * 
  * cdef int is_intersecting(double* particle, double [:] N, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2786,7 +2786,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(double *__py
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":137
+/* "opendxmc\engine\_siddon_func.pyx":160
  * 
  * 
  * cdef double alpha(double* particle, double* stop, int plane, int axis, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2799,7 +2799,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(double *__pyx_v_par
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_siddon_func.pyx":138
+  /* "opendxmc\engine\_siddon_func.pyx":161
  * 
  * cdef double alpha(double* particle, double* stop, int plane, int axis, double [:] spacing, double [:] offset) nogil:
  *     return (offset[axis] + spacing[axis] * plane - particle[axis]) / (stop[axis] - particle[axis])             # <<<<<<<<<<<<<<
@@ -2811,7 +2811,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(double *__pyx_v_par
   __pyx_r = ((((*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_1 * __pyx_v_offset.strides[0]) ))) + ((*((double *) ( /* dim=0 */ (__pyx_v_spacing.data + __pyx_t_2 * __pyx_v_spacing.strides[0]) ))) * __pyx_v_plane)) - (__pyx_v_particle[__pyx_v_axis])) / ((__pyx_v_stop[__pyx_v_axis]) - (__pyx_v_particle[__pyx_v_axis])));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":137
+  /* "opendxmc\engine\_siddon_func.pyx":160
  * 
  * 
  * cdef double alpha(double* particle, double* stop, int plane, int axis, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2824,7 +2824,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(double *__pyx_v_par
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":141
+/* "opendxmc\engine\_siddon_func.pyx":164
  * 
  * 
  * cdef double phi(double* particle, double* stop, double alpha, int axis, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2837,7 +2837,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_phi(double *__pyx_v_parti
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "opendxmc\engine\_siddon_func.pyx":142
+  /* "opendxmc\engine\_siddon_func.pyx":165
  * 
  * cdef double phi(double* particle, double* stop, double alpha, int axis, double [:] spacing, double [:] offset) nogil:
  *     return (particle[axis] + alpha * (stop[axis] - particle[axis]) - offset[axis]) / spacing[axis]             # <<<<<<<<<<<<<<
@@ -2849,7 +2849,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_phi(double *__pyx_v_parti
   __pyx_r = ((((__pyx_v_particle[__pyx_v_axis]) + (__pyx_v_alpha * ((__pyx_v_stop[__pyx_v_axis]) - (__pyx_v_particle[__pyx_v_axis])))) - (*((double *) ( /* dim=0 */ (__pyx_v_offset.data + __pyx_t_1 * __pyx_v_offset.strides[0]) )))) / (*((double *) ( /* dim=0 */ (__pyx_v_spacing.data + __pyx_t_2 * __pyx_v_spacing.strides[0]) ))));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":141
+  /* "opendxmc\engine\_siddon_func.pyx":164
  * 
  * 
  * cdef double phi(double* particle, double* stop, double alpha, int axis, double [:] spacing, double [:] offset) nogil:             # <<<<<<<<<<<<<<
@@ -2862,7 +2862,7 @@ static double __pyx_f_8opendxmc_6engine_12_siddon_func_phi(double *__pyx_v_parti
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":145
+/* "opendxmc\engine\_siddon_func.pyx":168
  * 
  * 
  * cdef int array_indices(double* particle, double [:] N, double [:] spacing, double [:] offset, int** indices, double** lenght) nogil:             # <<<<<<<<<<<<<<
@@ -2900,7 +2900,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   int __pyx_t_9;
   int __pyx_t_10;
 
-  /* "opendxmc\engine\_siddon_func.pyx":147
+  /* "opendxmc\engine\_siddon_func.pyx":170
  * cdef int array_indices(double* particle, double [:] N, double [:] spacing, double [:] offset, int** indices, double** lenght) nogil:
  * 
  *     cdef double *stop = <double *>malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2909,7 +2909,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_stop = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":148
+  /* "opendxmc\engine\_siddon_func.pyx":171
  * 
  *     cdef double *stop = <double *>malloc(3 * sizeof(double))
  *     get_stop(particle, N, spacing, offset, stop)             # <<<<<<<<<<<<<<
@@ -2918,7 +2918,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_f_8opendxmc_6engine_12_siddon_func_get_stop(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset, __pyx_v_stop);
 
-  /* "opendxmc\engine\_siddon_func.pyx":150
+  /* "opendxmc\engine\_siddon_func.pyx":173
  *     get_stop(particle, N, spacing, offset, stop)
  * 
  *     cdef double *a_e = <double *>malloc(6 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -2927,7 +2927,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_a_e = ((double *)malloc((6 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":151
+  /* "opendxmc\engine\_siddon_func.pyx":174
  * 
  *     cdef double *a_e = <double *>malloc(6 * sizeof(double))
  *     cdef int *ind_e = <int *>malloc(6 * sizeof(int))             # <<<<<<<<<<<<<<
@@ -2936,7 +2936,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_ind_e = ((int *)malloc((6 * (sizeof(int)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":152
+  /* "opendxmc\engine\_siddon_func.pyx":175
  *     cdef double *a_e = <double *>malloc(6 * sizeof(double))
  *     cdef int *ind_e = <int *>malloc(6 * sizeof(int))
  *     cdef int *ind = <int *>malloc(3 * sizeof(int))             # <<<<<<<<<<<<<<
@@ -2945,7 +2945,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_ind = ((int *)malloc((3 * (sizeof(int)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":156
+  /* "opendxmc\engine\_siddon_func.pyx":179
  * 
  *     #finding valid dimensions
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2955,7 +2955,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":157
+    /* "opendxmc\engine\_siddon_func.pyx":180
  *     #finding valid dimensions
  *     for i in range(3):
  *         if fabs(particle[i] - stop[i]) > ERRF:             # <<<<<<<<<<<<<<
@@ -2965,7 +2965,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_t_2 = ((fabs(((__pyx_v_particle[__pyx_v_i]) - (__pyx_v_stop[__pyx_v_i]))) > __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":158
+      /* "opendxmc\engine\_siddon_func.pyx":181
  *     for i in range(3):
  *         if fabs(particle[i] - stop[i]) > ERRF:
  *             ind[i] = 1             # <<<<<<<<<<<<<<
@@ -2977,7 +2977,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_siddon_func.pyx":160
+      /* "opendxmc\engine\_siddon_func.pyx":183
  *             ind[i] = 1
  *         else:
  *             ind[i] = 0             # <<<<<<<<<<<<<<
@@ -2989,7 +2989,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_L5:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":164
+  /* "opendxmc\engine\_siddon_func.pyx":187
  *     #finding a_e
  *     cdef double a0, aN
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -2999,7 +2999,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":165
+    /* "opendxmc\engine\_siddon_func.pyx":188
  *     cdef double a0, aN
  *     for i in range(3):
  *         if ind[i] == 1:             # <<<<<<<<<<<<<<
@@ -3009,7 +3009,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_t_2 = (((__pyx_v_ind[__pyx_v_i]) == 1) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":166
+      /* "opendxmc\engine\_siddon_func.pyx":189
  *     for i in range(3):
  *         if ind[i] == 1:
  *             a0 = alpha(particle, stop, 0, i, spacing, offset)             # <<<<<<<<<<<<<<
@@ -3018,7 +3018,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
       __pyx_v_a0 = __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(__pyx_v_particle, __pyx_v_stop, 0, __pyx_v_i, __pyx_v_spacing, __pyx_v_offset);
 
-      /* "opendxmc\engine\_siddon_func.pyx":167
+      /* "opendxmc\engine\_siddon_func.pyx":190
  *         if ind[i] == 1:
  *             a0 = alpha(particle, stop, 0, i, spacing, offset)
  *             aN = alpha(particle, stop, <int>N[i], i, spacing, offset)             # <<<<<<<<<<<<<<
@@ -3028,7 +3028,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       __pyx_t_3 = __pyx_v_i;
       __pyx_v_aN = __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(__pyx_v_particle, __pyx_v_stop, ((int)(*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_3 * __pyx_v_N.strides[0]) )))), __pyx_v_i, __pyx_v_spacing, __pyx_v_offset);
 
-      /* "opendxmc\engine\_siddon_func.pyx":168
+      /* "opendxmc\engine\_siddon_func.pyx":191
  *             a0 = alpha(particle, stop, 0, i, spacing, offset)
  *             aN = alpha(particle, stop, <int>N[i], i, spacing, offset)
  *             a_e[i] = min(a0, aN)             # <<<<<<<<<<<<<<
@@ -3037,7 +3037,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
       (__pyx_v_a_e[__pyx_v_i]) = __pyx_f_8opendxmc_6engine_12_siddon_func_min(__pyx_v_a0, __pyx_v_aN);
 
-      /* "opendxmc\engine\_siddon_func.pyx":169
+      /* "opendxmc\engine\_siddon_func.pyx":192
  *             aN = alpha(particle, stop, <int>N[i], i, spacing, offset)
  *             a_e[i] = min(a0, aN)
  *             a_e[i+3] = max(a0, aN)             # <<<<<<<<<<<<<<
@@ -3050,7 +3050,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_L8:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":173
+  /* "opendxmc\engine\_siddon_func.pyx":196
  *     #finding extreme a
  *     cdef double amin, amax
  *     amin = 0.             # <<<<<<<<<<<<<<
@@ -3059,7 +3059,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_amin = 0.;
 
-  /* "opendxmc\engine\_siddon_func.pyx":174
+  /* "opendxmc\engine\_siddon_func.pyx":197
  *     cdef double amin, amax
  *     amin = 0.
  *     amax = 1.             # <<<<<<<<<<<<<<
@@ -3068,7 +3068,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_amax = 1.;
 
-  /* "opendxmc\engine\_siddon_func.pyx":175
+  /* "opendxmc\engine\_siddon_func.pyx":198
  *     amin = 0.
  *     amax = 1.
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -3078,7 +3078,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":176
+    /* "opendxmc\engine\_siddon_func.pyx":199
  *     amax = 1.
  *     for i in range(3):
  *         if ind[i] == 1:             # <<<<<<<<<<<<<<
@@ -3088,7 +3088,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_t_2 = (((__pyx_v_ind[__pyx_v_i]) == 1) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":177
+      /* "opendxmc\engine\_siddon_func.pyx":200
  *     for i in range(3):
  *         if ind[i] == 1:
  *             amin = max(amin, a_e[i])             # <<<<<<<<<<<<<<
@@ -3097,7 +3097,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
       __pyx_v_amin = __pyx_f_8opendxmc_6engine_12_siddon_func_max(__pyx_v_amin, (__pyx_v_a_e[__pyx_v_i]));
 
-      /* "opendxmc\engine\_siddon_func.pyx":178
+      /* "opendxmc\engine\_siddon_func.pyx":201
  *         if ind[i] == 1:
  *             amin = max(amin, a_e[i])
  *             amax = min(amax, a_e[i+3])             # <<<<<<<<<<<<<<
@@ -3110,7 +3110,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_L11:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":181
+  /* "opendxmc\engine\_siddon_func.pyx":204
  * 
  *     #finding extreme indices:
  *     cdef int n = 0             # <<<<<<<<<<<<<<
@@ -3119,7 +3119,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_n = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":182
+  /* "opendxmc\engine\_siddon_func.pyx":205
  *     #finding extreme indices:
  *     cdef int n = 0
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -3129,7 +3129,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":183
+    /* "opendxmc\engine\_siddon_func.pyx":206
  *     cdef int n = 0
  *     for i in range(3):
  *         if ind[i] == 1:             # <<<<<<<<<<<<<<
@@ -3139,7 +3139,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_t_2 = (((__pyx_v_ind[__pyx_v_i]) == 1) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":184
+      /* "opendxmc\engine\_siddon_func.pyx":207
  *     for i in range(3):
  *         if ind[i] == 1:
  *             if particle[i] < stop[i]:             # <<<<<<<<<<<<<<
@@ -3149,7 +3149,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       __pyx_t_2 = (((__pyx_v_particle[__pyx_v_i]) < (__pyx_v_stop[__pyx_v_i])) != 0);
       if (__pyx_t_2) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":185
+        /* "opendxmc\engine\_siddon_func.pyx":208
  *         if ind[i] == 1:
  *             if particle[i] < stop[i]:
  *                 if amin == a_e[i]:             # <<<<<<<<<<<<<<
@@ -3159,7 +3159,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         __pyx_t_2 = ((__pyx_v_amin == (__pyx_v_a_e[__pyx_v_i])) != 0);
         if (__pyx_t_2) {
 
-          /* "opendxmc\engine\_siddon_func.pyx":186
+          /* "opendxmc\engine\_siddon_func.pyx":209
  *             if particle[i] < stop[i]:
  *                 if amin == a_e[i]:
  *                     ind_e[i] = 0             # <<<<<<<<<<<<<<
@@ -3171,7 +3171,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         /*else*/ {
 
-          /* "opendxmc\engine\_siddon_func.pyx":188
+          /* "opendxmc\engine\_siddon_func.pyx":211
  *                     ind_e[i] = 0
  *                 else:
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amin, i, spacing, offset)))             # <<<<<<<<<<<<<<
@@ -3182,7 +3182,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         __pyx_L16:;
 
-        /* "opendxmc\engine\_siddon_func.pyx":189
+        /* "opendxmc\engine\_siddon_func.pyx":212
  *                 else:
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amin, i, spacing, offset)))
  *                 if amax == a_e[i+3]:             # <<<<<<<<<<<<<<
@@ -3192,7 +3192,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         __pyx_t_2 = ((__pyx_v_amax == (__pyx_v_a_e[(__pyx_v_i + 3)])) != 0);
         if (__pyx_t_2) {
 
-          /* "opendxmc\engine\_siddon_func.pyx":190
+          /* "opendxmc\engine\_siddon_func.pyx":213
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amin, i, spacing, offset)))
  *                 if amax == a_e[i+3]:
  *                     ind_e[i+3] = <int>N[i] - 1             # <<<<<<<<<<<<<<
@@ -3205,7 +3205,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         /*else*/ {
 
-          /* "opendxmc\engine\_siddon_func.pyx":192
+          /* "opendxmc\engine\_siddon_func.pyx":215
  *                     ind_e[i+3] = <int>N[i] - 1
  *                 else:
  *                     ind_e[i+3] = <int>min(floor(phi(particle, stop, amax, i, spacing, offset)), N[i] - 1)             # <<<<<<<<<<<<<<
@@ -3220,7 +3220,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_siddon_func.pyx":194
+        /* "opendxmc\engine\_siddon_func.pyx":217
  *                     ind_e[i+3] = <int>min(floor(phi(particle, stop, amax, i, spacing, offset)), N[i] - 1)
  *             else:
  *                 if amin == a_e[i]:             # <<<<<<<<<<<<<<
@@ -3230,7 +3230,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         __pyx_t_2 = ((__pyx_v_amin == (__pyx_v_a_e[__pyx_v_i])) != 0);
         if (__pyx_t_2) {
 
-          /* "opendxmc\engine\_siddon_func.pyx":195
+          /* "opendxmc\engine\_siddon_func.pyx":218
  *             else:
  *                 if amin == a_e[i]:
  *                     ind_e[i+3] = <int>N[i] - 1             # <<<<<<<<<<<<<<
@@ -3243,7 +3243,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         /*else*/ {
 
-          /* "opendxmc\engine\_siddon_func.pyx":197
+          /* "opendxmc\engine\_siddon_func.pyx":220
  *                     ind_e[i+3] = <int>N[i] - 1
  *                 else:
  *                     ind_e[i+3] = <int>min(floor(phi(particle, stop, amin, i, spacing, offset)), N[i] - 1)             # <<<<<<<<<<<<<<
@@ -3255,7 +3255,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         __pyx_L18:;
 
-        /* "opendxmc\engine\_siddon_func.pyx":198
+        /* "opendxmc\engine\_siddon_func.pyx":221
  *                 else:
  *                     ind_e[i+3] = <int>min(floor(phi(particle, stop, amin, i, spacing, offset)), N[i] - 1)
  *                 if amax == a_e[i+3]:             # <<<<<<<<<<<<<<
@@ -3265,7 +3265,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         __pyx_t_2 = ((__pyx_v_amax == (__pyx_v_a_e[(__pyx_v_i + 3)])) != 0);
         if (__pyx_t_2) {
 
-          /* "opendxmc\engine\_siddon_func.pyx":199
+          /* "opendxmc\engine\_siddon_func.pyx":222
  *                     ind_e[i+3] = <int>min(floor(phi(particle, stop, amin, i, spacing, offset)), N[i] - 1)
  *                 if amax == a_e[i+3]:
  *                     ind_e[i] = 0             # <<<<<<<<<<<<<<
@@ -3277,7 +3277,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
         }
         /*else*/ {
 
-          /* "opendxmc\engine\_siddon_func.pyx":201
+          /* "opendxmc\engine\_siddon_func.pyx":224
  *                     ind_e[i] = 0
  *                 else:
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amax, i, spacing, offset)))             # <<<<<<<<<<<<<<
@@ -3290,7 +3290,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       }
       __pyx_L15:;
 
-      /* "opendxmc\engine\_siddon_func.pyx":202
+      /* "opendxmc\engine\_siddon_func.pyx":225
  *                 else:
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amax, i, spacing, offset)))
  *             if ind_e[i+3] >= ind_e[i]:             # <<<<<<<<<<<<<<
@@ -3300,7 +3300,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       __pyx_t_2 = (((__pyx_v_ind_e[(__pyx_v_i + 3)]) >= (__pyx_v_ind_e[__pyx_v_i])) != 0);
       if (__pyx_t_2) {
 
-        /* "opendxmc\engine\_siddon_func.pyx":203
+        /* "opendxmc\engine\_siddon_func.pyx":226
  *                     ind_e[i] = <int>max(0, ceil(phi(particle, stop, amax, i, spacing, offset)))
  *             if ind_e[i+3] >= ind_e[i]:
  *                 n += (ind_e[i+3] - ind_e[i] + 1)             # <<<<<<<<<<<<<<
@@ -3316,7 +3316,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_L14:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":206
+  /* "opendxmc\engine\_siddon_func.pyx":229
  * 
  *     #finding a intersection values
  *     cdef double *a_ind = <double *>malloc((n+2) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3325,7 +3325,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_a_ind = ((double *)malloc(((__pyx_v_n + 2) * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":207
+  /* "opendxmc\engine\_siddon_func.pyx":230
  *     #finding a intersection values
  *     cdef double *a_ind = <double *>malloc((n+2) * sizeof(double))
  *     cdef double *a_xy = <double *>malloc((n+2) * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3334,7 +3334,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_a_xy = ((double *)malloc(((__pyx_v_n + 2) * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":209
+  /* "opendxmc\engine\_siddon_func.pyx":232
  *     cdef double *a_xy = <double *>malloc((n+2) * sizeof(double))
  *     cdef int j, k
  *     k = 0             # <<<<<<<<<<<<<<
@@ -3343,7 +3343,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_k = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":210
+  /* "opendxmc\engine\_siddon_func.pyx":233
  *     cdef int j, k
  *     k = 0
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -3353,7 +3353,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":211
+    /* "opendxmc\engine\_siddon_func.pyx":234
  *     k = 0
  *     for i in range(3):
  *         if ind[i] == 1:             # <<<<<<<<<<<<<<
@@ -3363,7 +3363,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_t_2 = (((__pyx_v_ind[__pyx_v_i]) == 1) != 0);
     if (__pyx_t_2) {
 
-      /* "opendxmc\engine\_siddon_func.pyx":212
+      /* "opendxmc\engine\_siddon_func.pyx":235
  *     for i in range(3):
  *         if ind[i] == 1:
  *             for j in range(ind_e[i], ind_e[i+3] + 1):             # <<<<<<<<<<<<<<
@@ -3374,7 +3374,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
       for (__pyx_t_9 = (__pyx_v_ind_e[__pyx_v_i]); __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
         __pyx_v_j = __pyx_t_9;
 
-        /* "opendxmc\engine\_siddon_func.pyx":213
+        /* "opendxmc\engine\_siddon_func.pyx":236
  *         if ind[i] == 1:
  *             for j in range(ind_e[i], ind_e[i+3] + 1):
  *                 a_ind[k] = alpha(particle, stop, j, i, spacing, offset)             # <<<<<<<<<<<<<<
@@ -3383,7 +3383,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
         (__pyx_v_a_ind[__pyx_v_k]) = __pyx_f_8opendxmc_6engine_12_siddon_func_alpha(__pyx_v_particle, __pyx_v_stop, __pyx_v_j, __pyx_v_i, __pyx_v_spacing, __pyx_v_offset);
 
-        /* "opendxmc\engine\_siddon_func.pyx":214
+        /* "opendxmc\engine\_siddon_func.pyx":237
  *             for j in range(ind_e[i], ind_e[i+3] + 1):
  *                 a_ind[k] = alpha(particle, stop, j, i, spacing, offset)
  *                 k += 1             # <<<<<<<<<<<<<<
@@ -3397,7 +3397,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_L23:;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":215
+  /* "opendxmc\engine\_siddon_func.pyx":238
  *                 a_ind[k] = alpha(particle, stop, j, i, spacing, offset)
  *                 k += 1
  *     a_ind[k] = amin             # <<<<<<<<<<<<<<
@@ -3406,7 +3406,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   (__pyx_v_a_ind[__pyx_v_k]) = __pyx_v_amin;
 
-  /* "opendxmc\engine\_siddon_func.pyx":216
+  /* "opendxmc\engine\_siddon_func.pyx":239
  *                 k += 1
  *     a_ind[k] = amin
  *     a_ind[k+1] = amax             # <<<<<<<<<<<<<<
@@ -3415,7 +3415,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   (__pyx_v_a_ind[(__pyx_v_k + 1)]) = __pyx_v_amax;
 
-  /* "opendxmc\engine\_siddon_func.pyx":219
+  /* "opendxmc\engine\_siddon_func.pyx":242
  * 
  *     cdef double a_red
  *     cdef double distance = 0             # <<<<<<<<<<<<<<
@@ -3424,7 +3424,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_distance = 0.0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":221
+  /* "opendxmc\engine\_siddon_func.pyx":244
  *     cdef double distance = 0
  *     #finding euclidian distance between start stop
  *     for i in range(3):             # <<<<<<<<<<<<<<
@@ -3434,7 +3434,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "opendxmc\engine\_siddon_func.pyx":222
+    /* "opendxmc\engine\_siddon_func.pyx":245
  *     #finding euclidian distance between start stop
  *     for i in range(3):
  *         distance += (stop[i]- particle[i]) * (stop[i]- particle[i])             # <<<<<<<<<<<<<<
@@ -3444,7 +3444,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     __pyx_v_distance = (__pyx_v_distance + (((__pyx_v_stop[__pyx_v_i]) - (__pyx_v_particle[__pyx_v_i])) * ((__pyx_v_stop[__pyx_v_i]) - (__pyx_v_particle[__pyx_v_i]))));
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":223
+  /* "opendxmc\engine\_siddon_func.pyx":246
  *     for i in range(3):
  *         distance += (stop[i]- particle[i]) * (stop[i]- particle[i])
  *     distance = sqrt(distance)             # <<<<<<<<<<<<<<
@@ -3453,7 +3453,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_distance = sqrt(__pyx_v_distance);
 
-  /* "opendxmc\engine\_siddon_func.pyx":225
+  /* "opendxmc\engine\_siddon_func.pyx":248
  *     distance = sqrt(distance)
  *     #unique intersections
  *     j = unique_array(a_ind, a_xy, n+2)             # <<<<<<<<<<<<<<
@@ -3462,7 +3462,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_j = __pyx_f_8opendxmc_6engine_12_siddon_func_unique_array(__pyx_v_a_ind, __pyx_v_a_xy, (__pyx_v_n + 2));
 
-  /* "opendxmc\engine\_siddon_func.pyx":227
+  /* "opendxmc\engine\_siddon_func.pyx":250
  *     j = unique_array(a_ind, a_xy, n+2)
  * 
  *     cdef int l = 0             # <<<<<<<<<<<<<<
@@ -3471,7 +3471,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   __pyx_v_l = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":228
+  /* "opendxmc\engine\_siddon_func.pyx":251
  * 
  *     cdef int l = 0
  *     for i in range(j):             # <<<<<<<<<<<<<<
@@ -3482,7 +3482,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_1; __pyx_t_9+=1) {
     __pyx_v_i = __pyx_t_9;
 
-    /* "opendxmc\engine\_siddon_func.pyx":229
+    /* "opendxmc\engine\_siddon_func.pyx":252
  *     cdef int l = 0
  *     for i in range(j):
  *         a_red = (a_xy[i + 1] + a_xy[i]) / 2.             # <<<<<<<<<<<<<<
@@ -3491,7 +3491,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
     __pyx_v_a_red = (((__pyx_v_a_xy[(__pyx_v_i + 1)]) + (__pyx_v_a_xy[__pyx_v_i])) / 2.);
 
-    /* "opendxmc\engine\_siddon_func.pyx":230
+    /* "opendxmc\engine\_siddon_func.pyx":253
  *     for i in range(j):
  *         a_red = (a_xy[i + 1] + a_xy[i]) / 2.
  *         lenght[0][i] = <double>((a_xy[i + 1] - a_xy[i]) * distance)             # <<<<<<<<<<<<<<
@@ -3500,7 +3500,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
     ((__pyx_v_lenght[0])[__pyx_v_i]) = ((double)(((__pyx_v_a_xy[(__pyx_v_i + 1)]) - (__pyx_v_a_xy[__pyx_v_i])) * __pyx_v_distance));
 
-    /* "opendxmc\engine\_siddon_func.pyx":231
+    /* "opendxmc\engine\_siddon_func.pyx":254
  *         a_red = (a_xy[i + 1] + a_xy[i]) / 2.
  *         lenght[0][i] = <double>((a_xy[i + 1] - a_xy[i]) * distance)
  *         for k in range(3):             # <<<<<<<<<<<<<<
@@ -3510,7 +3510,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     for (__pyx_t_10 = 0; __pyx_t_10 < 3; __pyx_t_10+=1) {
       __pyx_v_k = __pyx_t_10;
 
-      /* "opendxmc\engine\_siddon_func.pyx":232
+      /* "opendxmc\engine\_siddon_func.pyx":255
  *         lenght[0][i] = <double>((a_xy[i + 1] - a_xy[i]) * distance)
  *         for k in range(3):
  *             indices[0][l] = <int>(floor(phi(particle, stop, a_red, k, spacing, offset)))             # <<<<<<<<<<<<<<
@@ -3519,7 +3519,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
       ((__pyx_v_indices[0])[__pyx_v_l]) = ((int)floor(__pyx_f_8opendxmc_6engine_12_siddon_func_phi(__pyx_v_particle, __pyx_v_stop, __pyx_v_a_red, __pyx_v_k, __pyx_v_spacing, __pyx_v_offset)));
 
-      /* "opendxmc\engine\_siddon_func.pyx":233
+      /* "opendxmc\engine\_siddon_func.pyx":256
  *         for k in range(3):
  *             indices[0][l] = <int>(floor(phi(particle, stop, a_red, k, spacing, offset)))
  *             l += 1             # <<<<<<<<<<<<<<
@@ -3530,7 +3530,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
     }
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":234
+  /* "opendxmc\engine\_siddon_func.pyx":257
  *             indices[0][l] = <int>(floor(phi(particle, stop, a_red, k, spacing, offset)))
  *             l += 1
  *     free(stop)             # <<<<<<<<<<<<<<
@@ -3539,7 +3539,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_stop);
 
-  /* "opendxmc\engine\_siddon_func.pyx":235
+  /* "opendxmc\engine\_siddon_func.pyx":258
  *             l += 1
  *     free(stop)
  *     free(ind)             # <<<<<<<<<<<<<<
@@ -3548,7 +3548,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_ind);
 
-  /* "opendxmc\engine\_siddon_func.pyx":236
+  /* "opendxmc\engine\_siddon_func.pyx":259
  *     free(stop)
  *     free(ind)
  *     free(a_e)             # <<<<<<<<<<<<<<
@@ -3557,7 +3557,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_a_e);
 
-  /* "opendxmc\engine\_siddon_func.pyx":237
+  /* "opendxmc\engine\_siddon_func.pyx":260
  *     free(ind)
  *     free(a_e)
  *     free(ind_e)             # <<<<<<<<<<<<<<
@@ -3566,7 +3566,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_ind_e);
 
-  /* "opendxmc\engine\_siddon_func.pyx":238
+  /* "opendxmc\engine\_siddon_func.pyx":261
  *     free(a_e)
  *     free(ind_e)
  *     free(a_ind)             # <<<<<<<<<<<<<<
@@ -3575,7 +3575,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_a_ind);
 
-  /* "opendxmc\engine\_siddon_func.pyx":239
+  /* "opendxmc\engine\_siddon_func.pyx":262
  *     free(ind_e)
  *     free(a_ind)
  *     free(a_xy)             # <<<<<<<<<<<<<<
@@ -3584,7 +3584,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
  */
   free(__pyx_v_a_xy);
 
-  /* "opendxmc\engine\_siddon_func.pyx":240
+  /* "opendxmc\engine\_siddon_func.pyx":263
  *     free(a_ind)
  *     free(a_xy)
  *     return j             # <<<<<<<<<<<<<<
@@ -3594,7 +3594,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   __pyx_r = __pyx_v_j;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":145
+  /* "opendxmc\engine\_siddon_func.pyx":168
  * 
  * 
  * cdef int array_indices(double* particle, double [:] N, double [:] spacing, double [:] offset, int** indices, double** lenght) nogil:             # <<<<<<<<<<<<<<
@@ -3607,7 +3607,7 @@ static int __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(double *__pyx_
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":242
+/* "opendxmc\engine\_siddon_func.pyx":265
  *     return j
  * 
  * def is_intersecting_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
@@ -3651,21 +3651,21 @@ static PyObject *__pyx_pw_8opendxmc_6engine_12_siddon_func_1is_intersecting_py(P
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_N)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_spacing)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "is_intersecting_py") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "is_intersecting_py") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -3682,7 +3682,7 @@ static PyObject *__pyx_pw_8opendxmc_6engine_12_siddon_func_1is_intersecting_py(P
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("is_intersecting_py", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("opendxmc.engine._siddon_func.is_intersecting_py", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -3718,14 +3718,14 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("is_intersecting_py", 0);
 
-  /* "opendxmc\engine\_siddon_func.pyx":243
+  /* "opendxmc\engine\_siddon_func.pyx":266
  * 
  * def is_intersecting_py(particle, N, spacing, offset):
  *     for arg in [particle, N, spacing, offset]:             # <<<<<<<<<<<<<<
  *         assert arg.dtype == np.double
  *         assert arg is not None
  */
-  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_particle);
   __Pyx_GIVEREF(__pyx_v_particle);
@@ -3744,15 +3744,15 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   for (;;) {
     if (__pyx_t_3 >= 4) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #else
-    __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 243; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 266; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_arg, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "opendxmc\engine\_siddon_func.pyx":244
+    /* "opendxmc\engine\_siddon_func.pyx":267
  * def is_intersecting_py(particle, N, spacing, offset):
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double             # <<<<<<<<<<<<<<
@@ -3761,26 +3761,26 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  */
     #ifndef CYTHON_WITHOUT_ASSERTIONS
     if (unlikely(!Py_OptimizeFlag)) {
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_double); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_double); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       if (unlikely(!__pyx_t_6)) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 244; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":245
+    /* "opendxmc\engine\_siddon_func.pyx":268
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double
  *         assert arg is not None             # <<<<<<<<<<<<<<
@@ -3792,12 +3792,12 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
       __pyx_t_6 = (__pyx_v_arg != Py_None);
       if (unlikely(!(__pyx_t_6 != 0))) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 245; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 268; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":243
+    /* "opendxmc\engine\_siddon_func.pyx":266
  * 
  * def is_intersecting_py(particle, N, spacing, offset):
  *     for arg in [particle, N, spacing, offset]:             # <<<<<<<<<<<<<<
@@ -3807,14 +3807,14 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":246
+  /* "opendxmc\engine\_siddon_func.pyx":269
  *         assert arg.dtype == np.double
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:             # <<<<<<<<<<<<<<
  *         assert arg.shape[0] == 3
  *     assert particle.shape[0] == 8
  */
-  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_N);
   __Pyx_GIVEREF(__pyx_v_N);
@@ -3830,15 +3830,15 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   for (;;) {
     if (__pyx_t_3 >= 3) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #else
-    __pyx_t_2 = PySequence_ITEM(__pyx_t_4, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 246; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PySequence_ITEM(__pyx_t_4, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 269; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_arg, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "opendxmc\engine\_siddon_func.pyx":247
+    /* "opendxmc\engine\_siddon_func.pyx":270
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:
  *         assert arg.shape[0] == 3             # <<<<<<<<<<<<<<
@@ -3847,23 +3847,23 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  */
     #ifndef CYTHON_WITHOUT_ASSERTIONS
     if (unlikely(!Py_OptimizeFlag)) {
-      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 270; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 270; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_int_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_int_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 270; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 270; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       if (unlikely(!__pyx_t_6)) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 247; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 270; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":246
+    /* "opendxmc\engine\_siddon_func.pyx":269
  *         assert arg.dtype == np.double
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:             # <<<<<<<<<<<<<<
@@ -3873,7 +3873,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":248
+  /* "opendxmc\engine\_siddon_func.pyx":271
  *     for arg in [N, spacing, offset]:
  *         assert arg.shape[0] == 3
  *     assert particle.shape[0] == 8             # <<<<<<<<<<<<<<
@@ -3882,23 +3882,23 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_particle, __pyx_n_s_shape); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_particle, __pyx_n_s_shape); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyObject_RichCompare(__pyx_t_2, __pyx_int_8, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyObject_RichCompare(__pyx_t_2, __pyx_int_8, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (unlikely(!__pyx_t_6)) {
       PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 271; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "opendxmc\engine\_siddon_func.pyx":251
+  /* "opendxmc\engine\_siddon_func.pyx":274
  * 
  *     cdef int i, r
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))             # <<<<<<<<<<<<<<
@@ -3907,7 +3907,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  */
   __pyx_v_particle_p = ((double *)malloc((8 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":252
+  /* "opendxmc\engine\_siddon_func.pyx":275
  *     cdef int i, r
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))
  *     for i in range(8):             # <<<<<<<<<<<<<<
@@ -3917,21 +3917,21 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   for (__pyx_t_7 = 0; __pyx_t_7 < 8; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "opendxmc\engine\_siddon_func.pyx":253
+    /* "opendxmc\engine\_siddon_func.pyx":276
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))
  *     for i in range(8):
  *         particle_p[i] = particle[i]             # <<<<<<<<<<<<<<
  *     r = is_intersecting(particle_p, N, spacing, offset)
  *     free(particle_p)
  */
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_particle, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 253; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_particle, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 276; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_8 = __pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 253; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = __pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 276; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     (__pyx_v_particle_p[__pyx_v_i]) = __pyx_t_8;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":254
+  /* "opendxmc\engine\_siddon_func.pyx":277
  *     for i in range(8):
  *         particle_p[i] = particle[i]
  *     r = is_intersecting(particle_p, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -3939,17 +3939,17 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  *     return r
  */
   __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_N);
-  if (unlikely(!__pyx_t_9.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 254; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_9.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 277; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_10 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_spacing);
-  if (unlikely(!__pyx_t_10.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 254; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_10.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 277; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_11 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_offset);
-  if (unlikely(!__pyx_t_11.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 254; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_11.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 277; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_r = __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(__pyx_v_particle_p, __pyx_t_9, __pyx_t_10, __pyx_t_11);
   __PYX_XDEC_MEMVIEW(&__pyx_t_9, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_10, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_11, 1);
 
-  /* "opendxmc\engine\_siddon_func.pyx":255
+  /* "opendxmc\engine\_siddon_func.pyx":278
  *         particle_p[i] = particle[i]
  *     r = is_intersecting(particle_p, N, spacing, offset)
  *     free(particle_p)             # <<<<<<<<<<<<<<
@@ -3958,7 +3958,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  */
   free(__pyx_v_particle_p);
 
-  /* "opendxmc\engine\_siddon_func.pyx":256
+  /* "opendxmc\engine\_siddon_func.pyx":279
  *     r = is_intersecting(particle_p, N, spacing, offset)
  *     free(particle_p)
  *     return r             # <<<<<<<<<<<<<<
@@ -3966,13 +3966,13 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
  * def array_indices_py(particle, N, spacing, offset):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_r); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 256; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_r); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 279; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_r = __pyx_t_4;
   __pyx_t_4 = 0;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":242
+  /* "opendxmc\engine\_siddon_func.pyx":265
  *     return j
  * 
  * def is_intersecting_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
@@ -3998,7 +3998,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_is_intersecting_py(CY
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_siddon_func.pyx":258
+/* "opendxmc\engine\_siddon_func.pyx":281
  *     return r
  * 
  * def array_indices_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
@@ -4042,21 +4042,21 @@ static PyObject *__pyx_pw_8opendxmc_6engine_12_siddon_func_3array_indices_py(PyO
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_N)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_spacing)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "array_indices_py") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "array_indices_py") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -4073,7 +4073,7 @@ static PyObject *__pyx_pw_8opendxmc_6engine_12_siddon_func_3array_indices_py(PyO
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("array_indices_py", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("opendxmc.engine._siddon_func.array_indices_py", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4135,14 +4135,14 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   __pyx_pybuffernd_lenght_np.data = NULL;
   __pyx_pybuffernd_lenght_np.rcbuffer = &__pyx_pybuffer_lenght_np;
 
-  /* "opendxmc\engine\_siddon_func.pyx":260
+  /* "opendxmc\engine\_siddon_func.pyx":283
  * def array_indices_py(particle, N, spacing, offset):
  * 
  *     for arg in [particle, N, spacing, offset]:             # <<<<<<<<<<<<<<
  *         assert arg.dtype == np.double
  *         assert arg is not None
  */
-  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 260; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 283; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_particle);
   __Pyx_GIVEREF(__pyx_v_particle);
@@ -4161,15 +4161,15 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   for (;;) {
     if (__pyx_t_3 >= 4) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 260; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_3); __Pyx_INCREF(__pyx_t_1); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 283; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #else
-    __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 260; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PySequence_ITEM(__pyx_t_2, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 283; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_arg, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "opendxmc\engine\_siddon_func.pyx":261
+    /* "opendxmc\engine\_siddon_func.pyx":284
  * 
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double             # <<<<<<<<<<<<<<
@@ -4178,26 +4178,26 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
     #ifndef CYTHON_WITHOUT_ASSERTIONS
     if (unlikely(!Py_OptimizeFlag)) {
-      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_dtype); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_double); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_double); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_4 = PyObject_RichCompare(__pyx_t_1, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       if (unlikely(!__pyx_t_6)) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 261; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 284; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":262
+    /* "opendxmc\engine\_siddon_func.pyx":285
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double
  *         assert arg is not None             # <<<<<<<<<<<<<<
@@ -4209,12 +4209,12 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
       __pyx_t_6 = (__pyx_v_arg != Py_None);
       if (unlikely(!(__pyx_t_6 != 0))) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 262; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 285; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":260
+    /* "opendxmc\engine\_siddon_func.pyx":283
  * def array_indices_py(particle, N, spacing, offset):
  * 
  *     for arg in [particle, N, spacing, offset]:             # <<<<<<<<<<<<<<
@@ -4224,14 +4224,14 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":263
+  /* "opendxmc\engine\_siddon_func.pyx":286
  *         assert arg.dtype == np.double
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:             # <<<<<<<<<<<<<<
  *         assert arg.shape[0] == 3
  *     assert particle.shape[0] == 8
  */
-  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 263; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_N);
   __Pyx_GIVEREF(__pyx_v_N);
@@ -4247,15 +4247,15 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   for (;;) {
     if (__pyx_t_3 >= 3) break;
     #if CYTHON_COMPILING_IN_CPYTHON
-    __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 263; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_3); __Pyx_INCREF(__pyx_t_2); __pyx_t_3++; if (unlikely(0 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     #else
-    __pyx_t_2 = PySequence_ITEM(__pyx_t_4, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 263; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PySequence_ITEM(__pyx_t_4, __pyx_t_3); __pyx_t_3++; if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 286; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     #endif
     __Pyx_XDECREF_SET(__pyx_v_arg, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "opendxmc\engine\_siddon_func.pyx":264
+    /* "opendxmc\engine\_siddon_func.pyx":287
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:
  *         assert arg.shape[0] == 3             # <<<<<<<<<<<<<<
@@ -4264,23 +4264,23 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
     #ifndef CYTHON_WITHOUT_ASSERTIONS
     if (unlikely(!Py_OptimizeFlag)) {
-      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 264; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_arg, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 264; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+      __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_int_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 264; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = PyObject_RichCompare(__pyx_t_5, __pyx_int_3, Py_EQ); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 264; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       if (unlikely(!__pyx_t_6)) {
         PyErr_SetNone(PyExc_AssertionError);
-        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 264; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        {__pyx_filename = __pyx_f[0]; __pyx_lineno = 287; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
       }
     }
     #endif
 
-    /* "opendxmc\engine\_siddon_func.pyx":263
+    /* "opendxmc\engine\_siddon_func.pyx":286
  *         assert arg.dtype == np.double
  *         assert arg is not None
  *     for arg in [N, spacing, offset]:             # <<<<<<<<<<<<<<
@@ -4290,7 +4290,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":265
+  /* "opendxmc\engine\_siddon_func.pyx":288
  *     for arg in [N, spacing, offset]:
  *         assert arg.shape[0] == 3
  *     assert particle.shape[0] == 8             # <<<<<<<<<<<<<<
@@ -4299,30 +4299,30 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_particle, __pyx_n_s_shape); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_particle, __pyx_n_s_shape); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyObject_RichCompare(__pyx_t_2, __pyx_int_8, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyObject_RichCompare(__pyx_t_2, __pyx_int_8, Py_EQ); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (unlikely(!__pyx_t_6)) {
       PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 288; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "opendxmc\engine\_siddon_func.pyx":267
+  /* "opendxmc\engine\_siddon_func.pyx":290
  *     assert particle.shape[0] == 8
  * 
  *     cdef int n_max = <int>N.max()             # <<<<<<<<<<<<<<
  *     cdef double* lenght = <double*>malloc(n_max*n_max *sizeof(double))
  *     cdef int* ind=<int*>malloc(3*n_max*n_max *sizeof(int))
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_N, __pyx_n_s_max); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_N, __pyx_n_s_max); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_5 = NULL;
   if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_2))) {
@@ -4335,18 +4335,18 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
     }
   }
   if (__pyx_t_5) {
-    __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_5); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   } else {
-    __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_2); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_7 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 267; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_7 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_v_n_max = ((int)__pyx_t_7);
 
-  /* "opendxmc\engine\_siddon_func.pyx":268
+  /* "opendxmc\engine\_siddon_func.pyx":291
  * 
  *     cdef int n_max = <int>N.max()
  *     cdef double* lenght = <double*>malloc(n_max*n_max *sizeof(double))             # <<<<<<<<<<<<<<
@@ -4355,7 +4355,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   __pyx_v_lenght = ((double *)malloc(((__pyx_v_n_max * __pyx_v_n_max) * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":269
+  /* "opendxmc\engine\_siddon_func.pyx":292
  *     cdef int n_max = <int>N.max()
  *     cdef double* lenght = <double*>malloc(n_max*n_max *sizeof(double))
  *     cdef int* ind=<int*>malloc(3*n_max*n_max *sizeof(int))             # <<<<<<<<<<<<<<
@@ -4364,7 +4364,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   __pyx_v_ind = ((int *)malloc((((3 * __pyx_v_n_max) * __pyx_v_n_max) * (sizeof(int)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":272
+  /* "opendxmc\engine\_siddon_func.pyx":295
  * 
  *     cdef int n, i, j
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))             # <<<<<<<<<<<<<<
@@ -4373,7 +4373,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   __pyx_v_particle_p = ((double *)malloc((8 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_siddon_func.pyx":273
+  /* "opendxmc\engine\_siddon_func.pyx":296
  *     cdef int n, i, j
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))
  *     for i in range(8):             # <<<<<<<<<<<<<<
@@ -4383,21 +4383,21 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   for (__pyx_t_7 = 0; __pyx_t_7 < 8; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "opendxmc\engine\_siddon_func.pyx":274
+    /* "opendxmc\engine\_siddon_func.pyx":297
  *     cdef double* particle_p = <double*>malloc(8*sizeof(double))
  *     for i in range(8):
  *         particle_p[i] = particle[i]             # <<<<<<<<<<<<<<
  *     n = array_indices(particle_p, N, spacing, offset, &ind, &lenght)
  * #    print sizeof(lenght[0])
  */
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_particle, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_particle, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 297; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_8 = __pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 274; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_8 = __pyx_PyFloat_AsDouble(__pyx_t_4); if (unlikely((__pyx_t_8 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 297; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     (__pyx_v_particle_p[__pyx_v_i]) = __pyx_t_8;
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":275
+  /* "opendxmc\engine\_siddon_func.pyx":298
  *     for i in range(8):
  *         particle_p[i] = particle[i]
  *     n = array_indices(particle_p, N, spacing, offset, &ind, &lenght)             # <<<<<<<<<<<<<<
@@ -4405,31 +4405,31 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  * #    print sizeof(double)
  */
   __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_N);
-  if (unlikely(!__pyx_t_9.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_9.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 298; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_10 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_spacing);
-  if (unlikely(!__pyx_t_10.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_10.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 298; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_11 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(__pyx_v_offset);
-  if (unlikely(!__pyx_t_11.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 275; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__pyx_t_11.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 298; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_n = __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(__pyx_v_particle_p, __pyx_t_9, __pyx_t_10, __pyx_t_11, (&__pyx_v_ind), (&__pyx_v_lenght));
   __PYX_XDEC_MEMVIEW(&__pyx_t_9, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_10, 1);
   __PYX_XDEC_MEMVIEW(&__pyx_t_11, 1);
 
-  /* "opendxmc\engine\_siddon_func.pyx":280
+  /* "opendxmc\engine\_siddon_func.pyx":303
  * #    cdef int n = <int> (sizeof(lenght)/sizeof(double))
  * 
  *     cdef np.ndarray[np.int_t, ndim=2] ind_np = np.empty((3, n), dtype=np.int)             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[np.double_t, ndim=1] lenght_np = np.empty(n, dtype=np.double)
  *     for i in range(n):
  */
-  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_INCREF(__pyx_int_3);
   __Pyx_GIVEREF(__pyx_int_3);
@@ -4437,32 +4437,32 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_5);
   __pyx_t_5 = 0;
-  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = PyDict_New(); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_int); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_12);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, __pyx_t_12) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, __pyx_t_12) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-  __pyx_t_12 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_12);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (!(likely(((__pyx_t_12) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_12, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_t_12) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_12, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_13 = ((PyArrayObject *)__pyx_t_12);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_ind_np.rcbuffer->pybuffer, (PyObject*)__pyx_t_13, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_ind_np = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_ind_np.rcbuffer->pybuffer.buf = NULL;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 280; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 303; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     } else {__pyx_pybuffernd_ind_np.diminfo[0].strides = __pyx_pybuffernd_ind_np.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_ind_np.diminfo[0].shape = __pyx_pybuffernd_ind_np.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_ind_np.diminfo[1].strides = __pyx_pybuffernd_ind_np.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_ind_np.diminfo[1].shape = __pyx_pybuffernd_ind_np.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -4470,46 +4470,46 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   __pyx_v_ind_np = ((PyArrayObject *)__pyx_t_12);
   __pyx_t_12 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":281
+  /* "opendxmc\engine\_siddon_func.pyx":304
  * 
  *     cdef np.ndarray[np.int_t, ndim=2] ind_np = np.empty((3, n), dtype=np.int)
  *     cdef np.ndarray[np.double_t, ndim=1] lenght_np = np.empty(n, dtype=np.double)             # <<<<<<<<<<<<<<
  *     for i in range(n):
  *         lenght_np[i] = lenght[i]
  */
-  __pyx_t_12 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_12);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_empty); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_12, __pyx_n_s_empty); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-  __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_n); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_12);
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_12);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_12);
   __pyx_t_12 = 0;
-  __pyx_t_12 = PyDict_New(); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_12 = PyDict_New(); if (unlikely(!__pyx_t_12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_12);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_double); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_double); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (PyDict_SetItem(__pyx_t_12, __pyx_n_s_dtype, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_12, __pyx_n_s_dtype, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_12); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_12); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_14 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_lenght_np.rcbuffer->pybuffer, (PyObject*)__pyx_t_14, &__Pyx_TypeInfo_nn___pyx_t_5numpy_double_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_lenght_np = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_lenght_np.rcbuffer->pybuffer.buf = NULL;
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 304; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     } else {__pyx_pybuffernd_lenght_np.diminfo[0].strides = __pyx_pybuffernd_lenght_np.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_lenght_np.diminfo[0].shape = __pyx_pybuffernd_lenght_np.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -4517,7 +4517,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   __pyx_v_lenght_np = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":282
+  /* "opendxmc\engine\_siddon_func.pyx":305
  *     cdef np.ndarray[np.int_t, ndim=2] ind_np = np.empty((3, n), dtype=np.int)
  *     cdef np.ndarray[np.double_t, ndim=1] lenght_np = np.empty(n, dtype=np.double)
  *     for i in range(n):             # <<<<<<<<<<<<<<
@@ -4528,7 +4528,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   for (__pyx_t_15 = 0; __pyx_t_15 < __pyx_t_7; __pyx_t_15+=1) {
     __pyx_v_i = __pyx_t_15;
 
-    /* "opendxmc\engine\_siddon_func.pyx":283
+    /* "opendxmc\engine\_siddon_func.pyx":306
  *     cdef np.ndarray[np.double_t, ndim=1] lenght_np = np.empty(n, dtype=np.double)
  *     for i in range(n):
  *         lenght_np[i] = lenght[i]             # <<<<<<<<<<<<<<
@@ -4538,7 +4538,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
     __pyx_t_16 = __pyx_v_i;
     *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_double_t *, __pyx_pybuffernd_lenght_np.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_lenght_np.diminfo[0].strides) = (__pyx_v_lenght[__pyx_v_i]);
 
-    /* "opendxmc\engine\_siddon_func.pyx":284
+    /* "opendxmc\engine\_siddon_func.pyx":307
  *     for i in range(n):
  *         lenght_np[i] = lenght[i]
  *         for j in range(3):             # <<<<<<<<<<<<<<
@@ -4548,7 +4548,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
     for (__pyx_t_17 = 0; __pyx_t_17 < 3; __pyx_t_17+=1) {
       __pyx_v_j = __pyx_t_17;
 
-      /* "opendxmc\engine\_siddon_func.pyx":285
+      /* "opendxmc\engine\_siddon_func.pyx":308
  *         lenght_np[i] = lenght[i]
  *         for j in range(3):
  *             ind_np[j,i] = ind[i*3 + j]             # <<<<<<<<<<<<<<
@@ -4561,7 +4561,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
     }
   }
 
-  /* "opendxmc\engine\_siddon_func.pyx":287
+  /* "opendxmc\engine\_siddon_func.pyx":310
  *             ind_np[j,i] = ind[i*3 + j]
  * 
  *     free(ind)             # <<<<<<<<<<<<<<
@@ -4570,7 +4570,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   free(__pyx_v_ind);
 
-  /* "opendxmc\engine\_siddon_func.pyx":288
+  /* "opendxmc\engine\_siddon_func.pyx":311
  * 
  *     free(ind)
  *     free(lenght)             # <<<<<<<<<<<<<<
@@ -4579,24 +4579,21 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
  */
   free(__pyx_v_lenght);
 
-  /* "opendxmc\engine\_siddon_func.pyx":289
+  /* "opendxmc\engine\_siddon_func.pyx":312
  *     free(ind)
  *     free(lenght)
  *     free(particle_p)             # <<<<<<<<<<<<<<
  *     return ind_np, lenght_np
- * 
  */
   free(__pyx_v_particle_p);
 
-  /* "opendxmc\engine\_siddon_func.pyx":290
+  /* "opendxmc\engine\_siddon_func.pyx":313
  *     free(lenght)
  *     free(particle_p)
  *     return ind_np, lenght_np             # <<<<<<<<<<<<<<
- * 
- * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 290; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 313; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(((PyObject *)__pyx_v_ind_np));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_ind_np));
@@ -4608,7 +4605,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_12_siddon_func_2array_indices_py(CYT
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":258
+  /* "opendxmc\engine\_siddon_func.pyx":281
  *     return r
  * 
  * def array_indices_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
@@ -17966,7 +17963,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_Buffer_view_does_not_expose_stri, __pyx_k_Buffer_view_does_not_expose_stri, sizeof(__pyx_k_Buffer_view_does_not_expose_stri), 0, 0, 1, 0},
-  {&__pyx_kp_s_C_github_OpenDXMC_opendxmc_engin, __pyx_k_C_github_OpenDXMC_opendxmc_engin, sizeof(__pyx_k_C_github_OpenDXMC_opendxmc_engin), 0, 0, 1, 0},
+  {&__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin, sizeof(__pyx_k_C_GitHub_OpenDXMC_opendxmc_engin), 0, 0, 1, 0},
   {&__pyx_kp_s_Can_only_create_a_buffer_that_is, __pyx_k_Can_only_create_a_buffer_that_is, sizeof(__pyx_k_Can_only_create_a_buffer_that_is), 0, 0, 1, 0},
   {&__pyx_kp_s_Cannot_index_with_type_s, __pyx_k_Cannot_index_with_type_s, sizeof(__pyx_k_Cannot_index_with_type_s), 0, 0, 1, 0},
   {&__pyx_n_s_Ellipsis, __pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 0, 1, 1},
@@ -18062,11 +18059,11 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #if PY_MAJOR_VERSION >= 3
-  __pyx_builtin_xrange = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_xrange) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 94; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_xrange = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_xrange) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 117; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #else
-  __pyx_builtin_xrange = __Pyx_GetBuiltinName(__pyx_n_s_xrange); if (!__pyx_builtin_xrange) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 94; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_xrange = __Pyx_GetBuiltinName(__pyx_n_s_xrange); if (!__pyx_builtin_xrange) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 117; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 218; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -18286,29 +18283,29 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
 
-  /* "opendxmc\engine\_siddon_func.pyx":242
+  /* "opendxmc\engine\_siddon_func.pyx":265
  *     return j
  * 
  * def is_intersecting_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double
  */
-  __pyx_tuple__19 = PyTuple_Pack(8, __pyx_n_s_particle, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_arg, __pyx_n_s_i, __pyx_n_s_r, __pyx_n_s_particle_p); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__19 = PyTuple_Pack(8, __pyx_n_s_particle, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_arg, __pyx_n_s_i, __pyx_n_s_r, __pyx_n_s_particle_p); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(4, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_github_OpenDXMC_opendxmc_engin, __pyx_n_s_is_intersecting_py, 242, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(4, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_n_s_is_intersecting_py, 265, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "opendxmc\engine\_siddon_func.pyx":258
+  /* "opendxmc\engine\_siddon_func.pyx":281
  *     return r
  * 
  * def array_indices_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
  * 
  *     for arg in [particle, N, spacing, offset]:
  */
-  __pyx_tuple__21 = PyTuple_Pack(14, __pyx_n_s_particle, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_arg, __pyx_n_s_n_max, __pyx_n_s_lenght, __pyx_n_s_ind, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_particle_p, __pyx_n_s_ind_np, __pyx_n_s_lenght_np); if (unlikely(!__pyx_tuple__21)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__21 = PyTuple_Pack(14, __pyx_n_s_particle, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_arg, __pyx_n_s_n_max, __pyx_n_s_lenght, __pyx_n_s_ind, __pyx_n_s_n, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_particle_p, __pyx_n_s_ind_np, __pyx_n_s_lenght_np); if (unlikely(!__pyx_tuple__21)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__21);
   __Pyx_GIVEREF(__pyx_tuple__21);
-  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(4, 0, 14, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_github_OpenDXMC_opendxmc_engin, __pyx_n_s_array_indices_py, 258, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(4, 0, 14, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_n_s_array_indices_py, 281, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "View.MemoryView":276
  *         return self.name
@@ -18528,7 +18525,7 @@ PyMODINIT_FUNC PyInit__siddon_func(void)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "opendxmc\engine\_siddon_func.pyx":13
- * from libc.stdlib cimport malloc, free, realloc
+ * from libc.stdlib cimport malloc, free, realloc, qsort
  * 
  * cdef double ERRF = 1.e-9             # <<<<<<<<<<<<<<
  * 
@@ -18536,28 +18533,28 @@ PyMODINIT_FUNC PyInit__siddon_func(void)
  */
   __pyx_v_8opendxmc_6engine_12_siddon_func_ERRF = 1.e-9;
 
-  /* "opendxmc\engine\_siddon_func.pyx":242
+  /* "opendxmc\engine\_siddon_func.pyx":265
  *     return j
  * 
  * def is_intersecting_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
  *     for arg in [particle, N, spacing, offset]:
  *         assert arg.dtype == np.double
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_12_siddon_func_1is_intersecting_py, NULL, __pyx_n_s_opendxmc_engine__siddon_func); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_12_siddon_func_1is_intersecting_py, NULL, __pyx_n_s_opendxmc_engine__siddon_func); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_intersecting_py, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_is_intersecting_py, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 265; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "opendxmc\engine\_siddon_func.pyx":258
+  /* "opendxmc\engine\_siddon_func.pyx":281
  *     return r
  * 
  * def array_indices_py(particle, N, spacing, offset):             # <<<<<<<<<<<<<<
  * 
  *     for arg in [particle, N, spacing, offset]:
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_12_siddon_func_3array_indices_py, NULL, __pyx_n_s_opendxmc_engine__siddon_func); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_12_siddon_func_3array_indices_py, NULL, __pyx_n_s_opendxmc_engine__siddon_func); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_array_indices_py, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_array_indices_py, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 281; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "opendxmc\engine\_siddon_func.pyx":1

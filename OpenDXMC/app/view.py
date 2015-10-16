@@ -119,7 +119,6 @@ class ViewController(QtCore.QObject):
             self.update_scene_data(scene_name)
 
 
-
     def update_scene_data(self, name):
         if self.current_simulation is None:
             return
@@ -199,6 +198,8 @@ class ViewController(QtCore.QObject):
             self.selectScene(scene)
         else:
             self.update_scene_data(self.current_scene)
+
+
 
     @QtCore.pyqtSlot(dict, dict)
     def updateSimulation(self, description, volatiles):
@@ -601,6 +602,108 @@ class AecItem(QtGui.QGraphicsItem):
         painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
 
+class PlanningScene_test(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image_item = ImageItem()
+        self.image_item_bit = BitImageItem()
+        self.addItem(self.image_item)
+        self.addItem(self.image_item_bit)
+
+        self.aec_item = AecItem()
+        self.addItem(self.aec_item)
+
+        self.spacing = np.array((1., 1., 1.))
+        self.index = 0
+        self.view_orientation = 2
+        self.image_item.setLevels((0, 500))
+        self.is_bit_array = False
+        self.bit_lut = get_lut('pet')
+
+    def update_data(self, data):
+        self.is_bit_array = False
+        self.image_item.setVisible(True)
+        self.image_item_bit.setVisible(False)
+
+        self.spacing = data['spacing']
+        self.shape = data['shape']
+        self.index = self.index % self.shape[self.view_orientation]
+        if aec is None:
+            aec = np.ones((2,2))
+            aec[0, 0] = 0
+        self.aec_item.set_aec(aec, self.view_orientation, self.shape)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def setBitArray(self, ct, spacing, aec):
+        self.is_bit_array = True
+        self.image_item.setVisible(False)
+        self.image_item_bit.setVisible(True)
+
+        self.array = ct
+        self.shape = ct.shape
+        self.spacing = spacing
+        self.index = self.index % self.shape[self.view_orientation]
+        if aec is None:
+            aec = np.ones((2,2))
+            aec[0, 0] = 0
+        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
+        number_of_elements = self.array.max()
+        qlut = [QtGui.QColor(self.bit_lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
+        self.image_item_bit.set_lut(qlut)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    @QtCore.pyqtSlot(int)
+    def setViewOrientation(self, view_orientation):
+        self.view_orientation = view_orientation
+        self.aec_item.setViewOrientation(view_orientation)
+        self.reloadImages()
+        self.updateSceneTransform()
+
+    def updateSceneTransform(self):
+        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        if self.is_bit_array:
+            self.image_item_bit.setTransform(transform)
+        else:
+            self.image_item.setTransform(transform)
+
+        self.aec_item.setTransform(transform)
+        self.aec_item.prepareGeometryChange()
+        if self.is_bit_array:
+            self.aec_item.setPos(self.image_item_bit.mapToScene(self.image_item.boundingRect().bottomLeft()))
+            self.setSceneRect(self.image_item_bit.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
+        else:
+            self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
+            self.setSceneRect(self.image_item.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
+
+#        self.setSceneRect(self.itemsBoundingRect())
+
+    def getSlice(self, array, index):
+        if self.view_orientation == 2:
+            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
+        elif self.view_orientation == 1:
+            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
+        elif self.view_orientation == 0:
+            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
+        raise ValueError('view must select one of 0,1,2 dimensions')
+
+    def reloadImages(self):
+        if self.is_bit_array:
+            self.image_item_bit.setImage(self.getSlice(self.array, self.index))
+        else:
+            self.image_item.setImage(self.getSlice(self.array, self.index))
+        self.aec_item.setIndex(self.index)
+
+    def wheelEvent(self, ev):
+        if ev.delta() > 0:
+            self.index += 1
+        elif ev.delta() < 0:
+            self.index -= 1
+        self.index %= self.shape[self.view_orientation]
+        self.reloadImages()
+        ev.accept()
 
 class PlanningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):

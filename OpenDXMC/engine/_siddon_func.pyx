@@ -8,7 +8,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
-from libc.stdlib cimport malloc, free, realloc
+from libc.stdlib cimport malloc, free, realloc, qsort
 
 cdef double ERRF = 1.e-9
 
@@ -24,6 +24,29 @@ cdef extern from "math.h":
     double ceil(double) nogil
     double sqrt(double) nogil
     int abs(int) nogil
+
+#cdef void quick_sort(double* V, int n) nogil:
+#    cdef double X = V[n / 2]
+#    cdef int i1 = 0, i2 = 0, k
+#
+#    if n < 2:
+#        return
+#    while True:
+#        for i1 in range(i1, n):
+#            if V[i1] <= X:
+#                break
+#        for i2 in range(i2, 0, -1):
+#            if V[i2] >= X:
+#                break
+#        if i2 < i1:
+#            V[i1], V[i2] = V[i2], V[i1]
+#        else:
+#            quick_sort(V+1, i1-1)
+#            quick_sort(V+i1, n-i1)
+#            for k in range(i1 -1):
+#                V[k] = V[k+1]
+#                V[i1-1] = X
+#
 
 
 cdef void bubble_sort(double* arr, int n) nogil:
@@ -288,11 +311,3 @@ def array_indices_py(particle, N, spacing, offset):
     free(lenght)
     free(particle_p)
     return ind_np, lenght_np
-
-
-
-
-
-
-
-

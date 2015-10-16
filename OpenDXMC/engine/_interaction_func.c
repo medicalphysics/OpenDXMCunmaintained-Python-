@@ -5,8 +5,8 @@
     "distutils": {
         "depends": [
             "opendxmc\\engine\\_random.c",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h",
-            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h"
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\ufuncobject.h",
+            "E:\\WinPython-32bit-3.4.3.5\\python-3.4.3\\lib\\site-packages\\numpy\\core\\include\\numpy\\arrayobject.h"
         ],
         "extra_compile_args": [
             "-fopenmp",
@@ -1742,7 +1742,7 @@ static char __pyx_k_strided_and_direct_or_indirect[] = "<strided and direct or i
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_All_dimensions_preceding_dimensi[] = "All dimensions preceding dimension %d must be indexed and not sliced";
 static char __pyx_k_Buffer_view_does_not_expose_stri[] = "Buffer view does not expose strides";
-static char __pyx_k_C_github_OpenDXMC_opendxmc_engin[] = "C:\\github\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
+static char __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin[] = "C:\\GitHub\\OpenDXMC\\opendxmc\\engine\\_interaction_func.pyx";
 static char __pyx_k_Can_only_create_a_buffer_that_is[] = "Can only create a buffer that is contiguous in memory.";
 static char __pyx_k_Cannot_transpose_memoryview_with[] = "Cannot transpose memoryview with indirect dimensions";
 static char __pyx_k_Empty_shape_tuple_for_cython_arr[] = "Empty shape tuple for cython.array";
@@ -1758,7 +1758,7 @@ static char __pyx_k_opendxmc_engine__interaction_fun[] = "opendxmc.engine._inter
 static char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
 static char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
-static PyObject *__pyx_kp_s_C_github_OpenDXMC_opendxmc_engin;
+static PyObject *__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
 static PyObject *__pyx_kp_s_Cannot_index_with_type_s;
 static PyObject *__pyx_n_s_Ellipsis;
@@ -2678,7 +2678,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__Pyx_mem
  * 
  * cdef double compton_event_draw_energy_theta(double energy, double* theta) nogil:             # <<<<<<<<<<<<<<
  *     """Draws scattered energy and angle, based on Geant4 implementation
- *     returns tuple (scatter angle, energy)
+ *     """
  */
 
 static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_energy_theta(double __pyx_v_energy, double *__pyx_v_theta) {
@@ -2695,7 +2695,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   double __pyx_r;
   int __pyx_t_1;
 
-  /* "opendxmc\engine\_interaction_func.pyx":146
+  /* "opendxmc\engine\_interaction_func.pyx":145
  *     """
  *     cdef double epsilon_0, alpha1, alpha2, r1, r2, r3, epsilon, qsin_theta, t, k
  *     k = energy / ELECTRON_MASS             # <<<<<<<<<<<<<<
@@ -2704,7 +2704,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_k = (__pyx_v_energy / __pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS);
 
-  /* "opendxmc\engine\_interaction_func.pyx":147
+  /* "opendxmc\engine\_interaction_func.pyx":146
  *     cdef double epsilon_0, alpha1, alpha2, r1, r2, r3, epsilon, qsin_theta, t, k
  *     k = energy / ELECTRON_MASS
  *     epsilon_0 = 1. / (1. + 2. * k)             # <<<<<<<<<<<<<<
@@ -2713,7 +2713,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_epsilon_0 = (1. / (1. + (2. * __pyx_v_k)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":150
+  /* "opendxmc\engine\_interaction_func.pyx":149
  * 
  * 
  *     alpha1 = log(1. / epsilon_0)             # <<<<<<<<<<<<<<
@@ -2722,7 +2722,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_alpha1 = log((1. / __pyx_v_epsilon_0));
 
-  /* "opendxmc\engine\_interaction_func.pyx":151
+  /* "opendxmc\engine\_interaction_func.pyx":150
  * 
  *     alpha1 = log(1. / epsilon_0)
  *     alpha2 = (1. - epsilon_0**2) / 2.             # <<<<<<<<<<<<<<
@@ -2731,7 +2731,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   __pyx_v_alpha2 = ((1. - pow(__pyx_v_epsilon_0, 2.0)) / 2.);
 
-  /* "opendxmc\engine\_interaction_func.pyx":152
+  /* "opendxmc\engine\_interaction_func.pyx":151
  *     alpha1 = log(1. / epsilon_0)
  *     alpha2 = (1. - epsilon_0**2) / 2.
  *     while True:             # <<<<<<<<<<<<<<
@@ -2740,7 +2740,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   while (1) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":153
+    /* "opendxmc\engine\_interaction_func.pyx":152
  *     alpha2 = (1. - epsilon_0**2) / 2.
  *     while True:
  *         r1 = random.random()             # <<<<<<<<<<<<<<
@@ -2749,7 +2749,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":154
+    /* "opendxmc\engine\_interaction_func.pyx":153
  *     while True:
  *         r1 = random.random()
  *         r2 = random.random()             # <<<<<<<<<<<<<<
@@ -2758,7 +2758,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r2 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":155
+    /* "opendxmc\engine\_interaction_func.pyx":154
  *         r1 = random.random()
  *         r2 = random.random()
  *         r3 = random.random()             # <<<<<<<<<<<<<<
@@ -2767,7 +2767,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_r3 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-    /* "opendxmc\engine\_interaction_func.pyx":157
+    /* "opendxmc\engine\_interaction_func.pyx":156
  *         r3 = random.random()
  * 
  *         if r1 < alpha1 / (alpha1 + alpha2):             # <<<<<<<<<<<<<<
@@ -2777,7 +2777,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     __pyx_t_1 = ((__pyx_v_r1 < (__pyx_v_alpha1 / (__pyx_v_alpha1 + __pyx_v_alpha2))) != 0);
     if (__pyx_t_1) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":158
+      /* "opendxmc\engine\_interaction_func.pyx":157
  * 
  *         if r1 < alpha1 / (alpha1 + alpha2):
  *             epsilon = exp(-r2 * alpha1)             # <<<<<<<<<<<<<<
@@ -2789,7 +2789,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":160
+      /* "opendxmc\engine\_interaction_func.pyx":159
  *             epsilon = exp(-r2 * alpha1)
  *         else:
  *             epsilon = sqrt((epsilon_0**2 + (1. - epsilon_0**2) * r2))             # <<<<<<<<<<<<<<
@@ -2800,7 +2800,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     }
     __pyx_L5:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":162
+    /* "opendxmc\engine\_interaction_func.pyx":161
  *             epsilon = sqrt((epsilon_0**2 + (1. - epsilon_0**2) * r2))
  * 
  *         t = ELECTRON_MASS * (1. - epsilon) / (energy * epsilon)             # <<<<<<<<<<<<<<
@@ -2809,7 +2809,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_t = ((__pyx_v_8opendxmc_6engine_17_interaction_func_ELECTRON_MASS * (1. - __pyx_v_epsilon)) / (__pyx_v_energy * __pyx_v_epsilon));
 
-    /* "opendxmc\engine\_interaction_func.pyx":163
+    /* "opendxmc\engine\_interaction_func.pyx":162
  * 
  *         t = ELECTRON_MASS * (1. - epsilon) / (energy * epsilon)
  *         qsin_theta = t * (2. - t)             # <<<<<<<<<<<<<<
@@ -2818,7 +2818,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
     __pyx_v_qsin_theta = (__pyx_v_t * (2. - __pyx_v_t));
 
-    /* "opendxmc\engine\_interaction_func.pyx":165
+    /* "opendxmc\engine\_interaction_func.pyx":164
  *         qsin_theta = t * (2. - t)
  * 
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:             # <<<<<<<<<<<<<<
@@ -2828,7 +2828,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
     __pyx_t_1 = (((1. - ((__pyx_v_epsilon / (1. + pow(__pyx_v_epsilon, 2.0))) * __pyx_v_qsin_theta)) >= __pyx_v_r3) != 0);
     if (__pyx_t_1) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":166
+      /* "opendxmc\engine\_interaction_func.pyx":165
  * 
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:
  *             break             # <<<<<<<<<<<<<<
@@ -2840,7 +2840,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   }
   __pyx_L4_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":167
+  /* "opendxmc\engine\_interaction_func.pyx":166
  *         if (1. - epsilon / (1. + epsilon**2) * qsin_theta) >= r3:
  *             break
  *     theta[0] = acos(1. + 1./k - 1./epsilon/k)             # <<<<<<<<<<<<<<
@@ -2849,7 +2849,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  */
   (__pyx_v_theta[0]) = acos(((1. + (1. / __pyx_v_k)) - ((1. / __pyx_v_epsilon) / __pyx_v_k)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":168
+  /* "opendxmc\engine\_interaction_func.pyx":167
  *             break
  *     theta[0] = acos(1. + 1./k - 1./epsilon/k)
  *     return epsilon * energy             # <<<<<<<<<<<<<<
@@ -2864,7 +2864,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
  * 
  * cdef double compton_event_draw_energy_theta(double energy, double* theta) nogil:             # <<<<<<<<<<<<<<
  *     """Draws scattered energy and angle, based on Geant4 implementation
- *     returns tuple (scatter angle, energy)
+ *     """
  */
 
   /* function exit code */
@@ -2872,7 +2872,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_e
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":172
+/* "opendxmc\engine\_interaction_func.pyx":171
  * 
  * 
  * cdef double rayleigh_event_draw_theta() nogil:             # <<<<<<<<<<<<<<
@@ -2886,7 +2886,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   double __pyx_v_A;
   double __pyx_r;
 
-  /* "opendxmc\engine\_interaction_func.pyx":174
+  /* "opendxmc\engine\_interaction_func.pyx":173
  * cdef double rayleigh_event_draw_theta() nogil:
  *     cdef double r, c, A
  *     r = random.random()             # <<<<<<<<<<<<<<
@@ -2895,7 +2895,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_r = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-  /* "opendxmc\engine\_interaction_func.pyx":175
+  /* "opendxmc\engine\_interaction_func.pyx":174
  *     cdef double r, c, A
  *     r = random.random()
  *     c = 4. - 8. * r             # <<<<<<<<<<<<<<
@@ -2904,7 +2904,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_c = (4. - (8. * __pyx_v_r));
 
-  /* "opendxmc\engine\_interaction_func.pyx":176
+  /* "opendxmc\engine\_interaction_func.pyx":175
  *     r = random.random()
  *     c = 4. - 8. * r
  *     A = -sign(c) * ((fabs(c) + (c**2 + 4.)**.5) / 2.)**(1./3.)             # <<<<<<<<<<<<<<
@@ -2913,7 +2913,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
  */
   __pyx_v_A = ((-__pyx_f_8opendxmc_6engine_17_interaction_func_sign(__pyx_v_c)) * pow(((fabs(__pyx_v_c) + pow((pow(__pyx_v_c, 2.0) + 4.), .5)) / 2.), (1. / 3.)));
 
-  /* "opendxmc\engine\_interaction_func.pyx":177
+  /* "opendxmc\engine\_interaction_func.pyx":176
  *     c = 4. - 8. * r
  *     A = -sign(c) * ((fabs(c) + (c**2 + 4.)**.5) / 2.)**(1./3.)
  *     return acos(A - 1. / A)             # <<<<<<<<<<<<<<
@@ -2923,7 +2923,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   __pyx_r = acos((__pyx_v_A - (1. / __pyx_v_A)));
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":172
+  /* "opendxmc\engine\_interaction_func.pyx":171
  * 
  * 
  * cdef double rayleigh_event_draw_theta() nogil:             # <<<<<<<<<<<<<<
@@ -2936,7 +2936,7 @@ static double __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_
   return __pyx_r;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":180
+/* "opendxmc\engine\_interaction_func.pyx":179
  * 
  * 
  * cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double energy, double* cum_prob) nogil:             # <<<<<<<<<<<<<<
@@ -2976,7 +2976,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   int __pyx_t_23;
   int __pyx_t_24;
 
-  /* "opendxmc\engine\_interaction_func.pyx":183
+  /* "opendxmc\engine\_interaction_func.pyx":182
  *     cdef double att, cum_sum
  *     cdef int e_index, N_energy, material, i
  *     N_energy = <int>attinuation_lut.shape[2]             # <<<<<<<<<<<<<<
@@ -2985,7 +2985,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
  */
   __pyx_v_N_energy = ((int)(__pyx_v_attinuation_lut.shape[2]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":185
+  /* "opendxmc\engine\_interaction_func.pyx":184
  *     N_energy = <int>attinuation_lut.shape[2]
  *     #finding upper energy
  *     for e_index in range(N_energy):             # <<<<<<<<<<<<<<
@@ -2996,7 +2996,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_e_index = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":186
+    /* "opendxmc\engine\_interaction_func.pyx":185
  *     #finding upper energy
  *     for e_index in range(N_energy):
  *         if energy < attinuation_lut[0, 0, e_index]:             # <<<<<<<<<<<<<<
@@ -3009,7 +3009,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_6 = ((__pyx_v_energy < (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_3 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_4 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_5 * __pyx_v_attinuation_lut.strides[2]) )))) != 0);
     if (__pyx_t_6) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":187
+      /* "opendxmc\engine\_interaction_func.pyx":186
  *     for e_index in range(N_energy):
  *         if energy < attinuation_lut[0, 0, e_index]:
  *             break             # <<<<<<<<<<<<<<
@@ -3021,7 +3021,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   }
   /*else*/ {
 
-    /* "opendxmc\engine\_interaction_func.pyx":189
+    /* "opendxmc\engine\_interaction_func.pyx":188
  *             break
  *     else:
  *         for i in range(N):             # <<<<<<<<<<<<<<
@@ -3032,7 +3032,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_2; __pyx_t_7+=1) {
       __pyx_v_i = __pyx_t_7;
 
-      /* "opendxmc\engine\_interaction_func.pyx":190
+      /* "opendxmc\engine\_interaction_func.pyx":189
  *     else:
  *         for i in range(N):
  *             cum_prob[i] = 0             # <<<<<<<<<<<<<<
@@ -3042,7 +3042,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
       (__pyx_v_cum_prob[__pyx_v_i]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":191
+    /* "opendxmc\engine\_interaction_func.pyx":190
  *         for i in range(N):
  *             cum_prob[i] = 0
  *         return             # <<<<<<<<<<<<<<
@@ -3053,7 +3053,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   }
   __pyx_L4_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":192
+  /* "opendxmc\engine\_interaction_func.pyx":191
  *             cum_prob[i] = 0
  *         return
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3062,7 +3062,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":193
+  /* "opendxmc\engine\_interaction_func.pyx":192
  *         return
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3073,7 +3073,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":194
+    /* "opendxmc\engine\_interaction_func.pyx":193
  *     cum_sum = 0
  *     for i in range(N):
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]             # <<<<<<<<<<<<<<
@@ -3085,7 +3085,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_9 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_material = (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_7 * __pyx_v_material_map.strides[0]) ) + __pyx_t_8 * __pyx_v_material_map.strides[1]) ) + __pyx_t_9 * __pyx_v_material_map.strides[2]) )));
 
-    /* "opendxmc\engine\_interaction_func.pyx":195
+    /* "opendxmc\engine\_interaction_func.pyx":194
  *     for i in range(N):
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])             # <<<<<<<<<<<<<<
@@ -3106,7 +3106,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_21 = __pyx_v_e_index;
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_interpolate(__pyx_v_energy, (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_10 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_11 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_12 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_13 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_14 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_15 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_16 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_17 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_18 * __pyx_v_attinuation_lut.strides[2]) ))), (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_attinuation_lut.data + __pyx_t_19 * __pyx_v_attinuation_lut.strides[0]) ) + __pyx_t_20 * __pyx_v_attinuation_lut.strides[1]) ) + __pyx_t_21 * __pyx_v_attinuation_lut.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":196
+    /* "opendxmc\engine\_interaction_func.pyx":195
  *         material = material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]]
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])
  *         cum_sum += att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3118,7 +3118,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     __pyx_t_24 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_22 * __pyx_v_density_map.strides[0]) ) + __pyx_t_23 * __pyx_v_density_map.strides[1]) ) + __pyx_t_24 * __pyx_v_density_map.strides[2]) )))) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":197
+    /* "opendxmc\engine\_interaction_func.pyx":196
  *         att = interpolate(energy, attinuation_lut[material, 0, e_index -1], attinuation_lut[material, 0, e_index], attinuation_lut[material, 1, e_index -1], attinuation_lut[material, 1, e_index])
  *         cum_sum += att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]] * lenghts[i]
  *         cum_prob[i] = 1 - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3128,7 +3128,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
     (__pyx_v_cum_prob[__pyx_v_i]) = (1.0 - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":180
+  /* "opendxmc\engine\_interaction_func.pyx":179
  * 
  * 
  * cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double energy, double* cum_prob) nogil:             # <<<<<<<<<<<<<<
@@ -3140,7 +3140,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_cumulative_interaction
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":200
+/* "opendxmc\engine\_interaction_func.pyx":199
  * 
  * 
  * cdef void interaction_point(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3169,7 +3169,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   int __pyx_t_9;
   int __pyx_t_10;
 
-  /* "opendxmc\engine\_interaction_func.pyx":205
+  /* "opendxmc\engine\_interaction_func.pyx":204
  *     cdef double att, cum_sum, r1, delta_r, dist
  * 
  *     cdef double* u = <double*> malloc(N*sizeof(double))             # <<<<<<<<<<<<<<
@@ -3178,7 +3178,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_u = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":206
+  /* "opendxmc\engine\_interaction_func.pyx":205
  * 
  *     cdef double* u = <double*> malloc(N*sizeof(double))
  *     cdef double* cum_prob = <double*> malloc(N*sizeof(double))             # <<<<<<<<<<<<<<
@@ -3187,7 +3187,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_cum_prob = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":209
+  /* "opendxmc\engine\_interaction_func.pyx":208
  * 
  * #    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3196,7 +3196,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":210
+  /* "opendxmc\engine\_interaction_func.pyx":209
  * #    cumulative_interaction_prob(ind, lenghts, N, material_map, density_map, attinuation_lut, particle[6], cum_prob)
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3207,7 +3207,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":211
+    /* "opendxmc\engine\_interaction_func.pyx":210
  *     cum_sum = 0
  *     for i in range(N):
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])             # <<<<<<<<<<<<<<
@@ -3219,7 +3219,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_5 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_3 * __pyx_v_material_map.strides[0]) ) + __pyx_t_4 * __pyx_v_material_map.strides[1]) ) + __pyx_t_5 * __pyx_v_material_map.strides[2]) ))), 1, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":212
+    /* "opendxmc\engine\_interaction_func.pyx":211
  *     for i in range(N):
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]             # <<<<<<<<<<<<<<
@@ -3231,7 +3231,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_8 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     (__pyx_v_u[__pyx_v_i]) = (__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_6 * __pyx_v_density_map.strides[0]) ) + __pyx_t_7 * __pyx_v_density_map.strides[1]) ) + __pyx_t_8 * __pyx_v_density_map.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":213
+    /* "opendxmc\engine\_interaction_func.pyx":212
  *         att = att_linear(attinuation_lut, material_map[ind[3*i], ind[3*i+1], ind[3*i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
  *         cum_sum += u[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3240,7 +3240,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_u[__pyx_v_i]) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":214
+    /* "opendxmc\engine\_interaction_func.pyx":213
  *         u[i] = att * density_map[ind[3*i], ind[3*i+1], ind[3*i+2]]
  *         cum_sum += u[i] * lenghts[i]
  *         cum_prob[i] = 1 - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3250,7 +3250,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     (__pyx_v_cum_prob[__pyx_v_i]) = (1.0 - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":217
+  /* "opendxmc\engine\_interaction_func.pyx":216
  * 
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:             # <<<<<<<<<<<<<<
@@ -3260,7 +3260,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   __pyx_t_9 = (((__pyx_v_cum_prob[(__pyx_v_N - 1)]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF) != 0);
   if (__pyx_t_9) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":218
+    /* "opendxmc\engine\_interaction_func.pyx":217
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):             # <<<<<<<<<<<<<<
@@ -3270,7 +3270,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
       __pyx_v_j = __pyx_t_1;
 
-      /* "opendxmc\engine\_interaction_func.pyx":219
+      /* "opendxmc\engine\_interaction_func.pyx":218
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):
  *             stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3280,7 +3280,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       (__pyx_v_stop[__pyx_v_j]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":220
+    /* "opendxmc\engine\_interaction_func.pyx":219
  *         for j in range(3):
  *             stop[j] = 0
  *         index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3289,7 +3289,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     (__pyx_v_index[0]) = ((int)-1);
 
-    /* "opendxmc\engine\_interaction_func.pyx":221
+    /* "opendxmc\engine\_interaction_func.pyx":220
  *             stop[j] = 0
  *         index[0] = <int>-1
  *         weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3298,7 +3298,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     (__pyx_v_weight[0]) = ((int)0);
 
-    /* "opendxmc\engine\_interaction_func.pyx":222
+    /* "opendxmc\engine\_interaction_func.pyx":221
  *         index[0] = <int>-1
  *         weight[0] = <int>0
  *         free(u)             # <<<<<<<<<<<<<<
@@ -3307,7 +3307,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     free(__pyx_v_u);
 
-    /* "opendxmc\engine\_interaction_func.pyx":223
+    /* "opendxmc\engine\_interaction_func.pyx":222
  *         weight[0] = <int>0
  *         free(u)
  *         free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3316,7 +3316,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
     free(__pyx_v_cum_prob);
 
-    /* "opendxmc\engine\_interaction_func.pyx":224
+    /* "opendxmc\engine\_interaction_func.pyx":223
  *         free(u)
  *         free(cum_prob)
  *         return             # <<<<<<<<<<<<<<
@@ -3326,7 +3326,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":226
+  /* "opendxmc\engine\_interaction_func.pyx":225
  *         return
  * 
  *     weight[0] = <int>1             # <<<<<<<<<<<<<<
@@ -3335,7 +3335,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_weight[0]) = ((int)1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":228
+  /* "opendxmc\engine\_interaction_func.pyx":227
  *     weight[0] = <int>1
  * 
  *     r1 = random.random()             # <<<<<<<<<<<<<<
@@ -3344,7 +3344,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-  /* "opendxmc\engine\_interaction_func.pyx":230
+  /* "opendxmc\engine\_interaction_func.pyx":229
  *     r1 = random.random()
  * 
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3355,7 +3355,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":231
+    /* "opendxmc\engine\_interaction_func.pyx":230
  * 
  *     for i in range(N):
  *         if r1 < cum_prob[i]:             # <<<<<<<<<<<<<<
@@ -3365,7 +3365,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     __pyx_t_9 = ((__pyx_v_r1 < (__pyx_v_cum_prob[__pyx_v_i])) != 0);
     if (__pyx_t_9) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":232
+      /* "opendxmc\engine\_interaction_func.pyx":231
  *     for i in range(N):
  *         if r1 < cum_prob[i]:
  *             if i > 0:             # <<<<<<<<<<<<<<
@@ -3375,7 +3375,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       __pyx_t_9 = ((__pyx_v_i > 0) != 0);
       if (__pyx_t_9) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":233
+        /* "opendxmc\engine\_interaction_func.pyx":232
  *         if r1 < cum_prob[i]:
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])             # <<<<<<<<<<<<<<
@@ -3384,7 +3384,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
         __pyx_v_delta_r = (__pyx_v_r1 - (__pyx_v_cum_prob[(__pyx_v_i - 1)]));
 
-        /* "opendxmc\engine\_interaction_func.pyx":234
+        /* "opendxmc\engine\_interaction_func.pyx":233
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3396,7 +3396,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":236
+        /* "opendxmc\engine\_interaction_func.pyx":235
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]
  *             else:
  *                 delta_r = r1             # <<<<<<<<<<<<<<
@@ -3405,7 +3405,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
         __pyx_v_delta_r = __pyx_v_r1;
 
-        /* "opendxmc\engine\_interaction_func.pyx":237
+        /* "opendxmc\engine\_interaction_func.pyx":236
  *             else:
  *                 delta_r = r1
  *                 dist = delta_r / cum_prob[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3416,7 +3416,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       }
       __pyx_L11:;
 
-      /* "opendxmc\engine\_interaction_func.pyx":239
+      /* "opendxmc\engine\_interaction_func.pyx":238
  *                 dist = delta_r / cum_prob[i] * lenghts[i]
  * 
  *             index[0] = <int>i             # <<<<<<<<<<<<<<
@@ -3425,7 +3425,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       (__pyx_v_index[0]) = ((int)__pyx_v_i);
 
-      /* "opendxmc\engine\_interaction_func.pyx":240
+      /* "opendxmc\engine\_interaction_func.pyx":239
  * 
  *             index[0] = <int>i
  *             for j in range(3):             # <<<<<<<<<<<<<<
@@ -3435,7 +3435,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
       for (__pyx_t_10 = 0; __pyx_t_10 < 3; __pyx_t_10+=1) {
         __pyx_v_j = __pyx_t_10;
 
-        /* "opendxmc\engine\_interaction_func.pyx":241
+        /* "opendxmc\engine\_interaction_func.pyx":240
  *             index[0] = <int>i
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3+j]) + dist * particle[j+3]             # <<<<<<<<<<<<<<
@@ -3445,7 +3445,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
         (__pyx_v_stop[__pyx_v_j]) = (__pyx_f_8opendxmc_6engine_12_siddon_func_plane(__pyx_v_spacing, __pyx_v_offset, __pyx_v_j, (__pyx_v_ind[((__pyx_v_i * 3) + __pyx_v_j)])) + (__pyx_v_dist * (__pyx_v_particle[(__pyx_v_j + 3)])));
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":243
+      /* "opendxmc\engine\_interaction_func.pyx":242
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3+j]) + dist * particle[j+3]
  * #            print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist, cum_prob
  *             free(u)             # <<<<<<<<<<<<<<
@@ -3454,7 +3454,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       free(__pyx_v_u);
 
-      /* "opendxmc\engine\_interaction_func.pyx":244
+      /* "opendxmc\engine\_interaction_func.pyx":243
  * #            print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist, cum_prob
  *             free(u)
  *             free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3463,7 +3463,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
       free(__pyx_v_cum_prob);
 
-      /* "opendxmc\engine\_interaction_func.pyx":245
+      /* "opendxmc\engine\_interaction_func.pyx":244
  *             free(u)
  *             free(cum_prob)
  *             return             # <<<<<<<<<<<<<<
@@ -3474,7 +3474,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     }
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":247
+  /* "opendxmc\engine\_interaction_func.pyx":246
  *             return
  * 
  *     for j in range(3):             # <<<<<<<<<<<<<<
@@ -3484,7 +3484,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_j = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":248
+    /* "opendxmc\engine\_interaction_func.pyx":247
  * 
  *     for j in range(3):
  *         stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3494,7 +3494,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
     (__pyx_v_stop[__pyx_v_j]) = 0.0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":249
+  /* "opendxmc\engine\_interaction_func.pyx":248
  *     for j in range(3):
  *         stop[j] = 0
  *     index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3503,7 +3503,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_index[0]) = ((int)-1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":250
+  /* "opendxmc\engine\_interaction_func.pyx":249
  *         stop[j] = 0
  *     index[0] = <int>-1
  *     weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3512,7 +3512,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   (__pyx_v_weight[0]) = ((int)0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":251
+  /* "opendxmc\engine\_interaction_func.pyx":250
  *     index[0] = <int>-1
  *     weight[0] = <int>0
  *     free(u)             # <<<<<<<<<<<<<<
@@ -3521,7 +3521,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   free(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":252
+  /* "opendxmc\engine\_interaction_func.pyx":251
  *     weight[0] = <int>0
  *     free(u)
  *     free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3530,7 +3530,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   free(__pyx_v_cum_prob);
 
-  /* "opendxmc\engine\_interaction_func.pyx":253
+  /* "opendxmc\engine\_interaction_func.pyx":252
  *     free(u)
  *     free(cum_prob)
  *     return             # <<<<<<<<<<<<<<
@@ -3539,7 +3539,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":200
+  /* "opendxmc\engine\_interaction_func.pyx":199
  * 
  * 
  * cdef void interaction_point(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3551,7 +3551,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point(doub
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":257
+/* "opendxmc\engine\_interaction_func.pyx":256
  * 
  * 
  * cdef void interaction_point_forced(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3580,7 +3580,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   int __pyx_t_9;
   int __pyx_t_10;
 
-  /* "opendxmc\engine\_interaction_func.pyx":261
+  /* "opendxmc\engine\_interaction_func.pyx":260
  *     cdef int i, j
  *     cdef double att, cum_sum, r1, delta_r, dist
  *     cdef double* u = <double*> malloc(N * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3589,7 +3589,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_u = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":262
+  /* "opendxmc\engine\_interaction_func.pyx":261
  *     cdef double att, cum_sum, r1, delta_r, dist
  *     cdef double* u = <double*> malloc(N * sizeof(double))
  *     cdef double* cum_prob = <double*> malloc(N * sizeof(double))             # <<<<<<<<<<<<<<
@@ -3598,7 +3598,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_cum_prob = ((double *)malloc((__pyx_v_N * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":264
+  /* "opendxmc\engine\_interaction_func.pyx":263
  *     cdef double* cum_prob = <double*> malloc(N * sizeof(double))
  * 
  *     cum_sum = 0             # <<<<<<<<<<<<<<
@@ -3607,7 +3607,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_cum_sum = 0.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":265
+  /* "opendxmc\engine\_interaction_func.pyx":264
  * 
  *     cum_sum = 0
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3618,7 +3618,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":266
+    /* "opendxmc\engine\_interaction_func.pyx":265
  *     cum_sum = 0
  *     for i in range(N):
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])             # <<<<<<<<<<<<<<
@@ -3630,7 +3630,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_5 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     __pyx_v_att = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_3 * __pyx_v_material_map.strides[0]) ) + __pyx_t_4 * __pyx_v_material_map.strides[1]) ) + __pyx_t_5 * __pyx_v_material_map.strides[2]) ))), 1, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":267
+    /* "opendxmc\engine\_interaction_func.pyx":266
  *     for i in range(N):
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]             # <<<<<<<<<<<<<<
@@ -3642,7 +3642,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_8 = (__pyx_v_ind[((3 * __pyx_v_i) + 2)]);
     (__pyx_v_u[__pyx_v_i]) = (__pyx_v_att * (*((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_density_map.data + __pyx_t_6 * __pyx_v_density_map.strides[0]) ) + __pyx_t_7 * __pyx_v_density_map.strides[1]) ) + __pyx_t_8 * __pyx_v_density_map.strides[2]) ))));
 
-    /* "opendxmc\engine\_interaction_func.pyx":268
+    /* "opendxmc\engine\_interaction_func.pyx":267
  *         att = att_linear(attinuation_lut,material_map[ind[3 * i], ind[3 * i+1], ind[3 * i+2]], 1, particle[6])
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
  *         cum_sum += u[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3651,7 +3651,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     __pyx_v_cum_sum = (__pyx_v_cum_sum + ((__pyx_v_u[__pyx_v_i]) * (__pyx_v_lenghts[__pyx_v_i])));
 
-    /* "opendxmc\engine\_interaction_func.pyx":269
+    /* "opendxmc\engine\_interaction_func.pyx":268
  *         u[i] = att * density_map[ind[3 * i], ind[3*i+1], ind[3 * i+2]]
  *         cum_sum += u[i] * lenghts[i]
  *         cum_prob[i] = 1. - exp(-cum_sum)             # <<<<<<<<<<<<<<
@@ -3661,7 +3661,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     (__pyx_v_cum_prob[__pyx_v_i]) = (1. - exp((-__pyx_v_cum_sum)));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":273
+  /* "opendxmc\engine\_interaction_func.pyx":272
  * 
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:             # <<<<<<<<<<<<<<
@@ -3671,7 +3671,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   __pyx_t_9 = (((__pyx_v_cum_prob[(__pyx_v_N - 1)]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ERRF) != 0);
   if (__pyx_t_9) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":274
+    /* "opendxmc\engine\_interaction_func.pyx":273
  *     #test for zero prob
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):             # <<<<<<<<<<<<<<
@@ -3681,7 +3681,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
       __pyx_v_j = __pyx_t_1;
 
-      /* "opendxmc\engine\_interaction_func.pyx":275
+      /* "opendxmc\engine\_interaction_func.pyx":274
  *     if cum_prob[N-1] < ERRF:
  *         for j in range(3):
  *             stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3691,7 +3691,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       (__pyx_v_stop[__pyx_v_j]) = 0.0;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":276
+    /* "opendxmc\engine\_interaction_func.pyx":275
  *         for j in range(3):
  *             stop[j] = 0
  *         index[0] = -1             # <<<<<<<<<<<<<<
@@ -3700,7 +3700,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     (__pyx_v_index[0]) = -1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":277
+    /* "opendxmc\engine\_interaction_func.pyx":276
  *             stop[j] = 0
  *         index[0] = -1
  *         weight[0] = 0             # <<<<<<<<<<<<<<
@@ -3709,7 +3709,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     (__pyx_v_weight[0]) = 0.0;
 
-    /* "opendxmc\engine\_interaction_func.pyx":278
+    /* "opendxmc\engine\_interaction_func.pyx":277
  *         index[0] = -1
  *         weight[0] = 0
  *         free(u)             # <<<<<<<<<<<<<<
@@ -3718,7 +3718,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     free(__pyx_v_u);
 
-    /* "opendxmc\engine\_interaction_func.pyx":279
+    /* "opendxmc\engine\_interaction_func.pyx":278
  *         weight[0] = 0
  *         free(u)
  *         free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3727,7 +3727,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
     free(__pyx_v_cum_prob);
 
-    /* "opendxmc\engine\_interaction_func.pyx":280
+    /* "opendxmc\engine\_interaction_func.pyx":279
  *         free(u)
  *         free(cum_prob)
  *         return             # <<<<<<<<<<<<<<
@@ -3737,7 +3737,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":282
+  /* "opendxmc\engine\_interaction_func.pyx":281
  *         return
  * 
  *     r1 = random.random() * cum_prob[N-1]             # <<<<<<<<<<<<<<
@@ -3746,7 +3746,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   __pyx_v_r1 = (((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * (__pyx_v_cum_prob[(__pyx_v_N - 1)]));
 
-  /* "opendxmc\engine\_interaction_func.pyx":283
+  /* "opendxmc\engine\_interaction_func.pyx":282
  * 
  *     r1 = random.random() * cum_prob[N-1]
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3757,7 +3757,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "opendxmc\engine\_interaction_func.pyx":284
+    /* "opendxmc\engine\_interaction_func.pyx":283
  *     r1 = random.random() * cum_prob[N-1]
  *     for i in range(N):
  *         if r1 < cum_prob[i]:             # <<<<<<<<<<<<<<
@@ -3767,7 +3767,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     __pyx_t_9 = ((__pyx_v_r1 < (__pyx_v_cum_prob[__pyx_v_i])) != 0);
     if (__pyx_t_9) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":285
+      /* "opendxmc\engine\_interaction_func.pyx":284
  *     for i in range(N):
  *         if r1 < cum_prob[i]:
  *             if i > 0:             # <<<<<<<<<<<<<<
@@ -3777,7 +3777,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       __pyx_t_9 = ((__pyx_v_i > 0) != 0);
       if (__pyx_t_9) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":286
+        /* "opendxmc\engine\_interaction_func.pyx":285
  *         if r1 < cum_prob[i]:
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])             # <<<<<<<<<<<<<<
@@ -3786,7 +3786,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
         __pyx_v_delta_r = (__pyx_v_r1 - (__pyx_v_cum_prob[(__pyx_v_i - 1)]));
 
-        /* "opendxmc\engine\_interaction_func.pyx":287
+        /* "opendxmc\engine\_interaction_func.pyx":286
  *             if i > 0:
  *                 delta_r = (r1 - cum_prob[i - 1])
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3798,7 +3798,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":289
+        /* "opendxmc\engine\_interaction_func.pyx":288
  *                 dist = delta_r / (cum_prob[i] - cum_prob[i - 1]) * lenghts[i]
  *             else:
  *                 delta_r = r1             # <<<<<<<<<<<<<<
@@ -3807,7 +3807,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
         __pyx_v_delta_r = __pyx_v_r1;
 
-        /* "opendxmc\engine\_interaction_func.pyx":290
+        /* "opendxmc\engine\_interaction_func.pyx":289
  *             else:
  *                 delta_r = r1
  *                 dist = delta_r / cum_prob[i] * lenghts[i]             # <<<<<<<<<<<<<<
@@ -3818,7 +3818,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       }
       __pyx_L11:;
 
-      /* "opendxmc\engine\_interaction_func.pyx":292
+      /* "opendxmc\engine\_interaction_func.pyx":291
  *                 dist = delta_r / cum_prob[i] * lenghts[i]
  * 
  *             index[0] = 3*i             # <<<<<<<<<<<<<<
@@ -3827,7 +3827,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       (__pyx_v_index[0]) = (3 * __pyx_v_i);
 
-      /* "opendxmc\engine\_interaction_func.pyx":293
+      /* "opendxmc\engine\_interaction_func.pyx":292
  * 
  *             index[0] = 3*i
  *             for j in range(3):             # <<<<<<<<<<<<<<
@@ -3837,7 +3837,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
       for (__pyx_t_10 = 0; __pyx_t_10 < 3; __pyx_t_10+=1) {
         __pyx_v_j = __pyx_t_10;
 
-        /* "opendxmc\engine\_interaction_func.pyx":294
+        /* "opendxmc\engine\_interaction_func.pyx":293
  *             index[0] = 3*i
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]             # <<<<<<<<<<<<<<
@@ -3847,7 +3847,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
         (__pyx_v_stop[__pyx_v_j]) = (__pyx_f_8opendxmc_6engine_12_siddon_func_plane(__pyx_v_spacing, __pyx_v_offset, __pyx_v_j, (__pyx_v_ind[((__pyx_v_i * 3) + __pyx_v_j)])) + (__pyx_v_dist * (__pyx_v_particle[(__pyx_v_j + 3)])));
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":295
+      /* "opendxmc\engine\_interaction_func.pyx":294
  *             for j in range(3):
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
  *             weight[0] = particle[7] * cum_prob[N-1]             # <<<<<<<<<<<<<<
@@ -3856,7 +3856,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       (__pyx_v_weight[0]) = ((__pyx_v_particle[7]) * (__pyx_v_cum_prob[(__pyx_v_N - 1)]));
 
-      /* "opendxmc\engine\_interaction_func.pyx":296
+      /* "opendxmc\engine\_interaction_func.pyx":295
  *                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3 + j]) + dist * particle[j+3]
  *             weight[0] = particle[7] * cum_prob[N-1]
  *             free(u)             # <<<<<<<<<<<<<<
@@ -3865,7 +3865,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       free(__pyx_v_u);
 
-      /* "opendxmc\engine\_interaction_func.pyx":297
+      /* "opendxmc\engine\_interaction_func.pyx":296
  *             weight[0] = particle[7] * cum_prob[N-1]
  *             free(u)
  *             free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3874,7 +3874,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
       free(__pyx_v_cum_prob);
 
-      /* "opendxmc\engine\_interaction_func.pyx":298
+      /* "opendxmc\engine\_interaction_func.pyx":297
  *             free(u)
  *             free(cum_prob)
  *             return             # <<<<<<<<<<<<<<
@@ -3885,7 +3885,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     }
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":300
+  /* "opendxmc\engine\_interaction_func.pyx":299
  *             return
  * 
  *     for j in range(3):             # <<<<<<<<<<<<<<
@@ -3895,7 +3895,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_j = __pyx_t_1;
 
-    /* "opendxmc\engine\_interaction_func.pyx":301
+    /* "opendxmc\engine\_interaction_func.pyx":300
  * 
  *     for j in range(3):
  *         stop[j] = 0             # <<<<<<<<<<<<<<
@@ -3905,7 +3905,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
     (__pyx_v_stop[__pyx_v_j]) = 0.0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":302
+  /* "opendxmc\engine\_interaction_func.pyx":301
  *     for j in range(3):
  *         stop[j] = 0
  *     index[0] = <int>-1             # <<<<<<<<<<<<<<
@@ -3914,7 +3914,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   (__pyx_v_index[0]) = ((int)-1);
 
-  /* "opendxmc\engine\_interaction_func.pyx":303
+  /* "opendxmc\engine\_interaction_func.pyx":302
  *         stop[j] = 0
  *     index[0] = <int>-1
  *     weight[0] = <int>0             # <<<<<<<<<<<<<<
@@ -3923,7 +3923,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   (__pyx_v_weight[0]) = ((int)0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":304
+  /* "opendxmc\engine\_interaction_func.pyx":303
  *     index[0] = <int>-1
  *     weight[0] = <int>0
  *     free(u)             # <<<<<<<<<<<<<<
@@ -3932,7 +3932,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   free(__pyx_v_u);
 
-  /* "opendxmc\engine\_interaction_func.pyx":305
+  /* "opendxmc\engine\_interaction_func.pyx":304
  *     weight[0] = <int>0
  *     free(u)
  *     free(cum_prob)             # <<<<<<<<<<<<<<
@@ -3941,7 +3941,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   free(__pyx_v_cum_prob);
 
-  /* "opendxmc\engine\_interaction_func.pyx":306
+  /* "opendxmc\engine\_interaction_func.pyx":305
  *     free(u)
  *     free(cum_prob)
  *     return             # <<<<<<<<<<<<<<
@@ -3950,7 +3950,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":257
+  /* "opendxmc\engine\_interaction_func.pyx":256
  * 
  * 
  * cdef void interaction_point_forced(double* particle, double[:] spacing, double[:] offset, int* ind, double* lenghts, int N, double* weight, int* index, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double* stop) nogil:             # <<<<<<<<<<<<<<
@@ -3962,7 +3962,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_interaction_point_forc
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":309
+/* "opendxmc\engine\_interaction_func.pyx":308
  * 
  * 
  * cdef void transport_particle(double[:,:] particles, long particle_index, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose) nogil:             # <<<<<<<<<<<<<<
@@ -4014,7 +4014,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   int __pyx_t_17;
   long __pyx_t_18;
 
-  /* "opendxmc\engine\_interaction_func.pyx":316
+  /* "opendxmc\engine\_interaction_func.pyx":315
  *     cdef int valid, force_interaction, index, material, i, n_indices, n_max
  * 
  *     cdef double weight_cutoff = WEIGHT_CUTOFF             # <<<<<<<<<<<<<<
@@ -4023,7 +4023,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_weight_cutoff = __pyx_v_8opendxmc_6engine_17_interaction_func_WEIGHT_CUTOFF;
 
-  /* "opendxmc\engine\_interaction_func.pyx":317
+  /* "opendxmc\engine\_interaction_func.pyx":316
  * 
  *     cdef double weight_cutoff = WEIGHT_CUTOFF
  *     cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE             # <<<<<<<<<<<<<<
@@ -4032,7 +4032,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_russian_rulette_chance = __pyx_v_8opendxmc_6engine_17_interaction_func_RUSSIAN_RULETTE_CHANCE;
 
-  /* "opendxmc\engine\_interaction_func.pyx":319
+  /* "opendxmc\engine\_interaction_func.pyx":318
  *     cdef double russian_rulette_chance = RUSSIAN_RULETTE_CHANCE
  * 
  *     n_max = <int>(N[0] + N[1] + N[2] + 3)             # <<<<<<<<<<<<<<
@@ -4044,7 +4044,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   __pyx_t_3 = 2;
   __pyx_v_n_max = ((int)((((*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_1 * __pyx_v_N.strides[0]) ))) + (*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_2 * __pyx_v_N.strides[0]) )))) + (*((double *) ( /* dim=0 */ (__pyx_v_N.data + __pyx_t_3 * __pyx_v_N.strides[0]) )))) + 3.0));
 
-  /* "opendxmc\engine\_interaction_func.pyx":321
+  /* "opendxmc\engine\_interaction_func.pyx":320
  *     n_max = <int>(N[0] + N[1] + N[2] + 3)
  * 
  *     cdef double* particle = <double*>malloc(8*sizeof(double))             # <<<<<<<<<<<<<<
@@ -4053,7 +4053,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_particle = ((double *)malloc((8 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":322
+  /* "opendxmc\engine\_interaction_func.pyx":321
  * 
  *     cdef double* particle = <double*>malloc(8*sizeof(double))
  *     for i in range(8):             # <<<<<<<<<<<<<<
@@ -4063,7 +4063,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   for (__pyx_t_4 = 0; __pyx_t_4 < 8; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "opendxmc\engine\_interaction_func.pyx":323
+    /* "opendxmc\engine\_interaction_func.pyx":322
  *     cdef double* particle = <double*>malloc(8*sizeof(double))
  *     for i in range(8):
  *         particle[i] = particles[i, particle_index]             # <<<<<<<<<<<<<<
@@ -4075,7 +4075,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     (__pyx_v_particle[__pyx_v_i]) = (*((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_particles.data + __pyx_t_5 * __pyx_v_particles.strides[0]) ) + __pyx_t_6 * __pyx_v_particles.strides[1]) )));
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":326
+  /* "opendxmc\engine\_interaction_func.pyx":325
  * 
  * 
  *     cdef double* stop = <double*> malloc(3 * sizeof(double))             # <<<<<<<<<<<<<<
@@ -4084,7 +4084,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_stop = ((double *)malloc((3 * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":328
+  /* "opendxmc\engine\_interaction_func.pyx":327
  *     cdef double* stop = <double*> malloc(3 * sizeof(double))
  * 
  *     cdef double* weight_p = <double*> malloc(sizeof(double))             # <<<<<<<<<<<<<<
@@ -4093,7 +4093,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_weight_p = ((double *)malloc((sizeof(double))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":329
+  /* "opendxmc\engine\_interaction_func.pyx":328
  * 
  *     cdef double* weight_p = <double*> malloc(sizeof(double))
  *     cdef int* index_p = <int*> malloc(sizeof(int))             # <<<<<<<<<<<<<<
@@ -4102,7 +4102,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_index_p = ((int *)malloc((sizeof(int))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":331
+  /* "opendxmc\engine\_interaction_func.pyx":330
  *     cdef int* index_p = <int*> malloc(sizeof(int))
  * 
  *     cdef double* l =<double*> malloc(n_max * sizeof(double))             # <<<<<<<<<<<<<<
@@ -4111,7 +4111,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_l = ((double *)malloc((__pyx_v_n_max * (sizeof(double)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":332
+  /* "opendxmc\engine\_interaction_func.pyx":331
  * 
  *     cdef double* l =<double*> malloc(n_max * sizeof(double))
  *     cdef int* ind=<int*> malloc(n_max * 3 * sizeof(int))             # <<<<<<<<<<<<<<
@@ -4120,7 +4120,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_ind = ((int *)malloc(((__pyx_v_n_max * 3) * (sizeof(int)))));
 
-  /* "opendxmc\engine\_interaction_func.pyx":334
+  /* "opendxmc\engine\_interaction_func.pyx":333
  *     cdef int* ind=<int*> malloc(n_max * 3 * sizeof(int))
  * 
  *     force_interaction = 1             # <<<<<<<<<<<<<<
@@ -4129,7 +4129,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_force_interaction = 1;
 
-  /* "opendxmc\engine\_interaction_func.pyx":335
+  /* "opendxmc\engine\_interaction_func.pyx":334
  * 
  *     force_interaction = 1
  *     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4138,7 +4138,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   __pyx_v_valid = __pyx_f_8opendxmc_6engine_12_siddon_func_is_intersecting(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset);
 
-  /* "opendxmc\engine\_interaction_func.pyx":336
+  /* "opendxmc\engine\_interaction_func.pyx":335
  *     force_interaction = 1
  *     valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
  *     while valid == 1:             # <<<<<<<<<<<<<<
@@ -4149,7 +4149,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_valid == 1) != 0);
     if (!__pyx_t_7) break;
 
-    /* "opendxmc\engine\_interaction_func.pyx":338
+    /* "opendxmc\engine\_interaction_func.pyx":337
  *     while valid == 1:
  * 
  *         if particle[6] < ENERGY_CUTOFF:             # <<<<<<<<<<<<<<
@@ -4159,7 +4159,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = (((__pyx_v_particle[6]) < __pyx_v_8opendxmc_6engine_17_interaction_func_ENERGY_CUTOFF) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":339
+      /* "opendxmc\engine\_interaction_func.pyx":338
  * 
  *         if particle[6] < ENERGY_CUTOFF:
  *             break             # <<<<<<<<<<<<<<
@@ -4169,7 +4169,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L6_break;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":341
+    /* "opendxmc\engine\_interaction_func.pyx":340
  *             break
  * 
  *         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)             # <<<<<<<<<<<<<<
@@ -4178,7 +4178,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_n_indices = __pyx_f_8opendxmc_6engine_12_siddon_func_array_indices(__pyx_v_particle, __pyx_v_N, __pyx_v_spacing, __pyx_v_offset, (&__pyx_v_ind), (&__pyx_v_l));
 
-    /* "opendxmc\engine\_interaction_func.pyx":343
+    /* "opendxmc\engine\_interaction_func.pyx":342
  *         n_indices = _siddon_func.array_indices(particle, N, spacing, offset, &ind, &l)
  * 
  *         if force_interaction == 1:             # <<<<<<<<<<<<<<
@@ -4188,7 +4188,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_force_interaction == 1) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":345
+      /* "opendxmc\engine\_interaction_func.pyx":344
  *         if force_interaction == 1:
  * #            interaction_point_forced(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point_forced(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)             # <<<<<<<<<<<<<<
@@ -4200,7 +4200,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":348
+      /* "opendxmc\engine\_interaction_func.pyx":347
  *         else:
  * #            interaction_point(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)             # <<<<<<<<<<<<<<
@@ -4211,7 +4211,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     __pyx_L8:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":349
+    /* "opendxmc\engine\_interaction_func.pyx":348
  * #            interaction_point(particle, spacing, offset, ind, l, n_indices, &weight, &index, material_map, density_map, attinuation_lut, stop)
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
  *         index = index_p[0]             # <<<<<<<<<<<<<<
@@ -4220,7 +4220,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_index = (__pyx_v_index_p[0]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":350
+    /* "opendxmc\engine\_interaction_func.pyx":349
  *             interaction_point(particle, spacing, offset, ind, l, n_indices, weight_p, index_p, material_map, density_map, attinuation_lut, stop)
  *         index = index_p[0]
  *         weight = weight_p[0]             # <<<<<<<<<<<<<<
@@ -4229,7 +4229,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_weight = (__pyx_v_weight_p[0]);
 
-    /* "opendxmc\engine\_interaction_func.pyx":352
+    /* "opendxmc\engine\_interaction_func.pyx":351
  *         weight = weight_p[0]
  * 
  *         if index < 0:             # <<<<<<<<<<<<<<
@@ -4239,7 +4239,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_index < 0) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":353
+      /* "opendxmc\engine\_interaction_func.pyx":352
  * 
  *         if index < 0:
  *             break             # <<<<<<<<<<<<<<
@@ -4249,7 +4249,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L6_break;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":355
+    /* "opendxmc\engine\_interaction_func.pyx":354
  *             break
  * 
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]             # <<<<<<<<<<<<<<
@@ -4261,7 +4261,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_9 = (__pyx_v_ind[(__pyx_v_index + 2)]);
     __pyx_v_material = (*((int *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_material_map.data + __pyx_t_4 * __pyx_v_material_map.strides[0]) ) + __pyx_t_8 * __pyx_v_material_map.strides[1]) ) + __pyx_t_9 * __pyx_v_material_map.strides[2]) )));
 
-    /* "opendxmc\engine\_interaction_func.pyx":356
+    /* "opendxmc\engine\_interaction_func.pyx":355
  * 
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])             # <<<<<<<<<<<<<<
@@ -4270,7 +4270,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_compton = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 4, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":357
+    /* "opendxmc\engine\_interaction_func.pyx":356
  *         material = material_map[ind[index], ind[index + 1], ind[index+2]]
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])             # <<<<<<<<<<<<<<
@@ -4279,7 +4279,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_photo = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 3, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":358
+    /* "opendxmc\engine\_interaction_func.pyx":357
  *         compton = att_linear(attinuation_lut, material, 4, particle[6])
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])
  *         rayleigh = att_linear(attinuation_lut, material, 2, particle[6])             # <<<<<<<<<<<<<<
@@ -4288,7 +4288,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_rayleigh = __pyx_f_8opendxmc_6engine_17_interaction_func_att_linear(__pyx_v_attinuation_lut, __pyx_v_material, 2, (__pyx_v_particle[6]));
 
-    /* "opendxmc\engine\_interaction_func.pyx":359
+    /* "opendxmc\engine\_interaction_func.pyx":358
  *         photo = att_linear(attinuation_lut, material, 3, particle[6])
  *         rayleigh = att_linear(attinuation_lut, material, 2, particle[6])
  *         total = compton + rayleigh + photo             # <<<<<<<<<<<<<<
@@ -4297,7 +4297,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_total = ((__pyx_v_compton + __pyx_v_rayleigh) + __pyx_v_photo);
 
-    /* "opendxmc\engine\_interaction_func.pyx":361
+    /* "opendxmc\engine\_interaction_func.pyx":360
  *         total = compton + rayleigh + photo
  * #
  *         r1 = random.random() * total             # <<<<<<<<<<<<<<
@@ -4306,7 +4306,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
     __pyx_v_r1 = (((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_total);
 
-    /* "opendxmc\engine\_interaction_func.pyx":363
+    /* "opendxmc\engine\_interaction_func.pyx":362
  *         r1 = random.random() * total
  * 
  *         if r1 <= photo:             # <<<<<<<<<<<<<<
@@ -4316,7 +4316,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_r1 <= __pyx_v_photo) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":364
+      /* "opendxmc\engine\_interaction_func.pyx":363
  * 
  *         if r1 <= photo:
  *             openmp.omp_set_lock(&mylock)             # <<<<<<<<<<<<<<
@@ -4325,7 +4325,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       omp_set_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
 
-      /* "opendxmc\engine\_interaction_func.pyx":365
+      /* "opendxmc\engine\_interaction_func.pyx":364
  *         if r1 <= photo:
  *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]             # <<<<<<<<<<<<<<
@@ -4337,7 +4337,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       __pyx_t_12 = (__pyx_v_ind[(__pyx_v_index + 2)]);
       *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dose.data + __pyx_t_10 * __pyx_v_dose.strides[0]) ) + __pyx_t_11 * __pyx_v_dose.strides[1]) ) + __pyx_t_12 * __pyx_v_dose.strides[2]) )) += (__pyx_v_weight * (__pyx_v_particle[6]));
 
-      /* "opendxmc\engine\_interaction_func.pyx":366
+      /* "opendxmc\engine\_interaction_func.pyx":365
  *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
  *             openmp.omp_unset_lock(&mylock)             # <<<<<<<<<<<<<<
@@ -4346,7 +4346,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       omp_unset_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
 
-      /* "opendxmc\engine\_interaction_func.pyx":367
+      /* "opendxmc\engine\_interaction_func.pyx":366
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * particle[6]
  *             openmp.omp_unset_lock(&mylock)
  *             valid = 0             # <<<<<<<<<<<<<<
@@ -4357,7 +4357,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       goto __pyx_L10;
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":369
+    /* "opendxmc\engine\_interaction_func.pyx":368
  *             valid = 0
  * 
  *         elif r1 <= (compton + photo):             # <<<<<<<<<<<<<<
@@ -4367,7 +4367,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_t_7 = ((__pyx_v_r1 <= (__pyx_v_compton + __pyx_v_photo)) != 0);
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":370
+      /* "opendxmc\engine\_interaction_func.pyx":369
  * 
  *         elif r1 <= (compton + photo):
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)             # <<<<<<<<<<<<<<
@@ -4376,7 +4376,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_scatter_energy = __pyx_f_8opendxmc_6engine_17_interaction_func_compton_event_draw_energy_theta((__pyx_v_particle[6]), (&__pyx_v_scatter_angle));
 
-      /* "opendxmc\engine\_interaction_func.pyx":371
+      /* "opendxmc\engine\_interaction_func.pyx":370
  *         elif r1 <= (compton + photo):
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
  *             azimutal_angle = random.random() * PI * 2.             # <<<<<<<<<<<<<<
@@ -4385,7 +4385,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_azimutal_angle = ((((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_8opendxmc_6engine_17_interaction_func_PI) * 2.);
 
-      /* "opendxmc\engine\_interaction_func.pyx":372
+      /* "opendxmc\engine\_interaction_func.pyx":371
  *             scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle)
  *             azimutal_angle = random.random() * PI * 2.
  *             particle[7] = weight             # <<<<<<<<<<<<<<
@@ -4394,7 +4394,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       (__pyx_v_particle[7]) = __pyx_v_weight;
 
-      /* "opendxmc\engine\_interaction_func.pyx":373
+      /* "opendxmc\engine\_interaction_func.pyx":372
  *             azimutal_angle = random.random() * PI * 2.
  *             particle[7] = weight
  *             openmp.omp_set_lock(&mylock)             # <<<<<<<<<<<<<<
@@ -4403,7 +4403,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       omp_set_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
 
-      /* "opendxmc\engine\_interaction_func.pyx":374
+      /* "opendxmc\engine\_interaction_func.pyx":373
  *             particle[7] = weight
  *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)             # <<<<<<<<<<<<<<
@@ -4415,7 +4415,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       __pyx_t_15 = (__pyx_v_ind[(__pyx_v_index + 2)]);
       *((double *) ( /* dim=2 */ (( /* dim=1 */ (( /* dim=0 */ (__pyx_v_dose.data + __pyx_t_13 * __pyx_v_dose.strides[0]) ) + __pyx_t_14 * __pyx_v_dose.strides[1]) ) + __pyx_t_15 * __pyx_v_dose.strides[2]) )) += (__pyx_v_weight * ((__pyx_v_particle[6]) - __pyx_v_scatter_energy));
 
-      /* "opendxmc\engine\_interaction_func.pyx":375
+      /* "opendxmc\engine\_interaction_func.pyx":374
  *             openmp.omp_set_lock(&mylock)
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
  *             openmp.omp_unset_lock(&mylock)             # <<<<<<<<<<<<<<
@@ -4424,7 +4424,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       omp_unset_lock((&__pyx_v_8opendxmc_6engine_17_interaction_func_mylock));
 
-      /* "opendxmc\engine\_interaction_func.pyx":376
+      /* "opendxmc\engine\_interaction_func.pyx":375
  *             dose[ind[index], ind[index + 1], ind[index+2]] +=  weight * (particle[6] - scatter_energy)
  *             openmp.omp_unset_lock(&mylock)
  *             for i in range(3):             # <<<<<<<<<<<<<<
@@ -4434,7 +4434,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       for (__pyx_t_16 = 0; __pyx_t_16 < 3; __pyx_t_16+=1) {
         __pyx_v_i = __pyx_t_16;
 
-        /* "opendxmc\engine\_interaction_func.pyx":377
+        /* "opendxmc\engine\_interaction_func.pyx":376
  *             openmp.omp_unset_lock(&mylock)
  *             for i in range(3):
  *                 particle[i] = stop[i]             # <<<<<<<<<<<<<<
@@ -4444,7 +4444,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
         (__pyx_v_particle[__pyx_v_i]) = (__pyx_v_stop[__pyx_v_i]);
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":378
+      /* "opendxmc\engine\_interaction_func.pyx":377
  *             for i in range(3):
  *                 particle[i] = stop[i]
  *             particle[6] = scatter_energy             # <<<<<<<<<<<<<<
@@ -4453,7 +4453,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       (__pyx_v_particle[6]) = __pyx_v_scatter_energy;
 
-      /* "opendxmc\engine\_interaction_func.pyx":379
+      /* "opendxmc\engine\_interaction_func.pyx":378
  *                 particle[i] = stop[i]
  *             particle[6] = scatter_energy
  *             rot_particle(particle, scatter_angle)             # <<<<<<<<<<<<<<
@@ -4462,7 +4462,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(__pyx_v_particle, __pyx_v_scatter_angle);
 
-      /* "opendxmc\engine\_interaction_func.pyx":380
+      /* "opendxmc\engine\_interaction_func.pyx":379
  *             particle[6] = scatter_energy
  *             rot_particle(particle, scatter_angle)
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4474,7 +4474,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     /*else*/ {
 
-      /* "opendxmc\engine\_interaction_func.pyx":383
+      /* "opendxmc\engine\_interaction_func.pyx":382
  * 
  *         else:
  *             scatter_angle = rayleigh_event_draw_theta()             # <<<<<<<<<<<<<<
@@ -4483,7 +4483,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_scatter_angle = __pyx_f_8opendxmc_6engine_17_interaction_func_rayleigh_event_draw_theta();
 
-      /* "opendxmc\engine\_interaction_func.pyx":384
+      /* "opendxmc\engine\_interaction_func.pyx":383
  *         else:
  *             scatter_angle = rayleigh_event_draw_theta()
  *             azimutal_angle = random.random() * PI * 2.             # <<<<<<<<<<<<<<
@@ -4492,7 +4492,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_azimutal_angle = ((((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random) * __pyx_v_8opendxmc_6engine_17_interaction_func_PI) * 2.);
 
-      /* "opendxmc\engine\_interaction_func.pyx":385
+      /* "opendxmc\engine\_interaction_func.pyx":384
  *             scatter_angle = rayleigh_event_draw_theta()
  *             azimutal_angle = random.random() * PI * 2.
  *             for i in range(3):             # <<<<<<<<<<<<<<
@@ -4502,7 +4502,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       for (__pyx_t_16 = 0; __pyx_t_16 < 3; __pyx_t_16+=1) {
         __pyx_v_i = __pyx_t_16;
 
-        /* "opendxmc\engine\_interaction_func.pyx":386
+        /* "opendxmc\engine\_interaction_func.pyx":385
  *             azimutal_angle = random.random() * PI * 2.
  *             for i in range(3):
  *                 particle[i] = stop[i]             # <<<<<<<<<<<<<<
@@ -4512,7 +4512,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
         (__pyx_v_particle[__pyx_v_i]) = (__pyx_v_stop[__pyx_v_i]);
       }
 
-      /* "opendxmc\engine\_interaction_func.pyx":387
+      /* "opendxmc\engine\_interaction_func.pyx":386
  *             for i in range(3):
  *                 particle[i] = stop[i]
  *             particle[7] = weight             # <<<<<<<<<<<<<<
@@ -4521,7 +4521,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       (__pyx_v_particle[7]) = __pyx_v_weight;
 
-      /* "opendxmc\engine\_interaction_func.pyx":388
+      /* "opendxmc\engine\_interaction_func.pyx":387
  *                 particle[i] = stop[i]
  *             particle[7] = weight
  *             rot_particle(particle, scatter_angle)             # <<<<<<<<<<<<<<
@@ -4530,7 +4530,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_f_8opendxmc_6engine_17_interaction_func_rot_particle(__pyx_v_particle, __pyx_v_scatter_angle);
 
-      /* "opendxmc\engine\_interaction_func.pyx":389
+      /* "opendxmc\engine\_interaction_func.pyx":388
  *             particle[7] = weight
  *             rot_particle(particle, scatter_angle)
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)             # <<<<<<<<<<<<<<
@@ -4541,7 +4541,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     }
     __pyx_L10:;
 
-    /* "opendxmc\engine\_interaction_func.pyx":391
+    /* "opendxmc\engine\_interaction_func.pyx":390
  *             valid = _siddon_func.is_intersecting(particle, N, spacing, offset)
  * 
  *         if weight < WEIGHT_CUTOFF and valid == 1:             # <<<<<<<<<<<<<<
@@ -4559,7 +4559,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
     __pyx_L16_bool_binop_done:;
     if (__pyx_t_7) {
 
-      /* "opendxmc\engine\_interaction_func.pyx":393
+      /* "opendxmc\engine\_interaction_func.pyx":392
  *         if weight < WEIGHT_CUTOFF and valid == 1:
  *             # Russion rulette photon termination
  *             r1 = random.random()             # <<<<<<<<<<<<<<
@@ -4568,7 +4568,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
       __pyx_v_r1 = ((struct __pyx_vtabstruct_8opendxmc_6engine_8cyrandom_Random *)__pyx_v_8opendxmc_6engine_17_interaction_func_random->__pyx_vtab)->random(__pyx_v_8opendxmc_6engine_17_interaction_func_random);
 
-      /* "opendxmc\engine\_interaction_func.pyx":394
+      /* "opendxmc\engine\_interaction_func.pyx":393
  *             # Russion rulette photon termination
  *             r1 = random.random()
  *             if russian_rulette_chance * r1 <= 1:             # <<<<<<<<<<<<<<
@@ -4578,7 +4578,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       __pyx_t_7 = (((__pyx_v_russian_rulette_chance * __pyx_v_r1) <= 1.0) != 0);
       if (__pyx_t_7) {
 
-        /* "opendxmc\engine\_interaction_func.pyx":395
+        /* "opendxmc\engine\_interaction_func.pyx":394
  *             r1 = random.random()
  *             if russian_rulette_chance * r1 <= 1:
  *                 particle[7] *= russian_rulette_chance             # <<<<<<<<<<<<<<
@@ -4591,7 +4591,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
       }
       /*else*/ {
 
-        /* "opendxmc\engine\_interaction_func.pyx":397
+        /* "opendxmc\engine\_interaction_func.pyx":396
  *                 particle[7] *= russian_rulette_chance
  *             else:
  *                 valid = 0             # <<<<<<<<<<<<<<
@@ -4607,7 +4607,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   }
   __pyx_L6_break:;
 
-  /* "opendxmc\engine\_interaction_func.pyx":400
+  /* "opendxmc\engine\_interaction_func.pyx":399
  * #        force_interaction = 0
  * 
  *     free(l)             # <<<<<<<<<<<<<<
@@ -4616,7 +4616,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_l);
 
-  /* "opendxmc\engine\_interaction_func.pyx":401
+  /* "opendxmc\engine\_interaction_func.pyx":400
  * 
  *     free(l)
  *     free(ind)             # <<<<<<<<<<<<<<
@@ -4625,7 +4625,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_ind);
 
-  /* "opendxmc\engine\_interaction_func.pyx":402
+  /* "opendxmc\engine\_interaction_func.pyx":401
  *     free(l)
  *     free(ind)
  *     free(stop)             # <<<<<<<<<<<<<<
@@ -4634,7 +4634,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_stop);
 
-  /* "opendxmc\engine\_interaction_func.pyx":403
+  /* "opendxmc\engine\_interaction_func.pyx":402
  *     free(ind)
  *     free(stop)
  *     free(particle)             # <<<<<<<<<<<<<<
@@ -4643,7 +4643,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_particle);
 
-  /* "opendxmc\engine\_interaction_func.pyx":404
+  /* "opendxmc\engine\_interaction_func.pyx":403
  *     free(stop)
  *     free(particle)
  *     free(index_p)             # <<<<<<<<<<<<<<
@@ -4652,7 +4652,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_index_p);
 
-  /* "opendxmc\engine\_interaction_func.pyx":405
+  /* "opendxmc\engine\_interaction_func.pyx":404
  *     free(particle)
  *     free(index_p)
  *     free(weight_p)             # <<<<<<<<<<<<<<
@@ -4661,7 +4661,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   free(__pyx_v_weight_p);
 
-  /* "opendxmc\engine\_interaction_func.pyx":406
+  /* "opendxmc\engine\_interaction_func.pyx":405
  *     free(index_p)
  *     free(weight_p)
  *     return             # <<<<<<<<<<<<<<
@@ -4670,7 +4670,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
  */
   goto __pyx_L0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":309
+  /* "opendxmc\engine\_interaction_func.pyx":308
  * 
  * 
  * cdef void transport_particle(double[:,:] particles, long particle_index, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose) nogil:             # <<<<<<<<<<<<<<
@@ -4682,7 +4682,7 @@ static void __pyx_f_8opendxmc_6engine_17_interaction_func_transport_particle(__P
   __pyx_L0:;
 }
 
-/* "opendxmc\engine\_interaction_func.pyx":409
+/* "opendxmc\engine\_interaction_func.pyx":408
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
@@ -4738,37 +4738,37 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_N)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_spacing)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 2); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  3:
         if (likely((values[3] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_offset)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 3); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  4:
         if (likely((values[4] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_material_map)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 4); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  5:
         if (likely((values[5] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_density_map)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 5); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  6:
         if (likely((values[6] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_attinuation_lut)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 6); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  7:
         if (likely((values[7] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_dose)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, 7); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  8:
         if (kw_args > 0) {
@@ -4777,7 +4777,7 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "score_energy") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "score_energy") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -4794,19 +4794,19 @@ static PyObject *__pyx_pw_8opendxmc_6engine_17_interaction_func_1score_energy(Py
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_particles = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0]); if (unlikely(!__pyx_v_particles.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_N = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1]); if (unlikely(!__pyx_v_N.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_spacing = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2]); if (unlikely(!__pyx_v_spacing.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_offset = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3]); if (unlikely(!__pyx_v_offset.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_material_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_int(values[4]); if (unlikely(!__pyx_v_material_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_density_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[5]); if (unlikely(!__pyx_v_density_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_attinuation_lut = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[6]); if (unlikely(!__pyx_v_attinuation_lut.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-    __pyx_v_dose = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[7]); if (unlikely(!__pyx_v_dose.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_particles = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(values[0]); if (unlikely(!__pyx_v_particles.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_N = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[1]); if (unlikely(!__pyx_v_N.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_spacing = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[2]); if (unlikely(!__pyx_v_spacing.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_offset = __Pyx_PyObject_to_MemoryviewSlice_ds_double(values[3]); if (unlikely(!__pyx_v_offset.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_material_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_int(values[4]); if (unlikely(!__pyx_v_material_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_density_map = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[5]); if (unlikely(!__pyx_v_density_map.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_attinuation_lut = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[6]); if (unlikely(!__pyx_v_attinuation_lut.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_dose = __Pyx_PyObject_to_MemoryviewSlice_dsdsds_double(values[7]); if (unlikely(!__pyx_v_dose.memview)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_num_threads = values[8];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("score_energy", 0, 8, 9, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("opendxmc.engine._interaction_func.score_energy", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4836,7 +4836,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("score_energy", 0);
 
-  /* "opendxmc\engine\_interaction_func.pyx":450
+  /* "opendxmc\engine\_interaction_func.pyx":449
  *     cdef long i
  *     cdef int n
  *     if num_threads is None:             # <<<<<<<<<<<<<<
@@ -4847,7 +4847,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "opendxmc\engine\_interaction_func.pyx":451
+    /* "opendxmc\engine\_interaction_func.pyx":450
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4864,7 +4864,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           if (1 == 0) abort();
           {
 
-              /* "opendxmc\engine\_interaction_func.pyx":451
+              /* "opendxmc\engine\_interaction_func.pyx":450
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4892,7 +4892,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
                           {
                               __pyx_v_i = 0 + 1 * __pyx_t_4;
 
-                              /* "opendxmc\engine\_interaction_func.pyx":452
+                              /* "opendxmc\engine\_interaction_func.pyx":451
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)             # <<<<<<<<<<<<<<
@@ -4913,7 +4913,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           #endif
         }
 
-        /* "opendxmc\engine\_interaction_func.pyx":451
+        /* "opendxmc\engine\_interaction_func.pyx":450
  *     cdef int n
  *     if num_threads is None:
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):             # <<<<<<<<<<<<<<
@@ -4931,7 +4931,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
         }
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":453
+    /* "opendxmc\engine\_interaction_func.pyx":452
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
  *         return             # <<<<<<<<<<<<<<
@@ -4944,20 +4944,20 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
   }
   /*else*/ {
 
-    /* "opendxmc\engine\_interaction_func.pyx":455
+    /* "opendxmc\engine\_interaction_func.pyx":454
  *         return
  *     else:
  *         n = int(num_threads)             # <<<<<<<<<<<<<<
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  */
-    __pyx_t_7 = PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_7 = PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 454; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_7); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 455; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_7); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 454; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
     __pyx_v_n = __pyx_t_6;
 
-    /* "opendxmc\engine\_interaction_func.pyx":457
+    /* "opendxmc\engine\_interaction_func.pyx":456
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -4974,7 +4974,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           if (1 == 0) abort();
           {
 
-              /* "opendxmc\engine\_interaction_func.pyx":457
+              /* "opendxmc\engine\_interaction_func.pyx":456
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -5002,7 +5002,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
                           {
                               __pyx_v_i = 0 + 1 * __pyx_t_4;
 
-                              /* "opendxmc\engine\_interaction_func.pyx":458
+                              /* "opendxmc\engine\_interaction_func.pyx":457
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)             # <<<<<<<<<<<<<<
@@ -5023,7 +5023,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
           #endif
         }
 
-        /* "opendxmc\engine\_interaction_func.pyx":457
+        /* "opendxmc\engine\_interaction_func.pyx":456
  *         n = int(num_threads)
  * 
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):             # <<<<<<<<<<<<<<
@@ -5041,7 +5041,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
         }
     }
 
-    /* "opendxmc\engine\_interaction_func.pyx":459
+    /* "opendxmc\engine\_interaction_func.pyx":458
  *         for i in prange(particles.shape[1], schedule='guided', nogil=True, chunksize=1000, num_threads=n):
  *             transport_particle(particles, i, N, spacing, offset, material_map, density_map, attinuation_lut, dose)
  *         return             # <<<<<<<<<<<<<<
@@ -5053,7 +5053,7 @@ static PyObject *__pyx_pf_8opendxmc_6engine_17_interaction_func_score_energy(CYT
     goto __pyx_L0;
   }
 
-  /* "opendxmc\engine\_interaction_func.pyx":409
+  /* "opendxmc\engine\_interaction_func.pyx":408
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
@@ -18400,7 +18400,7 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_Buffer_view_does_not_expose_stri, __pyx_k_Buffer_view_does_not_expose_stri, sizeof(__pyx_k_Buffer_view_does_not_expose_stri), 0, 0, 1, 0},
-  {&__pyx_kp_s_C_github_OpenDXMC_opendxmc_engin, __pyx_k_C_github_OpenDXMC_opendxmc_engin, sizeof(__pyx_k_C_github_OpenDXMC_opendxmc_engin), 0, 0, 1, 0},
+  {&__pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_k_C_GitHub_OpenDXMC_opendxmc_engin, sizeof(__pyx_k_C_GitHub_OpenDXMC_opendxmc_engin), 0, 0, 1, 0},
   {&__pyx_kp_s_Can_only_create_a_buffer_that_is, __pyx_k_Can_only_create_a_buffer_that_is, sizeof(__pyx_k_Can_only_create_a_buffer_that_is), 0, 0, 1, 0},
   {&__pyx_kp_s_Cannot_index_with_type_s, __pyx_k_Cannot_index_with_type_s, sizeof(__pyx_k_Cannot_index_with_type_s), 0, 0, 1, 0},
   {&__pyx_n_s_Ellipsis, __pyx_k_Ellipsis, sizeof(__pyx_k_Ellipsis), 0, 0, 1, 1},
@@ -18704,17 +18704,17 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__18);
   __Pyx_GIVEREF(__pyx_tuple__18);
 
-  /* "opendxmc\engine\_interaction_func.pyx":409
+  /* "opendxmc\engine\_interaction_func.pyx":408
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
  *     """
  *     Score dose by the Monte Carlo method. If OpenMP is available during
  */
-  __pyx_tuple__19 = PyTuple_Pack(11, __pyx_n_s_particles, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_material_map, __pyx_n_s_density_map, __pyx_n_s_attinuation_lut, __pyx_n_s_dose, __pyx_n_s_num_threads, __pyx_n_s_i, __pyx_n_s_n); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__19 = PyTuple_Pack(11, __pyx_n_s_particles, __pyx_n_s_N, __pyx_n_s_spacing, __pyx_n_s_offset, __pyx_n_s_material_map, __pyx_n_s_density_map, __pyx_n_s_attinuation_lut, __pyx_n_s_dose, __pyx_n_s_num_threads, __pyx_n_s_i, __pyx_n_s_n); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_github_OpenDXMC_opendxmc_engin, __pyx_n_s_score_energy, 409, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(9, 0, 11, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_C_GitHub_OpenDXMC_opendxmc_engin, __pyx_n_s_score_energy, 408, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "View.MemoryView":276
  *         return self.name
@@ -19030,16 +19030,16 @@ PyMODINIT_FUNC PyInit__interaction_func(void)
  */
   __pyx_v_8opendxmc_6engine_17_interaction_func_RUSSIAN_RULETTE_CHANCE = 2.0;
 
-  /* "opendxmc\engine\_interaction_func.pyx":409
+  /* "opendxmc\engine\_interaction_func.pyx":408
  * 
  * 
  * def score_energy(double[:,:] particles, double[:] N, double[:] spacing, double[:] offset, int[:,:,:] material_map, double[:,:,:] density_map, double[:,:,:] attinuation_lut, double[:,:,:] dose, num_threads=None):             # <<<<<<<<<<<<<<
  *     """
  *     Score dose by the Monte Carlo method. If OpenMP is available during
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_17_interaction_func_1score_energy, NULL, __pyx_n_s_opendxmc_engine__interaction_fun); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_8opendxmc_6engine_17_interaction_func_1score_energy, NULL, __pyx_n_s_opendxmc_engine__interaction_fun); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_score_energy, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 409; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_score_energy, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 408; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "opendxmc\engine\_interaction_func.pyx":1

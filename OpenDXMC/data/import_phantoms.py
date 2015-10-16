@@ -54,6 +54,7 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     sim = Simulation(name)
     sim.spacing = np.array(spacing, dtype=np.double) / 10.
     sim.organ = np.rollaxis(np.reshape(a[header_len:], (-1, shape[0], shape[1])), 0, 3)#[:,:,::-1]
+    sim.shape = np.array(sim.organ.shape)
     N = sim.organ.shape[2]
     organ_map={}
     organ_material_map={}

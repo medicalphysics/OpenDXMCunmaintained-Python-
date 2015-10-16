@@ -261,17 +261,57 @@ class Database(object):
             logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(name))
             raise ValueError('No study named {}'.format(name))
 
+        pat_node = self.get_node('/simulations', name, create=False)
         if not ignore_arrays:
-            pat_node = self.get_node('/simulations', name, create=False)
-            for data_node in itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table')):
+            props = itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table'))
+        else:
+            aecnode_list = []
+            try:
+                aecnode_list.append(self.get_node(pat_node, 'exposure_modulation'), create=False)
+            except ValueError:
+                pass
+            props = itertools.chain(aecnode_list, pat_node._f_walknodes('Table'))
+        for data_node in props:
 #            for data_node in pat_node._f_walknodes():
-                node_name = data_node._v_name
-                logger.debug('Reading data node {}'.format(node_name))
-                setattr(simulation, node_name, data_node.read())
+            node_name = data_node._v_name
+            logger.debug('Reading data node {}'.format(node_name))
+            setattr(simulation, node_name, data_node.read())
 
         logger.debug('Successfully read simulation {} from database.'.format(name))
         self.close()
         return simulation
+
+    def get_simulation_array(self, name, array_name):
+        self.open()
+        if self.test_node('simulations/{0}/{1}'.format(name, array_name)):
+            node = self.get_node('simulations/{0}/{1}'.format(name, array_name), create=False)
+        elif self.test_node('simulations/{0}/volatiles/{1}'.format(name, array_name)):
+            node = self.get_node('simulations/{0}/volatiles/{1}'.format(name, array_name), create=False)
+        else:
+            self.close()
+            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
+            return
+        arr = node.read()
+        self.close()
+        return arr
+
+    def get_simulation_array_slice(self, name, array_name, index, orientation):
+        self.open()
+        if self.test_node('simulations/{0}/{1}'.format(name, array_name)):
+            node = self.get_node('simulations/{0}/{1}'.format(name, array_name), create=False)
+        elif self.test_node('simulations/{0}/volatiles/{1}'.format(name, array_name)):
+            node = self.get_node('simulations/{0}/volatiles/{1}'.format(name, array_name), create=False)
+        else:
+            return None
+        index %= 3
+        if index == 1:
+            arr = np.squeeze(node[:, index, :])
+        elif index == 0:
+            arr = np.squeeze(node[index, :, :])
+        else:
+            arr = np.squeeze(node[:,:,index])
+        self.close()
+        return arr
 
     def get_MCready_simulation(self):
         logger.debug('Attempting to find MC ready simulations from database.')

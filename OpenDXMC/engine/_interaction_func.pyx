@@ -140,7 +140,6 @@ cdef double att_linear(double[:,:,:] atts, int tissue_ind, int interaction, doub
 
 cdef double compton_event_draw_energy_theta(double energy, double* theta) nogil:
     """Draws scattered energy and angle, based on Geant4 implementation
-    returns tuple (scatter angle, energy)
     """
     cdef double epsilon_0, alpha1, alpha2, r1, r2, r3, epsilon, qsin_theta, t, k
     k = energy / ELECTRON_MASS

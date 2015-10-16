@@ -101,7 +101,7 @@ def image_to_world_transform(image_vector, position, orientation, spacing):
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
     R[:3, :3] *= spacing
-    return np.dot(R, image_vector) + position    
+    return np.dot(R, image_vector) + position
 
 def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
@@ -119,10 +119,10 @@ def array_from_dicom_list(dc_list, scaling):
 #    return arr
     out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
     spline_filter(arr, order=3, output=arr)
-    return affine_transform(arr, scaling, prefilter=False, 
-                            output_shape=out_shape, cval=-1000, 
+    return affine_transform(arr, scaling, prefilter=False,
+                            output_shape=out_shape, cval=-1000,
                             output=np.int16)
-    
+
 
 
 def aec_from_dicom_list(dc_list, iop, spacing):
@@ -130,8 +130,8 @@ def aec_from_dicom_list(dc_list, iop, spacing):
     n_im = len(dc_list)
     exp = np.empty((n_im, 2), dtype=np.float)
     pos = np.zeros(3)
-    
-    
+
+
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
         exp[i, 0] = image_to_world_transform(np.array([0, 0, i]), pos, iop, spacing)[2]
@@ -146,17 +146,17 @@ def dc_slice_indicator(dc):
     pos = np.array(dc[0x20, 0x32].value)
     iop = np.array(dc[0x20, 0x37].value).reshape((2, 3)).T
     return np.inner(pos, np.cross(*iop.T[:]))
-    
+
 def z_stop_estimator(iop, spacing, shape):
     choices = []
     pos = np.zeros(3)
     for i in [0, shape[0]]:
         for j in [0, shape[1]]:
             for k in [0, shape[2]]:
-                choices.append(image_to_world_transform(np.array([i, j, k]), pos, iop, spacing)[2])  
+                choices.append(image_to_world_transform(np.array([i, j, k]), pos, iop, spacing)[2])
     return min(choices), max(choices)
-    
-    
+
+
 
 def import_ct_series(paths, import_scaling=(2, 2, 2)):
     series = {}
@@ -211,24 +211,24 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
         #Creating transforrmation matrix
         patient = Simulation(name)
         patient.import_scaling = import_scaling
-        
-        patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
 
+        patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
+        patient.shape = np.array(patient.ctarray.shape)
         patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
         patient.image_orientation = np.array(dc[0x20, 0x37].value)
-        
-        patient.exposure_modulation = aec_from_dicom_list(dc_list, 
-                                                          np.array(dc[0x20, 0x37].value), 
+
+        patient.exposure_modulation = aec_from_dicom_list(dc_list,
+                                                          np.array(dc[0x20, 0x37].value),
                                                           spacing)
-        
+
         try:
             patient.data_center = np.array(dc[0x18, 0x9313].value) / 10. - patient.image_position
         except KeyError:
-            patient.data_center = image_to_world_transform(np.array(patient.ctarray.shape) / 2., 
+            patient.data_center = image_to_world_transform(np.array(patient.ctarray.shape) / 2.,
                                                            patient.image_position,
-                                                           patient.image_orientation, 
-                                                           patient.spacing) 
+                                                           patient.image_orientation,
+                                                           patient.spacing)
 
         tag_key = {'pitch': (0x18, 0x9311),
                    'scan_fov': (0x18, 0x90),

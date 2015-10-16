@@ -111,7 +111,10 @@ class DatabaseInterface(QtCore.QObject):
 
 
     request_simulation_run = QtCore.pyqtSignal(Simulation, list)
-    request_simulation_view = QtCore.pyqtSignal(Simulation)
+
+    request_array_slice_view = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
+    request_array_view = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
+
     request_material_view = QtCore.pyqtSignal(Material)
     database_busy = QtCore.pyqtSignal(bool)
 
@@ -145,12 +148,6 @@ class DatabaseInterface(QtCore.QObject):
                 folder = QtCore.QDir.current()
 
         path = QtCore.QFileInfo(folder.absolutePath() + folder.separator() + fname)
-#        if not folder.isWritable():
-#            if len(msg) > 0:
-#                msg += ' '
-#            msg += 'Could not write or create database path: {0}'.format(path)
-#            QtGui.QMessageBox.critical(title='Error in database file path', text=msg)
-#            QtGui.qApp.quit()
 
         logger.debug('Attemting to use database in {0}'.format(path.absoluteFilePath()))
 
@@ -188,32 +185,37 @@ class DatabaseInterface(QtCore.QObject):
         self.get_simulation_list()
         self.database_busy.emit(False)
 
-#    @QtCore.pyqtSlot(list)
-#    def import_dicom(self, qurl_list):
-#        paths = [url.toLocalFile() for url in qurl_list]
-#        for sim in import_ct_series(paths):
-#            self.database_busy.emit(True)
-#            try:
-#                self.__db.add_simulation(sim, overwrite=False)
-#            except ValueError:
-#               name = self.__db.get_unique_simulation_name()
-#               logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
-#               sim.name = name
-#               self.__db.add_simulation(sim, overwrite=False)
-#
-#            self.get_simulation_list()
-#            self.database_busy.emit(False)
+    @QtCore.pyqtSlot(str, str, int, int)
+    def get_array(self, simulation_name, array_name):
+        try:
+            arr = self.__db.get_simulation_array(simulation_name, array_name)
+        except ValueError:
+            pass
+        else:
+            self.request_array_view.emit(simulation_name, arr, array_name)
+
+    @QtCore.pyqtSlot(str, str, int, int)
+    def get_array_slice(self, simulation_name, array_name, index, orientation):
+        try:
+            arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
+        except ValueError:
+            pass
+        else:
+            self.request_array_slice_view.emit(simulation_name, arr, array_name, index, orientation)
+
+
 
     @QtCore.pyqtSlot(str)
     def select_simulation(self, name):
         self.database_busy.emit(True)
         try:
-            sim = self.__db.get_simulation(name)
+            sim = self.__db.get_simulation(name, ignore_arrays=True)
         except ValueError:
             pass
         else:
             logger.debug('Emmitting signal for request to view Simulation {}'.format(sim.name))
             self.request_simulation_view.emit(sim)
+
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str)
