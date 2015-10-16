@@ -5,16 +5,9 @@ Created on Fri Aug 21 11:03:15 2015
 @author: erlean
 """
 import numpy as np
-import tempfile
 import os
 import logging
 import itertools
-
-TEMP_DIR = os.path.abspath(tempfile.mkdtemp())
-TEMP_DIR = os.path.abspath("C:\\test\\temp")
-tempfile.tempdir = TEMP_DIR
-DELETE_FLAGGED = []
-
 
 logger = logging.getLogger('OpenDXMC')
 
@@ -569,7 +562,7 @@ class Simulation(object):
     def material(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__volatiles['material'] = self.create_memmap(value)
+        self.__volatiles['material'] = value
 
     @property
     def density(self):
@@ -580,7 +573,7 @@ class Simulation(object):
         assert len(value.shape) == 3
         if self.__volatiles['density'] is not None:
             del self.__volatiles['density']
-        self.__volatiles['density'] = self.create_memmap(value.astype(np.double))
+        self.__volatiles['density'] = value.astype(np.double)
 
     @property
     def organ(self):
@@ -589,7 +582,7 @@ class Simulation(object):
     def organ(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['organ'] = self.create_memmap(value)
+        self.__arrays['organ'] = value
 
     @property
     def ctarray(self):
@@ -598,7 +591,7 @@ class Simulation(object):
     def ctarray(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['ctarray'] = self.create_memmap(value.astype(np.int16))
+        self.__arrays['ctarray'] = value.astype(np.int16)
 
     @property
     def exposure_modulation(self):
@@ -620,7 +613,7 @@ class Simulation(object):
             return
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__volatiles['energy_imparted'] = self.create_memmap(value)
+        self.__volatiles['energy_imparted'] = value
 
     @property
     def material_map(self):
@@ -672,8 +665,6 @@ class Simulation(object):
         assert 'value' in value.dtype.names
         self.__arrays['organ_map'] = value
 
-
-
     @property
     def organ_material_map(self):
         return self.__arrays['organ_material_map']
@@ -714,45 +705,3 @@ class Simulation(object):
                              ''.format(self.name,))
 
         return self.energy_imparted / (self.density * (np.prod(self.spacing))) * factor
-
-
-    def create_memmap(self, array):
-        p = tempfile.mktemp('.dat')
-        m = np.memmap(p, dtype=array.dtype, mode='w+', shape=array.shape)
-        m[:] = array[:]
-        m.flush()
-        return m
-
-    def cleanup_memmap(self, array):
-        if array is None:
-            return
-        f = array.filename
-        print(f)
-        del array
-        try:
-            os.remove(f)
-        except PermissionError:
-            DELETE_FLAGGED.append(f)
-
-
-
-
-    def __del__(self):
-        keys = ['organ', 'material', 'density', 'energy_imparted', 'ctarray']
-        for key, m in itertools.chain(self.__volatiles.items(), self.__arrays.items()):
-            if key in keys:
-                self.cleanup_memmap(m)
-
-        i = 0
-        while i < len(DELETE_FLAGGED):
-            try:
-                os.remove(DELETE_FLAGGED[i])
-            except PermissionError:
-                i += 1
-            except FileNotFoundError:
-                del DELETE_FLAGGED[i]
-            else:
-                del DELETE_FLAGGED[i]
-
-
-

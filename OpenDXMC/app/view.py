@@ -52,7 +52,11 @@ class ViewController(QtCore.QObject):
                        'energy_imparted': DoseScene(self),
                        'running': RunningScene(self),
                        'material': MaterialScene(self),
-                       'dose': DoseScene(self) }
+                       'dose': DoseScene(self),
+                       'planning_test': PlanningScene_test(self)  }
+
+        self.scenes['planning_test'].request_reload_slice.connect(database_interface.get_array_slice)
+        database_interface.request_array_slice_view.connect(self.scenes['planning_test'].reload_slice)
 
         self.current_simulation = None
         self.current_scene = 'planning'
@@ -179,6 +183,9 @@ class ViewController(QtCore.QObject):
                 self.organ_dose_widget.set_data(dose,
                                                 self.current_simulation.organ,
                                                 self.current_simulation.organ_map)
+        elif name == 'planning_test':
+            self.scenes[name].update_data(self.current_simulation)
+        
         self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
         self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
                                     QtCore.Qt.KeepAspectRatio)
@@ -523,22 +530,25 @@ class AecItem(QtGui.QGraphicsItem):
         super().__init__(parent)
         self.aec = np.zeros((5, 2))
         self.view_orientation = 2
-        self.shape = (1, 1, 1)
+        self.__shape = (1, 1, 1)
         self.index = 0
         self.__path = None
         self.__path_pos = None
 
     def set_aec(self, aec, view_orientation, shape):
-        self.shape = shape
+        self.__shape = shape
         self.view_orientation = view_orientation
 
         self.aec = aec
         self.aec[:, 0] -= self.aec[:, 0].min()
 
         self.aec[:, 0] /= self.aec[:, 0].max()
-
-        self.aec[:, 1] -= self.aec[:, 1].min()
-        self.aec[:, 1] /= self.aec[:, 1].max()
+        
+        if self.aec[:, 1].min() == self.aec[:, 1].max():
+            self.aec[:, 1] = .5
+        else:
+            self.aec[:, 1] -= self.aec[:, 1].min()
+            self.aec[:, 1] /= self.aec[:, 1].max()
 
         self.__path = None
         self.__path_pos = None
@@ -547,11 +557,11 @@ class AecItem(QtGui.QGraphicsItem):
         self.update(self.boundingRect())
 
     def boundingRect(self):
-        shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
+        shape = tuple(self.__shape[i] for i in [0, 1, 2] if i != self.view_orientation)
         return QtCore.QRectF(0, 0, shape[1], shape[0]*.1)
 
     def setIndex(self, index):
-        self.index = index % self.shape[self.view_orientation]
+        self.index = index % self.__shape[self.view_orientation]
         self.__path_pos = None
 #        self.prepareGeometryChange()
         self.update(self.boundingRect())
@@ -566,7 +576,7 @@ class AecItem(QtGui.QGraphicsItem):
     def aec_path(self):
 
         if self.__path is None:
-            shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
+            shape = tuple(self.__shape[i] for i in [0, 1, 2] if i != self.view_orientation)
             self.__path = QtGui.QPainterPath()
 
             x = self.aec[:, 0] * shape[1]
@@ -584,11 +594,11 @@ class AecItem(QtGui.QGraphicsItem):
         if self.__path_pos is None:
             self.__path_pos = QtGui.QPainterPath()
             if self.view_orientation == 2:
-                shape = tuple(self.shape[i] for i in [0, 1, 2] if i != self.view_orientation)
+                shape = tuple(self.__shape[i] for i in [0, 1, 2] if i != self.view_orientation)
                 self.__path_pos = QtGui.QPainterPath()
                 x = self.aec[:, 0] * shape[1]
                 y = (1. - self.aec[:, 1]) * shape[0] * .1
-                x_c = self.index / self.shape[2]
+                x_c = self.index / self.__shape[2]
                 y_c = 1. - np.interp(x_c, self.aec[:, 0], self.aec[:, 1])
                 self.__path_pos.addEllipse(QtCore.QPointF(x_c * shape[1], y_c * shape[0] *.1), shape[0]*.005, shape[0]*.01)
 
@@ -603,16 +613,18 @@ class AecItem(QtGui.QGraphicsItem):
         painter.drawPath(self.aec_path())
 
 class PlanningScene_test(QtGui.QGraphicsScene):
+    request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
         self.image_item_bit = BitImageItem()
         self.addItem(self.image_item)
         self.addItem(self.image_item_bit)
-
+        self.name = None
         self.aec_item = AecItem()
         self.addItem(self.aec_item)
-
+        self.shape = np.array((1., 1., 1.))
+        self.array_name = 'ctarray'
         self.spacing = np.array((1., 1., 1.))
         self.index = 0
         self.view_orientation = 2
@@ -620,45 +632,46 @@ class PlanningScene_test(QtGui.QGraphicsScene):
         self.is_bit_array = False
         self.bit_lut = get_lut('pet')
 
-    def update_data(self, data):
-        self.is_bit_array = False
-        self.image_item.setVisible(True)
-        self.image_item_bit.setVisible(False)
-
-        self.spacing = data['spacing']
-        self.shape = data['shape']
+    def update_data(self, sim):
+        self.is_bit_array = sim.is_phantom
+        self.image_item.setVisible(not self.is_bit_array)
+        self.image_item_bit.setVisible(self.is_bit_array)
+        self.name = sim.name
+        if self.is_bit_array:
+            self.array_name = 'organ'
+        else:
+            self.array_name = 'ctarray'
+        self.spacing = sim.spacing
+        self.shape = sim.shape
         self.index = self.index % self.shape[self.view_orientation]
-        if aec is None:
-            aec = np.ones((2,2))
-            aec[0, 0] = 0
-        self.aec_item.set_aec(aec, self.view_orientation, self.shape)
-        self.reloadImages()
+        self.aec_item.set_aec(sim.exposure_modulation, self.view_orientation, self.shape)
         self.updateSceneTransform()
+        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
 
-    def setBitArray(self, ct, spacing, aec):
-        self.is_bit_array = True
-        self.image_item.setVisible(False)
-        self.image_item_bit.setVisible(True)
-
-        self.array = ct
-        self.shape = ct.shape
-        self.spacing = spacing
-        self.index = self.index % self.shape[self.view_orientation]
-        if aec is None:
-            aec = np.ones((2,2))
-            aec[0, 0] = 0
-        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
-        number_of_elements = self.array.max()
-        qlut = [QtGui.QColor(self.bit_lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
-        self.image_item_bit.set_lut(qlut)
-        self.reloadImages()
-        self.updateSceneTransform()
+#    def setBitArray(self, ct, spacing, aec):
+#        self.is_bit_array = True
+#        self.image_item.setVisible(False)
+#        self.image_item_bit.setVisible(True)
+#
+#        self.array = ct
+#        self.shape = ct.shape
+#        self.spacing = spacing
+#        self.index = self.index % self.shape[self.view_orientation]
+#        if aec is None:
+#            aec = np.ones((2,2))
+#            aec[0, 0] = 0
+#        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
+#        number_of_elements = self.array.max()
+#        qlut = [QtGui.QColor(self.bit_lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
+#        self.image_item_bit.set_lut(qlut)
+#        self.reloadImages()
+#        self.updateSceneTransform()
 
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
         self.view_orientation = view_orientation
         self.aec_item.setViewOrientation(view_orientation)
-        self.reloadImages()
+        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
         self.updateSceneTransform()
 
     def updateSceneTransform(self):
@@ -671,29 +684,25 @@ class PlanningScene_test(QtGui.QGraphicsScene):
 
         self.aec_item.setTransform(transform)
         self.aec_item.prepareGeometryChange()
+        shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
+        rect = QtCore.QRectF(0, 0, shape[1], shape[0])
         if self.is_bit_array:
-            self.aec_item.setPos(self.image_item_bit.mapToScene(self.image_item.boundingRect().bottomLeft()))
-            self.setSceneRect(self.image_item_bit.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
+            self.aec_item.setPos(self.image_item_bit.mapRectToScene(rect).bottomLeft())
+            self.setSceneRect(self.image_item_bit.mapRectToScene(rect).united(self.aec_item.sceneBoundingRect()))
         else:
-            self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
-            self.setSceneRect(self.image_item.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
+            self.aec_item.setPos(self.image_item.mapRectToScene(rect).bottomLeft())
+            self.setSceneRect(self.image_item.mapRectToScene(rect).united(self.aec_item.sceneBoundingRect()))
 
-#        self.setSceneRect(self.itemsBoundingRect())
 
-    def getSlice(self, array, index):
-        if self.view_orientation == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
-        elif self.view_orientation == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
-        elif self.view_orientation == 0:
-            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
-        raise ValueError('view must select one of 0,1,2 dimensions')
-
-    def reloadImages(self):
+    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
+    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+        if simulation_name != self.name:
+            return
+            
         if self.is_bit_array:
-            self.image_item_bit.setImage(self.getSlice(self.array, self.index))
+            self.image_item_bit.setImage(arr)
         else:
-            self.image_item.setImage(self.getSlice(self.array, self.index))
+            self.image_item.setImage(arr)
         self.aec_item.setIndex(self.index)
 
     def wheelEvent(self, ev):
@@ -702,7 +711,7 @@ class PlanningScene_test(QtGui.QGraphicsScene):
         elif ev.delta() < 0:
             self.index -= 1
         self.index %= self.shape[self.view_orientation]
-        self.reloadImages()
+        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
         ev.accept()
 
 class PlanningScene(QtGui.QGraphicsScene):

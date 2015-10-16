@@ -267,7 +267,7 @@ class Database(object):
         else:
             aecnode_list = []
             try:
-                aecnode_list.append(self.get_node(pat_node, 'exposure_modulation'), create=False)
+                aecnode_list.append(self.get_node(pat_node, 'exposure_modulation', create=False))
             except ValueError:
                 pass
             props = itertools.chain(aecnode_list, pat_node._f_walknodes('Table'))
@@ -283,10 +283,10 @@ class Database(object):
 
     def get_simulation_array(self, name, array_name):
         self.open()
-        if self.test_node('simulations/{0}/{1}'.format(name, array_name)):
-            node = self.get_node('simulations/{0}/{1}'.format(name, array_name), create=False)
-        elif self.test_node('simulations/{0}/volatiles/{1}'.format(name, array_name)):
-            node = self.get_node('simulations/{0}/volatiles/{1}'.format(name, array_name), create=False)
+        if self.test_node('/simulations/{0}'.format(name), array_name):
+            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
+        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
+            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
         else:
             self.close()
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
@@ -297,16 +297,19 @@ class Database(object):
 
     def get_simulation_array_slice(self, name, array_name, index, orientation):
         self.open()
-        if self.test_node('simulations/{0}/{1}'.format(name, array_name)):
-            node = self.get_node('simulations/{0}/{1}'.format(name, array_name), create=False)
-        elif self.test_node('simulations/{0}/volatiles/{1}'.format(name, array_name)):
-            node = self.get_node('simulations/{0}/volatiles/{1}'.format(name, array_name), create=False)
+        if self.test_node('/simulations/{0}'.format(name), array_name):
+            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
+        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
+            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
         else:
+            self.close()
+            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
             return None
-        index %= 3
-        if index == 1:
+        orientation %= 3
+        index %= node.shape[orientation]
+        if orientation == 1:
             arr = np.squeeze(node[:, index, :])
-        elif index == 0:
+        elif orientation == 0:
             arr = np.squeeze(node[index, :, :])
         else:
             arr = np.squeeze(node[:,:,index])

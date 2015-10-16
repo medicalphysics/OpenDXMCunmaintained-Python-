@@ -9,7 +9,7 @@ import os
 import sys
 import numpy as np
 from opendxmc.study import Simulation
-from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs
+from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs, child_organs, baby_organs
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -30,6 +30,8 @@ def read_phantoms():
                 'Adam8bit': ('ADAM_8bit', adam_organs, (1.6, 1.6, 2.), (256, 256, 900)),
                 'Frank': ('segm_frank', frank_organs, (.742, .742, 5.), (512, 512, 193)),
                 'Katja': ('Katja', katja_organs, (1.775, 1.775, 4.84), (150, 299, 348)),
+                'Child': ('segm_child', child_organs, (1.54, 1.54, 8), (256, 256, 144)),
+                'Babynew': ('babynew_May2003', baby_organs, (.85, .85, 4.), (138, 267, 142)),
                 }
 
 

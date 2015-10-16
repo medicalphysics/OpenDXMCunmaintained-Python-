@@ -15,6 +15,151 @@ __tissues = {1: 'hardbone',
                9: 'air',
                10: 'water',
                }
+__baby_organs = """0;Air;9
+                    1;Adrenals;4
+                    2;Bladder wall;4
+                    3;Brain;7
+                    4;Eyes;4
+                    5;Eye lenses;4
+                    6;Heart;3
+                    8;Small intestine wall;4
+                    10;Left kidney;4
+                    11;Right kidney;4
+                    12;Liver;4
+                    14;Left lung;8
+                    15;Right lung;8
+                    16;Ovaries;4
+                    17;Pancreas;4
+                    19;Head skin;2
+                    20;Trunk skin;2
+                    21;Leg skin;2
+                    22;Spinal cord;4
+                    23;Spleen;4
+                    24;Stomach wall;4
+                    25;Testes;4
+                    26;Thymus;4
+                    27;Thyroid;4
+                    29;Head tissue;4
+                    30;Trunk tissue;4
+                    31;Leg tissue;4
+                    32;Uterus;4
+                    34;Upper left arm bone;1
+                    35;Lower left arm bones;1
+                    36;Left hand bones;1
+                    37;Upper right arm bone;1
+                    38;Lower right arm bones;1
+                    39;Right hand bones;1
+                    40;Clavicles;1
+                    41;Facial skeleton;1
+                    43;Upper left leg bone;1
+                    44;Lower left leg bones;1
+                    45;Left foot bones;1
+                    46;Upper right leg bone;1
+                    47;Lower right leg bones;1
+                    48;Right foot bones;1
+                    49;Pelvis;1
+                    50;Ribs;1
+                    51;Scapulae;1
+                    52;Skull;1
+                    54;Cervical spine;1
+                    55;Thoracic spine;1
+                    56;Lumbar spine;1
+                    57;Sternum;1
+                    93;Stomach contents;4
+                    94;Small intestine contents;4
+                    96;Bladder contents;10
+                    103;Upper large intestine (ascending+transverse colon) wall;4
+                    104;Lower large intestine (descending+sigmoid colon) wall;4
+                    105;Upper large intestine contents;4
+                    106;Lower large intestine contents;4
+                    107;Arm skin;2
+                    108;Arm tissue;4
+                    109;Breast;7
+                    110;Oesophagus;4
+                    111;Gall bladder wall;4
+                    112;Gall bladder contents;4
+                    113;Muscle tissue, head;3
+                    114;Muscle tissue, trunk;3
+                    115;Muscle tissue, arms;3
+                    116;Muscle tissue, legs;3"""
+def baby_organs():
+    lg = __baby_organs.replace('\n', ';').replace('\r', '').split(';')
+    while len(lg) > 0:
+        org = lg.pop(0)
+        desc = lg.pop(0)
+        tiss = lg.pop(0)
+        yield int(org), desc.strip(), __tissues[int(tiss)]
+        
+__child_organs="""0;Air;9  
+                    1;Adrenals;4
+                    2;Bladder wall;4
+                    3;Brain;7
+                    4;Eyes;4
+                    5;Eye lenses;4
+                    6;Heart;3
+                    8;Colon ascending + transverse (wall);4
+                    9;Colon descending (wall);4
+                    10;Small intestine (wall + contents);4
+                    12;Left kidney;4
+                    13;Right kidney;4
+                    14;Liver;4
+                    16;Left lung;8
+                    17;Right lung;8
+                    18;Ovaries;4
+                    19;Pancreas;4
+                    21;Head skin;2
+                    22;Trunk skin;2
+                    23;Arm skin;2
+                    24;Leg skin;2
+                    25;Spinal cord;4
+                    26;Spleen;4
+                    27;Stomach wall;4
+                    28;Thymus;4
+                    29;Thyroid;4
+                    31;Head tissue;4
+                    32;Trunk tissue;4
+                    33;Left arm tissue;3
+                    34;Right arm tissue;3
+                    35;Left leg tissue;3
+                    36;Right leg tissue;3
+                    37;Trachea;4
+                    38;Uterus;4
+                    40;Upper left arm bone;1
+                    41;Lower left arm bones;1
+                    42;Left hand bones;1
+                    43;Upper right arm bone;1
+                    44;Lower right arm bones;1
+                    45;Right hand bones;1
+                    46;Clavicles;1
+                    47;Facial skeleton;1
+                    49;Upper left leg bone;1
+                    50;Lower left leg bones;1
+                    51;Left foot bones;1
+                    52;Upper right leg bone;1
+                    53;Lower right leg bones;1
+                    54;Right foot bones;1
+                    55;Pelvis;1
+                    56;Ribs;1
+                    61;Scapulae;1
+                    62;Skull;1
+                    64;Cervical spine;1
+                    65;Thoracic spine;1
+                    66;Lumbar spine;1
+                    67;Sacrum;1
+                    68;Sternum;1
+                    110;Mucous membrane (head);4
+                    111;Bladder contents;10
+                    112;Colon contents;4
+                    113;Stomach contents;4
+                    114;Testes;4"""
+def child_organs():
+    lg = __child_organs.replace('\n', ';').replace('\r', '').split(';')
+    while len(lg) > 0:
+        org = lg.pop(0)
+        desc = lg.pop(0)
+        tiss = lg.pop(0)
+        yield int(org), desc.strip(), __tissues[int(tiss)]
+             
 __katja_organs="""0;Air;9
                 1;Adrenal, left;4
                 2;Adrenal, right;4

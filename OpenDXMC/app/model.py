@@ -112,6 +112,7 @@ class DatabaseInterface(QtCore.QObject):
 
     request_simulation_run = QtCore.pyqtSignal(Simulation, list)
 
+    request_simulation_view = QtCore.pyqtSignal(Simulation) 
     request_array_slice_view = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
     request_array_view = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
 
@@ -187,22 +188,27 @@ class DatabaseInterface(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, str, int, int)
     def get_array(self, simulation_name, array_name):
+        self.database_busy.emit(True)
         try:
             arr = self.__db.get_simulation_array(simulation_name, array_name)
         except ValueError:
             pass
         else:
             self.request_array_view.emit(simulation_name, arr, array_name)
-
+        self.database_busy.emit(False)
+        
     @QtCore.pyqtSlot(str, str, int, int)
     def get_array_slice(self, simulation_name, array_name, index, orientation):
+        self.database_busy.emit(True)
         try:
             arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
-        except ValueError:
+        except ValueError as e:
+            raise e
             pass
+        
         else:
             self.request_array_slice_view.emit(simulation_name, arr, array_name, index, orientation)
-
+        self.database_busy.emit(False)
 
 
     @QtCore.pyqtSlot(str)
