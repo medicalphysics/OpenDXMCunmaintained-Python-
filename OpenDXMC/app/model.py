@@ -203,7 +203,7 @@ class DatabaseInterface(QtCore.QObject):
         try:
             arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
         except ValueError as e:
-            raise e
+#            raise e
             pass
         
         else:

@@ -67,7 +67,9 @@ __baby_organs = """0;Air;9
                     57;Sternum;1
                     93;Stomach contents;4
                     94;Small intestine contents;4
+                    95;UknownERROR;4
                     96;Bladder contents;10
+                    97;UknownERROR;4
                     103;Upper large intestine (ascending+transverse colon) wall;4
                     104;Lower large intestine (descending+sigmoid colon) wall;4
                     105;Upper large intestine contents;4
