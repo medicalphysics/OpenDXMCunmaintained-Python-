@@ -125,7 +125,7 @@ class ViewController(QtCore.QObject):
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_scene_data(scene_name)
 
-
+    def update_slice_data()
     def update_scene_data(self, name):
         if self.current_simulation is None:
             return
@@ -1155,6 +1155,15 @@ class Scene(QtGui.QGraphicsScene):
         super().__init__(parent)
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
+        
+        self.shape = np.array([1, 1, 1], dtype=np.int)
+        self.spacing = np.array([1, 1, 1])
+        self.array_name = ''
+        self.view_orientation = 2
+        self.index = 0
+        
+        self.image_item = ImageItem()
+      
 
 
 class View(QtGui.QGraphicsView):
