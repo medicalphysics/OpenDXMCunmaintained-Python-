@@ -136,12 +136,12 @@ class Simulation(object):
                          'ctarray': None,
                          'exposure_modulation': None,
                          'organ_map': None,
-                         'organ_material_map': None
+                         'organ_material_map': None,
+                         'material': None,
+                         'material_map': None,
+                         'density': None,
                     }
-        self.__volatiles = {'material': None,
-                            'density': None,
-                            'energy_imparted': None,
-                            'material_map': None,
+        self.__volatiles = {'energy_imparted': None,
                             }
 
 
@@ -557,23 +557,23 @@ class Simulation(object):
 
     @property
     def material(self):
-        return self.__volatiles['material']
+        return self.__arrays['material']
     @material.setter
     def material(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__volatiles['material'] = value
+        self.__arrays['material'] = value.astype(np.int)
 
     @property
     def density(self):
-        return self.__volatiles['density']
+        return self.__arrays['density']
     @density.setter
     def density(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        if self.__volatiles['density'] is not None:
-            del self.__volatiles['density']
-        self.__volatiles['density'] = value.astype(np.double)
+        if self.__arrays['density'] is not None:
+            del self.__arrays['density']
+        self.__arrays['density'] = value.astype(np.double)
 
     @property
     def organ(self):
@@ -582,7 +582,7 @@ class Simulation(object):
     def organ(self, value):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
-        self.__arrays['organ'] = value
+        self.__arrays['organ'] = value.astype(np.uint8)
 
     @property
     def ctarray(self):
@@ -617,11 +617,11 @@ class Simulation(object):
 
     @property
     def material_map(self):
-        return self.__volatiles['material_map']
+        return self.__arrays['material_map']
     @material_map.setter
     def material_map(self, value):
         if value is None:
-            self.__volatiles['material_map'] = None
+            self.__arrays['material_map'] = None
         if isinstance(value, dict):
             value_rec = np.recarray((len(value),),
                                     dtype=[('key', np.int), ('value', 'a64')])
@@ -633,12 +633,12 @@ class Simulation(object):
                     logger.error('Did not understand setting of requested '
                                  'material map')
                     raise e
-            self.__volatiles['material_map'] = value_rec
+            self.__arrays['material_map'] = value_rec
             return
         assert value.dtype.names is not None
         assert 'key' in value.dtype.names
         assert 'value' in value.dtype.names
-        self.__volatiles['material_map'] = value
+        self.__arrays['material_map'] = value
 
     @property
     def organ_map(self):

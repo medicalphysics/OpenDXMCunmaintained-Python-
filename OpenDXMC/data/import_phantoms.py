@@ -10,6 +10,7 @@ import sys
 import numpy as np
 from opendxmc.study import Simulation
 from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs, child_organs, baby_organs
+from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -19,7 +20,7 @@ import pdb
 
 PATH = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc', 'data', 'phantoms')
 
-def read_phantoms():
+def read_phantoms(materials=None):
 
     phantoms = {'golem': ('segm_golem', golem_organs, (2.08, 2.08, 8.), (256, 256, 220)),
                 'VisHum': ('segm_vishum', vishum_organs, (.91, .94, 5.), (512, 512, 250)),
@@ -44,6 +45,13 @@ def read_phantoms():
             raise e
         else:
             logger.debug('{0} phantom read successfully'.format(key))
+            if materials is not None:
+                try:
+                    ct_runner_validate_simulation(sim, materials)
+                except AssertionError or ValueError:
+                    logger.debug('Failed to create material mapping for phantom {0}'.format(key))
+                else:
+                    logger.debug('Generated material mapping for phantom {0}'.format(key))
             yield sim
 
 
@@ -69,6 +77,9 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
         if organ_number in organ_indices:
             organ_map[organ_number] = organ
             organ_material_map[organ_number] = tissue
+        else:
+            organ_map[organ_number] = 'Unknown Organ mapped as Air'
+            organ_material_map[organ_number] = 'air'
     sim.organ_map = organ_map
     sim.organ_material_map = organ_material_map
     sim.is_phantom = True
@@ -80,6 +91,10 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     aec[:, 0] = np.linspace(0, sim.stop, N)
 
     sim.exposure_modulation = aec
+
+
+
+
     return sim
 
 

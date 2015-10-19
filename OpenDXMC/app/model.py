@@ -112,7 +112,7 @@ class DatabaseInterface(QtCore.QObject):
 
     request_simulation_run = QtCore.pyqtSignal(Simulation, list)
 
-    request_simulation_view = QtCore.pyqtSignal(Simulation) 
+    request_simulation_view = QtCore.pyqtSignal(Simulation)
     request_array_slice_view = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
     request_array_view = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
 
@@ -196,7 +196,7 @@ class DatabaseInterface(QtCore.QObject):
         else:
             self.request_array_view.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
-        
+
     @QtCore.pyqtSlot(str, str, int, int)
     def get_array_slice(self, simulation_name, array_name, index, orientation):
         self.database_busy.emit(True)
@@ -205,7 +205,7 @@ class DatabaseInterface(QtCore.QObject):
         except ValueError as e:
 #            raise e
             pass
-        
+
         else:
             self.request_array_slice_view.emit(simulation_name, arr, array_name, index, orientation)
         self.database_busy.emit(False)
@@ -281,7 +281,9 @@ class DatabaseInterface(QtCore.QObject):
 
 class Importer(QtCore.QObject):
     request_add_sim_to_database = QtCore.pyqtSignal(Simulation)
+    request_materials = QtCore.pyqtSignal()
     running = QtCore.pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.__import_scaling = (1, 1, 1)

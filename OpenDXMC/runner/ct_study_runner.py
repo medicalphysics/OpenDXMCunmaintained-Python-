@@ -311,7 +311,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
         coffe_msg = '.'
     logger.info('{0}: Starting simulation with {1} histories per '
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
-
+    raise ValueError('ERROR Material maps and arrays will not be stored. NOT VOLATILES')
     time_start = time.clock()
     for p, e, n in phase_space:
         score_energy(p, N, spacing, offset, simulation.material,
