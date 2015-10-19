@@ -115,7 +115,7 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
                                  scale,
                                  output_shape=np.floor(np.array(organ.shape)/scale),
                                  cval=0, output=np.uint8, prefilter=True,
-                                 order=1)
+                                 order=0).astype(np.uint8)
 
         material_array = np.asarray(organ, dtype=np.int)
         density_array = np.asarray(organ, dtype=np.double)

@@ -68,11 +68,21 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     N = sim.organ.shape[2]
     organ_map={}
     organ_material_map={}
-    organ_indices = []
+    organ_values = set()
     for i in range(N):
         # we do loops due to memory constrains on np.unique
-        organ_indices += list(np.unique(sim.organ[:, : ,i]))
-    organ_indices = set(organ_indices)
+        organ_values.union(set(np.unique(sim.organ[:, : ,i])))
+    
+    organ_dict = {organ_number: (organ, tissue) for organ_number, organ, tissue in organ_func()}
+    for organ_number in organ_values:
+        if organ_number in organ_dict:
+            organ_str, tissue_str = organ_dict[organ_number] 
+    
+
+
+    
+    
+    
     for organ_number, organ, tissue in organ_func():
         if organ_number in organ_indices:
             organ_map[organ_number] = organ

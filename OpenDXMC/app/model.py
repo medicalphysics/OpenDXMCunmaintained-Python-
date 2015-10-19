@@ -121,11 +121,16 @@ class DatabaseInterface(QtCore.QObject):
 
     simulation_updated = QtCore.pyqtSignal(dict, dict)
 
+    importer_materials = QtCore.pyqtSignal(list)
+
     def __init__(self, database_qurl, importer, parent=None):
         super().__init__(parent)
         self.__db = None
         importer.request_add_sim_to_database.connect(self.import_simulation)
         self.set_database(database_qurl)
+        importer.request_materials.connect(self.importer_request_materials)
+        self.importer_materials.connect(importer.get_materials)
+
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
@@ -157,6 +162,17 @@ class DatabaseInterface(QtCore.QObject):
         self.get_material_list()
         self.get_simulation_list()
 
+    @QtCore.pyqtSlot()
+    def importer_request_materials(self):
+        try:
+            materials = self.__db.get_materials(organic_only=False)
+        except ValueError:
+            self.database_busy.emit(False)
+            logger.warning('Request for materials failed.')
+        else:
+            self.importer_materials.emit(materials)
+            
+        
 
     @QtCore.pyqtSlot()
     def get_simulation_list(self):
@@ -261,7 +277,6 @@ class DatabaseInterface(QtCore.QObject):
         try:
             sim = self.__db.get_MCready_simulation()
         except ValueError:
-            logger.debug('Request to get ready simulations failed for a mysterious reason.')
             self.database_busy.emit(False)
             return
         else:
@@ -287,24 +302,41 @@ class Importer(QtCore.QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.__import_scaling = (1, 1, 1)
+        self.dicom_jobs = []
+        self.phantom_jobs = []
+
 
     @QtCore.pyqtSlot(tuple)
     def set_import_scaling(self, im_scaling):
         self.__import_scaling = im_scaling
 
     @QtCore.pyqtSlot(list)
+    def get_materials(self, materials):
+        self.running.emit(True)
+        while len(self.dicom_jobs) > 0:
+            paths = self.dicom_jobs.pop()
+            for sim in import_ct_series(paths, import_scaling=self.__import_scaling, materials=materials):
+                self.request_add_sim_to_database.emit(sim)
+                
+        if len(self.phantom_jobs) > 0:
+            for sim in read_phantoms(materials=materials):
+                self.request_add_sim_to_database.emit(sim)
+            self.phantom_jobs = []
+        self.running.emit(False)
+        
+    @QtCore.pyqtSlot(list)
     def import_urls(self, qurl_list):
         self.running.emit(True)
         paths = [url.toLocalFile() for url in qurl_list]
-        for sim in import_ct_series(paths, import_scaling=self.__import_scaling):
-            self.request_add_sim_to_database.emit(sim)
+        self.phantom_jobs.append(paths)
+        self.request_materials.emit()
         self.running.emit(False)
 
     @QtCore.pyqtSlot()
     def import_phantoms(self):
         self.running.emit(True)
-        for sim in read_phantoms():
-            self.request_add_sim_to_database.emit(sim)
+        self.phantom_jobs.append(True)
+        self.request_materials.emit()
         self.running.emit(False)
 
 class Runner(QtCore.QThread):

@@ -11,6 +11,7 @@ import os
 
 import logging
 from scipy.ndimage.interpolation import affine_transform, spline_filter
+from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 from opendxmc.utils import find_all_files
 from opendxmc.study.simulation import Simulation
 
@@ -158,7 +159,7 @@ def z_stop_estimator(iop, spacing, shape):
 
 
 
-def import_ct_series(paths, import_scaling=(2, 2, 2)):
+def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
     series = {}
     for p in find_all_files(paths):
         try:
@@ -286,6 +287,11 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
         patient.stop_scan = stop
         patient.start = start
         patient.stop = stop
+
+        if materials is not None:
+            ct_runner_validate_simulation(patient, materials)
+            
+        
         yield patient
 
 
