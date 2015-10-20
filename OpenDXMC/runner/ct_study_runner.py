@@ -117,13 +117,17 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
                                  cval=0, output=np.uint8, prefilter=True,
                                  order=0).astype(np.uint8)
 
-        material_array = np.asarray(organ, dtype=np.int)
-        density_array = np.asarray(organ, dtype=np.double)
+        material_array = np.asarray(organ, dtype=np.uint8)
+        density_array = np.zeros(organ.shape, dtype=np.double)
 
         material_map = {}
         key = 0
         for i in np.unique(organ):
-            material_name = organ_material_map[i]
+            try:
+                material_name = organ_material_map[i]
+            except:
+                import pdb
+                pdb.set_trace()
             if material_name not in material_map:
                 material_map[material_name] = key
                 key += 1
@@ -135,7 +139,7 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
 
         # reversing material_map
         material_map = {key: value for value, key in material_map.items()}
-        return material_map, material_array, density_array
+        return material_map, material_array.astype(np.int), density_array
 
 
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
@@ -208,7 +212,7 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
             if simulation.ctarray is not None:
                 logger.info('CT study {0} do not have a {1}. Recalculating from CT'
                         ' array.'.format(simulation.name, att))
-                specter = tungsten_specter(simulation.kV,
+                specter = tungsten_specter(simulation.aquired_kV,
                                            filtration_materials='al',
                                            filtration_mm=simulation.al_filtration)
                 vals = prepare_geometry_from_ct_array(simulation.ctarray,

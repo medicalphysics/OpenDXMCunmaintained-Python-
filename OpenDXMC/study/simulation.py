@@ -26,6 +26,7 @@ SIMULATION_DESCRIPTION = {
     'ctdi_vol100': [0., np.double, False, True, 'CTDIvol [mGy/100mAs]'],
     'ctdi_w100': [0., np.double, False, True, 'CTDIw [mGy/100mAs/pitch]'],
     'kV': [120., np.double, True, True, 'Tube potential [kV]'],
+    'aquired_kV': [0., np.double, False, False, 'Images aquired with tube potential [kV]'],
     'region': ['abdomen', 'a64', False, False, 'Examination region'],
     # per 1000000 histories
     'conversion_factor_ctdiair': [0., np.double, False, False, 'CTDIair to dose conversionfactor'],
@@ -279,6 +280,14 @@ class Simulation(object):
         else:
             self.__description['ctdi_vol100'] = float(value)
         self.__description['ctdi_w100'] = float(value)
+
+    @property
+    def aquired_kV(self):
+        return self.__description['aquired_kV']
+    @aquired_kV.setter
+    def aquired_kV(self, value):
+        assert value >= 40.
+        self.__description['aquired_kV'] = float(value)
 
     @property
     def kV(self):

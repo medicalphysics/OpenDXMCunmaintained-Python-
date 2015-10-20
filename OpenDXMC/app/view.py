@@ -343,6 +343,7 @@ class NoDataItem(QtGui.QGraphicsTextItem):
         self.setDefaultTextColor(QtCore.Qt.white)
 
 
+
 class BlendImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -627,7 +628,7 @@ class PlanningScene(QtGui.QGraphicsScene):
         if self.is_bit_array:
             self.array_name = 'organ'
             organ_max_value = sim.organ_map['key'].max()
-            lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value)]
+            lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value + 1)]
             self.image_item_bit.set_lut(lut)
         else:
             self.array_name = 'ctarray'
@@ -810,9 +811,6 @@ class RunningScene(QtGui.QGraphicsScene):
         self.shape = self.array.shape
         self.image_item.setVisible(False)
         self.nodata_item.setVisible(True)
-#        self.nodata_item.prepareGeometryChange()
-#        self.setSceneRect(QtCore.QRectF(0, 0, 500, 500))
-#        self.setSceneRect(self.nodata_item.boundingRect())
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
@@ -838,7 +836,6 @@ class RunningScene(QtGui.QGraphicsScene):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
-#        self.setSceneRect(self.itemsBoundingRect())
         if self.nodata_item.isVisible():
             self.setSceneRect(self.nodata_item.sceneBoundingRect())
         else:
@@ -856,15 +853,13 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         self.box_size = self.fontMetrics.boundingRect('A').height()
         self.rect = QtCore.QRectF(0, 0, self.box_size, self.box_size)
         self.map = []
-        mapping = np.recarray((1,), dtype=[('key', np.int), ('value', 'a64')])
-        mapping['key'][0] = 0
-        mapping['value'][0] = 'Air'
-#        self.set_map(mapping)
+
 
     def set_map(self, mapping, colors):
         self.map = []
+
         for ind in range(len(mapping)):
-            self.map.append((colors[mapping['key'][ind]], str(mapping['value'][ind], encoding='utf-8')))
+            self.map.append((colors[ind], str(mapping['value'][ind], encoding='utf-8')))
 
         max_str_index = 0
         max_len_str = 0
@@ -887,7 +882,7 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         h = self.fontMetrics.boundingRect('A').height()
         for ind, value in enumerate(self.map):
             key, item = value
-            painter.fillRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size), key)
+            painter.fillRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size), QtGui.QColor(key))
             painter.drawText(self.box_size * 1.25, ind*2*h + self.box_size, item)
             painter.drawRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size))
 
@@ -930,34 +925,15 @@ class MaterialScene(QtGui.QGraphicsScene):
 
         self.name = sim.name
         self.spacing = sim.spacing * sim.scaling
-        self.shape = sim.shape
+        self.shape = sim.shape / sim.scaling
         self.index = self.index % self.shape[self.view_orientation]
-        number_of_elements = len(sim.material_map)
-#        qlut = [intColor(i, hues=number_of_elements) for i in range(number_of_elements)]
-        qlut = [QtGui.QColor(self.lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
-        self.image_item.set_lut(qlut)
+        organ_max_value = sim.material_map['key'].max()
+        lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value + 1)]
+        self.image_item.set_lut(lut)
 
-        self.map_item.set_map(sim.material_map, qlut)
+        self.map_item.set_map(sim.material_map, lut)
         self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
         self.updateSceneTransform()
-
-
-#    def setMaterialArray(self, material, mapping, spacing, scaling):
-#        self.nodata_item.setVisible(False)
-#        self.map_item.setVisible(True)
-#        self.image_item.setVisible(True)
-#        number_of_elements = len(mapping)
-##        qlut = [intColor(i, hues=number_of_elements) for i in range(number_of_elements)]
-#        qlut = [QtGui.QColor(self.lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
-#        self.image_item.set_lut(qlut)
-#
-#        self.map_item.set_map(mapping, qlut)
-#        self.array = material.astype(np.int8)
-#        self.shape = material.shape
-#        self.spacing = spacing * scaling
-#        self.index = self.index % self.shape[self.view_orientation]
-#        self.reloadImages()
-#        self.updateSceneTransform()
 
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
@@ -971,14 +947,6 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.image_item.setTransform(transform)
 
         self.map_item.prepareGeometryChange()
-#        self.map_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().topRight()))
-
-
-
-        if self.nodata_item.isVisible():
-            self.setSceneRect(self.nodata_item.sceneBoundingRect())
-        else:
-            self.setSceneRect(self.image_item.sceneBoundingRect().united(self.map_item.sceneBoundingRect()))
 
         shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
         rect = QtCore.QRectF(0, 0, shape[1], shape[0])
@@ -1004,26 +972,7 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
         ev.accept()
 
-#    def getSlice(self, array, index):
-#        if self.view_orientation == 2:
-#            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
-#        elif self.view_orientation == 1:
-#            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
-#        elif self.view_orientation == 0:
-#            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
-#        raise ValueError('view must select one of 0,1,2 dimensions')
-#
-#    def reloadImages(self):
-#        self.image_item.setImage(self.getSlice(self.array, self.index))
-#
-#    def wheelEvent(self, ev):
-#        if ev.delta() > 0:
-#            self.index += 1
-#        elif ev.delta() < 0:
-#            self.index -= 1
-#        self.index %= self.shape[self.view_orientation]
-#        self.reloadImages()
-#        ev.accept()
+
 
 class DoseScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):

@@ -234,6 +234,7 @@ def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
         tag_key = {'pitch': (0x18, 0x9311),
                    'scan_fov': (0x18, 0x90),
                    'sdd': (0x18, 0x1110),
+                   'aquired_kV': (0x18, 0x60),
                    'detector_width': (0x18, 0x9306),
                    'region': (0x18, 0x15)
                    }
@@ -251,6 +252,8 @@ def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
                     setattr(patient, key, float(dc[tag].value) / 10.)
                 else:
                     setattr(patient, key, dc[tag].value)
+        if patient.aquired_kV > 0:
+            patient.kV = patient.aquired_kV
         # correction for sdd
         try:
             patient.sdd = dc[0x18, 0x1111].value * 2 / 10.
@@ -290,8 +293,8 @@ def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
 
         if materials is not None:
             ct_runner_validate_simulation(patient, materials)
-            
-        
+
+
         yield patient
 
 

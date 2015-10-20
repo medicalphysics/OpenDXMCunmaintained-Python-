@@ -14,9 +14,6 @@ from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 import logging
 logger = logging.getLogger('OpenDXMC')
 
-import pylab as plt
-import pdb
-
 
 PATH = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc', 'data', 'phantoms')
 
@@ -68,28 +65,21 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     N = sim.organ.shape[2]
     organ_map={}
     organ_material_map={}
-    organ_values = set()
+    organ_values = []
     for i in range(N):
         # we do loops due to memory constrains on np.unique
-        organ_values.union(set(np.unique(sim.organ[:, : ,i])))
-    
+        organ_values += list(np.unique(sim.organ[:, : ,i]))
+
     organ_dict = {organ_number: (organ, tissue) for organ_number, organ, tissue in organ_func()}
-    for organ_number in organ_values:
+    for organ_number in set(organ_values):
         if organ_number in organ_dict:
-            organ_str, tissue_str = organ_dict[organ_number] 
-    
-
-
-    
-    
-    
-    for organ_number, organ, tissue in organ_func():
-        if organ_number in organ_indices:
-            organ_map[organ_number] = organ
-            organ_material_map[organ_number] = tissue
+            organ_str, tissue_str = organ_dict[organ_number]
+            organ_map[organ_number] = organ_str
+            organ_material_map[organ_number] = tissue_str
         else:
-            organ_map[organ_number] = 'Unknown Organ mapped as Air'
+            organ_map[organ_number] = 'Unknown as air {}'.format(organ_number)
             organ_material_map[organ_number] = 'air'
+
     sim.organ_map = organ_map
     sim.organ_material_map = organ_material_map
     sim.is_phantom = True
@@ -103,37 +93,8 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     sim.exposure_modulation = aec
 
 
-
+    sim.scaling=np.array([2,2,1], dtype=np.double)
 
     return sim
 
-
-
-def read_golem():
-    voxpath = os.path.join(PATH, 'golem', 'segm_golem')
-    logger.debug('Attempting to read Golem phantom from {}'.format(voxpath))
-    header_len = 4096
-
-    a = np.fromfile(voxpath, dtype=np.uint8)
-    sim = Simulation('golem')
-    sim.spacing = np.array([.208, .208, .8], dtype=np.double)
-    sim.organ = np.rollaxis(np.reshape(a[header_len:], (-1, 256, 256)), 0, 3)[:,:,::-1]
-    N = sim.organ.shape[2]
-    organ_map={}
-    organ_material_map={}
-    for organ_number, organ, tissue in golem_organs():
-        organ_map[organ_number] = organ
-        organ_material_map[organ_number] = tissue
-    sim.organ_map = organ_map
-    sim.organ_material_map = organ_material_map
-    sim.is_phantom = True
-    sim.start_scan = 0
-    sim.stop_scan = sim.spacing[2] * N
-    sim.stop = sim.spacing[2] * N
-    sim.data_center = np.array(sim.organ.shape) * sim.spacing / 2
-    aec = np.ones((N, 2))
-    aec[:, 0] = np.linspace(0, sim.stop, N)
-
-    sim.exposure_modulation = aec
-    return sim
 
