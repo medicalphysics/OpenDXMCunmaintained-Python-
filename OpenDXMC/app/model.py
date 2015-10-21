@@ -205,10 +205,10 @@ class DatabaseInterface(QtCore.QObject):
         self.database_busy.emit(True)
         try:
             arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
-        except ValueError as e:
+        except:
+            print(simulation_name, array_name, index, orientation)
 #            raise e
             pass
-
         else:
             self.request_array_slice_view.emit(simulation_name, arr, array_name, index, orientation)
         self.database_busy.emit(False)

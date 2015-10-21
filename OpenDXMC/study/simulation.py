@@ -286,7 +286,6 @@ class Simulation(object):
         return self.__description['aquired_kV']
     @aquired_kV.setter
     def aquired_kV(self, value):
-        assert value >= 40.
         self.__description['aquired_kV'] = float(value)
 
     @property

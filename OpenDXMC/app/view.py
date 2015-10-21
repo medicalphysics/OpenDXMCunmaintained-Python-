@@ -49,17 +49,19 @@ class ViewController(QtCore.QObject):
         database_interface.request_simulation_view.connect(self.applySimulation)
         database_interface.simulation_updated.connect(self.updateSimulation)
         self.scenes = {'planning': PlanningScene(self),
-#                       'energy_imparted': DoseScene(self),
-#                       'running': RunningScene(self),
+                       'energy_imparted': DoseScene(self),
+                       'running': RunningScene(self),
                        'material': MaterialScene(self),
 #                       'dose': DoseScene(self),
                        }
 
         self.scenes['planning'].request_reload_slice.connect(database_interface.get_array_slice)
         self.scenes['material'].request_reload_slice.connect(database_interface.get_array_slice)
+        self.scenes['energy_imparted'].request_reload_slice.connect(database_interface.get_array_slice)
 
         database_interface.request_array_slice_view.connect(self.scenes['planning'].reload_slice)
         database_interface.request_array_slice_view.connect(self.scenes['material'].reload_slice)
+        database_interface.request_array_slice_view.connect(self.scenes['energy_imparted'].reload_slice)
 
         self.current_simulation = None
         self.current_scene = 'planning'
@@ -125,8 +127,6 @@ class ViewController(QtCore.QObject):
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_scene_data(scene_name)
 
-    def update_slice_data(self):
-        pass
     def update_scene_data(self, name):
         if self.current_simulation is None:
             return
@@ -145,21 +145,23 @@ class ViewController(QtCore.QObject):
 #                                             self.current_simulation.spacing,
 #                                             self.current_simulation.exposure_modulation)
 
-        elif name == 'running':
-            if self.current_simulation.energy_imparted is not None:
-                self.scenes[name].setArray(self.current_simulation.energy_imparted,
-                                           self.current_simulation.spacing,
-                                           self.current_simulation.scaling)
-            else:
-                self.scenes[name].setNoData()
+#        elif name == 'running':
+#            if self.current_simulation.energy_imparted is not None:
+#                self.scenes[name].setArray(self.current_simulation.energy_imparted,
+#                                           self.current_simulation.spacing,
+#                                           self.current_simulation.scaling)
+#            else:
+#                self.scenes[name].setNoData()
         elif name == 'energy_imparted':
-            if self.current_simulation.energy_imparted is not None:
-                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
-                                                  self.current_simulation.energy_imparted,
-                                                  self.current_simulation.spacing,
-                                                  self.current_simulation.scaling)
-            else:
-                self.scenes[name].setNoData()
+            self.scenes[name].update_data(self.current_simulation)
+#            if self.current_simulation.energy_imparted is not None:
+#
+##                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
+##                                                  self.current_simulation.energy_imparted,
+##                                                  self.current_simulation.spacing,
+##                                                  self.current_simulation.scaling)
+#            else:
+#                self.scenes[name].setNoData()
         elif name == 'material':
             self.scenes[name].update_data(self.current_simulation)
 #            if self.current_simulation.material is not None and self.current_simulation.material_map is not None:
@@ -189,8 +191,7 @@ class ViewController(QtCore.QObject):
                 self.organ_dose_widget.set_data(dose,
                                                 self.current_simulation.organ,
                                                 self.current_simulation.organ_map)
-        elif name == 'planning_test':
-            self.scenes[name].update_data(self.current_simulation)
+
 
         self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
         self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
@@ -417,9 +418,11 @@ class BlendImageItem(QtGui.QGraphicsItem):
     def boundingRect(self):
         return QtCore.QRectF(self.qImage().rect())
 
-    def setImage(self, front_image, back_image):
-        self.front_image = front_image
-        self.back_image = back_image
+    def setImage(self, front_image=None, back_image=None):
+        if front_image is not None:
+            self.front_image = front_image
+        if back_image is not None:
+            self.back_image = back_image
         self.prepareGeometryChange()
         self.qimage = None
         self.update(self.boundingRect())
@@ -845,7 +848,7 @@ class PlanningScene(QtGui.QGraphicsScene):
 class RunningScene(QtGui.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.image_item = ImageItem(lut='hot_iron')
+        self.image_item = ImageItem()
         self.addItem(self.image_item)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
@@ -1024,18 +1027,19 @@ class MaterialScene(QtGui.QGraphicsScene):
 
 
 class DoseScene(QtGui.QGraphicsScene):
+    request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.name = ''
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
-        self.dose_array = np.random.uniform(size=(8, 8, 8))
-        self.ct_array = np.random.uniform(size=(8, 8, 8))
+        self.name1 = ''
+        self.name2 = 'energy_imparted'
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
-        self.dose_scale = np.ones(3)
+        self.scaling = np.array((1., 1., 1.))
         self.index = 0
         self.view_orientation = 2
         self.nodata_item.setVisible(True)
@@ -1048,28 +1052,44 @@ class DoseScene(QtGui.QGraphicsScene):
         self.nodata_item.setVisible(True)
         self.image_item.setVisible(False)
 
-    def defaultLevels(self, array):
-        p = array.max() - array.min()
-        return (p/2., p / 2. - 1)
-
-    def setCtDoseArrays(self, ct, dose, spacing, scaling):
-        self.dose_array = gaussian_filter(dose, 1.)
-#        self.dose_array = dose
-        if ct is None:
-            self.ct_array = np.zeros(dose.shape, dtype=np.int16)
-
+    def update_data(self, sim):
+        if sim.is_phantom:
+            self.name1 = 'organ'
+            self.image_item.setLevels(back=(127, 128))
         else:
-            self.ct_array = ct
-        self.shape = np.array(self.ct_array.shape)
-        self.spacing = spacing
-        self.dose_scale = scaling
+            self.name1 = 'ctarray'
+            self.image_item.setLevels(back=(0, 500))
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
-        self.index = self.index % self.shape[self.view_orientation]
-        self.reloadImages()
+
+        self.name = sim.name
+        self.shape = sim.shape
+        self.scaling = sim.scaling
+        self.spacing = sim.spacing
         self.updateSceneTransform()
-        self.image_item.setLevels(front=self.defaultLevels(self.dose_array),
-                                  back=self.defaultLevels(self.ct_array))
+        self.request_reload_slice.emit(self.name, self.name1, self.index, self.view_orientation)
+        index2 = self.index % self.shape[self.view_orientation]
+        index2 /= self.scaling[self.view_orientation]
+        self.request_reload_slice.emit(self.name, self.name2, index2, self.view_orientation)
+
+#    def setCtDoseArrays(self, ct, dose, spacing, scaling):
+#        self.dose_array = gaussian_filter(dose, 1.)
+##        self.dose_array = dose
+#        if ct is None:
+#            self.ct_array = np.zeros(dose.shape, dtype=np.int16)
+#
+#        else:
+#            self.ct_array = ct
+#        self.shape = np.array(self.ct_array.shape)
+#        self.spacing = spacing
+#        self.dose_scale = scaling
+#        self.nodata_item.setVisible(False)
+#        self.image_item.setVisible(True)
+#        self.index = self.index % self.shape[self.view_orientation]
+#        self.reloadImages()
+#        self.updateSceneTransform()
+#        self.image_item.setLevels(front=self.defaultLevels(self.dose_array),
+#                                  back=self.defaultLevels(self.ct_array))
 
     def updateSceneTransform(self):
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
@@ -1078,36 +1098,59 @@ class DoseScene(QtGui.QGraphicsScene):
         if self.nodata_item.isVisible():
             self.setSceneRect(self.nodata_item.sceneBoundingRect())
         else:
-            self.setSceneRect(self.image_item.sceneBoundingRect())
+            shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
+            rect = QtCore.QRectF(0, 0, shape[1], shape[0])
+            self.setSceneRect(self.image_item.mapRectToScene(rect))
+
+
+
 
     @QtCore.pyqtSlot(int)
     def setViewOrientation(self, view_orientation):
         self.view_orientation = view_orientation % 3
-        self.reloadImages()
+        self.request_reload_slice.emit(self.name, self.name1, self.index, self.view_orientation)
+        index2 = self.index % self.shape[self.view_orientation]
+        index2 /= self.scaling[self.view_orientation]
+        self.request_reload_slice.emit(self.name, self.name2, index2, self.view_orientation)
         self.updateSceneTransform()
 
-    def getSlice(self, array, index):
-        if self.view_orientation == 2:
-            return np.copy(np.squeeze(array[: ,: ,index % self.shape[2]]))
-        elif self.view_orientation == 1:
-            return np.copy(np.squeeze(array[:, index % self.shape[1], :]))
-        elif self.view_orientation == 0:
-            return np.copy(np.squeeze(array[index % self.shape[0], :, :]))
-        raise ValueError('view must select one of 0,1,2 dimensions')
+    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
+    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+        if simulation_name != self.name:
+            return
+        if array_name in ['ctarray', 'organ']:
+            self.image_item.setImage(back_image=arr)
 
-    def reloadImages(self):
-        n = self.shape[self.view_orientation]
-        dose_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.dose_array.shape[self.view_orientation])
+        elif array_name == 'energy_imparted':
+            self.image_item.setImage(front_image=arr)
+        else:
+            self.index = index
 
-        self.image_item.setImage(self.getSlice(self.dose_array, dose_index),
-                                 self.getSlice(self.ct_array, self.index))
+#    def getSlice(self, array, index):
+#        if self.view_orientation == 2:
+#            return np.copy(np.squeeze(array[: ,: ,index % self.shape[2]]))
+#        elif self.view_orientation == 1:
+#            return np.copy(np.squeeze(array[:, index % self.shape[1], :]))
+#        elif self.view_orientation == 0:
+#            return np.copy(np.squeeze(array[index % self.shape[0], :, :]))
+#        raise ValueError('view must select one of 0,1,2 dimensions')
+#
+#    def reloadImages(self):
+#        n = self.shape[self.view_orientation]
+#        dose_index = np.floor((self.index % self.shape[self.view_orientation]) / n * self.dose_array.shape[self.view_orientation])
+#
+#        self.image_item.setImage(self.getSlice(self.dose_array, dose_index),
+#                                 self.getSlice(self.ct_array, self.index))
 
     def wheelEvent(self, ev):
         if ev.delta() > 0:
             self.index += 1
         elif ev.delta() < 0:
             self.index -= 1
-        self.reloadImages()
+        self.request_reload_slice.emit(self.name, self.name1, self.index, self.view_orientation)
+        index2 = self.index % self.shape[self.view_orientation]
+        index2 /= self.scaling[self.view_orientation]
+        self.request_reload_slice.emit(self.name, self.name2, index2, self.view_orientation)
         ev.accept()
 
 
