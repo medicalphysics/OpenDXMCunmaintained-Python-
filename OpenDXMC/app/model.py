@@ -317,7 +317,7 @@ class Runner(QtCore.QThread):
     start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.request_save = False
+        self.request_save = True
         self.timer = QtCore.QTimer()
         self.timer.setInterval(600000)
 #        self.time_interval = 600000 # saving data every 10 minutes
@@ -337,17 +337,16 @@ class Runner(QtCore.QThread):
         self.request_save = True
         self.mutex.unlock()
 
-    def update_simulation_iteration(self, name, energy_imparted, exposure_number):
+    def update_simulation_iteration(self, name, array_dict, exposure_number):
         desc = {'name': name,
                 'start_at_exposure_no': exposure_number}
-        arrs = {'energy_imparted': energy_imparted}
         if self.request_save:
-            self.request_update_simulation.emit(desc, arrs, False, False)
+            self.request_update_simulation.emit(desc, array_dict, False, False)
             self.mutex.lock()
             self.request_save = False
             self.mutex.unlock()
         else:
-            self.request_view_update.emit(desc, arrs)
+            self.request_view_update.emit(desc, array_dict)
 
     def run(self):
         if self.simulation is None:
@@ -392,7 +391,7 @@ class Runner(QtCore.QThread):
                                                 self.simulation.volatiles,
                                                 False, False)
         self.mc_calculation_finished.emit()
-
+        self.request_save = True
 
 
 class RunManager(QtCore.QObject):

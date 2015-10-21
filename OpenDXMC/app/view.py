@@ -145,13 +145,13 @@ class ViewController(QtCore.QObject):
 #                                             self.current_simulation.spacing,
 #                                             self.current_simulation.exposure_modulation)
 
-#        elif name == 'running':
-#            if self.current_simulation.energy_imparted is not None:
-#                self.scenes[name].setArray(self.current_simulation.energy_imparted,
-#                                           self.current_simulation.spacing,
-#                                           self.current_simulation.scaling)
-#            else:
-#                self.scenes[name].setNoData()
+        elif name == 'running':
+            if self.current_simulation.energy_imparted is not None:
+                self.scenes[name].setArray(self.current_simulation.energy_imparted,
+                                           self.current_simulation.spacing,
+                                           self.current_simulation.scaling)
+            else:
+                self.scenes[name].setNoData()
         elif name == 'energy_imparted':
             self.scenes[name].update_data(self.current_simulation)
 #            if self.current_simulation.energy_imparted is not None:
@@ -850,6 +850,7 @@ class RunningScene(QtGui.QGraphicsScene):
         super().__init__(parent)
         self.image_item = ImageItem()
         self.addItem(self.image_item)
+        self.image_item.setLut(get_lut('hot_iron'))
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
         self.nodata_item.setVisible(True)
@@ -1037,6 +1038,7 @@ class DoseScene(QtGui.QGraphicsScene):
         self.addItem(self.nodata_item)
         self.name1 = ''
         self.name2 = 'energy_imparted'
+        self.max2_value = 0
         self.shape = np.array((8, 8, 8))
         self.spacing = np.array((1., 1., 1.))
         self.scaling = np.array((1., 1., 1.))
@@ -1061,7 +1063,7 @@ class DoseScene(QtGui.QGraphicsScene):
             self.image_item.setLevels(back=(0, 500))
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
-
+        self.max2_value = 0
         self.name = sim.name
         self.shape = sim.shape
         self.scaling = sim.scaling
@@ -1123,6 +1125,10 @@ class DoseScene(QtGui.QGraphicsScene):
 
         elif array_name == 'energy_imparted':
             self.image_item.setImage(front_image=arr)
+            m = arr.max()
+            if self.max2_value < m:
+                self.image_item.setLevels(front=(m/2., m/2))
+                self.max2_value = m
         else:
             self.index = index
 

@@ -39,7 +39,7 @@ def read_phantoms(materials=None):
             sim = read_voxels(path, key, *value[1:])
         except FileNotFoundError as e:
             logger.debug('{0} phantom not found in {1}'.format(key, path))
-            raise e
+#            raise e
         else:
             logger.debug('{0} phantom read successfully'.format(key))
             if materials is not None:

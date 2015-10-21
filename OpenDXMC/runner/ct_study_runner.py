@@ -293,7 +293,10 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 
     # Validating if everything is in place
     ct_runner_validate_simulation(simulation, materials_organic)
-
+    if callback is not None:
+        callback(simulation.name, {'material': simulation.material,
+                                   'material_map': simulation.material_map}, 
+                 simulation.start_at_exposure_no)
     phase_space = ct_phase_space(simulation)
     n_histories = simulation.histories
 
@@ -322,7 +325,7 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
                      simulation.density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
         if callback is not None:
-            callback(simulation.name, energy_imparted, e + 1)
+            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
         simulation.start_at_exposure_no = e + 1
 
     generate_dose_conversion_factor(simulation, materials)

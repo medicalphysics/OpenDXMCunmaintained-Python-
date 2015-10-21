@@ -122,7 +122,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     rotation_center[2] = 0  # we start spiral at start not center
     if rotation_plane_cosines is None:
         rotation_plane_cosines = np.array([1, 0, 0, 0, 1, 0], dtype=np.double)
-
+    print('CT phase space start', start, stop)
     # total number of exposures + one total rotation
     exposures = int(exposures)
     e = int((abs(start - stop) / (pitch * total_collimation) + 1) * exposures)
