@@ -334,13 +334,62 @@ def arrayToQImage(array_un, level, lut):
     return result
 
 
-class NoDataItem(QtGui.QGraphicsTextItem):
-    def __init__(self, parent=None, title=''):
-        self.msg = "Sorry, no data here yet.\nRun a simulation to compute.".format(title)
-        super().__init__(self.msg, parent)
+class NoDataItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+#        self.fontMetrics = QtGui.qApp.fontMetrics()
+        self.msg = "Sorry, no data here yet. Run a simulation to compute."
+#        self.rect = QtCore.QRectF(self.fontMetrics.boundingRect(self.msg))
 
-        self.setPlainText(self.msg)
-        self.setDefaultTextColor(QtCore.Qt.white)
+    def boundingRect(self):
+#        return  QtCore.QRectF(self.fontMetrics.boundingRect(self.msg))
+        return QtCore.QRectF(0, 0, 2000, 2000)
+
+    def paint(self, painter, style, widget=None):
+        painter.setPen(QtGui.QPen(QtCore.Qt.white))
+
+#        h = self.fontMetrics.boundingRect('A').height()
+#        painter.drawText(0, h ,self.msg)
+
+        painter.drawText(QtCore.QRectF(0, 0, 2000, 2000), QtCore.Qt.AlignCenter, self.msg)
+#
+#
+#        self.fontMetrics = QtGui.qApp.fontMetrics()
+#        self.box_size = self.fontMetrics.boundingRect('A').height()
+#        self.rect = QtCore.QRectF(0, 0, self.box_size, self.box_size)
+#        self.map = []
+
+#
+#    def set_map(self, mapping, colors):
+#        self.map = []
+#
+#        for ind in range(len(mapping)):
+#            self.map.append((colors[ind], str(mapping['value'][ind], encoding='utf-8')))
+#
+#        max_str_index = 0
+#        max_len_str = 0
+#        for ind, item in enumerate(self.map):
+#            if len(item[1]) > max_len_str:
+#                max_len_str = len(item[1])
+#                max_str_index = ind
+#
+#        sub_rect = self.fontMetrics.boundingRect(self.map[max_str_index][1])
+#        self.rect = QtCore.QRectF(0, 0,
+#                                  self.box_size * 1.25 + sub_rect.width(),
+#                                  sub_rect.height() * len(self.map) * 2)
+#
+#    def boundingRect(self):
+#        return self.rect
+#
+#    def paint(self, painter, style, widget=None):
+#        painter.setPen(QtGui.QPen(QtCore.Qt.white))
+#        painter.setRenderHint(painter.Antialiasing, True)
+#        h = self.fontMetrics.boundingRect('A').height()
+#        for ind, value in enumerate(self.map):
+#            key, item = value
+#            painter.fillRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size), QtGui.QColor(key))
+#            painter.drawText(self.box_size * 1.25, ind*2*h + self.box_size, item)
+#            painter.drawRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size))
 
 
 
@@ -421,7 +470,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
     def paint(self, painter, style, widget=None):
         if self.qimage is None:
             self.render()
-        painter.drawImage(QtCore.QPointF(self.pos()), self.qimage)
+        painter.drawImage(QtCore.QPointF(0, 0), self.qimage)
 
 class BitImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -464,7 +513,7 @@ class BitImageItem(QtGui.QGraphicsItem):
         return path
 
     def paint(self, painter, style, widget=None):
-        painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
+        painter.drawImage(QtCore.QPointF(0, 0), self.qImage())
 
 class ImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -913,7 +962,7 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.nodata_item.setVisible(True)
         self.map_item.setVisible(False)
         self.image_item.setVisible(False)
-        self.setSceneRect(self.nodata_item.boundingRect())
+        self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
     def update_data(self, sim):
         if sim.material_map is None:
