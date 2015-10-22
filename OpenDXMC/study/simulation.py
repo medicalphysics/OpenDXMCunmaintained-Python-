@@ -23,8 +23,8 @@ SIMULATION_DESCRIPTION = {
     'al_filtration': [7., np.double, True, True, 'Filtration of primary beam [mmAl]'],
     'xcare': [False, np.bool, True, True, 'XCare'],
     'ctdi_air100': [0., np.double, False, True, 'CTDIair [mGy/100mAs]'],
-    'ctdi_vol100': [0., np.double, False, True, 'CTDIvol [mGy/100mAs]'],
-    'ctdi_w100': [0., np.double, False, True, 'CTDIw [mGy/100mAs/pitch]'],
+    'ctdi_vol100': [0., np.double, False, True, 'CTDIvol [mGy/100mAs/pitch]'],
+    'ctdi_w100': [0., np.double, False, True, 'CTDIw [mGy/100mAs]'],
     'kV': [120., np.double, True, True, 'Tube potential [kV]'],
     'aquired_kV': [0., np.double, False, False, 'Images aquired with tube potential [kV]'],
     'region': ['abdomen', 'a64', False, False, 'Examination region'],
@@ -64,70 +64,10 @@ DESCRIPTION_RECARRAY = np.array([(k, v[2], v[3], v[4])
                                        ('description', 'a128')]).view(np.recarray)
 
 
-class Simulation(object):
-#    __description = {'name': '',
-#                     'scan_fov': 50.,
-#                     'sdd': 100.,
-#                     'detector_width': 0.06,
-#                     'detector_rows': 64,
-#                     'collimation_width': 0.06 * 64,
-#                     'xcare': False,
-#                     'ctdi_air100': 0.,
-#                     'ctdi_vol100': 0.,
-#                     'ctdi_w100': 0.,
-#                     'kV': 120.,
-#                     'region': 'abdomen',
-#                     # per 1000000 histories
-#                     'conversion_factor_ctdiair': 0,
-#                     # per 1000000 histories to dose
-#                     'conversion_factor_ctdiw': 0,
-#                     'is_spiral': True,
-#                     'al_filtration': 7.,
-#                     'pitch': .9,
-#                     'exposures': 1200.,
-#                     'histories': 1000,
-#                     'batch_size': 0,
-#                     'start': 0.,
-#                     'stop': 0.,
-#                     'step': 0,
-#                     'start_at_exposure_no': 0,
-#                     'MC_finished': False,
-#                     'MC_ready': False,
-#                     'scaling': np.ones(3, dtype=np.double),
-#                     'ignore_air': False
-#                     }
-#    __dtype = {'name': 'a64',
-#               'scan_fov': np.float,
-#               'sdd': np.float,
-#               'detector_width': np.float,
-#               'detector_rows': np.int,
-#               'collimation_width': np.float,
-#               'xcare': np.bool,
-#               'ctdi_air100': np.float,
-#               'ctdi_vol100': np.float,
-#               'ctdi_w100': np.float,
-#               'kV': np.float,
-#               'region': 'a64',
-#               # per 1000000 histories to dose
-#               'conversion_factor_ctdiair': np.float,
-#               # per 1000000 histories to dose
-#               'conversion_factor_ctdiw': np.float,
-#               'is_spiral': np.bool,
-#               'al_filtration': np.float,
-#               'pitch': np.float,
-#               'exposures': np.int,
-#               'histories': np.int,
-#               'batch_size': np.int,
-#               'start': np.float,
-#               'stop': np.float,
-#               'step': np.float,
-#               'start_at_exposure_no': np.int,
-#               'MC_finished': np.bool,
-#               'MC_ready': np.bool,
-#               'scaling': np.dtype((np.double, 3)),
-#               'ignore_air': np.bool
-#               }
 
+
+
+class Simulation(object):
 
     def __init__(self, name, description=None):
 
@@ -164,7 +104,7 @@ class Simulation(object):
 
     @property
     def description(self):
-        return self.__description
+        return {key: item for key, item in self.__description.items()}
 
     @property
     def dtype(self):
@@ -264,10 +204,7 @@ class Simulation(object):
         return self.__description['ctdi_vol100']
     @ctdi_vol100.setter
     def ctdi_vol100(self, value):
-        if self.is_spiral:
-            self.__description['ctdi_w100'] = float(value) * self.pitch
-        else:
-            self.__description['ctdi_w100'] = float(value)
+        self.__description['ctdi_w100'] = float(value) * self.pitch
         self.__description['ctdi_vol100'] = float(value)
 
     @property
@@ -275,10 +212,7 @@ class Simulation(object):
         return self.__description['ctdi_w100']
     @ctdi_w100.setter
     def ctdi_w100(self, value):
-        if self.is_spiral:
-            self.__description['ctdi_vol100'] = float(value) / self.pitch
-        else:
-            self.__description['ctdi_vol100'] = float(value)
+        self.__description['ctdi_vol100'] = float(value) / self.pitch
         self.__description['ctdi_w100'] = float(value)
 
     @property
@@ -331,6 +265,7 @@ class Simulation(object):
     def is_spiral(self, value):
         if (self.pitch == 0.) and bool(value):
             self.__description['pitch'] = 1
+            self.ctdi_w100 = self.__description['ctdi_w100']
         self.__description['is_spiral'] = bool(value)
 
     @property
@@ -338,11 +273,10 @@ class Simulation(object):
         return self.__description['pitch']
     @pitch.setter
     def pitch(self, value):
-        assert value > 0
         if float(value) > 0:
             self.__description['is_spiral'] = True
-        self.__description['ctdi_vol100'] =  self.ctdi_w100 / value
         self.__description['pitch'] = float(value)
+        self.ctdi_w100 = self.__description['ctdi_w100']
 
     @property
     def exposures(self):
@@ -562,6 +496,9 @@ class Simulation(object):
     @is_phantom.setter
     def is_phantom(self, value):
         self.__description['is_phantom'] = bool(value)
+
+
+
 
     @property
     def material(self):

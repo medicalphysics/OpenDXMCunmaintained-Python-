@@ -181,10 +181,14 @@ class DatabaseInterface(QtCore.QObject):
         try:
             self.__db.add_simulation(sim, overwrite=False)
         except ValueError:
-           name = self.__db.get_unique_simulation_name()
-           logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
-           sim.name = name
-           self.__db.add_simulation(sim, overwrite=False)
+            if sim.is_phantom:
+                logger.info('Phantom {0} already exist in database'.format(sim.name))
+            else:
+                name = self.__db.get_unique_simulation_name(sim.name)
+                logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
+                sim.name = name
+                self.__db.add_simulation(sim, overwrite=False)
+
 
         self.get_simulation_list()
         self.database_busy.emit(False)
@@ -253,10 +257,11 @@ class DatabaseInterface(QtCore.QObject):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
         self.__db.update_simulation(prop_dict, arr_dict, purge_volatiles, cancel_if_running)
-        if prop_dict.get('MC_ready', False) and not prop_dict.get('MC_running', False):
+        updated_metadata = self.__db.get_simulation_meta_data(prop_dict['name'])
+        self.simulation_updated.emit(updated_metadata, {})
+        if updated_metadata.get('MC_ready', False) and not updated_metadata.get('MC_running', False):
             self.get_run_simulation()
         self.database_busy.emit(False)
-        self.simulation_updated.emit(prop_dict, arr_dict)
 
     @QtCore.pyqtSlot()
     def get_run_simulation(self):

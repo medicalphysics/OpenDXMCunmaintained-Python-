@@ -203,7 +203,6 @@ class ViewController(QtCore.QObject):
     @QtCore.pyqtSlot(Simulation)
     def applySimulation(self, sim):
         self.current_simulation = sim
-        self.simulation_properties_data.emit(sim.description)
         logger.debug('Got signal request to view Simulation {}'.format(sim.name))
 
 
@@ -222,10 +221,9 @@ class ViewController(QtCore.QObject):
         if description.get('name', None) == self.current_simulation.name:
             for key, value in itertools.chain(description.items(), volatiles.items()):
                 setattr(self.current_simulation, key, value)
-            self.simulation_properties_data.emit(self.current_simulation.description)
-
             if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
                 self.selectScene('running')
+
 
 
 def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360,
@@ -650,6 +648,7 @@ class AecItem(QtGui.QGraphicsItem):
         painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
 
+
 class PlanningScene(QtGui.QGraphicsScene):
     request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
     def __init__(self, parent=None, lut='pet'):
@@ -1029,7 +1028,7 @@ class MaterialScene(QtGui.QGraphicsScene):
 
 class DoseScene(QtGui.QGraphicsScene):
     request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, front_array='energy_imparted'):
         super().__init__(parent)
         self.name = ''
         self.image_item = BlendImageItem()
@@ -1057,7 +1056,8 @@ class DoseScene(QtGui.QGraphicsScene):
     def update_data(self, sim):
         if sim.is_phantom:
             self.name1 = 'organ'
-            self.image_item.setLevels(back=(127, 128))
+            max_level = max(sim.organ_map['key'])
+            self.image_item.setLevels(back=(max_level/2, max_level/2))
         else:
             self.name1 = 'ctarray'
             self.image_item.setLevels(back=(0, 500))
@@ -1124,11 +1124,12 @@ class DoseScene(QtGui.QGraphicsScene):
             self.image_item.setImage(back_image=arr)
 
         elif array_name == 'energy_imparted':
-            self.image_item.setImage(front_image=arr)
             m = arr.max()
             if self.max2_value < m:
+
                 self.image_item.setLevels(front=(m/2., m/2))
                 self.max2_value = m
+            self.image_item.setImage(front_image=arr)
         else:
             self.index = index
 
@@ -1196,7 +1197,6 @@ class View(QtGui.QGraphicsView):
         super().setScene(scene)
         self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
-
 class PropertiesModel(QtCore.QAbstractTableModel):
 #    error_setting_value = QtCore.pyqtSignal(str)
 #    request_simulation_update = QtCore.pyqtSignal(dict)
@@ -1211,9 +1211,9 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         self.unsaved_data = {}
         self.__indices = list(self.__data.keys())
         self.__indices.sort()
-#        interface.request_simulation_view.connect(self.update_data)
+        interface.request_simulation_view.connect(self.set_data)
+        interface.simulation_updated.connect(self.update_data)
         self.request_update_simulation.connect(interface.update_simulation_properties)
-#        self.request_simulation_start.connect(interface.get_run_simulation)
         self.__simulation = Simulation('None')
 
 
@@ -1260,8 +1260,13 @@ class PropertiesModel(QtCore.QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 
-    @QtCore.pyqtSlot(dict)
-    def update_data(self, sim_description):
+    @QtCore.pyqtSlot(Simulation)
+    def set_data(self, sim):
+        sim_description = sim.description
+        self.update_data(sim_description, {})
+
+    @QtCore.pyqtSlot(dict, dict)
+    def update_data(self, sim_description, array_dict):
         self.unsaved_data = {}
         self.layoutAboutToBeChanged.emit()
         self.__simulation = Simulation('None', sim_description)
@@ -1288,12 +1293,6 @@ class PropertiesModel(QtCore.QAbstractTableModel):
             return None
         row = index.row()
         column = index.column()
-#        if column == 0:
-#            pos = 4
-#        elif column == 1:
-#            pos = 0
-#        else:
-#            return None
 
         var = self.__indices[row]
         if column == 0:

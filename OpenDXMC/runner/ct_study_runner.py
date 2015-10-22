@@ -201,58 +201,49 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         return material_map, material_array, density_array
 
 
-def ct_runner_validate_simulation(simulation, materials, second_try=False):
+def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=None,
+                                  organ_material_map=None, second_try=False):
     """
     validating a ct mc simulation
     """
 
     # testing for required attributes
-    for att in ['material_map', 'material', 'density']:
-        if getattr(simulation, att) is None:
-            if simulation.ctarray is not None:
-                logger.info('CT study {0} do not have a {1}. Recalculating from CT'
-                        ' array.'.format(simulation.name, att))
-                specter = tungsten_specter(simulation.aquired_kV,
-                                           filtration_materials='al',
-                                           filtration_mm=simulation.al_filtration)
-                vals = prepare_geometry_from_ct_array(simulation.ctarray,
-                                                      simulation.scaling,
-                                                      specter,
-                                                      materials)
-            elif (simulation.organ is not None) and (simulation.organ_material_map is not None):
-                logger.info('CT study {0} do not have a {1}. Recalculating from organ mapping.'.format(simulation.name, att))
+    if ctarray is not None:
+        logger.info('Recalculating material mapping from CT array for {}'.format(simulation['name']))
+        specter = tungsten_specter(simulation['aquired_kV],
+                                   filtration_materials='al',
+                                   filtration_mm=simulation['al_filtration'])
+        vals = prepare_geometry_from_ct_array(ctarray,
+                                              scaling,
+                                              specter,
+                                              materials)
+    elif (organ is not None) and (organ_material_map is not None):
+        logger.info('Recalculating material mapping from organ array for {}'.format(simulation['name']))
 
-                vals = prepare_geometry_from_organ_array(simulation.organ,
-                                                         simulation.organ_material_map,
-                                                         simulation.scaling,
-                                                         materials)
-            else:
-                logger.warning('CT study {} has no CT images. Simulation not '
-                               'started'.format(simulation.name))
-                raise ValueError('CT study {} must have CT images to run a '
-                                 'simulation'.format(simulation.name))
-
-
-            simulation.material_map = vals[0]
-            simulation.material = vals[1]
-            simulation.density = vals[2]
-            if simulation.energy_imparted is not None:
-                logger.warning('Erasing dosematrix for simulation {} due to '
-                               'recalculating of tissue materials'
-                               ''.format(simulation.name))
-                simulation.energy_imparted = None
-            break
+        vals = prepare_geometry_from_organ_array(organ,
+                                                 organ_material_map,
+                                                 simulation['scaling'],
+                                                 materials)
     else:
-        # Testing for required materials if the simulation have a material_map
-        material_names = [m.name for m in materials]
-        for m_name in simulation.material_map['value']:
-            if str(m_name, encoding='utf-8') not in material_names:
-                raise ValueError('Provided materials are not in ct study')
+        logger.warning('CT study {} has no CT images or organ arrays. Simulation not '
+                       'started'.format(simulation['name']))
+        raise ValueError('CT study {} must have CT images or organ array to run a '
+                         'simulation'.format(simulation['name']))
+
+
+    material_map = vals[0]
+    material = vals[1]
+    density = vals[2]
+
+    # Testing for required materials if the simulation have a material_map
+    material_names = [m.name for m in materials]
+    for m_name in material_map['value']:
+        if str(m_name, encoding='utf-8') not in material_names:
+            raise ValueError('Provided materials are not in ct study')
 
     # test for correct material geometry and mapping
-    materials_ind = list(np.unique(simulation.material))
-    materials_key = list(recarray_to_dict(simulation.material_map,
-                                          value_is_string=True).keys())
+    materials_ind = list(np.unique(material))
+    materials_key = list(material_map.keys())
     materials_range = list(range(len(materials_ind)))
 
     try:
@@ -261,24 +252,22 @@ def ct_runner_validate_simulation(simulation, materials, second_try=False):
             assert key in materials_range
 
     except AssertionError:
-        if not second_try:
-            logger.warning('Something went wrong with material definitions, '
-                           'attempting to recreate material mapping for '
-                           'current simulation.')
-            simulation.material_map = None
-            ct_runner_validate_simulation(simulation, materials,
-                                          second_try=True)
-        else:
-            raise ValueError('Error in material definitions for simulation')
+        logger.warning('Something went wrong with material definitions, '
+                       'attempting to recreate material mapping for '
+                       'current simulation.')
+        material_map = None
+        raise ValueError('Error in material definitions for simulation')
+    return material, material_map, density
 
 
-def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, callback=None):
+def ct_runner(materials, simulation, ctarray=None, organ=None, organ_material_map=None,
+              energy_imparted_to_dose_conversion=True, callback=None):
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 
     INPUT:
 
-        simulation : Simulation instance
+        simulation :
 
         materials : a list of Material instances to be used in the simulation
 
@@ -288,29 +277,31 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
     OUTPUT:
         None, but updates the energy_imparted property of simulation
     """
-    logger.info('Preparing simulation for {}'.format(simulation.name))
+    logger.info('Preparing simulation for {}'.format(simulation['name']))
     materials_organic = [m for m in materials if m.organic]
 
     # Validating if everything is in place
-    ct_runner_validate_simulation(simulation, materials_organic)
-    if callback is not None:
-        callback(simulation.name, {'material': simulation.material,
-                                   'material_map': simulation.material_map}, 
-                 simulation.start_at_exposure_no)
-    phase_space = ct_phase_space(simulation)
-    n_histories = simulation.histories
+    material, material_map, density = ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=None, organ_material_map=None)
 
-    N = np.array(simulation.material.shape, dtype=np.double)
+#    if callback is not None:
+#        callback(simulation.name, {'material': simulation.material,
+#                                   'material_map': simulation.material_map},
+#                 simulation.start_at_exposure_no)
+
+    raise ValueError('see below')
+    phase_space = ct_phase_space(simulation)
+
+    N = np.array(material.shape, dtype=np.double)
 
     offset = np.zeros(3, dtype=np.double)
-    spacing = simulation.spacing * simulation.scaling
+    spacing = simulation['spacing'] * simulation['scaling']
 
-    lut = generate_attinuation_lut(materials_organic, simulation.material_map,
+    lut = generate_attinuation_lut(materials_organic, material_map,
                                    max_eV=500.e3,
-                                   ignore_air=simulation.ignore_air)
+                                   ignore_air=simulation['ignore_air'])
 
-    energy_imparted = np.zeros_like(simulation.density, dtype=np.double)
-    tot_histories = simulation.histories * simulation.exposures
+    energy_imparted = np.zeros_like(density, dtype=np.double)
+    tot_histories = simulation['histories'] * simulation['exposures']
 
     if tot_histories > 1e6:
         coffe_msg = ', go get coffe!'
@@ -321,16 +312,16 @@ def ct_runner(simulation, materials, energy_imparted_to_dose_conversion=True, ca
 #    raise ValueError('ERROR Material maps and arrays will not be stored. NOT VOLATILES')
     time_start = time.clock()
     for p, e, n in phase_space:
-        score_energy(p, N, spacing, offset, simulation.material,
-                     simulation.density, lut, energy_imparted)
+        score_energy(p, N, spacing, offset, material,
+                     density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
-        if callback is not None:
-            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
-        simulation.start_at_exposure_no = e + 1
+#        if callback is not None:
+#            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
+        simulation['start_at_exposure_no'] = e + 1
 
     generate_dose_conversion_factor(simulation, materials)
-    simulation.energy_imparted = energy_imparted
-    simulation.start_at_exposure_no = 0
+    simulation['start_at_exposure_no'] = 0
+    return epleed arrays
 
 
 def generate_dose_conversion_factor(simulation, materials):
@@ -341,25 +332,26 @@ def generate_dose_conversion_factor(simulation, materials):
         elif m.name == 'air':
             air = m
 
-    if (simulation.ctdi_air100 > 0.) and (air is not None):
+    if (simulation['ctdi_air100'] > 0.) and (air is not None):
         obtain_ctdiair_conversion_factor(simulation, air)
-    elif (simulation.ctdi_w100 > 0.) and (pmma is not None) and (air is not None):
+    elif (simulation['ctdi_w100'] > 0.) and (pmma is not None) and (air is not None):
         obtain_ctdiw_conversion_factor(simulation, pmma, air)
     else:
         msg = """Need a combination of air material and ctdi air or ctdi_w100
                  pmma material and ctdiw_100 to generate energy to dose
                  conversion factor."""
         logger.warning(msg)
+    return eple
 
 
 def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     logger.info('Starting simulating CTDIair100 measurement for '
-                '{0}. CTDIair100 is {1}mGy'.format(simulation.name, simulation.ctdi_air100))
+                '{0}. CTDIair100 is {1}mGy'.format(simulation['name'], simulation['ctdi_air100']))
     spacing = np.array((1, 1, 10), dtype=np.double)
 
-    N = np.rint(np.array((simulation.sdd / spacing[0],
-                          simulation.sdd / spacing[1], 3),
+    N = np.rint(np.array((simulation['sdd'] / spacing[0],
+                          simulation['sdd'] / spacing[1], 3),
                          dtype=np.double))
 
     offset = -N * spacing / 2.
@@ -369,16 +361,16 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
     lut = generate_attinuation_lut([air_material], material_map, max_eV=0.5e6)
     dose = np.zeros_like(density_array, dtype=np.double)
 
-    en_specter = tungsten_specter(simulation.kV, angle_deg=10.,
+    en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
-                                  filtration_mm=simulation.al_filtration)
+                                  filtration_mm=simulation['al_filtration'])
 
-    phase_space = ct_seq(simulation.scan_fov, simulation.sdd,
-                         simulation.total_collimation, start=0, stop=0, step=0,
-                         exposures=simulation.exposures,
-                         histories=simulation.histories,
+    phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                         simulation['total_collimation'], start=0, stop=0, step=0,
+                         exposures=simulation['exposures'],
+                         histories=simulation['histories'],
                          energy_specter=en_specter,
-                         batch_size=simulation.batch_size)
+                         batch_size=simulation['batch_size'])
 
     t0 = time.clock()
     for batch, i, n in phase_space:
@@ -388,13 +380,13 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
-    simulation.conversion_factor_ctdiair = simulation.ctdi_air100 / d * simulation.total_collimation
+    simulation['conversion_factor_ctdiair'] = simulation['ctdi_air100'] / d * simulation['total_collimation']
 
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32.):
     spacing = np.array((1, 1, 2.5), dtype=np.double)
-    N = np.rint(np.array((simulation.sdd / spacing[0],
-                          simulation.sdd / spacing[1], 6),
+    N = np.rint(np.array((simulation['sdd'] / spacing[0],
+                          simulation['sdd'] / spacing[1], 6),
                          dtype=np.double))
 
     offset = -N * spacing / 2.
@@ -432,22 +424,22 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                    callback=None, phantom_size=32.):
 
     logger.info('Starting simulating CTDIw100 measurement for '
-                '{}'.format(simulation.name))
+                '{}'.format(simulation['name))
     args = generate_ctdi_phantom(simulation, pmma, air, size=phantom_size)
     N, spacing, offset, material_array, density_array, lut, meas_pos = args
 
     dose = np.zeros_like(density_array)
 
-    en_specter = tungsten_specter(simulation.kV, angle_deg=10.,
+    en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
-                                  filtration_mm=simulation.al_filtration)
+                                  filtration_mm=simulation['al_filtration'])
 
-    phase_space = ct_seq(simulation.scan_fov, simulation.sdd,
-                         simulation.total_collimation, start=0, stop=0, step=1,
-                         exposures=simulation.exposures,
-                         histories=simulation.histories,
+    phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                         simulation['total_collimation'], start=0, stop=0, step=1,
+                         exposures=simulation['exposures'],
+                         histories=simulation['histories'],
                          energy_specter=en_specter,
-                         batch_size=simulation.batch_size)
+                         batch_size=simulation['batch_size'])
 
     t0 = time.clock()
     for batch, i, n in phase_space:
@@ -462,4 +454,4 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
-    simulation.conversion_factor_ctdiw = simulation.ctdi_w100 / ctdiv * simulation.total_collimation
+    simulation['conversion_factor_ctdiw'] = simulation['ctdi_w100'] / ctdiv * simulation['total_collimation']

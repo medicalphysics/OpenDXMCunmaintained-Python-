@@ -64,8 +64,6 @@ class Database(object):
         try:
             node = self.db_instance.get_node(where, name=name)
         except tb.NoSuchNodeError:
-
-
             if not create:
                 raise ValueError("Node {0} do not exist in {1}. Was not allowed to create a new node".format(name, where))
 
@@ -86,7 +84,6 @@ class Database(object):
                                                           createparents=True)
             else:
                 raise ValueError("Node {0} do not exist in {1}. Unable to create new node, did not understand obj type".format(name, where))
-
         return node
 
     def remove_node(self, where, name):
@@ -95,6 +92,8 @@ class Database(object):
             self.db_instance.remove_node(where, name=name, recursive=True)
         except tb.NoSuchNodeError:
             pass
+        else:
+            logger.debug('Deleted node {0}/{1}'.format(where, name))
         return
 
     def add_material(self, material, overwrite=True):
@@ -196,9 +195,11 @@ class Database(object):
         matching_names = meta_table.get_where_list('name == b"{}"'.format(simulation.name))
         if len(matching_names) > 0:
             if not overwrite:
-                raise ValueError('Simulation {} is already present i database'.format(simulation.name))
+                logger.info('Simulation {} not imported, already present i database'.format(simulation.name))
+                self.close()
+                return
             else:
-                logger.warning('Overwriting simulation {} already in database'.format(simulation.name))
+                logger.info('Overwriting simulation {} already in database'.format(simulation.name))
 
         if self.test_node('/simulations', simulation.name):
             self.db_instance.remove_node('/simulations', name=simulation.name,
@@ -228,10 +229,37 @@ class Database(object):
         logger.info('Successfully wrote simulation {} to database'.format(simulation.name))
         self.close()
 
+    def remove_simulation(self, name):
+        self.open()
+        if not self.test_node('/', 'meta_data'):
+            logger.info('There is no simulations in database')
+            self.close()
+            return
+
+        index_to_remove = None
+        meta_table = self.get_node('/', 'meta_data')
+        for row in meta_table.where('name == b"{}"'.format(name)):
+            index_to_remove = row.nrow
+            break
+        else:
+            self.close()
+            logger.info('There is no simulations named {} in database'.format(name))
+            return
+        # removing table row
+        if meta_table.nrows <= 1 and index_to_remove is not None:
+            self.remove_node('/', 'meta_data')
+        elif index_to_remove is not None:
+            meta_table.remove_row(index_to_remove)
+
+        # removing array data
+        self.remove_node('/simulations', name)
+        self.close()
+        return
+
     def get_simulation(self, name, ignore_arrays=False, unsafe_read=True):
         logger.debug('Attempting to read simulation {} from database.'.format(name))
         if not self.test_node('/', 'meta_data'):
-            logger.warning('There is no simulations in database')
+            logger.info('There is no simulations in database')
             self.close()
             raise ValueError('No simulation by name {} in database'.format(name))
 
@@ -280,6 +308,59 @@ class Database(object):
         logger.debug('Successfully read simulation {} from database.'.format(name))
         self.close()
         return simulation
+
+    def set_simulation_meta_data(self, name, data_dict):
+        self.open()
+        if not self.test_node('/', 'meta_data'):
+            logger.info('Could not get metadata for {}. No data in database'.format(name))
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        for row in meta_table.where('name == b"{}"'.format(name)):
+            data = {col_name: row[col_name] for col_name in meta_table.colnames}
+            break
+        else:
+            logger.info('Could not get metadata for {}, simulation not in database'.format(name))
+            self.close()
+            raise ValueError('Could not get metadata for {}, simulation not in database')
+        self.close()
+        return data
+
+
+    def set_simulation_array(self, name, array_name, array):
+        self.open()
+        if self.test_node('/simulations/{0}'.format(name), array_name):
+            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
+        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
+            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
+        else:
+            self.close()
+            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
+            return
+        arr = node.read()
+        self.close()
+        return arr
+
+    def get_simulation_meta_data(self, name):
+        self.open()
+        if not self.test_node('/', 'meta_data'):
+            logger.info('Could not get metadata for {}. No data in database'.format(name))
+        meta_table = self.get_node('/', 'meta_data', create=False)
+        for row in meta_table.where('name == b"{}"'.format(name)):
+            data = {}
+            print(meta_table.colnames)
+            print(meta_table.coldtypes)
+            for col_name in meta_table.colnames:
+                if meta_table.coldtypes[col_name].char == 'S':
+                    data[col_name] = str(row[col_name], encoding='utf-8')
+                else:
+                    data[col_name] = row[col_name]
+            break
+        else:
+            logger.info('Could not get metadata for {}, simulation not in database'.format(name))
+            self.close()
+            raise ValueError('Could not get metadata for {}, simulation not in database')
+        self.close()
+        return data
+
 
     def get_simulation_array(self, name, array_name):
         self.open()

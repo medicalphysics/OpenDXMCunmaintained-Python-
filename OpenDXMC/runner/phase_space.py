@@ -10,8 +10,7 @@ import scipy.interpolate
 from opendxmc.tube.tungsten import specter
 import logging
 logger = logging.getLogger('OpenDXMC')
-import pdb
-import random
+
 SHUFFLE_SEED = 100
 
 
