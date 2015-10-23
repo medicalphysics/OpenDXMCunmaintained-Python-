@@ -1,75 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug 21 11:03:15 2015
+Created on Fri Oct 23 14:23:31 2015
 
 @author: erlean
 """
 import numpy as np
-import os
-import logging
-import itertools
-
-logger = logging.getLogger('OpenDXMC')
+from opendxmc.database.h5database import SIMULATION_DICT_TEMPLATE, ARRAY_TEMPLATES
 
 
-SIMULATION_DESCRIPTION = {
-    #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION
-    'name': ['', 'a64', False, False, 'Simulation ID'],
-    'scan_fov': [50., np.double, True, True, 'Scan field of view [cm]'],
-    'sdd': [100., np.double, True, True, 'Source detector distance [cm]'],
-    'detector_width': [0.06, np.double, True, True, 'Detector width [cm]'],
-    'detector_rows': [64, np.int, True, True, 'Detector rows'],
-    'collimation_width': [0.06 * 64, np.double, True, True, 'Total collimation width [cm]'],
-    'al_filtration': [7., np.double, True, True, 'Filtration of primary beam [mmAl]'],
-    'xcare': [False, np.bool, True, True, 'XCare'],
-    'ctdi_air100': [0., np.double, False, True, 'CTDIair [mGy/100mAs]'],
-    'ctdi_vol100': [0., np.double, False, True, 'CTDIvol [mGy/100mAs/pitch]'],
-    'ctdi_w100': [0., np.double, False, True, 'CTDIw [mGy/100mAs]'],
-    'kV': [120., np.double, True, True, 'Tube potential [kV]'],
-    'aquired_kV': [0., np.double, False, False, 'Images aquired with tube potential [kV]'],
-    'region': ['abdomen', 'a64', False, False, 'Examination region'],
-    # per 1000000 histories
-    'conversion_factor_ctdiair': [0., np.double, False, False, 'CTDIair to dose conversionfactor'],
-    # per 1000000 histories to dose
-    'conversion_factor_ctdiw': [0., np.double, False, False, 'CTDIw to dose conversionfactor'],
-    'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
-    'pitch': [1, np.double, True, True, 'Pitch'],
-    'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
-    'histories': [100, np.int, True, True, 'Number of photon histories per exposure'],
-    'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
-    'start_scan': [0, np.double, False, False, 'CT scan start position [cm]'],
-    'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]'],
-    'start': [0, np.double, True, True, 'Start position [cm]'],
-    'stop': [0, np.double, True, True, 'Stop position [cm]'],
-    'step': [1, np.int, True, True, 'Sequential aqusition step size [cm]'],
-    'start_at_exposure_no': [0, np.int, True, True, 'Start simulating exposure number'],
-    'MC_finished': [False, np.bool, False, False, 'Simulation finished'],
-    'MC_ready': [False, np.bool, False, False, 'Simulation ready'],
-    'MC_running': [False, np.bool, False, False, 'Simulation is running'],
-    'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
-    'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
-    'shape': [np.ones(3, dtype=np.int), np.dtype((np.int, 3)), False, False, 'Image matrix dimensions'],
-    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling'],
-    'import_scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix prescaling'],
-    'image_orientation': [np.array([1, 0, 0, 0, 1, 0], dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
-    'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position [cm]'],
-    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center [cm]'],
-    'is_phantom': [False, np.bool, False, False, 'Matematical phantom'],}
-
-# Generating a recarray for SIMULATION_DESCRIPTION to insert in database
-DESCRIPTION_RECARRAY = np.array([(k, v[2], v[3], v[4])
-                                 for k, v in SIMULATION_DESCRIPTION.items()],
-                                dtype=[('name', 'a64'), ('volatale', np.bool),
-                                       ('editable', np.bool),
-                                       ('description', 'a128')]).view(np.recarray)
+class Validator(object):
+    def __init__(self):
+        self._pt = SIMULATION_DICT_TEMPLATE
+        self._at = ARRAY_TEMPLATES
 
 
 
 
-class Simulation(object):
 
-    def __init__(self, name, description=None):
-
+class soppel(object):
+    def __init__(self):
+ properties, array_dict, volatiles_dict
         self.__description = {}
         self.__dtype = {}
         self.__arrays = {'organ': None,

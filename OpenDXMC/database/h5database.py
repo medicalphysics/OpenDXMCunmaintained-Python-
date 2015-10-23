@@ -10,12 +10,87 @@ import tables as tb
 import itertools
 import os
 
-from opendxmc.study.simulation import Simulation, DESCRIPTION_RECARRAY
 from opendxmc.materials import Material
 from opendxmc.data import get_stored_materials
 
 import logging
 logger = logging.getLogger('OpenDXMC')
+
+
+
+PROPETIES_DICT_TEMPLATE = {
+    #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION
+    'name': ['', 'a64', False, False, 'Simulation ID'],
+    'scan_fov': [50., np.double, True, True, 'Scan field of view [cm]'],
+    'sdd': [100., np.double, True, True, 'Source detector distance [cm]'],
+    'detector_width': [0.06, np.double, True, True, 'Detector width [cm]'],
+    'detector_rows': [64, np.int, True, True, 'Detector rows'],
+    'collimation_width': [0.06 * 64, np.double, True, True, 'Total collimation width [cm]'],
+    'al_filtration': [7., np.double, True, True, 'Filtration of primary beam [mmAl]'],
+    'xcare': [False, np.bool, True, True, 'XCare'],
+    'ctdi_air100': [0., np.double, True, True, 'CTDIair [mGy/100mAs]'],
+    'ctdi_vol100': [0., np.double, True, True, 'CTDIvol [mGy/100mAs/pitch]'],
+    'ctdi_w100': [0., np.double, True, True, 'CTDIw [mGy/100mAs]'],
+    'kV': [120., np.double, True, True, 'Simulation tube potential [kV]'],
+    'aquired_kV': [0., np.double, False, False, 'Images aquired with tube potential [kV]'],
+    'region': ['abdomen', 'a64', False, False, 'Examination region'],
+    # per 1000000 histories
+    'conversion_factor_ctdiair': [0., np.double, True, False, 'CTDIair to dose conversionfactor'],
+    # per 1000000 histories to dose
+    'conversion_factor_ctdiw': [0., np.double, True, False, 'CTDIw to dose conversionfactor'],
+    'is_spiral': [True, np.bool, True, True, 'Helical aqusition'],
+    'pitch': [1, np.double, True, True, 'Pitch'],
+    'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation'],
+    'histories': [100, np.int, True, True, 'Number of photon histories per exposure'],
+    'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch'],
+    'start_scan': [0, np.double, False, False, 'CT scan start position [cm]'],
+    'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]'],
+    'start': [0, np.double, True, True, 'Start position [cm]'],
+    'stop': [0, np.double, True, True, 'Stop position [cm]'],
+    'step': [1, np.int, True, True, 'Sequential aqusition step size [cm]'],
+    'start_at_exposure_no': [0, np.int, True, False, 'Start simulating exposure number'],
+    'MC_finished': [False, np.bool, True, False, 'Simulation finished'],
+    'MC_ready': [False, np.bool, True, False, 'Simulation ready'],
+    'MC_running': [False, np.bool, True, False, 'Simulation is running'],
+    'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation'],
+    'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]'],
+    'shape': [np.ones(3, dtype=np.int), np.dtype((np.int, 3)), False, False, 'Image matrix dimensions'],
+    'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling (stacked on image matrix prescaling)'],
+    'import_scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix prescaling when imported'],
+    'image_orientation': [np.array([1, 0, 0, 0, 1, 0], dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines'],
+    'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position (position of first voxel in volume) [cm]'],
+    'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center (relative to first voxel in volume) [cm]'],
+    'is_phantom': [False, np.bool, False, False, 'Matematical phantom'],}
+
+ARRAY_TEMPLATES = {
+    # TAG: DTYPE, VOLATILE
+    'ctarray': [np.int16, False],
+    'exposure_modulation': [np.double, False],
+    'organ': [np.uint8, False],
+    'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False],
+    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], True],
+    'energy_imparted': [np.double, True],
+    'density': [np.double, True],
+    'dose': [np.double, True],
+    'material': [np.uint8, True],
+    'material_map': [[('material', np.uint8), ('material_name', 'a128')], True],
+   }
+
+
+# Generating a recarray for SIMULATION_DESCRIPTION to insert in database
+DESCRIPTION_RECARRAY = np.array([(k, v[2], v[3], v[4])
+                                 for k, v in PROPETIES_DICT_TEMPLATE.items()],
+                                dtype=[('name', 'a64'), ('volatale', np.bool),
+                                       ('editable', np.bool),
+                                       ('description', 'a128')]).view(np.recarray)
+
+def SIMULATION_DTYPE():
+    d = {'names': [],
+         'formats': []}
+    for key, value in PROPETIES_DICT_TEMPLATE.items():
+        d['names'].append(key)
+        d['formats'].append(value[1])
+    return np.dtype(d)
 
 
 class Database(object):
@@ -36,6 +111,10 @@ class Database(object):
             logger.debug('Generating description data for simulation.')
             self.get_node('/', 'meta_description', create=True,
                           obj=DESCRIPTION_RECARRAY)
+        if not self.test_node('/', 'meta_data'):
+            logger.debug('Generating meta data table for simulation.')
+            self.get_node('/', 'meta_description', create=True,
+                          obj=SIMULATION_DTYPE())
 
         logger.debug('Using database: {}'.format(self.db_path))
 
@@ -59,7 +138,7 @@ class Database(object):
             return False
         return True
 
-    def get_node(self, where, name, create=True, obj=None):
+    def get_node(self, where, name, create=True, obj=None, overwrite=False):
         self.open()
         try:
             node = self.db_instance.get_node(where, name=name)
@@ -84,6 +163,10 @@ class Database(object):
                                                           createparents=True)
             else:
                 raise ValueError("Node {0} do not exist in {1}. Unable to create new node, did not understand obj type".format(name, where))
+        else:
+            if overwrite and create:
+                self.db_instance.remove_node(where, name)
+                return self.get_node(where, name, create, obj, overwrite)
         return node
 
     def remove_node(self, where, name):
@@ -188,45 +271,50 @@ class Database(object):
         return names
 
 
-    def add_simulation(self, simulation, overwrite=True):
-        meta_table = self.get_node('/', 'meta_data',
-                                   obj=simulation.numpy_dtype())
+    def add_simulation(self, properties, array_dict=None, volatiles_dict=None, overwrite=True):
+        if not self.test_node('/', 'meta_data'):
+            meta_table = self.get_node('/', 'meta_data',
+                                       obj=SIMULATION_DTYPE(), create=True)
+        else:
+            meta_table = self.get_node('/', 'meta_data', create=False)
         #test for existing data
-        matching_names = meta_table.get_where_list('name == b"{}"'.format(simulation.name))
+        matching_names = meta_table.get_where_list('name == b"{}"'.format(properties['name']))
         if len(matching_names) > 0:
             if not overwrite:
-                logger.info('Simulation {} not imported, already present i database'.format(simulation.name))
+                logger.info('Simulation {} not imported, already present i database'.format(properties['name']))
                 self.close()
                 return
             else:
-                logger.info('Overwriting simulation {} already in database'.format(simulation.name))
+                logger.info('Overwriting simulation {} already in database'.format(properties['name']))
 
-        if self.test_node('/simulations', simulation.name):
-            self.db_instance.remove_node('/simulations', name=simulation.name,
+        if self.test_node('/simulations', properties['name']):
+            self.db_instance.remove_node('/simulations', name=properties['name'],
                                          recursive=True)
 
-        for row in meta_table.where('name == b"{}"'.format(simulation.name)):
-            for key, value in simulation.description.items():
+        for row in meta_table.where('name == b"{}"'.format(properties['name'])):
+            for key, value in properties.items():
                 row[key] = value
             row.update()
             break
         else:
             row = meta_table.row
-            for key, value in simulation.description.items():
+            for key, value in properties.items():
                 row[key] = value
             row.append()
         meta_table.flush()
 
         #adding arrays
-        for key, value in iter(simulation.arrays.items()):
-            if value is not None:
-                self.get_node('/simulations/{0}'.format(simulation.name), key,
-                              obj=value)
-        for key, value in iter(simulation.volatiles.items()):
-            if value is not None:
-                self.get_node('/simulations/{0}/volatiles'.format(simulation.name),
-                              key, obj=value, create=True)
-        logger.info('Successfully wrote simulation {} to database'.format(simulation.name))
+        if array_dict is not None:
+            for key, value in iter(array_dict.items()):
+                if value is not None:
+                    self.get_node('/simulations/{0}'.format(properties['name']), key,
+                                  obj=value, create=True)
+        if volatiles_dict is not None:
+            for key, value in volatiles_dict.items():
+                if value is not None:
+                    self.get_node('/simulations/{0}/volatiles'.format(properties['name']),
+                                  key, obj=value, create=True)
+        logger.info('Successfully wrote simulation {} to database'.format(properties['name']))
         self.close()
 
     def remove_simulation(self, name):
@@ -248,6 +336,7 @@ class Database(object):
         # removing table row
         if meta_table.nrows <= 1 and index_to_remove is not None:
             self.remove_node('/', 'meta_data')
+            self.get_node('/', 'meta_data', obj=SIMULATION_DTYPE(), create=True)
         elif index_to_remove is not None:
             meta_table.remove_row(index_to_remove)
 
@@ -256,58 +345,58 @@ class Database(object):
         self.close()
         return
 
-    def get_simulation(self, name, ignore_arrays=False, unsafe_read=True):
-        logger.debug('Attempting to read simulation {} from database.'.format(name))
-        if not self.test_node('/', 'meta_data'):
-            logger.info('There is no simulations in database')
-            self.close()
-            raise ValueError('No simulation by name {} in database'.format(name))
-
-        meta_table = self.get_node('/', 'meta_data')
-
-
-        for row in meta_table.where('name == b"{}"'.format(name)):
-            if unsafe_read:
-                description = {}
-                for key in meta_table.colnames:
-                    if isinstance(row[key], bytes):
-                        description[key] = str(row[key], encoding='utf-8')
-                    else:
-                        description[key] = row[key]
-                simulation = Simulation(name, description)
-                break
-            else:
-                simulation = Simulation(name)
-                for key in meta_table.colnames:
-                    try:
-                        setattr(simulation, key, row[key])
-                    except AssertionError:
-                        pass
-                break
-        else:
-            self.close()
-            logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(name))
-            raise ValueError('No study named {}'.format(name))
-
-        pat_node = self.get_node('/simulations', name, create=False)
-        if not ignore_arrays:
-            props = itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table'))
-        else:
-            aecnode_list = []
-            try:
-                aecnode_list.append(self.get_node(pat_node, 'exposure_modulation', create=False))
-            except ValueError:
-                pass
-            props = itertools.chain(aecnode_list, pat_node._f_walknodes('Table'))
-        for data_node in props:
-#            for data_node in pat_node._f_walknodes():
-            node_name = data_node._v_name
-            logger.debug('Reading data node {}'.format(node_name))
-            setattr(simulation, node_name, data_node.read())
-
-        logger.debug('Successfully read simulation {} from database.'.format(name))
-        self.close()
-        return simulation
+#    def get_simulation(self, name, ignore_arrays=False, unsafe_read=True):
+#        logger.debug('Attempting to read simulation {} from database.'.format(name))
+#        if not self.test_node('/', 'meta_data'):
+#            logger.info('There is no simulations in database')
+#            self.close()
+#            raise ValueError('No simulation by name {} in database'.format(name))
+#
+#        meta_table = self.get_node('/', 'meta_data')
+#
+#
+#        for row in meta_table.where('name == b"{}"'.format(name)):
+#            if unsafe_read:
+#                description = {}
+#                for key in meta_table.colnames:
+#                    if isinstance(row[key], bytes):
+#                        description[key] = str(row[key], encoding='utf-8')
+#                    else:
+#                        description[key] = row[key]
+#                simulation = Simulation(name, description)
+#                break
+#            else:
+#                simulation = Simulation(name)
+#                for key in meta_table.colnames:
+#                    try:
+#                        setattr(simulation, key, row[key])
+#                    except AssertionError:
+#                        pass
+#                break
+#        else:
+#            self.close()
+#            logger.debug('Failed to read simulation {} from database. Simulation not found.'.format(name))
+#            raise ValueError('No study named {}'.format(name))
+#
+#        pat_node = self.get_node('/simulations', name, create=False)
+#        if not ignore_arrays:
+#            props = itertools.chain(pat_node._f_walknodes('Array'), pat_node._f_walknodes('Table'))
+#        else:
+#            aecnode_list = []
+#            try:
+#                aecnode_list.append(self.get_node(pat_node, 'exposure_modulation', create=False))
+#            except ValueError:
+#                pass
+#            props = itertools.chain(aecnode_list, pat_node._f_walknodes('Table'))
+#        for data_node in props:
+##            for data_node in pat_node._f_walknodes():
+#            node_name = data_node._v_name
+#            logger.debug('Reading data node {}'.format(node_name))
+#            setattr(simulation, node_name, data_node.read())
+#
+#        logger.debug('Successfully read simulation {} from database.'.format(name))
+#        self.close()
+#        return simulation
 
     def set_simulation_meta_data(self, name, data_dict):
         self.open()
@@ -325,19 +414,16 @@ class Database(object):
         return data
 
 
-    def set_simulation_array(self, name, array_name, array):
+    def set_simulation_array(self, name, array, array_name, volatile=False):
         self.open()
-        if self.test_node('/simulations/{0}'.format(name), array_name):
-            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
-        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
-            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
+        if volatile:
+            node_path = '/simulations/{0}/volatiles'.format(name)
         else:
-            self.close()
-            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
-            return
-        arr = node.read()
+            node_path = '/simulations/{0}'.format(name)
+
+        self.get_node(node_path, name, create=True, overwrite=True, obj=array)
         self.close()
-        return arr
+        return
 
     def get_simulation_meta_data(self, name):
         self.open()
@@ -345,14 +431,17 @@ class Database(object):
             logger.info('Could not get metadata for {}. No data in database'.format(name))
         meta_table = self.get_node('/', 'meta_data', create=False)
         for row in meta_table.where('name == b"{}"'.format(name)):
-            data = {}
-            print(meta_table.colnames)
-            print(meta_table.coldtypes)
-            for col_name in meta_table.colnames:
-                if meta_table.coldtypes[col_name].char == 'S':
-                    data[col_name] = str(row[col_name], encoding='utf-8')
-                else:
-                    data[col_name] = row[col_name]
+            data = {col_name:
+                    (str(row[col_name], encoding='utf-8')
+                    if (meta_table.coldtypes[col_name].char == 'S')
+                    else row[col_name])
+                    for col_name in meta_table.colnames}
+#            data = {}
+#            for col_name in meta_table.colnames:
+#                if meta_table.coldtypes[col_name].char == 'S':
+#                    data[col_name] = str(row[col_name], encoding='utf-8')
+#                else:
+#                    data[col_name] = row[col_name]
             break
         else:
             logger.info('Could not get metadata for {}, simulation not in database'.format(name))
@@ -409,28 +498,14 @@ class Database(object):
             raise ValueError('No simulations in database')
         meta_table = self.get_node('/', 'meta_data', create=False)
 
-        for row in meta_table.where('MC_ready & ~ MC_finished'):
-            simulation = Simulation(str(row['name'], encoding='utf-8'))
-            for key in meta_table.colnames:
-                try:
-                    setattr(simulation, key, row[key])
-                except AssertionError:
-                    pass
+        for row in meta_table.where('MC_ready & ~ MC_finished & ~ MC_running'):
+            name = str(row['name'], encoding='utf-8')
             break
         else:
             self.close()
             logger.debug('No ready simulations found.')
             raise ValueError('No simulations ready')
-
-        # we do not read volatile arrays here
-        pat_node = self.get_node('/simulations/', simulation.name, create=False)
-        for data_node in itertools.chain(pat_node._f_iter_nodes('Array'), pat_node._f_iter_nodes('Table')):
-            node_name = data_node._v_name
-            logger.debug('Reading data node {}'.format(node_name))
-            setattr(simulation, node_name, data_node.read())
-        logger.debug('Successfully read simulation {} from database.'.format(simulation.name))
-        self.close()
-        return simulation
+        return self.get_simulation_meta_data(name)
 
     def purge_simulation(self, name):
         logger.debug('Attempting to purge simulation {}'.format(name))
@@ -440,7 +515,7 @@ class Database(object):
         self.close()
         logger.debug('Purged simulation {}'.format(name))
 
-    def update_simulation(self, description_dict, array_dict=None,
+    def update_simulation(self, description_dict, volatiles_dict=None,
                           purge_volatiles=False, cancel_if_running=False):
         try:
             assert isinstance(description_dict, dict)
@@ -467,7 +542,7 @@ class Database(object):
 
                 for item in meta_table.colnames:
                     ind = np.argwhere(description_array['name'] == bytes(item, encoding='utf-8'))[0]
-                    if description_array['editable'][ind] or item in ['MC_ready', 'MC_running', 'MC_finished', 'conversion_factor_ctdiair', 'conversion_factor_ctdiw']:
+                    if description_array['volatile'][ind]:
                         try:
                             value = description_dict[item]
                         except KeyError:
@@ -497,8 +572,8 @@ class Database(object):
         if purge_simulation and purge_volatiles:
             self.purge_simulation(name)
 
-        if array_dict is not None:
-            for key, value in array_dict.items():
+        if volatiles_dict is not None:
+            for key, value in volatiles_dict.items():
                 if self.test_node('/simulations/{}/volatiles'.format(name), key):
                     self.remove_node('/simulations/{}/volatiles'.format(name), key)
                     self.get_node('/simulations/{}/volatiles'.format(name), key, create=True, obj=value)
