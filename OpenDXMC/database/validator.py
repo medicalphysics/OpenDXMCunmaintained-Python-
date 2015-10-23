@@ -13,6 +13,7 @@ class Validator(object):
         self._pt = SIMULATION_DICT_TEMPLATE
         self._at = ARRAY_TEMPLATES
 
+    def set_data()
 
 
 
