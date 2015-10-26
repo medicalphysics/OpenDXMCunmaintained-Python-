@@ -194,11 +194,9 @@ class DatabaseInterface(QtCore.QObject):
     def store_array(self, name, array, array_name, volatile=False):
         self.database_busy.emit(True)
         try:
-            self.__db.get_simulation_array(simulation_name, array_name)
+            self.__db.set_simulation_array(name, array, array_name, volatile)
         except ValueError:
             pass
-        else:
-            self.send_array.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str)
@@ -225,6 +223,20 @@ class DatabaseInterface(QtCore.QObject):
             self.send_array_slice.emit(simulation_name, arr, array_name, index, orientation)
         self.database_busy.emit(False)
 
+    @QtCore.pyqtSlot(str)
+    def request_propeties(self, name):
+        self.database_busy.emit(True)
+        try:
+            props = self.__db.get_simulation_meta_data(name)
+        except ValueError:
+            pass
+        else:
+            send_sim_propeties = QtCore.pyqtSignal(prpo)
+        self.database_busy.emit(False)
+        
+
+
+
     @QtCore.pyqtSlot(list)
     def copy_simulation(self, names):
         for name in names:
@@ -236,10 +248,10 @@ class DatabaseInterface(QtCore.QObject):
             self.get_simulation_list()
 
     @QtCore.pyqtSlot(dict, dict, bool, bool)
-    def update_simulation_properties(self, propeties_dict, array_dict, volatiles_dict, purge_volatiles=True, cancel_if_running=True):
+    def update_simulation_properties(self, propeties_dict, volatiles_dict, purge_volatiles=True, cancel_if_running=True):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
-        self.__db.update_simulation(propeties_dict, array_dict, volatiles_dict, purge_volatiles, cancel_if_running)
+        self.__db.update_simulation(propeties_dict, volatiles_dict, purge_volatiles, cancel_if_running)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot()
