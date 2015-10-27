@@ -8,7 +8,7 @@ Created on Tue Oct 13 11:03:25 2015
 import os
 import sys
 import numpy as np
-from opendxmc.database.h5database import 
+from opendxmc.database import Validator
 from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs, child_organs, baby_organs
 from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 import logging
@@ -42,14 +42,8 @@ def read_phantoms(materials=None):
 #            raise e
         else:
             logger.debug('{0} phantom read successfully'.format(key))
-            if materials is not None:
-                try:
-                    ct_runner_validate_simulation(sim, materials)
-                except AssertionError or ValueError:
-                    logger.debug('Failed to create material mapping for phantom {0}'.format(key))
-                else:
-                    logger.debug('Generated material mapping for phantom {0}'.format(key))
-            yield sim
+
+            yield sim.get_data()
 
 
 
@@ -58,7 +52,8 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     logger.debug('Attempting to read {0} phantom from {1}'.format(name, voxpath))
 
     a = np.fromfile(voxpath, dtype=np.uint8)
-    sim = {}Simulation(name)
+    sim = Validator()
+    sim.name = name
     sim.spacing = np.array(spacing, dtype=np.double) / 10.
     sim.organ = np.rollaxis(np.reshape(a[header_len:], (-1, shape[0], shape[1])), 0, 3)#[:,:,::-1]
     sim.shape = np.array(sim.organ.shape)

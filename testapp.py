@@ -16,10 +16,3 @@ LOG_FORMAT = ("[%(asctime)s %(name)s %(levelname)s]  -  %(message)s  -  in metho
 
 if __name__ == '__main__':
     start()
-
-
-#####################
-REMOVE ALL TRACES OF THE SIMULATION CLASS DUE TO
-MEMORY ISSUES ON 32 BIT
-GOAL IS TO WORK DIRECTLY ON DATABASE
-#

@@ -13,17 +13,10 @@ import logging
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 from opendxmc.utils import find_all_files
-from opendxmc.study.simulation import Simulation
+from opendxmc.study.database import Validator
 
 logger = logging.getLogger('OpenDXMC')
 
-
-#def find_scan_spacing(orientation, spacing, shape):
-#    x = np.array(orientation[:3], dtype=np.float)
-#    y = np.array(orientation[3:], dtype=np.float)
-#    z = np.cross(x, y)
-#    M = np.matrix(np.array([x, y, z]))
-#    dim = np.dot(spacing * shape, M)
 
 def matrix_scaled(orientation, spacing, spacing_scan):
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
@@ -35,6 +28,7 @@ def matrix_scaled(orientation, spacing, spacing_scan):
     M[:3, :3] = R*spacing
     return (np.eye(3)/spacing_scan).dot(M)
 
+
 def matrix(orientation):
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
     s_norm = np.cross(*iop.T[:])
@@ -42,57 +36,6 @@ def matrix(orientation):
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
     return R
-
-#def matrix_scaled(orientation, spacing, spacing_scan):
-#    y = np.array(orientation[:3], dtype=np.float)
-#    x = np.array(orientation[3:], dtype=np.float)
-#    z = np.cross(x, y)
-#
-##    M = np.array([x * spacing[0], y * spacing[1], z * spacing[2]]).T
-#    M = np.array([x * spacing, y * spacing, z * spacing])
-#    M = np.array([x, y, z])
-#    M=np.zeros((3, 3))
-#    for i, v in enumerate([x, y, z]):
-#        M[:, i] = v[:]
-#    return M.dot(np.eye(3)/spacing_scan)
-
-
-
-#def array_from_dicom_list_affine(dc_list, spacing, scan_spacing=(2, 2, 2)):
-#    sh = dc_list[0].pixel_array.shape
-#    n = len(dc_list)
-##    arr = np.empty((sh[1], sh[0], n), dtype=np.int16)
-#    arr = np.empty((sh[0], sh[1], n), dtype=np.int16)
-#    for i, dc in enumerate(dc_list):
-#        try:
-#            arr[:, :, i] = dc.pixel_array * int(dc[0x28, 0x1053].value) + int(dc[0x28, 0x1052].value)
-#        except ValueError:
-#            arr[:, :, i] = int(dc[0x28, 0x1052].value)
-#            logger.info('Error in slice number {}. Slice is filled with air.'.format(i))
-##    arr=np.swapaxes(arr, 0, 1)
-#    M = matrix_scaled(dc_list[0][0x20, 0x37].value, spacing, scan_spacing)
-#    out_dimension = M.dot(np.array(arr.shape))
-#    offset = np.linalg.inv(M).dot(out_dimension * (out_dimension < 0))
-#    out_shape = tuple(np.abs(np.rint(out_dimension).astype(np.int)))
-#
-#    logger.info('Align and scale CT series from {0} to {1} voxels. '
-#                'Voxel spacing changed from {2} to {3}'.format(sh + (n,),
-#                                                               out_shape,
-#                                                               spacing,
-#                                                               scan_spacing))
-#    k = np.empty(out_shape, dtype=np.int16)
-#    arr = spline_filter(arr, order=3, output=np.int16)
-#    affine_transform(arr, np.linalg.inv(M), output_shape=out_shape, cval=-1000,
-#                     offset=offset, output=k, order=3, prefilter=False)
-#    k = np.swapaxes(k, 0, 1)
-##    if offset[0] != 0:
-##        k = k[::-1,:,:]
-##    if offset[1] != 0:
-##        k = k[:, ::-1, :]
-##    if offset[2] != 0:
-##        k = k[:, :, ::-1]
-#    return k
-
 
 
 def image_to_world_transform(image_vector, position, orientation, spacing):
@@ -108,16 +51,11 @@ def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
-    shape = (i // s for i, s in zip([r, c, n], scaling))
-#    arr = np.empty(shape, dtype=np.int16)
     arr = np.empty((r, c, n), dtype=np.int16)
 
     for i, dc in enumerate(dc_list):
-#        arr[:, :, i] = affine_transform(dc.pixel_array * int(dc[0x28, 0x1053].value) +
-#                        int(dc[0x28, 0x1052].value), scaling[:2], out_shape=shape[:2], cval=-1000, output=np.int16)
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
                         int(dc[0x28, 0x1052].value))
-#    return arr
     out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
     spline_filter(arr, order=3, output=arr)
     return affine_transform(arr, scaling, prefilter=False,
@@ -127,26 +65,22 @@ def array_from_dicom_list(dc_list, scaling):
 
 
 def aec_from_dicom_list(dc_list, iop, spacing):
-#    M = matrix(dc_list[0][0x20, 0x37].value)
     n_im = len(dc_list)
     exp = np.empty((n_im, 2), dtype=np.float)
     pos = np.zeros(3)
 
-
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
         exp[i, 0] = image_to_world_transform(np.array([0, 0, i]), pos, iop, spacing)[2]
-#        exp[i, 0] = dc[0x20, 0x32].value[2]
-#    import pylab as plt
-#    plt.plot(exp[:,0], exp[:, 1])
-#    plt.show(block=True)
     return exp
+
 
 def dc_slice_indicator(dc):
     """Returns a number indicating slce z position"""
     pos = np.array(dc[0x20, 0x32].value)
     iop = np.array(dc[0x20, 0x37].value).reshape((2, 3)).T
     return np.inner(pos, np.cross(*iop.T[:]))
+
 
 def z_stop_estimator(iop, spacing, shape):
     choices = []
@@ -210,7 +144,8 @@ def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
                             np.array(dc_list[0][0x20, 0x32].value))**2)**.5
 
         #Creating transforrmation matrix
-        patient = Simulation(name)
+        patient = Validator()
+        patient.name = name
         patient.import_scaling = import_scaling
 
         patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
@@ -283,22 +218,13 @@ def import_ct_series(paths, import_scaling=(2, 2, 2), materials=None):
                     patient.ctdi_w100 = ctdi / exposure / patient.pitch * 100.
                 else:
                     patient.ctdi_w100 = ctdi / exposure * 100.
-#        patient.start_scan = patient.exposure_modulation[0, 0]
-#        patient.stop_scan = patient.exposure_modulation[-1, 0]
+
         start, stop = z_stop_estimator(patient.image_orientation, patient.spacing, patient.ctarray.shape)
         patient.start_scan = start
         patient.stop_scan = stop
         patient.start = start
         patient.stop = stop
 
-        if materials is not None:
-            ct_runner_validate_simulation(patient, materials)
 
-
-        yield patient
-
-
-
-
-
+        yield patient.get_data()
 

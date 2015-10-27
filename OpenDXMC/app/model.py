@@ -5,19 +5,14 @@ Created on Tue Sep  8 10:10:58 2015
 @author: erlean
 """
 import numpy as np
-import copy
 from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
 from opendxmc.data.import_phantoms import read_phantoms
-from opendxmc.study import import_ct_series, Simulation, SIMULATION_DESCRIPTION
+from opendxmc.database import import_ct_series
 from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
 import logging
 logger = logging.getLogger('OpenDXMC')
-import time
-
-
-from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 
 
 class ImportScalingValidator(QtGui.QValidator):
@@ -106,17 +101,26 @@ class DatabaseInterface(QtCore.QObject):
     """ Async database interface, async provided with signal/slots resulting in
     two connections per task wished to be done, ie, signal/slot hell
     """
+    database_busy = QtCore.pyqtSignal(bool)
+
     send_simulation_list = QtCore.pyqtSignal(list)
     send_material_list = QtCore.pyqtSignal(list)
 
-    send_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
-    send_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
-    send_sim_propeties = QtCore.pyqtSignal(dict)
+    send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
+    send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
+    send_view_sim_propeties = QtCore.pyqtSignal(dict)
 
-    send_material_obj = QtCore.pyqtSignal(Material)
-    database_busy = QtCore.pyqtSignal(bool)
+    send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
 
-    send_mc_ready = QtCore.pyqtSignal(dict, list)  # sim properties and list of Material objects
+
+#    send_import_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
+#    send_view_sim_propeties = QtCore.pyqtSignal(dict)
+#    send_view_sim_propeties = QtCore.pyqtSignal(dict)
+
+#    send_material_obj = QtCore.pyqtSignal(Material)
+
+
+#    send_mc_ready = QtCore.pyqtSignal(dict, list)  # sim properties and list of Material objects
 
 
 
@@ -172,57 +176,34 @@ class DatabaseInterface(QtCore.QObject):
         self.send_material_list.emit(mats)
         self.database_busy.emit(False)
 
-#    @QtCore.pyqtSlot(Simulation)
-#    def import_simulation(self, sim):
-#        self.database_busy.emit(True)
-#        try:
-#            self.__db.add_simulation(sim, overwrite=False)
-#        except ValueError:
-#            if sim.is_phantom:
-#                logger.info('Phantom {0} already exist in database'.format(sim.name))
-#            else:
-#                name = self.__db.get_unique_simulation_name(sim.name)
-#                logger.info('Simulation {0} already exist in database, renaming to {1}'.format(sim.name, name))
-#                sim.name = name
-#                self.__db.add_simulation(sim, overwrite=False)
-#
-#
-#        self.get_simulation_list()
-#        self.database_busy.emit(False)
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, bool)
-    def store_array(self, name, array, array_name, volatile=False):
+
+    @QtCore.pyqtSlot(dict, dict, bool)
+    def add_simulation(self, properties, array_dict, overwrite):
         self.database_busy.emit(True)
-        try:
-            self.__db.get_simulation_array(simulation_name, array_name)
-        except ValueError:
-            pass
-        else:
-            self.send_array.emit(simulation_name, arr, array_name)
+        self.__db.add_simulation(properties, array_dict, overwrite)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str)
-    def request_array(self, simulation_name, array_name):
+    def request_view_array(self, simulation_name, array_name):
         self.database_busy.emit(True)
         try:
             arr = self.__db.get_simulation_array(simulation_name, array_name)
         except ValueError:
             pass
         else:
-            self.send_array.emit(simulation_name, arr, array_name)
+            self.send_view_array.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str, int, int)
-    def request_array_slice(self, simulation_name, array_name, index, orientation):
+    def request_view_array_slice(self, simulation_name, array_name, index, orientation):
         self.database_busy.emit(True)
         try:
             arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
         except:
-            print(simulation_name, array_name, index, orientation)
-#            raise e
             pass
         else:
-            self.send_array_slice.emit(simulation_name, arr, array_name, index, orientation)
+            self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(list)
@@ -235,18 +216,18 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(False)
             self.get_simulation_list()
 
-    @QtCore.pyqtSlot(dict, dict, bool, bool)
-    def update_simulation_properties(self, propeties_dict, array_dict, volatiles_dict, purge_volatiles=True, cancel_if_running=True):
+    @QtCore.pyqtSlot(dict, bool, bool)
+    def set_simulation_properties(self, propeties_dict, purge_volatiles=True, cancel_if_running=True):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
-        self.__db.update_simulation(propeties_dict, array_dict, volatiles_dict, purge_volatiles, cancel_if_running)
+        self.__db.set_simulation_metadata(propeties_dict, purge_volatiles, cancel_if_running)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot()
-    def request_run_simulation(self):
+    def request_MC_ready_simulation(self):
         self.database_busy.emit(True)
         try:
-            props = self.__db.get_MCready_simulation()
+            props, arrays = self.__db.get_MCready_simulation()
         except ValueError:
             self.database_busy.emit(False)
             return
@@ -266,7 +247,7 @@ class DatabaseInterface(QtCore.QObject):
 
 
 class Importer(QtCore.QObject):
-    request_add_sim_to_database = QtCore.pyqtSignal(Simulation)
+    request_add_sim_to_database = QtCore.pyqtSignal(dict, dict, bool)
     running = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent=None):
@@ -282,15 +263,15 @@ class Importer(QtCore.QObject):
     def import_urls(self, qurl_list):
         self.running.emit(True)
         paths = [url.toLocalFile() for url in qurl_list]
-        for sim in import_ct_series(paths, import_scaling=self.__import_scaling):
-            self.request_add_sim_to_database.emit(sim)
+        for props, arrays in import_ct_series(paths, import_scaling=self.__import_scaling):
+            self.request_add_sim_to_database.emit(props, arrays, True)
         self.running.emit(False)
 
     @QtCore.pyqtSlot()
     def import_phantoms(self):
         self.running.emit(True)
-        for sim in read_phantoms():
-            self.request_add_sim_to_database.emit(sim)
+        for props, arrays in read_phantoms():
+            self.request_add_sim_to_database.emit(props, arrays, False)
         self.running.emit(False)
 
 class Runner(QtCore.QThread):
