@@ -13,7 +13,7 @@ import logging
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 from opendxmc.utils import find_all_files
-from opendxmc.study.database import Validator
+from opendxmc.database.h5database import Validator
 
 logger = logging.getLogger('OpenDXMC')
 

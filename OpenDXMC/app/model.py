@@ -7,7 +7,7 @@ Created on Tue Sep  8 10:10:58 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 from opendxmc.database import Database
-from opendxmc.data.import_phantoms import read_phantoms
+from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
 from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
@@ -124,10 +124,9 @@ class DatabaseInterface(QtCore.QObject):
 
 
 
-    def __init__(self, database_qurl, importer, parent=None):
+    def __init__(self, database_qurl, parent=None):
         super().__init__(parent)
         self.__db = None
-        importer.request_add_sim_to_database.connect(self.import_simulation)
         self.set_database(database_qurl)
 
 
@@ -182,6 +181,7 @@ class DatabaseInterface(QtCore.QObject):
     def add_simulation(self, properties, array_dict, overwrite):
         self.database_busy.emit(True)
         self.__db.add_simulation(properties, array_dict, overwrite)
+        self.emit_simulation_list()
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str)
@@ -216,12 +216,36 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(False)
             self.get_simulation_list()
 
+    @QtCore.pyqtSlot(str)
+    def request_simulation_properties(self, name):
+        logger.debug('Request simulation metadata for {} from database.'.format(name))
+        self.database_busy.emit(True)
+        try:
+            data = self.__db.get_simulation_metadata(name)
+        except ValueError:
+            pass
+        else:
+            self.send_view_sim_propeties.emit(data)
+        self.database_busy.emit(False)
+
     @QtCore.pyqtSlot(dict, bool, bool)
     def set_simulation_properties(self, propeties_dict, purge_volatiles=True, cancel_if_running=True):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
         self.__db.set_simulation_metadata(propeties_dict, purge_volatiles, cancel_if_running)
+        update_data = self.__db.get_simulation_meta_data(propeties_dict.get('name', ''))
+        self.send_view_sim_propeties.emit(update_data)
         self.database_busy.emit(False)
+
+    @QtCore.pyqtSlot(str, dict)
+    def write_simulation_arrays(self, name, array_dict):
+        logger.debug('Request database to write arrays.')
+        self.database_busy.emit(True)
+        for arr_name, array in array_dict.items():
+            self.__db.set_simulation_array(name, array, arr_name)
+        self.database_busy.emit(False)
+
+
 
     @QtCore.pyqtSlot()
     def request_MC_ready_simulation(self):
@@ -242,7 +266,7 @@ class DatabaseInterface(QtCore.QObject):
             return
 
         logger.debug('Emmitting signal request to run simulation {}'.format(props['name']))
-        self.send_mc_ready.emit(props, materials)
+        self.send_MC_ready_simulation.emit(props,arrays, materials)
         self.database_busy.emit(False)
 
 
@@ -250,9 +274,11 @@ class Importer(QtCore.QObject):
     request_add_sim_to_database = QtCore.pyqtSignal(dict, dict, bool)
     running = QtCore.pyqtSignal(bool)
 
-    def __init__(self, parent=None):
+    def __init__(self, database_interface, parent=None):
         super().__init__(parent)
         self.__import_scaling = (1, 1, 1)
+        self.request_add_sim_to_database.connect(database_interface.add_simulation)
+
 
     @QtCore.pyqtSlot(tuple)
     def set_import_scaling(self, im_scaling):
@@ -276,8 +302,9 @@ class Importer(QtCore.QObject):
 
 class Runner(QtCore.QThread):
     mc_calculation_finished = QtCore.pyqtSignal()
-    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
-    request_view_update = QtCore.pyqtSignal(dict, dict)
+    request_write_simulation_arrays = QtCore.pyqtSignal(str, dict)
+    request_set_simulation_properties = QtCore.pyqtSignal(dict, bool, bool)
+    request_runner_view_update = QtCore.pyqtSignal(str, dict, dict)
 
     start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
@@ -293,7 +320,8 @@ class Runner(QtCore.QThread):
 
         self.timer.timeout.connect(self.set_request_save)
         self.mutex = QtCore.QMutex()
-        self.simulation = None
+        self.simulation_properties = None
+        self.simulation_arrays = None
         self.material_list = None
 
     @QtCore.pyqtSlot()
@@ -306,12 +334,13 @@ class Runner(QtCore.QThread):
         desc = {'name': name,
                 'start_at_exposure_no': exposure_number}
         if self.request_save:
-            self.request_update_simulation.emit(desc, array_dict, False, False)
+            self.request_set_simulation_properties.emit(desc, False, False)
+            self.request_write_simulation_arrays.emit(name, array_dict)
             self.mutex.lock()
             self.request_save = False
             self.mutex.unlock()
         else:
-            self.request_view_update.emit(desc, array_dict)
+            self.request_runner_view_update.emit(name, desc, array_dict)
 
     def run(self):
         if self.simulation is None:
@@ -319,55 +348,50 @@ class Runner(QtCore.QThread):
         if self.material_list is None:
             return
 
-#        ct_runner_validate_simulation(self.simulation, self.material_list)
+        self.request_set_simulation_properties.emit({'name': self.simulation.name,
+                                                     'MC_running': True},
+                                                     False, False)
 
-        self.request_update_simulation.emit({'name': self.simulation.name,
-                                             'MC_running': True},
-                                            {},
-                                            False, False)
         try:
-            ct_runner(self.simulation, self.material_list,
-                      energy_imparted_to_dose_conversion=True,
-                      callback=self.update_simulation_iteration)
+            props_dict, arr_dict = ct_runner(self.material_list, self.simulation_properties,
+                                             energy_imparted_to_dose_conversion=True,
+                                             callback=self.update_simulation_iteration,
+                                             **self.simulation_arrays)
         except MemoryError:
             logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(self.simulation.name))
-            self.simulation.MC_finished = False
-            self.simulation.MC_running = False
-            self.simulation.MC_ready = False
-            self.request_update_simulation.emit(self.simulation.description,
-                                                {},
-                                                True, False)
+            self.simulation_properties['MC_finished'] = False
+            self.simulation_properties['MC_running'] = False
+            self.simulation_properties['MC_ready'] = False
+            self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
+
         except ValueError or AssertionError as e:
             print(e)
             raise e
             logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation.name))
-            self.simulation.MC_finished = False
-            self.simulation.MC_running = False
-            self.simulation.MC_ready = False
-            self.request_update_simulation.emit(self.simulation.description,
-                                                {},
-                                                True, False)
+            self.simulation_properties['MC_finished'] = False
+            self.simulation_properties['MC_running'] = False
+            self.simulation_properties['MC_ready'] = False
+            self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
 
         else:
-            self.simulation.MC_finished = True
-            self.simulation.MC_running = False
-            self.simulation.MC_ready = False
-            self.request_update_simulation.emit(self.simulation.description,
-                                                self.simulation.volatiles,
-                                                False, False)
+            self.request_set_simulation_properties.emit(props_dict, False, False)
+
+        self.simulation_properties = None
+        self.simulation_arrays = None
+        self.material_list = None
         self.mc_calculation_finished.emit()
         self.request_save = True
 
 
 class RunManager(QtCore.QObject):
     mc_calculation_running = QtCore.pyqtSignal(bool)
-    def __init__(self, interface, view_controller, parent=None):
+    def __init__(self, interface, parent=None):
         super().__init__(parent)
         self.runner = Runner()
-        interface.request_simulation_run.connect(self.run_simulation)
-        self.runner.mc_calculation_finished.connect(interface.get_run_simulation)
-        self.runner.request_update_simulation.connect(interface.update_simulation_properties)
-        self.runner.request_view_update.connect(view_controller.updateSimulation)
+        interface.send_MC_ready_simulation.connect(self.run_simulation)
+        self.runner.mc_calculation_finished.connect(interface.request_MC_ready_simulation)
+        self.runner.request_set_simulation_properties.connect(interface.set_simulation_properties)
+
         self.runner.finished.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
 
@@ -379,11 +403,12 @@ class RunManager(QtCore.QObject):
     def run_finished(self):
         self.mc_calculation_running.emit(False)
 
-    @QtCore.pyqtSlot(Simulation, list)
-    def run_simulation(self, sim, mat_list):
+    @QtCore.pyqtSlot(dict, dict, list)
+    def run_simulation(self, props, arrays, mat_list):
         logger.debug('Attemp to start MC thread')
         if not self.runner.isRunning():
-            self.runner.simulation = sim
+            self.runner.simulation_properties = props
+            self.runner.simulation_arrays = arrays
             self.runner.material_list = mat_list
             self.runner.start()
 #            self.runner.run2()
@@ -407,21 +432,19 @@ class ListModel(QtCore.QAbstractListModel):
         # connecting interface
         # outbound signals
         if simulations:
-            self.request_viewing.connect(interface.select_simulation)
-            self.request_data_list.connect(interface.get_simulation_list)
+            self.request_data_list.connect(interface.emit_simulation_list)
             self.request_copy_elements.connect(interface.copy_simulation)
             if importer:
                 self.request_import_dicom.connect(importer.import_urls)
         elif materials:
-            self.request_viewing.connect(interface.select_material)
-            self.request_data_list.connect(interface.get_material_list)
+            self.request_data_list.connect(interface.emit_material_list)
 
 
         # inbound signals
         if simulations:
-            interface.recive_simulation_list.connect(self.recive_data_list)
+            interface.send_simulation_list.connect(self.recive_data_list)
         elif materials:
-            interface.recive_material_list.connect(self.recive_data_list)
+            interface.send_material_list.connect(self.recive_data_list)
 
         # setting up
         self.request_data_list.emit()
@@ -529,4 +552,305 @@ class ListView(QtGui.QListView):
         if index.isValid():
             self.name_activated.emit(index.data())
 
-
+#class PropertiesModel(QtCore.QAbstractTableModel):
+#    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
+#    unsaved_data_changed = QtCore.pyqtSignal(bool)
+#    properties_is_set = QtCore.pyqtSignal(bool)
+#
+#    def __init__(self, interface, parent=None):
+#        super().__init__(parent)
+#        self.__data = copy.copy(SIMULATION_DESCRIPTION)
+#        self.unsaved_data = {}
+#        self.__indices = list(self.__data.keys())
+#        self.__indices.sort()
+#        interface.request_simulation_view.connect(self.set_data)
+#        interface.simulation_updated.connect(self.update_data)
+#        self.request_update_simulation.connect(interface.update_simulation_properties)
+#        self.__simulation = Simulation('None')
+#
+#
+#    def properties_data(self):
+#        return self.__data, self.__indices
+#
+#    @QtCore.pyqtSlot()
+#    def reset_properties(self):
+#        self.unsaved_data = {}
+#        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
+#        self.test_for_unsaved_changes()
+#
+#    @QtCore.pyqtSlot()
+#    def apply_properties(self):
+#        self.__init_data = self.__data
+#        self.unsaved_data['name'] = self.__data['name'][0]
+#        self.unsaved_data['MC_ready'] = True
+#        self.unsaved_data['MC_finished'] = False
+#        self.unsaved_data['MC_running'] = False
+#        self.test_for_unsaved_changes()
+#        self.request_update_simulation.emit(self.unsaved_data, {}, True, True)
+#        self.properties_is_set.emit(True)
+##        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+#        self.unsaved_data = {}
+#        self.test_for_unsaved_changes()
+#
+##    @QtCore.pyqtSlot()
+##    def run_simulation(self):
+##        self.__data['MC_running'][0] = True
+##        self.__data['MC_ready'][0] = True
+###        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
+##        self.unsaved_data_changed.emit(False)
+###        self.request_simulation_start.emit()
+#
+#    def test_for_unsaved_changes(self):
+#        for key, value in self.__simulation.description.items():
+#            if self.__data[key][3]:
+#                if isinstance(self.__data[key][0], np.ndarray):
+#                    if (value - self.__data[key][0]).sum() != 0.0:
+#                        self.unsaved_data[key] = value
+#                elif self.__data[key][0] != value:
+#                    self.unsaved_data[key] = value
+#        self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
+#        self.layoutAboutToBeChanged.emit()
+#        self.layoutChanged.emit()
+#
+#    @QtCore.pyqtSlot(Simulation)
+#    def set_data(self, sim):
+#        sim_description = sim.description
+#        self.update_data(sim_description, {})
+#
+#    @QtCore.pyqtSlot(dict, dict)
+#    def update_data(self, sim_description, array_dict):
+#        self.unsaved_data = {}
+#        self.layoutAboutToBeChanged.emit()
+#        self.__simulation = Simulation('None', sim_description)
+#        for key, value in sim_description.items():
+#            self.__data[key][0] = value
+#
+#        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
+#        self.layoutChanged.emit()
+#        self.test_for_unsaved_changes()
+#        self.properties_is_set.emit(self.__data['MC_running'][0])
+#
+#    def rowCount(self, index):
+#        if not index.isValid():
+#            return len(self.__data)
+#        return 0
+#
+#    def columnCount(self, index):
+#        if not index.isValid():
+#            return 2
+#        return 0
+#
+#    def data(self, index, role):
+#        if not index.isValid():
+#            return None
+#        row = index.row()
+#        column = index.column()
+#
+#        var = self.__indices[row]
+#        if column == 0:
+#            value = self.__data[var][4]
+#        else:
+#            value = self.unsaved_data.get(var, self.__data[var][0])
+#
+#        if role == QtCore.Qt.DisplayRole:
+#            if (column == 1) and isinstance(value, np.ndarray):
+#                return ' '.join([str(round(p, 3)) for p in value])
+#            elif (column == 1) and isinstance(value, bool):
+#                return ''
+#            return value
+#        elif role == QtCore.Qt.DecorationRole:
+#            pass
+#        elif role == QtCore.Qt.ToolTipRole:
+#            pass
+#        elif role == QtCore.Qt.BackgroundRole:
+#            if not self.__data[var][3] and index.column() == 1:
+#                return QtGui.qApp.palette().brush(QtGui.qApp.palette().Window)
+#        elif role == QtCore.Qt.ForegroundRole:
+#            pass
+#        elif role == QtCore.Qt.CheckStateRole:
+#            if (column == 1) and isinstance(value, bool):
+#                if value:
+#                    return QtCore.Qt.Checked
+#                else:
+#                    return QtCore.Qt.Unchecked
+#        return None
+#
+#    def setData(self, index, value, role):
+#        if not index.isValid():
+#            return False
+#        if index.column() != 1:
+#            return False
+#        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+##            var = self.__indices[index.row()]
+##            self.unsaved_data[var] = value
+##            self.dataChanged.emit(index, index)
+##            return True
+##        elif role == QtCore.Qt.EditRole:
+#            var = self.__indices[index.row()]
+#            try:
+#                setattr(self.__simulation, var, value)
+#            except Exception as e:
+#                logger.error(str(e))
+#                return False
+#            else:
+#                if value != self.__data[var][0]:
+#                    self.unsaved_data[var] = value
+#                else:
+#                    try:
+#                        del self.unsaved_data[var]
+#                    except KeyError:
+#                        pass
+#
+#            self.dataChanged.emit(index, index)
+#            self.test_for_unsaved_changes()
+#            return True
+#        elif role == QtCore.Qt.CheckStateRole:
+#            var = self.__indices[index.row()]
+#            if self.__data[var][0] != bool(value == QtCore.Qt.Checked):
+#                self.unsaved_data[var] = bool(value == QtCore.Qt.Checked)
+#            else:
+#                if var in self.unsaved_data:
+#                    del self.unsaved_data[var]
+#            self.test_for_unsaved_changes()
+#            self.dataChanged.emit(index, index)
+#            return True
+#
+#    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+#        return str(section)
+#
+#    def flags(self, index):
+#        if index.isValid():
+#            if self.__data[self.__indices[index.row()]][3] and index.column() == 1:
+#                if self.unsaved_data.get('MC_running', False):
+#                    return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+#                if isinstance(self.__data[self.__indices[index.row()]][0], bool):
+#                    return  QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable# | QtCore.Qt.ItemIsEditable
+#                return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
+#            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
+#        return QtCore.Qt.NoItemFlags
+#
+#class ArrayEdit(QtGui.QLineEdit):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#
+#    def set_data(self, value):
+#        self.setText(' '.join([str(r) for r in value]))
+#
+#
+#class LineEdit(QtGui.QLineEdit):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#
+#    def set_data(self, value):
+#        self.setText(str(value))
+#
+#class IntSpinBox(QtGui.QSpinBox):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.setRange(-1e9, 1e9)
+#
+#    def set_data(self, value):
+#        self.setValue(int(value))
+#
+#
+#class DoubleSpinBox(QtGui.QDoubleSpinBox):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.setRange(-1e9, 1e9)
+#
+#    def set_data(self, value):
+#        self.setValue(float(value))
+#
+#class CheckBox(QtGui.QCheckBox):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#
+#    def set_data(self, value):
+#        self.setChecked(bool(value))
+#
+#
+#class PropertiesDelegate(QtGui.QItemDelegate):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#
+#    def createEditor(self, parent, option, index):
+#        data , ind= index.model().properties_data()
+#        var = ind[index.row()]
+#        if data[var][1] is np.bool:
+##            return CheckBox(parent)
+#            return None
+#        elif data[var][1] is np.double:
+#            return DoubleSpinBox(parent)
+#        elif data[var][1] is np.int:
+#            return IntSpinBox(parent)
+#        elif isinstance(data[var][0], np.ndarray):
+#            return ArrayEdit(parent)
+#        return None
+#
+#    def setEditorData(self, editor, index):
+#        data, ind= index.model().properties_data()
+#        var = ind[index.row()]
+#        editor.set_data(data[var][0])
+##        if isinstance(editor, QtGui.QCheckBox):
+##            editor.setChecked(data[var][0])
+##        elif isinstance(editor, QtGui.QSpinBox) or isinstance(editor, QtGui.QDoubleSpinBox):
+##            editor.setValue(data[var][0])
+##        elif isinstance(editor, QtGui.QTextEdit):
+##            editor.setText(data[var][0])
+###        self.setProperty('bool', bool)
+##        factory = QtGui.QItemEditorFactory()
+##        print(factory.valuePropertyName(QtCore.QVariant.Bool))
+##
+###        factory.registerEditor(QtCore.QVariant.Bool, QtGui.QCheckBox())
+##        self.setItemEditorFactory(factory)
+###        self.itemEditorFactory().setDefaultFactory(QtGui.QItemEditorFactory())
+#
+#class PropertiesView(QtGui.QTableView):
+#    def __init__(self, properties_model, parent=None):
+#        super().__init__(parent)
+#        self.setModel(properties_model)
+#        self.setItemDelegateForColumn(1, PropertiesDelegate())
+#
+#        self.setWordWrap(False)
+##        self.setTextElideMode(QtCore.Qt.ElideMiddle)
+##        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+#        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+##        self.horizontalHeader().setMinimumSectionSize(-1)
+#        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+#        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+#
+#    def resizeEvent(self, ev):
+##        self.resizeColumnsToContents()
+##        self.resizeRowsToContents()
+#        super().resizeEvent(ev)
+#
+#class PropertiesWidget(QtGui.QWidget):
+#    def __init__(self, properties_model, parent=None):
+#        super().__init__(parent)
+#        self.setLayout(QtGui.QVBoxLayout())
+#        self.layout().setContentsMargins(0, 0, 0, 0)
+#        view = PropertiesView(properties_model)
+#        self.layout().addWidget(view)
+#
+#        apply_button = QtGui.QPushButton()
+#        apply_button.setText('Reset')
+#        apply_button.clicked.connect(properties_model.reset_properties)
+#        apply_button.setEnabled(False)
+#        properties_model.unsaved_data_changed.connect(apply_button.setEnabled)
+#
+#        run_button = QtGui.QPushButton()
+#        run_button.setText('Apply and Run')
+#        run_button.clicked.connect(properties_model.apply_properties)
+#        properties_model.properties_is_set.connect(run_button.setDisabled)
+#
+#
+##        run_button = QtGui.QPushButton()
+##        run_button.setText('Run')
+##        run_button.clicked.connect(properties_model.request_simulation_start)
+#
+#        button_layout = QtGui.QHBoxLayout()
+#        button_layout.setContentsMargins(0, 0, 0, 0)
+#        button_layout.addWidget(apply_button)
+#        button_layout.addWidget(run_button)
+#
+#        self.layout().addLayout(button_layout)

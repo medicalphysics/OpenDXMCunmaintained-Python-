@@ -41,219 +41,320 @@ class SceneSelectGroup(QtGui.QActionGroup):
                 return
 
 class ViewController(QtCore.QObject):
-    simulation_properties_data = QtCore.pyqtSignal(dict)
-    scene_selected = QtCore.pyqtSignal(str)
-    def __init__(self, database_interface, properties_model, parent=None):
+    request_metadata = QtCore.pyqtSignal(str)
+    request_array_slice = QtCore.pyqtSignal(str, str, int, int)
+
+    def __init__(self, database_interface, parent=None):
         super().__init__(parent)
-        database_interface.request_simulation_view.connect(self.applySimulation)
-        database_interface.simulation_updated.connect(self.updateSimulation)
-        self.scenes = {'planning': PlanningScene(self),
-                       'energy_imparted': DoseScene(self),
-                       'running': RunningScene(self),
-                       'material': MaterialScene(self),
-#                       'dose': DoseScene(self),
-                       }
-
-        self.scenes['planning'].request_reload_slice.connect(database_interface.get_array_slice)
-        self.scenes['material'].request_reload_slice.connect(database_interface.get_array_slice)
-        self.scenes['energy_imparted'].request_reload_slice.connect(database_interface.get_array_slice)
-
-        database_interface.request_array_slice_view.connect(self.scenes['planning'].reload_slice)
-        database_interface.request_array_slice_view.connect(self.scenes['material'].reload_slice)
-        database_interface.request_array_slice_view.connect(self.scenes['energy_imparted'].reload_slice)
 
         self.current_simulation = None
-        self.current_scene = 'planning'
+        self.current_index = 0
         self.current_view_orientation = 2
+        self.current_scene = ''
 
         self.graphicsview = View()
 
-
-        self.properties_widget = PropertiesWidget(properties_model)
-        self.organ_dose_widget = OrganDoseWidget()
-        properties_model.request_update_simulation.connect(self.updateSimulation)
-        self.simulation_properties_data.connect(properties_model.update_data)
-        self.selectScene('planning')
+        self.scenes = {}
+        for name, scene in self.scenes.items():
+            # connecting scenes to request array slot
+            scene.update_index.connect(self.update_index)
 
 
-    def view_widget(self):
-        wid = QtGui.QWidget()
-        main_layout = QtGui.QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        view_layout = QtGui.QVBoxLayout()
-        view_layout.setContentsMargins(0, 0, 0, 0)
+        self.request_array_slice.connect(database_interface.request_view_array_slice)
+        database_interface.send_view_array_slice.connect(self.reload_slice)
 
-        main_layout.addWidget(self.properties_widget)
+        self.request_metadata.connect(database_interface.request_simulation_properties)
+        database_interface.send_view_sim_propeties.connect(self.update_simulation_metadata)
 
-        main_layout.addLayout(view_layout)
+    @QtCore.pyqtSlot(str)
+    def view_simulation(self, name):
+        self.current_simulation = name
+        self.request_metadata.emit(self.current_simulation)
 
-        main_layout.addWidget(self.organ_dose_widget)
+    @QtCore.pyqtSlot(dict)
+    def update_simulation_metadata(self, sim_propeties_dict):
+        if sim_propeties_dict.get('name', '') == self.current_simulation:
+            for scene in self.scenes.values():
+                scene.set_metadata(sim_propeties_dict)
 
-        menu_widget = QtGui.QMenuBar(wid)
-        menu_widget.setContentsMargins(0, 0, 0, 0)
-        orientation_action = QtGui.QAction('Orientation', menu_widget)
-        orientation_action.triggered.connect(self.selectViewOrientation)
 
-        menu_widget.addAction(orientation_action)
+    @QtCore.pyqtSlot(int)
+    def update_index(self, index):
+        self.current_index = index
+        for arr_name in self.scenes[self.current_scene].array_names:
+            self.request_array_slice.emit(self.current_simulation, arr_name, self.current_index, self.current_view_orientation)
 
-        sceneSelect = SceneSelectGroup(wid)
-        for scene_name in self.scenes.keys():
-            sceneSelect.addAction(scene_name)
-        sceneSelect.scene_selected.connect(self.selectScene)
-        self.scene_selected.connect(sceneSelect.sceneSelected)
-        for action in sceneSelect.actions():
-            menu_widget.addAction(action)
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, name, arr_name, arr, index, orientation):
+        self.scenes[self.current_scene].reload_slice(name, arr_name, arr, index, orientation)
 
-        view_layout.addWidget(menu_widget)
-
-        view_layout.addWidget(self.graphicsview)
-        wid.setLayout(main_layout)
-
-#        sub_layout = QtGui.QVBoxLayout()
-        return wid
 
     @QtCore.pyqtSlot()
     def selectViewOrientation(self):
         self.current_view_orientation += 1
         self.current_view_orientation %= 3
-        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
-        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(), QtCore.Qt.KeepAspectRatio)
+        for scene in self.scenes.values():
+            scene.set_view_orientation(self.current_view_orientation)
 
     @QtCore.pyqtSlot(str)
     def selectScene(self, scene_name):
         if scene_name in self.scenes:
             self.current_scene = scene_name
             self.graphicsview.setScene(self.scenes[self.current_scene])
-            self.update_scene_data(scene_name)
+            self.update_index(self.current_index)
 
-    def update_scene_data(self, name):
-        if self.current_simulation is None:
-            return
-        if not name in self.scenes:
-            return
 
-        if name == 'planning':
-            self.scenes[name].update_data(self.current_simulation)
-#            if self.current_simulation.ctarray is not None:
-#                self.scenes[name].setCtArray(self.current_simulation.ctarray,
-#                                             self.current_simulation.spacing,
-#                                             self.current_simulation.exposure_modulation)
+
+
+class Scene(QtGui.QGraphicsScene):
+    update_index = QtCore.pyqtSignal(int)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.array_names = []
+        self.view_orientation = 2
+        self.index = 0
+        self.shape = np.ones(3, np.int)
+        self.spacing = np.ones(3, np.double)
+        self.scaling = np.ones(3, np.double)
+
+
+
+    def set_meta_data(self, meta_data):
+        pass
+
+    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
+    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+        pass
+
+    def set_view_orientation(self, orientation):
+        self.view_orientation = orientation
+
+    def wheelEvent(self, ev):
+        if ev.delta() > 0:
+            self.index += 1
+        elif ev.delta() < 0:
+            self.index -= 1
+        self.index %= self.shape[self.view_orientation]
+        self.update_index.emit(self.index)
+        ev.accept()
+
+
+
+#class ViewController(QtCore.QObject):
+#    def __init__(self, database_interface, properties_model, parent=None):
+#        super().__init__(parent)
 #
-#            elif self.current_simulation.organ is not None:
-#                self.scenes[name].setBitArray(self.current_simulation.organ,
-#                                             self.current_simulation.spacing,
-#                                             self.current_simulation.exposure_modulation)
-
-        elif name == 'running':
-            if self.current_simulation.energy_imparted is not None:
-                self.scenes[name].setArray(self.current_simulation.energy_imparted,
-                                           self.current_simulation.spacing,
-                                           self.current_simulation.scaling)
-            else:
-                self.scenes[name].setNoData()
-        elif name == 'energy_imparted':
-            self.scenes[name].update_data(self.current_simulation)
+#
+#
+#        database_interface.simulation_updated.connect(self.updateSimulation)
+#        self.scenes = {'planning': PlanningScene(self),
+#                       'energy_imparted': DoseScene(self),
+#                       'running': RunningScene(self),
+#                       'material': MaterialScene(self),
+##                       'dose': DoseScene(self),
+#                       }
+#
+#        self.scenes['planning'].request_reload_slice.connect(database_interface.get_array_slice)
+#        self.scenes['material'].request_reload_slice.connect(database_interface.get_array_slice)
+#        self.scenes['energy_imparted'].request_reload_slice.connect(database_interface.get_array_slice)
+#
+#        database_interface.request_array_slice_view.connect(self.scenes['planning'].reload_slice)
+#        database_interface.request_array_slice_view.connect(self.scenes['material'].reload_slice)
+#        database_interface.request_array_slice_view.connect(self.scenes['energy_imparted'].reload_slice)
+#
+#        self.current_simulation = None
+#        self.current_scene = 'planning'
+#        self.current_view_orientation = 2
+#
+#        self.graphicsview = View()
+#
+#
+#        self.properties_widget = PropertiesWidget(properties_model)
+#        self.organ_dose_widget = OrganDoseWidget()
+#        properties_model.request_update_simulation.connect(self.updateSimulation)
+#        self.simulation_properties_data.connect(properties_model.update_data)
+#        self.selectScene('planning')
+#
+#    def reload_slice(self, )
+#
+#    def view_widget(self):
+#        wid = QtGui.QWidget()
+#        main_layout = QtGui.QHBoxLayout()
+#        main_layout.setContentsMargins(0, 0, 0, 0)
+#        view_layout = QtGui.QVBoxLayout()
+#        view_layout.setContentsMargins(0, 0, 0, 0)
+#
+#        main_layout.addWidget(self.properties_widget)
+#
+#        main_layout.addLayout(view_layout)
+#
+#        main_layout.addWidget(self.organ_dose_widget)
+#
+#        menu_widget = QtGui.QMenuBar(wid)
+#        menu_widget.setContentsMargins(0, 0, 0, 0)
+#        orientation_action = QtGui.QAction('Orientation', menu_widget)
+#        orientation_action.triggered.connect(self.selectViewOrientation)
+#
+#        menu_widget.addAction(orientation_action)
+#
+#        sceneSelect = SceneSelectGroup(wid)
+#        for scene_name in self.scenes.keys():
+#            sceneSelect.addAction(scene_name)
+#        sceneSelect.scene_selected.connect(self.selectScene)
+#        self.scene_selected.connect(sceneSelect.sceneSelected)
+#        for action in sceneSelect.actions():
+#            menu_widget.addAction(action)
+#
+#        view_layout.addWidget(menu_widget)
+#
+#        view_layout.addWidget(self.graphicsview)
+#        wid.setLayout(main_layout)
+#
+##        sub_layout = QtGui.QVBoxLayout()
+#        return wid
+#
+#    @QtCore.pyqtSlot()
+#    def selectViewOrientation(self):
+#        self.current_view_orientation += 1
+#        self.current_view_orientation %= 3
+#        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+#        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(), QtCore.Qt.KeepAspectRatio)
+#
+#    @QtCore.pyqtSlot(str)
+#    def selectScene(self, scene_name):
+#        if scene_name in self.scenes:
+#            self.current_scene = scene_name
+#            self.graphicsview.setScene(self.scenes[self.current_scene])
+#            self.update_scene_data(scene_name)
+#
+#    def update_scene_data(self, name):
+#        if self.current_simulation is None:
+#            return
+#        if not name in self.scenes:
+#            return
+#
+#        if name == 'planning':
+#            self.scenes[name].update_data(self.current_simulation)
+##            if self.current_simulation.ctarray is not None:
+##                self.scenes[name].setCtArray(self.current_simulation.ctarray,
+##                                             self.current_simulation.spacing,
+##                                             self.current_simulation.exposure_modulation)
+##
+##            elif self.current_simulation.organ is not None:
+##                self.scenes[name].setBitArray(self.current_simulation.organ,
+##                                             self.current_simulation.spacing,
+##                                             self.current_simulation.exposure_modulation)
+#
+#        elif name == 'running':
 #            if self.current_simulation.energy_imparted is not None:
+#                self.scenes[name].setArray(self.current_simulation.energy_imparted,
+#                                           self.current_simulation.spacing,
+#                                           self.current_simulation.scaling)
+#            else:
+#                self.scenes[name].setNoData()
+#        elif name == 'energy_imparted':
+#            self.scenes[name].update_data(self.current_simulation)
+##            if self.current_simulation.energy_imparted is not None:
+##
+###                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
+###                                                  self.current_simulation.energy_imparted,
+###                                                  self.current_simulation.spacing,
+###                                                  self.current_simulation.scaling)
+##            else:
+##                self.scenes[name].setNoData()
+#        elif name == 'material':
+#            self.scenes[name].update_data(self.current_simulation)
+##            if self.current_simulation.material is not None and self.current_simulation.material_map is not None:
+##                self.scenes[name].setMaterialArray(self.current_simulation.material,
+##                                                     self.current_simulation.material_map,
+##                                                     self.current_simulation.spacing,
+##                                                     self.current_simulation.scaling)
+##            else:
+##                self.scenes[name].setNoData()
 #
-##                self.scenes[name].setCtDoseArrays(self.current_simulation.ctarray,
-##                                                  self.current_simulation.energy_imparted,
-##                                                  self.current_simulation.spacing,
-##                                                  self.current_simulation.scaling)
-#            else:
+#        elif name == 'dose':
+#            try:
+#                dose = self.current_simulation.dose
+#            except ValueError:
 #                self.scenes[name].setNoData()
-        elif name == 'material':
-            self.scenes[name].update_data(self.current_simulation)
-#            if self.current_simulation.material is not None and self.current_simulation.material_map is not None:
-#                self.scenes[name].setMaterialArray(self.current_simulation.material,
-#                                                     self.current_simulation.material_map,
-#                                                     self.current_simulation.spacing,
-#                                                     self.current_simulation.scaling)
 #            else:
-#                self.scenes[name].setNoData()
-
-        elif name == 'dose':
-            try:
-                dose = self.current_simulation.dose
-            except ValueError:
-                self.scenes[name].setNoData()
-            else:
-                if self.current_simulation.ctarray is not None:
-                    background = self.current_simulation.ctarray
-                elif self.current_simulation.organ is not None:
-                    background = self.current_simulation.organ
-                else:
-                    background=None
-                self.scenes[name].setCtDoseArrays(background,
-                                                  dose,
-                                                  self.current_simulation.spacing,
-                                                  self.current_simulation.scaling)
-                self.organ_dose_widget.set_data(dose,
-                                                self.current_simulation.organ,
-                                                self.current_simulation.organ_map)
-
-
-        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
-        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
-                                    QtCore.Qt.KeepAspectRatio)
-        self.properties_widget.setVisible(name == 'planning')
-        self.organ_dose_widget.setVisible(name == 'dose')
-
-
-    @QtCore.pyqtSlot(Simulation)
-    def applySimulation(self, sim):
-        self.current_simulation = sim
-        logger.debug('Got signal request to view Simulation {}'.format(sim.name))
-
-
-        if sim.MC_running: ##############################################!!!!!!!!
-            scene = 'running'
-            self.selectScene(scene)
-        else:
-            self.update_scene_data(self.current_scene)
-
-
-
-    @QtCore.pyqtSlot(dict, dict)
-    def updateSimulation(self, description, volatiles):
-        if self.current_simulation is None:
-            return
-        if description.get('name', None) == self.current_simulation.name:
-            for key, value in itertools.chain(description.items(), volatiles.items()):
-                setattr(self.current_simulation, key, value)
-            if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
-                self.selectScene('running')
+#                if self.current_simulation.ctarray is not None:
+#                    background = self.current_simulation.ctarray
+#                elif self.current_simulation.organ is not None:
+#                    background = self.current_simulation.organ
+#                else:
+#                    background=None
+#                self.scenes[name].setCtDoseArrays(background,
+#                                                  dose,
+#                                                  self.current_simulation.spacing,
+#                                                  self.current_simulation.scaling)
+#                self.organ_dose_widget.set_data(dose,
+#                                                self.current_simulation.organ,
+#                                                self.current_simulation.organ_map)
+#
+#
+#        self.scenes[self.current_scene].setViewOrientation(self.current_view_orientation)
+#        self.graphicsview.fitInView(self.scenes[self.current_scene].sceneRect(),
+#                                    QtCore.Qt.KeepAspectRatio)
+#        self.properties_widget.setVisible(name == 'planning')
+#        self.organ_dose_widget.setVisible(name == 'dose')
+#
+#
+#    @QtCore.pyqtSlot(dict)
+#    def applySimulation(self, sim):
+#        self.current_simulation = sim
+#        logger.debug('Got signal request to view Simulation {}'.format(sim.name))
+#
+#
+#        if sim.MC_running: ##############################################!!!!!!!!
+#            scene = 'running'
+#            self.selectScene(scene)
+#        else:
+#            self.update_scene_data(self.current_scene)
+#
+#
+#
+#    @QtCore.pyqtSlot(dict, dict)
+#    def updateSimulation(self, description, volatiles):
+#        if self.current_simulation is None:
+#            return
+#        if description.get('name', None) == self.current_simulation.name:
+#            for key, value in itertools.chain(description.items(), volatiles.items()):
+#                setattr(self.current_simulation, key, value)
+#            if self.current_simulation.MC_running and (self.current_simulation.energy_imparted is not None):
+#                self.selectScene('running')
+#
 
 
-
-def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360,
-             minHue=0, sat=255, alpha=255, firstBlack=True):
-    """
-    Creates a QColor from a single index. Useful for stepping through a
-    predefined list of colors.
-
-    The argument *index* determines which color from the set will be returned.
-    All other arguments determine what the set of predefined colors will be
-
-    Colors are chosen by cycling across hues while varying the value
-    (brightness).
-    By default, this selects from a list of 9 hues."""
-    if firstBlack and index == 0:
-        return QtGui.QColor(QtCore.Qt.black)
-    hues = int(hues)
-    values = int(values)
-    ind = int(index) % (hues * values)
-    indh = ind % hues
-    indv = ind / hues
-    if values > 1:
-        v = minValue + indv * ((maxValue-minValue) / (values-1))
-    else:
-        v = maxValue
-    h = minHue + (indh * (maxHue-minHue)) / hues
-
-    c = QtGui.QColor()
-    c.setHsv(h, sat, v)
-    c.setAlpha(alpha)
-    return c
+#def intColor(index, hues=9, values=1, maxValue=255, minValue=150, maxHue=360,
+#             minHue=0, sat=255, alpha=255, firstBlack=True):
+#    """
+#    Creates a QColor from a single index. Useful for stepping through a
+#    predefined list of colors.
+#
+#    The argument *index* determines which color from the set will be returned.
+#    All other arguments determine what the set of predefined colors will be
+#
+#    Colors are chosen by cycling across hues while varying the value
+#    (brightness).
+#    By default, this selects from a list of 9 hues."""
+#    if firstBlack and index == 0:
+#        return QtGui.QColor(QtCore.Qt.black)
+#    hues = int(hues)
+#    values = int(values)
+#    ind = int(index) % (hues * values)
+#    indh = ind % hues
+#    indv = ind / hues
+#    if values > 1:
+#        v = minValue + indv * ((maxValue-minValue) / (values-1))
+#    else:
+#        v = maxValue
+#    h = minHue + (indh * (maxHue-minHue)) / hues
+#
+#    c = QtGui.QColor()
+#    c.setHsv(h, sat, v)
+#    c.setAlpha(alpha)
+#    return c
 
 def blendArrayToQImage(front_array, back_array, front_level, back_level,
                        front_lut, back_lut):
@@ -1162,25 +1263,6 @@ class DoseScene(QtGui.QGraphicsScene):
 
 
 
-class Scene(QtGui.QGraphicsScene):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.shape = np.array([1, 1, 1], dtype=np.int)
-        self.spacing = np.array([1, 1, 1])
-        self.array_name = ''
-        self.view_orientation = 2
-        self.index = 0
-
-        self.image_items= {'ctarray': ImageItem(),
-                           }
-
-        self.image_item = ImageItem()
-        self.image_item = BlendImageItem()
-        self.addItem(self.image_item)
-
-
-
 
 class View(QtGui.QGraphicsView):
     def __init__(self, parent=None):
@@ -1196,385 +1278,81 @@ class View(QtGui.QGraphicsView):
         super().setScene(scene)
         self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
-class PropertiesModel(QtCore.QAbstractTableModel):
-#    error_setting_value = QtCore.pyqtSignal(str)
-#    request_simulation_update = QtCore.pyqtSignal(dict)
-#    request_simulation_start = QtCore.pyqtSignal()
-    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
-    unsaved_data_changed = QtCore.pyqtSignal(bool)
-    properties_is_set = QtCore.pyqtSignal(bool)
 
-    def __init__(self, interface, parent=None):
-        super().__init__(parent)
-        self.__data = copy.copy(SIMULATION_DESCRIPTION)
-        self.unsaved_data = {}
-        self.__indices = list(self.__data.keys())
-        self.__indices.sort()
-        interface.request_simulation_view.connect(self.set_data)
-        interface.simulation_updated.connect(self.update_data)
-        self.request_update_simulation.connect(interface.update_simulation_properties)
-        self.__simulation = Simulation('None')
-
-
-    def properties_data(self):
-        return self.__data, self.__indices
-
-    @QtCore.pyqtSlot()
-    def reset_properties(self):
-        self.unsaved_data = {}
-        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
-        self.test_for_unsaved_changes()
-
-    @QtCore.pyqtSlot()
-    def apply_properties(self):
-        self.__init_data = self.__data
-        self.unsaved_data['name'] = self.__data['name'][0]
-        self.unsaved_data['MC_ready'] = True
-        self.unsaved_data['MC_finished'] = False
-        self.unsaved_data['MC_running'] = False
-        self.test_for_unsaved_changes()
-        self.request_update_simulation.emit(self.unsaved_data, {}, True, True)
-        self.properties_is_set.emit(True)
-#        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-        self.unsaved_data = {}
-        self.test_for_unsaved_changes()
-
-#    @QtCore.pyqtSlot()
-#    def run_simulation(self):
-#        self.__data['MC_running'][0] = True
-#        self.__data['MC_ready'][0] = True
-##        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-#        self.unsaved_data_changed.emit(False)
-##        self.request_simulation_start.emit()
-
-    def test_for_unsaved_changes(self):
-        for key, value in self.__simulation.description.items():
-            if self.__data[key][3]:
-                if isinstance(self.__data[key][0], np.ndarray):
-                    if (value - self.__data[key][0]).sum() != 0.0:
-                        self.unsaved_data[key] = value
-                elif self.__data[key][0] != value:
-                    self.unsaved_data[key] = value
-        self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
-
-    @QtCore.pyqtSlot(Simulation)
-    def set_data(self, sim):
-        sim_description = sim.description
-        self.update_data(sim_description, {})
-
-    @QtCore.pyqtSlot(dict, dict)
-    def update_data(self, sim_description, array_dict):
-        self.unsaved_data = {}
-        self.layoutAboutToBeChanged.emit()
-        self.__simulation = Simulation('None', sim_description)
-        for key, value in sim_description.items():
-            self.__data[key][0] = value
-
-        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
-        self.layoutChanged.emit()
-        self.test_for_unsaved_changes()
-        self.properties_is_set.emit(self.__data['MC_running'][0])
-
-    def rowCount(self, index):
-        if not index.isValid():
-            return len(self.__data)
-        return 0
-
-    def columnCount(self, index):
-        if not index.isValid():
-            return 2
-        return 0
-
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-        row = index.row()
-        column = index.column()
-
-        var = self.__indices[row]
-        if column == 0:
-            value = self.__data[var][4]
-        else:
-            value = self.unsaved_data.get(var, self.__data[var][0])
-
-        if role == QtCore.Qt.DisplayRole:
-            if (column == 1) and isinstance(value, np.ndarray):
-                return ' '.join([str(round(p, 3)) for p in value])
-            elif (column == 1) and isinstance(value, bool):
-                return ''
-            return value
-        elif role == QtCore.Qt.DecorationRole:
-            pass
-        elif role == QtCore.Qt.ToolTipRole:
-            pass
-        elif role == QtCore.Qt.BackgroundRole:
-            if not self.__data[var][3] and index.column() == 1:
-                return QtGui.qApp.palette().brush(QtGui.qApp.palette().Window)
-        elif role == QtCore.Qt.ForegroundRole:
-            pass
-        elif role == QtCore.Qt.CheckStateRole:
-            if (column == 1) and isinstance(value, bool):
-                if value:
-                    return QtCore.Qt.Checked
-                else:
-                    return QtCore.Qt.Unchecked
-        return None
-
-    def setData(self, index, value, role):
-        if not index.isValid():
-            return False
-        if index.column() != 1:
-            return False
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
-#            var = self.__indices[index.row()]
-#            self.unsaved_data[var] = value
-#            self.dataChanged.emit(index, index)
-#            return True
-#        elif role == QtCore.Qt.EditRole:
-            var = self.__indices[index.row()]
-            try:
-                setattr(self.__simulation, var, value)
-            except Exception as e:
-                logger.error(str(e))
-                return False
-            else:
-                if value != self.__data[var][0]:
-                    self.unsaved_data[var] = value
-                else:
-                    try:
-                        del self.unsaved_data[var]
-                    except KeyError:
-                        pass
-
-            self.dataChanged.emit(index, index)
-            self.test_for_unsaved_changes()
-            return True
-        elif role == QtCore.Qt.CheckStateRole:
-            var = self.__indices[index.row()]
-            if self.__data[var][0] != bool(value == QtCore.Qt.Checked):
-                self.unsaved_data[var] = bool(value == QtCore.Qt.Checked)
-            else:
-                if var in self.unsaved_data:
-                    del self.unsaved_data[var]
-            self.test_for_unsaved_changes()
-            self.dataChanged.emit(index, index)
-            return True
-
-    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-        return str(section)
-
-    def flags(self, index):
-        if index.isValid():
-            if self.__data[self.__indices[index.row()]][3] and index.column() == 1:
-                if self.unsaved_data.get('MC_running', False):
-                    return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-                if isinstance(self.__data[self.__indices[index.row()]][0], bool):
-                    return  QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable# | QtCore.Qt.ItemIsEditable
-                return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
-            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-        return QtCore.Qt.NoItemFlags
-
-class ArrayEdit(QtGui.QLineEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def set_data(self, value):
-        self.setText(' '.join([str(r) for r in value]))
-
-
-class LineEdit(QtGui.QLineEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def set_data(self, value):
-        self.setText(str(value))
-
-class IntSpinBox(QtGui.QSpinBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setRange(-1e9, 1e9)
-
-    def set_data(self, value):
-        self.setValue(int(value))
-
-
-class DoubleSpinBox(QtGui.QDoubleSpinBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setRange(-1e9, 1e9)
-
-    def set_data(self, value):
-        self.setValue(float(value))
-
-class CheckBox(QtGui.QCheckBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def set_data(self, value):
-        self.setChecked(bool(value))
-
-
-class PropertiesDelegate(QtGui.QItemDelegate):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def createEditor(self, parent, option, index):
-        data , ind= index.model().properties_data()
-        var = ind[index.row()]
-        if data[var][1] is np.bool:
-#            return CheckBox(parent)
-            return None
-        elif data[var][1] is np.double:
-            return DoubleSpinBox(parent)
-        elif data[var][1] is np.int:
-            return IntSpinBox(parent)
-        elif isinstance(data[var][0], np.ndarray):
-            return ArrayEdit(parent)
-        return None
-
-    def setEditorData(self, editor, index):
-        data, ind= index.model().properties_data()
-        var = ind[index.row()]
-        editor.set_data(data[var][0])
-#        if isinstance(editor, QtGui.QCheckBox):
-#            editor.setChecked(data[var][0])
-#        elif isinstance(editor, QtGui.QSpinBox) or isinstance(editor, QtGui.QDoubleSpinBox):
-#            editor.setValue(data[var][0])
-#        elif isinstance(editor, QtGui.QTextEdit):
-#            editor.setText(data[var][0])
-##        self.setProperty('bool', bool)
-#        factory = QtGui.QItemEditorFactory()
-#        print(factory.valuePropertyName(QtCore.QVariant.Bool))
 #
-##        factory.registerEditor(QtCore.QVariant.Bool, QtGui.QCheckBox())
-#        self.setItemEditorFactory(factory)
-##        self.itemEditorFactory().setDefaultFactory(QtGui.QItemEditorFactory())
-
-class PropertiesView(QtGui.QTableView):
-    def __init__(self, properties_model, parent=None):
-        super().__init__(parent)
-        self.setModel(properties_model)
-        self.setItemDelegateForColumn(1, PropertiesDelegate())
-
-        self.setWordWrap(False)
-#        self.setTextElideMode(QtCore.Qt.ElideMiddle)
-#        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-#        self.horizontalHeader().setMinimumSectionSize(-1)
-        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-
-    def resizeEvent(self, ev):
-#        self.resizeColumnsToContents()
-#        self.resizeRowsToContents()
-        super().resizeEvent(ev)
-
-class PropertiesWidget(QtGui.QWidget):
-    def __init__(self, properties_model, parent=None):
-        super().__init__(parent)
-        self.setLayout(QtGui.QVBoxLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        view = PropertiesView(properties_model)
-        self.layout().addWidget(view)
-
-        apply_button = QtGui.QPushButton()
-        apply_button.setText('Reset')
-        apply_button.clicked.connect(properties_model.reset_properties)
-        apply_button.setEnabled(False)
-        properties_model.unsaved_data_changed.connect(apply_button.setEnabled)
-
-        run_button = QtGui.QPushButton()
-        run_button.setText('Apply and Run')
-        run_button.clicked.connect(properties_model.apply_properties)
-        properties_model.properties_is_set.connect(run_button.setDisabled)
-
-
-#        run_button = QtGui.QPushButton()
-#        run_button.setText('Run')
-#        run_button.clicked.connect(properties_model.request_simulation_start)
-
-        button_layout = QtGui.QHBoxLayout()
-        button_layout.setContentsMargins(0, 0, 0, 0)
-        button_layout.addWidget(apply_button)
-        button_layout.addWidget(run_button)
-
-        self.layout().addLayout(button_layout)
-
-class OrganListModelPopulator(QtCore.QThread):
-    new_dose_item = QtCore.pyqtSignal(str, float)
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.organ = None
-        self.dose = None
-        self.organ_map = None
-
-    def run(self):
-        if self.organ is None or self.dose is None or self.organ_map is None:
-            return
-        shape_scale = np.array(self.organ.shape, dtype=np.double) / np.array(self.dose.shape, dtype=np.double)
-        interp = RegularGridInterpolator(tuple(np.arange(self.dose.shape[i]) * shape_scale[i] for i in range(3)),
-                                         self.dose,
-                                         method='nearest',
-                                         bounds_error=False,
-                                         fill_value=0)
-        for key, value in zip(self.organ_map['key'], self.organ_map['value']):
-            points = np.array(np.nonzero(self.organ == key), dtype=np.int).T
-            dose = np.mean(interp(points))
-            if np.isnan(dose):
-                dose = 0.
-            self.new_dose_item.emit(str(value, encoding='utf-8'), round(dose, 2))
-
-
-class OrganListModel(QtGui.QStandardItemModel):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.populator = OrganListModelPopulator()
-        self.populator.new_dose_item.connect(self.add_dose_item)
-
-
-    @QtCore.pyqtSlot(str, float)
-    def add_dose_item(self, organ, dose):
-        item1 = QtGui.QStandardItem(organ)
-        item2 = QtGui.QStandardItem(str(dose))
-        self.layoutAboutToBeChanged.emit()
-
-        self.appendRow([item1, item2])
-        self.sort(0)
-        item2.setData(dose, QtCore.Qt.DisplayRole)
-        self.layoutChanged.emit()
-
-    def set_data(self, dose, organ, organ_map):
-        self.clear()
-        self.setHorizontalHeaderLabels(['Organ', 'Dose [mGy/100mAs]'])
-        if self.populator.isRunning():
-            self.populator.wait()
-        self.populator.dose = dose
-        self.populator.organ = organ
-        self.populator.organ_map = organ_map
-        self.populator.start()
-
-
-
-class OrganDoseWidget(QtGui.QTableView):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setModel(OrganListModel(self))
-        self.model().layoutChanged.connect(self.resizeColumnToContents)
-        self.name = ""
-        self.setWordWrap(False)
-#        self.setTextElideMode(QtCore.Qt.ElideMiddle)
-#        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-        self.horizontalHeader().setStretchLastSection(True)
-#        self.horizontalHeader().setMinimumSectionSize(-1)
-#        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-#        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-        self.setSortingEnabled(True)
-
-    @QtCore.pyqtSlot()
-    def resizeColumnToContents(self, col=0):
-        super().resizeColumnToContents(col)
-
-    def set_data(self, dose, organ, organ_map):
-        self.model().set_data(dose, organ, organ_map)
+#class OrganListModelPopulator(QtCore.QThread):
+#    new_dose_item = QtCore.pyqtSignal(str, float)
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.organ = None
+#        self.dose = None
+#        self.organ_map = None
+#
+#    def run(self):
+#        if self.organ is None or self.dose is None or self.organ_map is None:
+#            return
+#        shape_scale = np.array(self.organ.shape, dtype=np.double) / np.array(self.dose.shape, dtype=np.double)
+#        interp = RegularGridInterpolator(tuple(np.arange(self.dose.shape[i]) * shape_scale[i] for i in range(3)),
+#                                         self.dose,
+#                                         method='nearest',
+#                                         bounds_error=False,
+#                                         fill_value=0)
+#        for key, value in zip(self.organ_map['key'], self.organ_map['value']):
+#            points = np.array(np.nonzero(self.organ == key), dtype=np.int).T
+#            dose = np.mean(interp(points))
+#            if np.isnan(dose):
+#                dose = 0.
+#            self.new_dose_item.emit(str(value, encoding='utf-8'), round(dose, 2))
+#
+#
+#class OrganListModel(QtGui.QStandardItemModel):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.populator = OrganListModelPopulator()
+#        self.populator.new_dose_item.connect(self.add_dose_item)
+#
+#
+#    @QtCore.pyqtSlot(str, float)
+#    def add_dose_item(self, organ, dose):
+#        item1 = QtGui.QStandardItem(organ)
+#        item2 = QtGui.QStandardItem(str(dose))
+#        self.layoutAboutToBeChanged.emit()
+#
+#        self.appendRow([item1, item2])
+#        self.sort(0)
+#        item2.setData(dose, QtCore.Qt.DisplayRole)
+#        self.layoutChanged.emit()
+#
+#    def set_data(self, dose, organ, organ_map):
+#        self.clear()
+#        self.setHorizontalHeaderLabels(['Organ', 'Dose [mGy/100mAs]'])
+#        if self.populator.isRunning():
+#            self.populator.wait()
+#        self.populator.dose = dose
+#        self.populator.organ = organ
+#        self.populator.organ_map = organ_map
+#        self.populator.start()
+#
+#
+#
+#class OrganDoseWidget(QtGui.QTableView):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.setModel(OrganListModel(self))
+#        self.model().layoutChanged.connect(self.resizeColumnToContents)
+#        self.name = ""
+#        self.setWordWrap(False)
+##        self.setTextElideMode(QtCore.Qt.ElideMiddle)
+##        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+#        self.horizontalHeader().setStretchLastSection(True)
+##        self.horizontalHeader().setMinimumSectionSize(-1)
+##        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+##        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+#        self.setSortingEnabled(True)
+#
+#    @QtCore.pyqtSlot()
+#    def resizeColumnToContents(self, col=0):
+#        super().resizeColumnToContents(col)
+#
+#    def set_data(self, dose, organ, organ_map):
+#        self.model().set_data(dose, organ, organ_map)

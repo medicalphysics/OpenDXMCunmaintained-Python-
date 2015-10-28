@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from opendxmc.app.view import View, ViewController, PropertiesModel
+from opendxmc.app.view import View, ViewController
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit
 import logging
 
@@ -144,8 +144,15 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
 
+
+
+        # Databse interface
+#        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'))
+        self.interface.database_busy.connect(database_busywidget.busy)
+
         # importer
-        self.importer = Importer()
+        self.importer = Importer(self.interface)
         self.importer.running.connect(importer_busywidget.busy)
 
         ## import scaling setter
@@ -154,18 +161,14 @@ class MainWindow(QtGui.QMainWindow):
         import_phantoms_button = QtGui.QPushButton('Import Phantoms', self)
         import_phantoms_button.clicked.connect(self.importer.import_phantoms)
 
-        # Databse interface
-#        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'), self.importer)
-        self.interface.database_busy.connect(database_busywidget.busy)
 
-        self.properties_model = PropertiesModel(self.interface)
+#        self.properties_model = PropertiesModel(self.interface)
 
-        self.viewcontroller = ViewController(self.interface, self.properties_model)
+        self.viewcontroller = ViewController(self.interface)
 
 
         ## MC runner
-        self.mcrunner = RunManager(self.interface, self.viewcontroller)
+        self.mcrunner = RunManager(self.interface)
         self.mcrunner.mc_calculation_running.connect(simulation_busywidget.busy)
 
 
@@ -196,7 +199,7 @@ class MainWindow(QtGui.QMainWindow):
 #        central_splitter.addWidget(simulation_editor)
 
 
-        central_splitter.addWidget(self.viewcontroller.view_widget())
+        central_splitter.addWidget(self.viewcontroller.graphicsview)
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -209,13 +212,13 @@ class MainWindow(QtGui.QMainWindow):
         self.mcrunner.moveToThread(self.mc_thread)
 
         self.properties_thread = QtCore.QThread(self)
-        self.properties_model.moveToThread(self.properties_thread)
+#        self.properties_model.moveToThread(self.properties_thread)
 
-#        self.import_thread = QtCore.QThread(self)
-#        self.importer.moveToThread(self.import_thread)
+        self.import_thread = QtCore.QThread(self)
+        self.importer.moveToThread(self.import_thread)
         self.importer.moveToThread(self.database_thread)
 
-#        self.import_thread.start()
+        self.import_thread.start()
         self.mc_thread.start()
         self.properties_thread.start()
         self.database_thread.start()
