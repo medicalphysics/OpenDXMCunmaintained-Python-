@@ -6,7 +6,7 @@ Created on Tue Sep  8 10:10:58 2015
 """
 import numpy as np
 from PyQt4 import QtGui, QtCore
-from opendxmc.database import Database
+from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator
 from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
 from opendxmc.materials import Material
@@ -111,6 +111,7 @@ class DatabaseInterface(QtCore.QObject):
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
 
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
+
 
 
 #    send_import_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
@@ -551,6 +552,137 @@ class ListView(QtGui.QListView):
     def activation_name(self, index):
         if index.isValid():
             self.name_activated.emit(index.data())
+
+class PropertiesEditModelItem(QtGui.QStandardItem):
+    def __init__(self, key, value):
+        super().__init__()
+        self.key = key        
+        self.value = None
+
+        init_val, dtype, volatile, editable, description, order = PROPETIES_DICT_TEMPLATE[key]
+        self.dtype = dtype
+        self.setEditable(editable)
+        
+        if dtype.type is np.bool_:
+            self.setCheckable(True)       
+        self.update_data(value)        
+          
+          
+#    def setData(self, value, role):
+        
+    def update_data(self, value):
+        self.value = value
+        if len(self.dtype.shape) > 0:
+            val_t = " ".join([str(val) for val in value.astype(self.dtype.base.type)])
+            self.setData(val_t, QtCore.Qt.DisplayRole)            
+        else:
+            if self.dtype.type is np.bool_:
+                c_val = QtCore.Qt.Checked if value else QtCore.Qt.Unchecked
+                
+                self.setData(c_val, QtCore.Qt.CheckStateRole)
+#            elif self.dtype.type is np.int32 or self.dtype.type is np.float64:
+#                self.setData(value, QtCore.Qt.DisplayRole)
+            else:
+                self.setData(value, QtCore.Qt.DisplayRole)
+#        self.emitDataChanged()
+        
+class PropertiesEditModel(QtGui.QStandardItemModel):
+    request_properties_from_database = QtCore.pyqtSignal(str)
+    request_update_properties_to_database = QtCore.pyqtSignal(dict)
+    request_write_properties_to_database = QtCore.pyqtSignal(dict, bool, bool)
+    def __init__(self, database_interface, simulation_list_model, parent=None):
+        super().__init__(parent)
+        self.current_simulation = ""
+        database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
+        self.request_properties_from_database.connect(database_interface.request_simulation_properties)
+        self.request_write_properties_to_database.connect(database_interface.set_simulation_properties)
+        
+        simulation_list_model.request_viewing.connect(self.set_simulation)
+
+        self.validator = Validator()        
+        self.unsaved_items = {}
+        
+        propeties_dict, array_dict = self.validator.get_data()
+        row = 0
+        for key, value in propeties_dict.items():
+            self.setItem(row, 0, QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4]))
+            self.setItem(row, 1, PropertiesEditModelItem(key, value))
+            row += 1
+              
+    @QtCore.pyqtSlot(str)
+    def set_simulation(self, name):
+        self.current_simulation = name
+        self.request_properties_from_database.emit(self.current_simulation)
+        
+    @QtCore.pyqtSlot(dict)    
+    def set_simulation_properties(self, data_dict):
+        if data_dict['name'] != self.current_simulation:            
+            return
+        self.validator.set_data(props=data_dict, reset=True)       
+        unsaved_items = {}
+        for row in range(self.rowCount()):
+            item = self.item(row, 1)
+            item.update_data(self.validator._props[item.key])
+            
+            
+    def test_unsaved_changes(self):
+        test her
+            
+            
+    def setData(self, index, value, role):
+        if not index.isValid():
+            return
+        if index.column() == 0:
+            super().setData(index, value, role)
+            return
+        if role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole, QtCore.Qt.CheckStateRole]:
+            item = self.itemFromIndex(index)
+            
+            if role == QtCore.Qt.CheckStateRole:
+                value = value == QtCore.Qt.Checked
+            try:
+                setattr(self.validator, item.key, value)
+            except AssertionError:
+                return False
+            else:
+                item.update_data(getattr(self.validator, item.key))
+            return True
+        return super().setData(index, value, role)
+    
+    @QtCore.pyqtSlot()
+    def apply_changes(self):
+        self.request_write_properties_to_database.emit(self.validator._props)
+    @QtCore.pyqtSlot()
+    def reset_changes(self):
+        
+        self.request_write_properties_to_database.emit(self.validator._props)
+    
+    
+class PropertiesEditWidget(QtGui.QWidget):
+    def __init__(self, database_interface, simulation_list_model, parent=None):
+        super().__init__(parent)
+        layout = QtGui.QVBoxLayout()
+        table = QtGui.QTableView()
+        model = PropertiesEditModel(database_interface, simulation_list_model)
+        table.setModel(model)
+        layout.addWidget(table)
+        sub_layout = QtGui.QHBoxLayout
+        layout.addChildLayout(sub_layout)
+        apply_button = QtGui.QPushButton()
+        reset_button = QtGui.QPushButton()
+        run_button = QtGui.QPushButton()
+        apply_button.setText('Apply')
+        reset_button.setText('Reset')
+        run_button.setText('Run')
+        
+        
+                
+        
+        self.setModel(PropertiesEditModel(database_interface, simulation_list_model))
+        
+    
+
+
 
 #class PropertiesModel(QtCore.QAbstractTableModel):
 #    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)

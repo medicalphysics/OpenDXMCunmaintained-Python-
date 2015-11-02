@@ -8,6 +8,7 @@ Created on Fri Aug 21 10:16:46 2015
 import numpy as np
 import tables as tb
 import os
+import itertools
 
 from opendxmc.materials import Material
 from opendxmc.database.import_materials import get_stored_materials
@@ -19,39 +20,39 @@ logger = logging.getLogger('OpenDXMC')
 
 PROPETIES_DICT_TEMPLATE = {
     #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION, ORDER
-    'name': ['', 'a64', False, False, 'Simulation ID', 0],
-    'scan_fov': [50., np.double, True, True, 'Scan field of view [cm]', 0],
-    'sdd': [100., np.double, True, True, 'Source detector distance [cm]', 0],
-    'detector_width': [0.06, np.double, True, True, 'Detector width [cm]', 0],
-    'detector_rows': [64, np.int, True, True, 'Detector rows', 0],
-    'collimation_width': [0.06 * 64, np.double, True, True, 'Total collimation width [cm]', 2],
-    'al_filtration': [7., np.double, True, True, 'Filtration of primary beam [mmAl]', 0],
-    'xcare': [False, np.bool, True, True, 'XCare', 0],
-    'ctdi_air100': [0., np.double, True, True, 'CTDIair [mGy/100mAs]', 0],
-    'ctdi_vol100': [0., np.double, True, True, 'CTDIvol [mGy/100mAs/pitch]', 2],
-    'ctdi_w100': [0., np.double, True, True, 'CTDIw [mGy/100mAs]', 2],
-    'kV': [120., np.double, True, True, 'Simulation tube potential [kV]', 0],
-    'aquired_kV': [0., np.double, False, False, 'Images aquired with tube potential [kV]', 0],
-    'region': ['abdomen', 'a64', False, False, 'Examination region', 0],
+    'name': ['', np.dtype('a64'), False, False, 'Simulation ID', 0],
+    'scan_fov': [50., np.dtype(np.double), True, True, 'Scan field of view [cm]', 0],
+    'sdd': [100.,  np.dtype(np.double), True, True, 'Source detector distance [cm]', 0],
+    'detector_width': [0.06,  np.dtype(np.double), True, True, 'Detector width [cm]', 0],
+    'detector_rows': [64, np.dtype(np.int), True, True, 'Detector rows', 0],
+    'collimation_width': [0.06 * 64,  np.dtype(np.double), True, True, 'Total collimation width [cm]', 2],
+    'al_filtration': [7., np.dtype(np.double), True, True, 'Filtration of primary beam [mmAl]', 0],
+    'xcare': [False, np.dtype(np.bool), True, True, 'XCare', 0],
+    'ctdi_air100': [0., np.dtype(np.double), True, True, 'CTDIair [mGy/100mAs]', 0],
+    'ctdi_vol100': [0., np.dtype(np.double), True, True, 'CTDIvol [mGy/100mAs/pitch]', 2],
+    'ctdi_w100': [0., np.dtype(np.double), True, True, 'CTDIw [mGy/100mAs]', 2],
+    'kV': [120., np.dtype(np.double), True, True, 'Simulation tube potential [kV]', 0],
+    'aquired_kV': [0., np.dtype(np.double), False, False, 'Images aquired with tube potential [kV]', 0],
+    'region': ['abdomen', np.dtype('a64'), False, False, 'Examination region', 0],
     # per 1000000 histories
-    'conversion_factor_ctdiair': [0., np.double, True, False, 'CTDIair to dose conversionfactor', 0],
+    'conversion_factor_ctdiair': [0., np.dtype(np.double), True, False, 'CTDIair to dose conversionfactor', 0],
     # per 1000000 histories to dose
-    'conversion_factor_ctdiw': [0., np.double, True, False, 'CTDIw to dose conversionfactor', 0],
-    'is_spiral': [True, np.bool, True, True, 'Helical aqusition', 0],
-    'pitch': [1, np.double, True, True, 'Pitch', 0],
-    'exposures': [1200, np.int, True, True, 'Number of exposures in one rotation', 0],
-    'histories': [100, np.int, True, True, 'Number of photon histories per exposure', 0],
-    'batch_size': [500, np.int, True, True, 'Number of exposures in each calculation batch', 0],
-    'start_scan': [0, np.double, False, False, 'CT scan start position [cm]', 0],
-    'stop_scan': [0, np.double, False, False, 'CT scan stop position [cm]', 0],
-    'start': [0, np.double, True, True, 'Start position [cm]', 2],
-    'stop': [0, np.double, True, True, 'Stop position [cm]', 2],
-    'step': [1, np.int, True, True, 'Sequential aqusition step size [cm]', 0],
-    'start_at_exposure_no': [0, np.int, True, False, 'Start simulating exposure number', 0],
-    'MC_finished': [False, np.bool, True, False, 'Simulation finished', 0],
-    'MC_ready': [False, np.bool, True, False, 'Simulation ready', 0],
-    'MC_running': [False, np.bool, True, False, 'Simulation is running', 0],
-    'ignore_air': [False, np.bool, True, True, 'Ignore air material in simulation', 0],
+    'conversion_factor_ctdiw': [0., np.dtype(np.double), True, False, 'CTDIw to dose conversionfactor', 0],
+    'is_spiral': [True, np.dtype(np.bool), True, True, 'Helical aqusition', 0],
+    'pitch': [1, np.dtype(np.double), True, True, 'Pitch', 0],
+    'exposures': [1200, np.dtype(np.int), True, True, 'Number of exposures in one rotation', 0],
+    'histories': [100, np.dtype(np.int), True, True, 'Number of photon histories per exposure', 0],
+    'batch_size': [500, np.dtype(np.int), True, True, 'Number of exposures in each calculation batch', 0],
+    'start_scan': [0, np.dtype(np.double), False, False, 'CT scan start position [cm]', 0],
+    'stop_scan': [0, np.dtype(np.double), False, False, 'CT scan stop position [cm]', 0],
+    'start': [0, np.dtype(np.double), True, True, 'Start position [cm]', 2],
+    'stop': [0, np.dtype(np.double), True, True, 'Stop position [cm]', 2],
+    'step': [1, np.dtype(np.int), True, True, 'Sequential aqusition step size [cm]', 0],
+    'start_at_exposure_no': [0, np.dtype(np.int), True, False, 'Start simulating exposure number', 0],
+    'MC_finished': [False, np.dtype(np.bool), True, False, 'Simulation finished', 0],
+    'MC_ready': [False, np.dtype(np.bool), True, False, 'Simulation ready', 0],
+    'MC_running': [False, np.dtype(np.bool), True, False, 'Simulation is running', 0],
+    'ignore_air': [False, np.dtype(bool), True, True, 'Ignore air material in simulation', 0],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]', 0],
     'shape': [np.ones(3, dtype=np.int), np.dtype((np.int, 3)), False, False, 'Image matrix dimensions', 0],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling (stacked on image matrix prescaling)', 0],
@@ -59,7 +60,7 @@ PROPETIES_DICT_TEMPLATE = {
     'image_orientation': [np.array([1, 0, 0, 0, 1, 0], dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines', 0],
     'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position (position of first voxel in volume) [cm]', 0],
     'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Data collection center (relative to first voxel in volume) [cm]', 0],
-    'is_phantom': [False, np.bool, False, False, 'Matematical phantom', 0],}
+    'is_phantom': [False, np.dtype(np.bool), False, False, 'Matematical phantom', 0],}
 
 ARRAY_TEMPLATES = {
     # TAG: DTYPE, VOLATILE
@@ -67,7 +68,7 @@ ARRAY_TEMPLATES = {
     'exposure_modulation': [np.double, False],
     'organ': [np.uint8, False],
     'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False],
-    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], True],
+    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], False],
     'energy_imparted': [np.double, True],
     'density': [np.double, True],
     'dose': [np.double, True],
@@ -407,18 +408,22 @@ class Database(object):
         if array_name not in ARRAY_TEMPLATES:
             logger.debug('Not allowed to write array {0} for simulation {1}. Allowed arrays are {2}'.format(array_name, name, ARRAY_TEMPLATES.keys()))
             return
+        if array is None:
+            logger.debug('Not allowed to write array {0} for simulation {1}. Array is None'.format(array_name, name))
+            return
         volatile = ARRAY_TEMPLATES[array_name][1]
         if volatile:
             node_path = '/simulations/{0}/volatiles'.format(name)
         else:
             node_path = '/simulations/{0}'.format(name)
         self.open()
-        self.get_node(node_path, name, create=True, overwrite=True, obj=array)
+        
+        self.get_node(node_path, array_name, create=True, overwrite=True, obj=array)
         logger.debug('Wrote array {0} to database for simulation {1}'.format(array_name, name))
         self.close()
         return
 
-    def get_simulation_meta_data(self, name):
+    def get_simulation_metadata(self, name):
         self.open()
         if not self.test_node('/', 'meta_data'):
             logger.info('Could not get metadata for {}. No data in database'.format(name))
@@ -692,20 +697,20 @@ class Validator(object):
         if reset:
             self._props = {key: value[0] for key, value in self._pt.items()}
             self._arrays = {key: None for key in self._at.keys()}
-        valid_attrs = self._pt.keys() + self._at.keys()
+        valid_attrs = list(self._pt.keys()) + list(self._at.keys())
         if props is not None:
             if reset:
                 assert 'name' in props
             prop_list = [(key, value) for key, value in props.items()]
-            prop_list.sort(key=lambda x, y: self._pt[key][5] if x in self._pt else 0)
+            prop_list.sort(key=lambda x: self._pt[x[0]][5] if x[0] in self._pt else 0)
             for key, value in prop_list:
                 if key in valid_attrs:
                     setattr(self, key, value)
                 else:
-                    logger.debug('Error in propety 0{} for simulation {1}'.format(key, props['name']))
+                    logger.debug('Error in propety {0} for simulation {1}'.format(key, props['name']))
 
     def get_data(self):
-        return self._props, self._arrays
+        return self._props, {key: value for key, value in self._arrays.items() if value is not None}
 
     def string_validator(self, value, strict=False):
         if isinstance(value, bytes):
@@ -714,6 +719,8 @@ class Validator(object):
             value = str(value)
         if strict:
             name = "".join([l for l in value.split() if len(l) > 0])
+        else:
+            name = value
         assert len(name) > 0
         return name.lower()
 
@@ -740,7 +747,7 @@ class Validator(object):
                                     dtype=self._at[name][0])
             for ind, item in enumerate(value.items()):
                 value_rec[ind] = item
-            return
+            return value_rec
         elif isinstance(value, np.ndarray):
             value_rec = np.recarray((len(value),),
                                     dtype=self._at[name][0])
@@ -751,8 +758,32 @@ class Validator(object):
             for i in range(len(value)):
                 value_rec[i] = (value[c_title[0]][i], value[c_title[1]][i])
         else:
-            raise ValueError('material_map must be a structured array with correct keys or a dict')
+            raise ValueError('Mapping must be a structured array with correct keys or a dict')
         return value_rec
+
+    def string_to_array_converter(self, name, string):
+        dtype = self._pt[name][1]
+        
+        if len(dtype.shape) > 0:
+            string = " ".join(string.split(":"))
+            string = " ".join(string.split(","))
+            string = " ".join(string.split(";"))
+            val = np.asarray(self._pt[name][0])
+            teller = 0
+            for s in string.split():
+                try:
+                    val[teller] = s
+                except ValueError:
+                    pass
+                else:
+                    teller +=1
+                if teller >= val.shape[0]:
+                    break
+            return val
+        raise AssertionError
+        
+            
+
 
     @property
     def name(self):
@@ -982,6 +1013,8 @@ class Validator(object):
     def spacing(self, value):
         if isinstance(value, np.ndarray):
             self._props['spacing'] = value.astype(np.double)
+        elif isinstance(value, str):
+            self._props['spacing'] = self.string_to_array_converter('spacing', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -996,6 +1029,8 @@ class Validator(object):
     def shape(self, value):
         if isinstance(value, np.ndarray):
             self._props['shape'] = value.astype(np.int)
+        elif isinstance(value, str):
+            self._props['shape'] = self.string_to_array_converter('shape', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -1014,11 +1049,7 @@ class Validator(object):
             assert value.shape[0] == 3
             self._props['import_scaling'] = value.astype(np.double)
         elif isinstance(value, str):
-            value = np.array([float(s) for s in value.split()], dtype=np.double)
-            assert isinstance(value, np.ndarray)
-            assert value.shape[0] == 3
-            assert len(value) == 3
-            self._props['import_scaling'] = value.astype(np.double)
+            self._props['import_scaling'] = self.string_to_array_converter('import_scaling', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -1037,11 +1068,7 @@ class Validator(object):
             assert value.shape[0] == 3
             self._props['scaling'] = value.astype(np.double)
         elif isinstance(value, str):
-            value = np.array([float(s) for s in value.split()], dtype=np.double)
-            assert isinstance(value, np.ndarray)
-            assert value.shape[0] == 3
-            assert len(value) == 3
-            self._props['scaling'] = value.astype(np.double)
+            self._props['scaling'] = self.string_to_array_converter('scaling', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -1058,6 +1085,8 @@ class Validator(object):
     def image_orientation(self, value):
         if isinstance(value, np.ndarray):
             self._props['image_orientation'] = value.astype(np.double)
+        elif isinstance(value, str):
+            self._props['image_orientation'] = self.string_to_array_converter('image_orientation', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -1070,6 +1099,8 @@ class Validator(object):
     def image_position(self, value):
         if isinstance(value, np.ndarray):
             self._props['image_position'] = value.astype(np.double)
+        elif isinstance(value, str):
+            self._props['image_position'] = self.string_to_array_converter('image_position', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)
@@ -1083,6 +1114,8 @@ class Validator(object):
     def data_center(self, value):
         if isinstance(value, np.ndarray):
             self._props['data_center'] = value.astype(np.double)
+        elif isinstance(value, str):
+            self._props['data_center'] = self.string_to_array_converter('data_center', value)
         else:
             value=np.array(value)
             assert isinstance(value, np.ndarray)

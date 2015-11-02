@@ -88,7 +88,6 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
 
 
     sim.scaling=np.array([2,2,1], dtype=np.double)
-
     return sim
 
 
