@@ -210,7 +210,7 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
     # testing for required attributes
     if ctarray is not None:
         logger.info('Recalculating material mapping from CT array for {}'.format(simulation['name']))
-        specter = tungsten_specter(simulation['aquired_kV],
+        specter = tungsten_specter(simulation['aquired_kV'],
                                    filtration_materials='al',
                                    filtration_mm=simulation['al_filtration'])
         vals = prepare_geometry_from_ct_array(ctarray,
@@ -314,14 +314,17 @@ def ct_runner(materials, simulation, ctarray=None, organ=None, organ_material_ma
     for p, e, n in phase_space:
         score_energy(p, N, spacing, offset, material,
                      density, lut, energy_imparted)
-        log_elapsed_time(time_start, e+1, n, n_histories=n_histories)
-#        if callback is not None:
-#            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
+        log_elapsed_time(time_start, e+1, n)
+        if callback is not None:
+            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
         simulation['start_at_exposure_no'] = e + 1
 
     generate_dose_conversion_factor(simulation, materials)
     simulation['start_at_exposure_no'] = 0
-    return epleed arrays
+    simulation['MC_finished'] = True
+    simulation['MC_running'] = False
+    simulation['MC_ready'] = False
+    return simulation, {'density': density, 'material': material, 'material_map': material_map, 'energy_imparted': energy_imparted}
 
 
 def generate_dose_conversion_factor(simulation, materials):
@@ -424,7 +427,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                    callback=None, phantom_size=32.):
 
     logger.info('Starting simulating CTDIw100 measurement for '
-                '{}'.format(simulation['name))
+                '{}'.format(simulation['name']))
     args = generate_ctdi_phantom(simulation, pmma, air, size=phantom_size)
     N, spacing, offset, material_array, density_array, lut, meas_pos = args
 
