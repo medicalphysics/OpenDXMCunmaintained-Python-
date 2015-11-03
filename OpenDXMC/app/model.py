@@ -274,6 +274,14 @@ class DatabaseInterface(QtCore.QObject):
         self.database_busy.emit(False)
 
 
+    @QtCore.pyqtSlot(str)
+    def remove_simulation(self, name):
+        logger.debug('Attempting to remove simulation {}'.format(name))
+        self.__db.remove_simulation(name)
+        self.emit_simulation_list()
+
+
+
 class Importer(QtCore.QObject):
     request_add_sim_to_database = QtCore.pyqtSignal(dict, dict, bool)
     running = QtCore.pyqtSignal(bool)
@@ -308,12 +316,12 @@ class Runner(QtCore.QThread):
     mc_calculation_finished = QtCore.pyqtSignal()
     request_write_simulation_arrays = QtCore.pyqtSignal(str, dict)
     request_set_simulation_properties = QtCore.pyqtSignal(dict, bool, bool)
-    request_runner_view_update = QtCore.pyqtSignal(str, dict, dict)
+    request_runner_view_update = QtCore.pyqtSignal(dict, dict)
 
     start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.request_save = True
+        self.request_save = False
         self.timer = QtCore.QTimer()
         self.timer.setInterval(600000)
 #        self.time_interval = 600000 # saving data every 10 minutes
@@ -343,16 +351,16 @@ class Runner(QtCore.QThread):
             self.mutex.lock()
             self.request_save = False
             self.mutex.unlock()
-        else:
-            self.request_runner_view_update.emit(name, desc, array_dict)
+
+        self.request_runner_view_update.emit(desc, array_dict)
 
     def run(self):
-        if self.simulation is None:
+        if self.simulation_properties is None or self.simulation_arrays is None:
             return
         if self.material_list is None:
             return
 
-        self.request_set_simulation_properties.emit({'name': self.simulation.name,
+        self.request_set_simulation_properties.emit({'name': self.simulation_properties['name'],
                                                      'MC_running': True},
                                                      False, False)
 
@@ -367,24 +375,22 @@ class Runner(QtCore.QThread):
             self.simulation_properties['MC_running'] = False
             self.simulation_properties['MC_ready'] = False
             self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
-
         except ValueError or AssertionError as e:
             print(e)
             raise e
-            logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation.name))
+            logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation_properties['name']))
             self.simulation_properties['MC_finished'] = False
             self.simulation_properties['MC_running'] = False
             self.simulation_properties['MC_ready'] = False
             self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
-
         else:
             self.request_set_simulation_properties.emit(props_dict, False, False)
-
+            self.request_write_simulation_arrays.emit(props_dict['name'], arr_dict)
         self.simulation_properties = None
         self.simulation_arrays = None
         self.material_list = None
         self.mc_calculation_finished.emit()
-        self.request_save = True
+        self.request_save = False
 
 
 class RunManager(QtCore.QObject):
@@ -395,16 +401,23 @@ class RunManager(QtCore.QObject):
         interface.send_MC_ready_simulation.connect(self.run_simulation)
         self.runner.mc_calculation_finished.connect(interface.request_MC_ready_simulation)
         self.runner.request_set_simulation_properties.connect(interface.set_simulation_properties)
-
+        self.runner.request_write_simulation_arrays.connect(interface.write_simulation_arrays)
         self.runner.finished.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
+        self.current_simulation = ""
 
     @QtCore.pyqtSlot()
     def run_started(self):
         self.mc_calculation_running.emit(True)
 
+    @QtCore.pyqtSlot(str)
+    def cancel_run(self, name):
+        if name == self.current_simulation:
+            self.runner.quit()
+
     @QtCore.pyqtSlot()
     def run_finished(self):
+        self.current_simulation = ""
         self.mc_calculation_running.emit(False)
 
     @QtCore.pyqtSlot(dict, dict, list)
@@ -414,6 +427,7 @@ class RunManager(QtCore.QObject):
             self.runner.simulation_properties = props
             self.runner.simulation_arrays = arrays
             self.runner.material_list = mat_list
+            self.current_simulation = props['name']
             self.runner.start()
 #            self.runner.run2()
             logger.debug('MC thread started')
@@ -428,6 +442,7 @@ class ListModel(QtCore.QAbstractListModel):
     request_import_dicom = QtCore.pyqtSignal(list)
     request_viewing = QtCore.pyqtSignal(str)
     request_copy_elements = QtCore.pyqtSignal(list)
+    request_removal = QtCore.pyqtSignal(str)
     def __init__(self, interface, importer=None, parent=None, simulations=False,
                  materials=False):
         super().__init__(parent)
@@ -438,6 +453,7 @@ class ListModel(QtCore.QAbstractListModel):
         if simulations:
             self.request_data_list.connect(interface.emit_simulation_list)
             self.request_copy_elements.connect(interface.copy_simulation)
+            self.request_removal.connect(interface.remove_simulation)
             if importer:
                 self.request_import_dicom.connect(importer.import_urls)
         elif materials:
@@ -453,6 +469,7 @@ class ListModel(QtCore.QAbstractListModel):
         # setting up
         self.request_data_list.emit()
 
+
     @QtCore.pyqtSlot(list)
     def recive_data_list(self, sims):
         self.layoutAboutToBeChanged.emit()
@@ -463,6 +480,10 @@ class ListModel(QtCore.QAbstractListModel):
     @QtCore.pyqtSlot(str)
     def element_activated(self, name):
         self.request_viewing.emit(name)
+
+    @QtCore.pyqtSlot(str)
+    def request_removal_emit(self, name):
+        self.request_removal.emit(name)
 
 
     def rowCount(self, index):
@@ -524,7 +545,7 @@ class ListModel(QtCore.QAbstractListModel):
 
 class ListView(QtGui.QListView):
     name_activated = QtCore.pyqtSignal(str)
-
+    request_removal = QtCore.pyqtSignal(str)
     def __init__(self, parent=None, simulation=True):
         super().__init__(parent)
         if simulation:
@@ -533,6 +554,7 @@ class ListView(QtGui.QListView):
             self.setDropIndicatorShown(True)
             self.setDragDropMode(self.DragDrop)
             self.setDefaultDropAction(QtCore.Qt.CopyAction)
+
         else:
             self.setAcceptDrops(False)
             self.viewport().setAcceptDrops(False)
@@ -549,12 +571,23 @@ class ListView(QtGui.QListView):
             pass
         super().setModel(model)
         self.name_activated.connect(model.element_activated)
+        self.request_removal.connect(model.request_removal_emit)
 
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def activation_name(self, index):
         if index.isValid():
             self.name_activated.emit(index.data())
+
+    def keyPressEvent(self, event):
+        super().keyPressEvent(event)
+        if event.key() == QtCore.Qt.Key_Delete:
+            indices = self.selectedIndexes()
+            for ind in indices:
+                if ind.isValid():
+                    self.request_removal.emit(ind.data())
+
+
 
 class PropertiesEditModelItem(QtGui.QStandardItem):
     def __init__(self, key, value):
@@ -591,15 +624,21 @@ class PropertiesEditModelItem(QtGui.QStandardItem):
 
 class PropertiesEditModel(QtGui.QStandardItemModel):
     request_properties_from_database = QtCore.pyqtSignal(str)
-    request_update_properties_to_database = QtCore.pyqtSignal(dict)
     request_write_properties_to_database = QtCore.pyqtSignal(dict, bool, bool)
     has_unsaved_changes = QtCore.pyqtSignal(bool)
+    current_simulation_is_running = QtCore.pyqtSignal(bool)
+    request_run_simulation = QtCore.pyqtSignal()
+    request_cancel_simulation = QtCore.pyqtSignal(str)
+
     def __init__(self, database_interface, simulation_list_model, parent=None):
         super().__init__(parent)
         self.current_simulation = ""
         database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
         self.request_properties_from_database.connect(database_interface.request_simulation_properties)
         self.request_write_properties_to_database.connect(database_interface.set_simulation_properties)
+
+        self.request_run_simulation.connect(database_interface.request_MC_ready_simulation)
+
 
         simulation_list_model.request_viewing.connect(self.set_simulation)
 
@@ -628,6 +667,7 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
             item = self.item(row, 1)
             item.update_data(self.validator._props[item.key])
         self.test_unsaved_changes()
+        self.current_simulation_is_running.emit(self.validator.MC_running)
 
     def test_unsaved_changes(self):
         keys_for_deletion = []
@@ -672,6 +712,12 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         return super().setData(index, value, role)
 
     @QtCore.pyqtSlot()
+    def run_simulation(self):
+        self.validator.MC_ready = True
+        self.request_write_properties_to_database.emit(self.validator._props, True, True)
+        self.request_run_simulation.emit()
+
+    @QtCore.pyqtSlot()
     def apply_changes(self):
         self.request_write_properties_to_database.emit(self.validator._props, True, True)
 
@@ -680,14 +726,25 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         self.validator.set_data(self.unsaved_items, reset=False)
         self.set_simulation_properties(self.validator.get_data()[0])
 
+    @QtCore.pyqtSlot()
+    def cancel_MC_run(self):
+        if self.current_simulation == "":
+            return
+
+        self.validator.MC_ready = False
+        self.validator.MC_running = False
+        self.request_write_properties_to_database.emit(self.validator.get_data()[0], False, False)
+        self.request_cancel_simulation.emit(self.current_simulation)
+
 
 
 class PropertiesEditWidget(QtGui.QWidget):
-    def __init__(self, database_interface, simulation_list_model, parent=None):
+    def __init__(self, database_interface, simulation_list_model, run_manager, parent=None):
         super().__init__(parent)
         layout = QtGui.QVBoxLayout()
         table = QtGui.QTableView()
         model = PropertiesEditModel(database_interface, simulation_list_model)
+        model.request_cancel_simulation.connect(run_manager.cancel_run)
         table.setModel(model)
         layout.addWidget(table)
         sub_layout = QtGui.QHBoxLayout()
@@ -695,22 +752,27 @@ class PropertiesEditWidget(QtGui.QWidget):
         apply_button = QtGui.QPushButton()
         reset_button = QtGui.QPushButton()
         run_button = QtGui.QPushButton()
+        cancel_button = QtGui.QPushButton()
         apply_button.setText('Apply')
         reset_button.setText('Reset')
         run_button.setText('Run')
+        cancel_button.setText('Cancel')
         sub_layout.addWidget(reset_button)
         sub_layout.addWidget(apply_button)
         sub_layout.addWidget(run_button)
+        sub_layout.addWidget(cancel_button)
         layout.setContentsMargins(0, 0, 0, 0)
         sub_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
 
         reset_button.clicked.connect(model.reset_changes)
+        cancel_button.clicked.connect(model.cancel_MC_run)
         apply_button.clicked.connect(model.apply_changes)
+        run_button.clicked.connect(model.run_simulation)
         model.has_unsaved_changes.connect(reset_button.setEnabled)
         model.has_unsaved_changes.connect(apply_button.setEnabled)
-
+        model.current_simulation_is_running.connect(cancel_button.setEnabled)
 
 
 

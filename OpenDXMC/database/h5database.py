@@ -326,6 +326,7 @@ class Database(object):
         # removing array data
         self.remove_node('/simulations', name)
         self.close()
+        logger.debug('Removed simulation {}'.format(name))
         return
 
 #    def get_simulation(self, name, ignore_arrays=False, unsafe_read=True):
@@ -386,7 +387,7 @@ class Database(object):
             logger.debug('Unable to update simulation meta data, requires name key in update dictionary')
         self.open()
         meta_table = self.get_node('/', 'meta_data', create=False)
-        breaker = False        
+        breaker = False
         for row in meta_table.where('name == b"{}"'.format(properties['name'])):
             if not breaker:
                 if row['MC_running'] and cancel_if_running:
@@ -397,7 +398,7 @@ class Database(object):
                     if key in meta_table.colnames:
                         row[key] = value
                 row.update()
-                
+
                 breaker = True
         if not breaker:
             row = meta_table.row
@@ -422,7 +423,10 @@ class Database(object):
         else:
             node_path = '/simulations/{0}'.format(name)
         self.open()
-        
+
+        if isinstance(array, dict):
+            array = Validator().validate_structured_array(array, array_name)
+
         self.get_node(node_path, array_name, create=True, overwrite=True, obj=array)
         logger.debug('Wrote array {0} to database for simulation {1}'.format(array_name, name))
         self.close()
@@ -495,7 +499,7 @@ class Database(object):
             raise ValueError('No simulations in database')
         meta_table = self.get_node('/', 'meta_data', create=False)
 
-        for row in meta_table.where('MC_ready & ~ MC_finished & ~ MC_running'):
+        for row in meta_table.where('MC_ready & ~ MC_running'):
             name = str(row['name'], encoding='utf-8')
             break
         else:
@@ -503,10 +507,10 @@ class Database(object):
             logger.debug('No ready simulations found.')
             raise ValueError('No simulations ready')
 
-        properties = self.get_simulation_meta_data(name)
+        properties = self.get_simulation_metadata(name)
         arrays = {}
         for key in ARRAY_TEMPLATES.keys():
-            if ARRAY_TEMPLATES[key][1]:
+            if not ARRAY_TEMPLATES[key][1]:
                 try:
                     arrays[key] = self.get_simulation_array(name, key)
                 except ValueError:
@@ -768,7 +772,7 @@ class Validator(object):
 
     def string_to_array_converter(self, name, string):
         dtype = self._pt[name][1]
-        
+
         if len(dtype.shape) > 0:
             string = " ".join(string.split(":"))
             string = " ".join(string.split(","))
@@ -786,8 +790,8 @@ class Validator(object):
                     break
             return val
         raise AssertionError
-        
-            
+
+
 
 
     @property

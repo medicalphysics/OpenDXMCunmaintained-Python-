@@ -163,7 +163,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 #        self.properties_model = PropertiesEditModel(self.interface)
-        
+
 
         self.viewcontroller = ViewController(self.interface)
 
@@ -171,6 +171,7 @@ class MainWindow(QtGui.QMainWindow):
         ## MC runner
         self.mcrunner = RunManager(self.interface)
         self.mcrunner.mc_calculation_running.connect(simulation_busywidget.busy)
+        self.viewcontroller.set_mc_runner(self.mcrunner.runner)
 
 
         # Models
@@ -178,6 +179,9 @@ class MainWindow(QtGui.QMainWindow):
                                                simulations=True)
         simulation_list_view = ListView()
         simulation_list_view.setModel(self.simulation_list_model)
+        self.simulation_list_model.request_viewing.connect(self.viewcontroller.set_simulation)
+
+
 
         self.material_list_model = ListModel(self.interface, self,
                                              materials=True)
@@ -196,11 +200,11 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(material_list_view, 1)
         central_splitter.addWidget(list_view_collection_widget)
 
-        simulation_editor = PropertiesEditWidget(self.interface, self.simulation_list_model)
+        simulation_editor = PropertiesEditWidget(self.interface, self.simulation_list_model, self.mcrunner)
         central_splitter.addWidget(simulation_editor)
-        
 
-        central_splitter.addWidget(self.viewcontroller.graphicsview)
+
+        central_splitter.addWidget(self.viewcontroller.view_widget())
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)

@@ -50,24 +50,33 @@ class ViewController(QtCore.QObject):
         self.current_simulation = " "
         self.current_index = 0
         self.current_view_orientation = 2
-        self.current_scene = ''
+        self.current_scene = 'planning'
 
         self.graphicsview = View()
 
-        self.scenes = {}
+        self.scenes = {'planning': PlanningScene(),
+                       'running':  RunningScene(),
+                       'material': MaterialScene()}
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
             scene.update_index.connect(self.update_index)
+            scene.request_array.connect(database_interface.request_view_array)
+            database_interface.send_view_array.connect(scene.set_requested_array)
+
+
+
 
 
         self.request_array_slice.connect(database_interface.request_view_array_slice)
         database_interface.send_view_array_slice.connect(self.reload_slice)
 
         self.request_metadata.connect(database_interface.request_simulation_properties)
-        database_interface.send_view_sim_propeties.connect(self.update_simulation_metadata)
+        database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
 
-
-
+    def set_mc_runner(self, runner):
+        if runner is not None:
+            if 'running' in self.scenes:
+                runner.request_runner_view_update.connect(self.scenes['running'].set_running_data)
 
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
@@ -80,7 +89,8 @@ class ViewController(QtCore.QObject):
             return
         for scene in self.scenes.values():
             scene.set_metadata(data_dict)
-
+        self.update_index(self.current_index)
+        self.graphicsview.fitInView(self.graphicsview.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
     @QtCore.pyqtSlot(int)
     def update_index(self, index):
@@ -100,6 +110,8 @@ class ViewController(QtCore.QObject):
         self.current_view_orientation %= 3
         for scene in self.scenes.values():
             scene.set_view_orientation(self.current_view_orientation, self.current_index)
+        self.update_index(self.current_index)
+        self.graphicsview.fitInView(self.graphicsview.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
     @QtCore.pyqtSlot(str)
     def selectScene(self, scene_name):
@@ -129,7 +141,7 @@ class ViewController(QtCore.QObject):
         for scene_name in self.scenes.keys():
             sceneSelect.addAction(scene_name)
         sceneSelect.scene_selected.connect(self.selectScene)
-        self.scene_selected.connect(sceneSelect.sceneSelected)
+#        self.scene_selected.connect(sceneSelect.sceneSelected)
         for action in sceneSelect.actions():
             menu_widget.addAction(action)
 
@@ -156,7 +168,7 @@ class Scene(QtGui.QGraphicsScene):
 
 
 
-    def set_meta_data(self, sim, index=0):
+    def set_metadata(self, sim, index=0):
         self.name = sim.get('name', '')
         self.spacing = sim.get('spacing', np.ones(3, np.double))
         self.shape = sim.get('shape', np.ones(3, np.int))
@@ -164,7 +176,7 @@ class Scene(QtGui.QGraphicsScene):
         self.index = index % self.shape[self.view_orientation]
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
-    def set_requested_arrays(self, name, array, array_name):
+    def set_requested_array(self, name, array, array_name):
         pass
 
 
@@ -173,8 +185,9 @@ class Scene(QtGui.QGraphicsScene):
     def reload_slice(self, simulation_name, arr, array_name, index, orientation):
         pass
 
-    def set_view_orientation(self, orientation):
+    def set_view_orientation(self, orientation, index):
         self.view_orientation = orientation
+        self.index = index % self.shape[self.view_orientation]
 
     def wheelEvent(self, ev):
         if ev.delta() > 0:
@@ -813,8 +826,8 @@ class PlanningScene(Scene):
         self.is_bit_array = False
         self.lut = get_lut('pet')
 
-    def set_meta_data(self, sim, index=0):
-        super().set_meta_data(sim, index)
+    def set_metadata(self, sim, index=0):
+        super().set_metadata(sim, index)
         self.is_bit_array = sim.get('is_phantom', False)
         self.image_item.setVisible(not self.is_bit_array)
         self.image_item_bit.setVisible(self.is_bit_array)
@@ -830,21 +843,21 @@ class PlanningScene(Scene):
 
 
 
-     @QtCore.pyqtSlot(str, np.ndarray, str)
-    def set_requested_arrays(self, name, array, array_name):
+    @QtCore.pyqtSlot(str, np.ndarray, str)
+    def set_requested_array(self, name, array, array_name):
         if name != self.name:
             return
         if array_name == 'organ_map':
-            organ_max_value = array['key'].max()
+            organ_max_value = array['organ'].max()
             lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value + 1)]
             self.image_item_bit.set_lut(lut)
         elif array_name == 'exposure_modulation':
-            self.aec_item.set_aec(sim.exposure_modulation, self.view_orientation, self.shape)
+            self.aec_item.set_aec(array, self.view_orientation, self.shape)
 
-    def set_view_orientation(self, view_orientation):
+    def set_view_orientation(self, view_orientation, index):
         self.view_orientation = view_orientation
         self.aec_item.setViewOrientation(view_orientation)
-
+        self.index = index % self.shape[self.view_orientation]
         self.updateSceneTransform()
 
     def updateSceneTransform(self):
@@ -880,14 +893,14 @@ class PlanningScene(Scene):
             self.image_item.setImage(arr)
         self.aec_item.setIndex(self.index)
 
-    def wheelEvent(self, ev):
-        if ev.delta() > 0:
-            self.index += 1
-        elif ev.delta() < 0:
-            self.index -= 1
-        self.index %= self.shape[self.view_orientation]
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
-        ev.accept()
+#    def wheelEvent(self, ev):
+#        if ev.delta() > 0:
+#            self.index += 1
+#        elif ev.delta() < 0:
+#            self.index -= 1
+#        self.index %= self.shape[self.view_orientation]
+#        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+#        ev.accept()
 
 #class PlanningScene(QtGui.QGraphicsScene):
 #    def __init__(self, parent=None):
@@ -994,7 +1007,7 @@ class PlanningScene(Scene):
 #        ev.accept()
 
 
-class RunningScene(QtGui.QGraphicsScene):
+class RunningScene(Scene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
@@ -1003,34 +1016,53 @@ class RunningScene(QtGui.QGraphicsScene):
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
         self.nodata_item.setVisible(True)
-        self.array = np.random.uniform(size=(8, 8, 8))
-        self.shape = np.array((8, 8, 8))
-        self.spacing = np.array((1., 1., 1.))
-        self.view_orientation = 2
+
+        self.progress_item = self.addText('0 %')
+        self.progress_item.setDefaultTextColor(QtCore.Qt.white)
+
+        self.n_exposures = 1
+        self.array = None
+        self.view_orientation = 1
+
+
+    def set_metadata(self, props, index=0):
+        self.setNoData()
+        super().set_metadata(props, index)
+        collimation = props['detector_rows']*props['detector_width']
+        if props['is_spiral']:
+            self.n_exposures = props['exposures'] * (1 + abs(props['start'] - props['stop']) / collimation / props['pitch'])
+        else:
+            self.n_exposures = 1
+        self.updateSceneTransform()
+
 
     def setNoData(self):
-        self.array = np.zeros((2, 2, 2))
-        self.shape = self.array.shape
+        self.array = None
         self.image_item.setVisible(False)
+        self.progress_item.setVisible(False)
         self.nodata_item.setVisible(True)
 
     def defaultLevels(self, array):
         p = array.max() - array.min()
         return (p/2., p / 2. )
 
-    def setArray(self, energy_imparted, spacing, scaling):
-        self.array = energy_imparted
-        self.shape = energy_imparted.shape
-        self.spacing = spacing * scaling
+    @QtCore.pyqtSlot(dict, dict)
+    def set_running_data(self, props, arr_dict):
+        self.array = arr_dict.get('energy_imparted', None)
+
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
-        self.reloadImages()
+        self.progress_item.setVisible(True)
+        if 'start_at_exposure_no' in props:
+            self.progress_item.setPlainText("{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1) ))
+
+
         self.image_item.setLevels(self.defaultLevels(self.array))
+        self.reloadImages()
         self.updateSceneTransform()
 
-    @QtCore.pyqtSlot(int)
-    def setViewOrientation(self, view_orientation):
-        self.view_orientation = view_orientation
+    def set_view_orientation(self, orientation, index):
+        self.view_orientation = orientation
         self.reloadImages()
         self.updateSceneTransform()
 
@@ -1044,8 +1076,11 @@ class RunningScene(QtGui.QGraphicsScene):
             self.setSceneRect(self.image_item.sceneBoundingRect())
 
     def reloadImages(self):
-        self.image_item.setImage(self.array.max(axis=self.view_orientation))
+        if self.array is not None:
+            self.image_item.setImage(self.array.max(axis=self.view_orientation))
 
+    def wheelEvent(self, ev):
+        pass
 
 
 class MaterialMapItem(QtGui.QGraphicsItem):
@@ -1061,7 +1096,7 @@ class MaterialMapItem(QtGui.QGraphicsItem):
         self.map = []
 
         for ind in range(len(mapping)):
-            self.map.append((colors[ind], str(mapping['value'][ind], encoding='utf-8')))
+            self.map.append((colors[ind], str(mapping['material_name'][ind], encoding='utf-8')))
 
         max_str_index = 0
         max_len_str = 0
@@ -1089,8 +1124,7 @@ class MaterialMapItem(QtGui.QGraphicsItem):
             painter.drawRect(QtCore.QRectF(0, ind*2*h, self.box_size, self.box_size))
 
 
-class MaterialScene(QtGui.QGraphicsScene):
-    request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
+class MaterialScene(Scene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.lut = get_lut('pet')
@@ -1100,51 +1134,47 @@ class MaterialScene(QtGui.QGraphicsScene):
         self.addItem(self.map_item)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
-        self.array_name = 'material'
-#        self.array = np.random.uniform(size=(8, 8, 8))
-        self.shape = np.array((8, 8, 8))
-        self.spacing = np.array((1., 1., 1.))
-        self.index = 0
-        self.view_orientation = 2
-        self.name = ''
+
+        self.array_names = ['material']
+
 
     def setNoData(self):
-#        self.array = np.zeros((2, 2, 2))
-        self.spacing = np.array((1., 1., 1.))
-        self.shape = np.array((8, 8, 8))
         self.nodata_item.setVisible(True)
         self.map_item.setVisible(False)
         self.image_item.setVisible(False)
         self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
-    def update_data(self, sim):
-        if sim.material_map is None:
-            self.setNoData()
-            return
-        self.nodata_item.setVisible(False)
-        self.map_item.setVisible(True)
-        self.image_item.setVisible(True)
-
-        self.name = sim.name
-        self.spacing = sim.spacing * sim.scaling
-        self.shape = sim.shape / sim.scaling
+    def set_metadata(self, sim, index=0):
+        super().set_metadata(sim, index)
+        self.setNoData()
         self.index = self.index % self.shape[self.view_orientation]
-        organ_max_value = sim.material_map['key'].max()
-        lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value + 1)]
-        self.image_item.set_lut(lut)
-
-        self.map_item.set_map(sim.material_map, lut)
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+        self.request_array.emit(self.name, 'material_map')
         self.updateSceneTransform()
 
-    @QtCore.pyqtSlot(int)
-    def setViewOrientation(self, view_orientation):
-        self.view_orientation = view_orientation
+    @QtCore.pyqtSlot(str, np.ndarray, str)
+    def set_requested_array(self, name, array, array_name):
+        if name != self.name:
+            return
+        if array_name == 'material_map':
+            organ_max_value = array['material'].max()
+            print(organ_max_value)
+            lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value+1)]
+            self.image_item.set_lut(lut)
+            self.map_item.set_map(array, lut)
+
+            self.nodata_item.setVisible(False)
+            self.map_item.setVisible(True)
+            self.image_item.setVisible(True)
+            self.updateSceneTransform()
+
+    def set_view_orientation(self, orientation, index):
+        self.view_orientation = orientation
+        self.index = index % self.shape[self.view_orientation]
         self.updateSceneTransform()
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+
 
     def updateSceneTransform(self):
-        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
 
@@ -1152,7 +1182,7 @@ class MaterialScene(QtGui.QGraphicsScene):
 
         shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
         rect = QtCore.QRectF(0, 0, shape[1], shape[0])
-        self.map_item.setScale(rect.height() / self.map_item.boundingRect().height())
+        self.map_item.setScale(self.image_item.mapRectToScene(rect).height() / self.map_item.boundingRect().height())
         self.map_item.setPos(self.image_item.mapRectToScene(rect).topRight())
         self.setSceneRect(self.image_item.mapRectToScene(rect).united(self.map_item.sceneBoundingRect()))
 
@@ -1165,14 +1195,14 @@ class MaterialScene(QtGui.QGraphicsScene):
             return
         self.image_item.setImage(arr)
 
-    def wheelEvent(self, ev):
-        if ev.delta() > 0:
-            self.index += 1
-        elif ev.delta() < 0:
-            self.index -= 1
-        self.index %= self.shape[self.view_orientation]
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
-        ev.accept()
+#    def wheelEvent(self, ev):
+#        if ev.delta() > 0:
+#            self.index += 1
+#        elif ev.delta() < 0:
+#            self.index -= 1
+#        self.index %= self.shape[self.view_orientation]
+#        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+#        ev.accept()
 
 
 

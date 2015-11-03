@@ -28,29 +28,31 @@ def half_shuffle(arr):
     return shuf
 
 
-def ct_phase_space(simulation, batch_size=None):
-    arglist = ['scan_fov', 'sdd', 'total_collimation']
+def ct_phase_space(simulation, exposure_modulation, batch_size=None):
+    arglist = ['scan_fov', 'sdd']
     kwarglist = ['start', 'stop', 'exposures', 'histories',
-                 'exposure_modulation', 'start_at_exposure_no', 'batch_size',
+                 'start_at_exposure_no', 'batch_size',
                  ]
 
-    args = [getattr(simulation, a) for a in arglist]
-    kwargs = {}
+    args = [simulation.get(a) for a in arglist]
+    args.append(simulation.get('detector_rows') * simulation.get('detector_width'))
+    kwargs = {'exposure_modulation': exposure_modulation}
     for a in kwarglist:
-        kwargs[a] = getattr(simulation, a)
-    kwargs['rotation_center'] = simulation.data_center
-    kwargs['rotation_plane_cosines'] = simulation.image_orientation
+        kwargs[a] = simulation.get(a)
+    kwargs['rotation_center'] = simulation.get('data_center')
+    kwargs['rotation_plane_cosines'] = simulation.get('image_orientation')
+
 #    'rotation_center', kwargs['rotation_plane_cosines']
 
-    if simulation.is_spiral:
-        kwargs['pitch'] = simulation.pitch
+    if simulation.get('is_spiral'):
+        kwargs['pitch'] = simulation.get('pitch')
         phase_func = ct_spiral
     else:
-        kwargs['step'] = simulation.step
+        kwargs['step'] = simulation.get('step')
         phase_func = ct_seq
 
-    s = specter(simulation.kV, filtration_materials='Al',
-                filtration_mm=simulation.al_filtration)
+    s = specter(simulation.get('kV'), filtration_materials='Al',
+                filtration_mm=simulation.get('al_filtration'))
     kwargs['energy_specter'] = s
 
     return phase_func(*args, **kwargs)

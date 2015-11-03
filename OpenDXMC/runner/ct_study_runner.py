@@ -38,7 +38,8 @@ def log_elapsed_time(time_start, elapsed_exposures, total_exposures,
                                      elapsed_exposures, total_exposures))
 
 
-def recarray_to_dict(arr, key='key', value='value', value_is_string=False):
+def recarray_to_dict(arr, key=None, value=None, value_is_string=False):
+    key, value = arr.dtype.names
     assert key in arr.dtype.names
     assert value in arr.dtype.names
     if value_is_string:
@@ -167,6 +168,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         material_map = {}
         material_att = {}
         material_dens = {}
+        materials = [m for m in materials if m.organic]
         materials.sort(key=lambda x: x.density)
         for i, mat in enumerate(materials):
             material_map[i] = mat.name
@@ -202,7 +204,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
 
 
 def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=None,
-                                  organ_material_map=None, second_try=False):
+                                  organ_material_map=None):
     """
     validating a ct mc simulation
     """
@@ -214,7 +216,7 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
                                    filtration_materials='al',
                                    filtration_mm=simulation['al_filtration'])
         vals = prepare_geometry_from_ct_array(ctarray,
-                                              scaling,
+                                              simulation['scaling'],
                                               specter,
                                               materials)
     elif (organ is not None) and (organ_material_map is not None):
@@ -237,8 +239,8 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
 
     # Testing for required materials if the simulation have a material_map
     material_names = [m.name for m in materials]
-    for m_name in material_map['value']:
-        if str(m_name, encoding='utf-8') not in material_names:
+    for m_name in material_map.values():
+        if m_name not in material_names:
             raise ValueError('Provided materials are not in ct study')
 
     # test for correct material geometry and mapping
@@ -260,8 +262,9 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
     return material, material_map, density
 
 
-def ct_runner(materials, simulation, ctarray=None, organ=None, organ_material_map=None,
-              energy_imparted_to_dose_conversion=True, callback=None):
+def ct_runner(materials, simulation, ctarray=None, organ=None,
+              organ_material_map=None, exposure_modulation=None,
+              energy_imparted_to_dose_conversion=True, callback=None, **kwargs):
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 
@@ -281,15 +284,17 @@ def ct_runner(materials, simulation, ctarray=None, organ=None, organ_material_ma
     materials_organic = [m for m in materials if m.organic]
 
     # Validating if everything is in place
-    material, material_map, density = ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=None, organ_material_map=None)
+    material, material_map, density = ct_runner_validate_simulation(materials, simulation,
+                                                                    ctarray=ctarray,
+                                                                    organ_material_map=organ_material_map,
+                                                                    organ=organ)
 
 #    if callback is not None:
 #        callback(simulation.name, {'material': simulation.material,
 #                                   'material_map': simulation.material_map},
 #                 simulation.start_at_exposure_no)
 
-    raise ValueError('see below')
-    phase_space = ct_phase_space(simulation)
+    phase_space = ct_phase_space(simulation, exposure_modulation)
 
     N = np.array(material.shape, dtype=np.double)
 
@@ -316,7 +321,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None, organ_material_ma
                      density, lut, energy_imparted)
         log_elapsed_time(time_start, e+1, n)
         if callback is not None:
-            callback(simulation.name, {'energy_imparted': energy_imparted}, e + 1)
+            callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1)
         simulation['start_at_exposure_no'] = e + 1
 
     generate_dose_conversion_factor(simulation, materials)
@@ -344,7 +349,7 @@ def generate_dose_conversion_factor(simulation, materials):
                  pmma material and ctdiw_100 to generate energy to dose
                  conversion factor."""
         logger.warning(msg)
-    return eple
+
 
 
 def obtain_ctdiair_conversion_factor(simulation, air_material):
@@ -367,9 +372,9 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
     en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
                                   filtration_mm=simulation['al_filtration'])
-
+    total_collimation = simulation['detector_rows'] * simulation['detector_width']
     phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
-                         simulation['total_collimation'], start=0, stop=0, step=0,
+                         total_collimation, start=0, stop=0, step=0,
                          exposures=simulation['exposures'],
                          histories=simulation['histories'],
                          energy_specter=en_specter,
@@ -383,7 +388,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
-    simulation['conversion_factor_ctdiair'] = simulation['ctdi_air100'] / d * simulation['total_collimation']
+    simulation['conversion_factor_ctdiair'] = simulation['ctdi_air100'] / d * total_collimation
 
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32.):
@@ -436,9 +441,9 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
                                   filtration_mm=simulation['al_filtration'])
-
+    total_collimation = simulation['detector_rows'] * simulation['detector_width']
     phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
-                         simulation['total_collimation'], start=0, stop=0, step=1,
+                         total_collimation, start=0, stop=0, step=1,
                          exposures=simulation['exposures'],
                          histories=simulation['histories'],
                          energy_specter=en_specter,
@@ -457,4 +462,4 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
-    simulation['conversion_factor_ctdiw'] = simulation['ctdi_w100'] / ctdiv * simulation['total_collimation']
+    simulation['conversion_factor_ctdiw'] = simulation['ctdi_w100'] / ctdiv * total_collimation
