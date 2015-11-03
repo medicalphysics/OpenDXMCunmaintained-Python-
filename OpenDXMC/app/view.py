@@ -47,7 +47,7 @@ class ViewController(QtCore.QObject):
     def __init__(self, database_interface, parent=None):
         super().__init__(parent)
 
-        self.current_simulation = None
+        self.current_simulation = " "
         self.current_index = 0
         self.current_view_orientation = 2
         self.current_scene = ''
@@ -66,16 +66,20 @@ class ViewController(QtCore.QObject):
         self.request_metadata.connect(database_interface.request_simulation_properties)
         database_interface.send_view_sim_propeties.connect(self.update_simulation_metadata)
 
+
+
+
     @QtCore.pyqtSlot(str)
-    def view_simulation(self, name):
+    def set_simulation(self, name):
         self.current_simulation = name
         self.request_metadata.emit(self.current_simulation)
 
     @QtCore.pyqtSlot(dict)
-    def update_simulation_metadata(self, sim_propeties_dict):
-        if sim_propeties_dict.get('name', '') == self.current_simulation:
-            for scene in self.scenes.values():
-                scene.set_metadata(sim_propeties_dict)
+    def set_simulation_properties(self, data_dict):
+        if data_dict.get('name', '') != self.current_simulation:
+            return
+        for scene in self.scenes.values():
+            scene.set_metadata(data_dict)
 
 
     @QtCore.pyqtSlot(int)
@@ -86,7 +90,8 @@ class ViewController(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
     def reload_slice(self, name, arr_name, arr, index, orientation):
-        self.scenes[self.current_scene].reload_slice(name, arr_name, arr, index, orientation)
+        if name == self.current_simulation:
+            self.scenes[self.current_scene].reload_slice(name, arr_name, arr, index, orientation)
 
 
     @QtCore.pyqtSlot()
@@ -94,7 +99,7 @@ class ViewController(QtCore.QObject):
         self.current_view_orientation += 1
         self.current_view_orientation %= 3
         for scene in self.scenes.values():
-            scene.set_view_orientation(self.current_view_orientation)
+            scene.set_view_orientation(self.current_view_orientation, self.current_index)
 
     @QtCore.pyqtSlot(str)
     def selectScene(self, scene_name):
@@ -103,13 +108,45 @@ class ViewController(QtCore.QObject):
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_index(self.current_index)
 
+    def view_widget(self):
+        wid = QtGui.QWidget()
+        main_layout = QtGui.QHBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        view_layout = QtGui.QVBoxLayout()
+        view_layout.setContentsMargins(0, 0, 0, 0)
+
+        main_layout.addLayout(view_layout)
+
+
+        menu_widget = QtGui.QMenuBar(wid)
+        menu_widget.setContentsMargins(0, 0, 0, 0)
+        orientation_action = QtGui.QAction('Orientation', menu_widget)
+        orientation_action.triggered.connect(self.selectViewOrientation)
+
+        menu_widget.addAction(orientation_action)
+
+        sceneSelect = SceneSelectGroup(wid)
+        for scene_name in self.scenes.keys():
+            sceneSelect.addAction(scene_name)
+        sceneSelect.scene_selected.connect(self.selectScene)
+        self.scene_selected.connect(sceneSelect.sceneSelected)
+        for action in sceneSelect.actions():
+            menu_widget.addAction(action)
+
+        view_layout.addWidget(menu_widget)
+
+        view_layout.addWidget(self.graphicsview)
+        wid.setLayout(main_layout)
+        return wid
 
 
 
 class Scene(QtGui.QGraphicsScene):
     update_index = QtCore.pyqtSignal(int)
+    request_array = QtCore.pyqtSignal(str, str)
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.name = ''
         self.array_names = []
         self.view_orientation = 2
         self.index = 0
@@ -119,8 +156,18 @@ class Scene(QtGui.QGraphicsScene):
 
 
 
-    def set_meta_data(self, meta_data):
+    def set_meta_data(self, sim, index=0):
+        self.name = sim.get('name', '')
+        self.spacing = sim.get('spacing', np.ones(3, np.double))
+        self.shape = sim.get('shape', np.ones(3, np.int))
+        self.scaling = sim.get('scaling', np.ones(3, np.double))
+        self.index = index % self.shape[self.view_orientation]
+
+    @QtCore.pyqtSlot(str, np.ndarray, str)
+    def set_requested_arrays(self, name, array, array_name):
         pass
+
+
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, simulation_name, arr, array_name, index, orientation):
@@ -137,6 +184,8 @@ class Scene(QtGui.QGraphicsScene):
         self.index %= self.shape[self.view_orientation]
         self.update_index.emit(self.index)
         ev.accept()
+
+
 
 
 
@@ -749,52 +798,53 @@ class AecItem(QtGui.QGraphicsItem):
         painter.drawPath(self.aec_path())
 
 
-class PlanningScene(QtGui.QGraphicsScene):
-    request_reload_slice = QtCore.pyqtSignal(str, str, int, int)
-    def __init__(self, parent=None, lut='pet'):
+class PlanningScene(Scene):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
         self.image_item_bit = BitImageItem()
         self.addItem(self.image_item)
         self.addItem(self.image_item_bit)
 
-        self.name = ''
+
         self.aec_item = AecItem()
         self.addItem(self.aec_item)
-        self.shape = np.array((1., 1., 1.))
-        self.array_name = 'ctarray'
-        self.spacing = np.array((1., 1., 1.))
-        self.index = 0
-        self.view_orientation = 2
-
         self.image_item.setLevels((0, 500))
         self.is_bit_array = False
-        self.lut = get_lut(lut)
+        self.lut = get_lut('pet')
 
-    def update_data(self, sim):
-        self.is_bit_array = sim.is_phantom
+    def set_meta_data(self, sim, index=0):
+        super().set_meta_data(sim, index)
+        self.is_bit_array = sim.get('is_phantom', False)
         self.image_item.setVisible(not self.is_bit_array)
         self.image_item_bit.setVisible(self.is_bit_array)
-        self.name = sim.name
+
         if self.is_bit_array:
-            self.array_name = 'organ'
-            organ_max_value = sim.organ_map['key'].max()
+            self.array_names = ['organ']
+            self.request_array.emit(self.name, 'organ_map')
+        else:
+            self.array_names = ['ctarray']
+        self.request_array.emit(self.name, 'exposure_modulation')
+
+        self.updateSceneTransform()
+
+
+
+     @QtCore.pyqtSlot(str, np.ndarray, str)
+    def set_requested_arrays(self, name, array, array_name):
+        if name != self.name:
+            return
+        if array_name == 'organ_map':
+            organ_max_value = array['key'].max()
             lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value + 1)]
             self.image_item_bit.set_lut(lut)
-        else:
-            self.array_name = 'ctarray'
-        self.spacing = sim.spacing
-        self.shape = sim.shape
-        self.index = self.index % self.shape[self.view_orientation]
-        self.aec_item.set_aec(sim.exposure_modulation, self.view_orientation, self.shape)
-        self.updateSceneTransform()
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+        elif array_name == 'exposure_modulation':
+            self.aec_item.set_aec(sim.exposure_modulation, self.view_orientation, self.shape)
 
-    @QtCore.pyqtSlot(int)
-    def setViewOrientation(self, view_orientation):
+    def set_view_orientation(self, view_orientation):
         self.view_orientation = view_orientation
         self.aec_item.setViewOrientation(view_orientation)
-        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
+
         self.updateSceneTransform()
 
     def updateSceneTransform(self):

@@ -559,36 +559,36 @@ class ListView(QtGui.QListView):
 class PropertiesEditModelItem(QtGui.QStandardItem):
     def __init__(self, key, value):
         super().__init__()
-        self.key = key        
+        self.key = key
         self.value = None
 
         init_val, dtype, volatile, editable, description, order = PROPETIES_DICT_TEMPLATE[key]
         self.dtype = dtype
         self.setEditable(editable)
-        
-        if dtype.type is np.bool_:
-            self.setCheckable(True)       
-        self.update_data(value)        
-          
-          
 
-        
+        if dtype.type is np.bool_:
+            self.setCheckable(True)
+        self.update_data(value)
+
+
+
+
     def update_data(self, value):
         self.value = value
         if len(self.dtype.shape) > 0:
             val_t = " ".join([str(val) for val in value.astype(self.dtype.base.type)])
-            self.setData(val_t, QtCore.Qt.DisplayRole)            
+            self.setData(val_t, QtCore.Qt.DisplayRole)
         else:
             if self.dtype.type is np.bool_:
                 if value:
-                    c_val = QtCore.Qt.Checked 
+                    c_val = QtCore.Qt.Checked
                 else:
-                    c_val = QtCore.Qt.Unchecked             
+                    c_val = QtCore.Qt.Unchecked
                 self.setData(c_val, QtCore.Qt.CheckStateRole)
             else:
                 self.setData(value, QtCore.Qt.DisplayRole)
 
-        
+
 class PropertiesEditModel(QtGui.QStandardItemModel):
     request_properties_from_database = QtCore.pyqtSignal(str)
     request_update_properties_to_database = QtCore.pyqtSignal(dict)
@@ -600,78 +600,88 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
         self.request_properties_from_database.connect(database_interface.request_simulation_properties)
         self.request_write_properties_to_database.connect(database_interface.set_simulation_properties)
-        
+
         simulation_list_model.request_viewing.connect(self.set_simulation)
 
-        self.validator = Validator()        
+        self.validator = Validator()
         self.unsaved_items = {}
-        
+
         propeties_dict, array_dict = self.validator.get_data()
         row = 0
         for key, value in propeties_dict.items():
             self.setItem(row, 0, QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4]))
             self.setItem(row, 1, PropertiesEditModelItem(key, value))
             row += 1
-              
+
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
         self.current_simulation = name
         self.request_properties_from_database.emit(self.current_simulation)
-        
-    @QtCore.pyqtSlot(dict)    
+
+    @QtCore.pyqtSlot(dict)
     def set_simulation_properties(self, data_dict):
-        if data_dict['name'] != self.current_simulation:            
+        if data_dict['name'] != self.current_simulation:
             return
-        self.validator.set_data(props=data_dict, reset=True)       
+        self.validator.set_data(props=data_dict, reset=True)
         self.unsaved_items = {}
         for row in range(self.rowCount()):
             item = self.item(row, 1)
             item.update_data(self.validator._props[item.key])
         self.test_unsaved_changes()
-            
+
     def test_unsaved_changes(self):
-            
+        keys_for_deletion = []
+        for key, value in self.unsaved_items.items():
+            if isinstance(value, np.ndarray):
+                if np.sum(np.nonzero(value - getattr(self.validator, key))) == 0:
+                    keys_for_deletion.append(key)
+            else:
+                if (value - getattr(self.validator, key)) == 0:
+                    keys_for_deletion.append(key)
+        for key in keys_for_deletion:
+            del self.unsaved_items[key]
+
         self.has_unsaved_changes.emit(len(self.unsaved_items) > 0)
-            
-            
+
+
     def setData(self, index, value, role):
         if not index.isValid():
             return False
         if index.column() == 0:
             return super().setData(index, value, role)
-            
+
         if role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole, QtCore.Qt.CheckStateRole]:
             item = self.itemFromIndex(index)
             if not self.validator._pt[item.key][3]:
-                
+
                 return False
             if role == QtCore.Qt.CheckStateRole:
                 value = value == QtCore.Qt.Checked
-                
+
             try:
                 setattr(self.validator, item.key, value)
             except AssertionError:
                 return False
             else:
                 if item.key not in self.unsaved_items:
-                    
+
                     self.unsaved_items[item.key] = item.value
                 item.update_data(getattr(self.validator, item.key))
                 self.test_unsaved_changes()
             return True
         return super().setData(index, value, role)
-    
+
     @QtCore.pyqtSlot()
     def apply_changes(self):
         self.request_write_properties_to_database.emit(self.validator._props, True, True)
-        
+
     @QtCore.pyqtSlot()
     def reset_changes(self):
         self.validator.set_data(self.unsaved_items, reset=False)
         self.set_simulation_properties(self.validator.get_data()[0])
-    
-    
-    
+
+
+
 class PropertiesEditWidget(QtGui.QWidget):
     def __init__(self, database_interface, simulation_list_model, parent=None):
         super().__init__(parent)
@@ -694,15 +704,15 @@ class PropertiesEditWidget(QtGui.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         sub_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
-        
-        
+
+
         reset_button.clicked.connect(model.reset_changes)
         apply_button.clicked.connect(model.apply_changes)
         model.has_unsaved_changes.connect(reset_button.setEnabled)
         model.has_unsaved_changes.connect(apply_button.setEnabled)
-     
-        
-    
+
+
+
 
 
 
