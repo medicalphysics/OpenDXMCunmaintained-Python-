@@ -181,15 +181,8 @@ class DatabaseInterface(QtCore.QObject):
     @QtCore.pyqtSlot(dict, dict, bool)
     def add_simulation(self, properties, array_dict, overwrite):
         self.database_busy.emit(True)
-<<<<<<< HEAD
-        try:
-            self.__db.set_simulation_array(name, array, array_name, volatile)
-        except ValueError:
-            pass
-=======
         self.__db.add_simulation(properties, array_dict, overwrite)
         self.emit_simulation_list()
->>>>>>> origin/development
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str)
@@ -214,20 +207,6 @@ class DatabaseInterface(QtCore.QObject):
             self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
         self.database_busy.emit(False)
 
-    @QtCore.pyqtSlot(str)
-    def request_propeties(self, name):
-        self.database_busy.emit(True)
-        try:
-            props = self.__db.get_simulation_meta_data(name)
-        except ValueError:
-            pass
-        else:
-            send_sim_propeties = QtCore.pyqtSignal(prpo)
-        self.database_busy.emit(False)
-        
-
-
-
     @QtCore.pyqtSlot(list)
     def copy_simulation(self, names):
         for name in names:
@@ -238,13 +217,7 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(False)
             self.get_simulation_list()
 
-<<<<<<< HEAD
-    @QtCore.pyqtSlot(dict, dict, bool, bool)
-    def update_simulation_properties(self, propeties_dict, volatiles_dict, purge_volatiles=True, cancel_if_running=True):
-        logger.debug('Request database to update simulation properties.')
-        self.database_busy.emit(True)
-        self.__db.update_simulation(propeties_dict, volatiles_dict, purge_volatiles, cancel_if_running)
-=======
+
     @QtCore.pyqtSlot(str)
     def request_simulation_properties(self, name):
         logger.debug('Request simulation metadata for {} from database.'.format(name))
@@ -252,7 +225,7 @@ class DatabaseInterface(QtCore.QObject):
         try:
             data = self.__db.get_simulation_metadata(name)
         except ValueError:
-            pass
+            logger.debug('Could not read metadata for simulation')
         else:
             self.send_view_sim_propeties.emit(data)
         self.database_busy.emit(False)
@@ -262,9 +235,12 @@ class DatabaseInterface(QtCore.QObject):
         logger.debug('Request database to update simulation properties.')
         self.database_busy.emit(True)
         self.__db.set_simulation_metadata(propeties_dict, purge_volatiles, cancel_if_running)
-        update_data = self.__db.get_simulation_meta_data(propeties_dict.get('name', ''))
-        self.send_view_sim_propeties.emit(update_data)
->>>>>>> origin/development
+        try:
+            update_data = self.__db.get_simulation_metadata(propeties_dict.get('name', ''))
+        except ValueError:
+            logger.debug('Could not read metadata for simulation')
+        else:
+            self.send_view_sim_propeties.emit(update_data)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, dict)
@@ -274,8 +250,6 @@ class DatabaseInterface(QtCore.QObject):
         for arr_name, array in array_dict.items():
             self.__db.set_simulation_array(name, array, arr_name)
         self.database_busy.emit(False)
-
-
 
     @QtCore.pyqtSlot()
     def request_MC_ready_simulation(self):
@@ -597,7 +571,7 @@ class PropertiesEditModelItem(QtGui.QStandardItem):
         self.update_data(value)        
           
           
-#    def setData(self, value, role):
+
         
     def update_data(self, value):
         self.value = value
@@ -606,19 +580,20 @@ class PropertiesEditModelItem(QtGui.QStandardItem):
             self.setData(val_t, QtCore.Qt.DisplayRole)            
         else:
             if self.dtype.type is np.bool_:
-                c_val = QtCore.Qt.Checked if value else QtCore.Qt.Unchecked
-                
+                if value:
+                    c_val = QtCore.Qt.Checked 
+                else:
+                    c_val = QtCore.Qt.Unchecked             
                 self.setData(c_val, QtCore.Qt.CheckStateRole)
-#            elif self.dtype.type is np.int32 or self.dtype.type is np.float64:
-#                self.setData(value, QtCore.Qt.DisplayRole)
             else:
                 self.setData(value, QtCore.Qt.DisplayRole)
-#        self.emitDataChanged()
+
         
 class PropertiesEditModel(QtGui.QStandardItemModel):
     request_properties_from_database = QtCore.pyqtSignal(str)
     request_update_properties_to_database = QtCore.pyqtSignal(dict)
     request_write_properties_to_database = QtCore.pyqtSignal(dict, bool, bool)
+    has_unsaved_changes = QtCore.pyqtSignal(bool)
     def __init__(self, database_interface, simulation_list_model, parent=None):
         super().__init__(parent)
         self.current_simulation = ""
@@ -648,43 +623,53 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         if data_dict['name'] != self.current_simulation:            
             return
         self.validator.set_data(props=data_dict, reset=True)       
-        unsaved_items = {}
+        self.unsaved_items = {}
         for row in range(self.rowCount()):
             item = self.item(row, 1)
             item.update_data(self.validator._props[item.key])
-            
+        self.test_unsaved_changes()
             
     def test_unsaved_changes(self):
-        test her
+            
+        self.has_unsaved_changes.emit(len(self.unsaved_items) > 0)
             
             
     def setData(self, index, value, role):
         if not index.isValid():
-            return
+            return False
         if index.column() == 0:
-            super().setData(index, value, role)
-            return
+            return super().setData(index, value, role)
+            
         if role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole, QtCore.Qt.CheckStateRole]:
             item = self.itemFromIndex(index)
-            
+            if not self.validator._pt[item.key][3]:
+                
+                return False
             if role == QtCore.Qt.CheckStateRole:
                 value = value == QtCore.Qt.Checked
+                
             try:
                 setattr(self.validator, item.key, value)
             except AssertionError:
                 return False
             else:
+                if item.key not in self.unsaved_items:
+                    
+                    self.unsaved_items[item.key] = item.value
                 item.update_data(getattr(self.validator, item.key))
+                self.test_unsaved_changes()
             return True
         return super().setData(index, value, role)
     
     @QtCore.pyqtSlot()
     def apply_changes(self):
-        self.request_write_properties_to_database.emit(self.validator._props)
+        self.request_write_properties_to_database.emit(self.validator._props, True, True)
+        
     @QtCore.pyqtSlot()
     def reset_changes(self):
-        
-        self.request_write_properties_to_database.emit(self.validator._props)
+        self.validator.set_data(self.unsaved_items, reset=False)
+        self.set_simulation_properties(self.validator.get_data()[0])
+    
     
     
 class PropertiesEditWidget(QtGui.QWidget):
@@ -695,19 +680,27 @@ class PropertiesEditWidget(QtGui.QWidget):
         model = PropertiesEditModel(database_interface, simulation_list_model)
         table.setModel(model)
         layout.addWidget(table)
-        sub_layout = QtGui.QHBoxLayout
-        layout.addChildLayout(sub_layout)
+        sub_layout = QtGui.QHBoxLayout()
+        layout.addLayout(sub_layout)
         apply_button = QtGui.QPushButton()
         reset_button = QtGui.QPushButton()
         run_button = QtGui.QPushButton()
         apply_button.setText('Apply')
         reset_button.setText('Reset')
         run_button.setText('Run')
+        sub_layout.addWidget(reset_button)
+        sub_layout.addWidget(apply_button)
+        sub_layout.addWidget(run_button)
+        layout.setContentsMargins(0, 0, 0, 0)
+        sub_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
         
         
-                
-        
-        self.setModel(PropertiesEditModel(database_interface, simulation_list_model))
+        reset_button.clicked.connect(model.reset_changes)
+        apply_button.clicked.connect(model.apply_changes)
+        model.has_unsaved_changes.connect(reset_button.setEnabled)
+        model.has_unsaved_changes.connect(apply_button.setEnabled)
+     
         
     
 

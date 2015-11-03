@@ -386,22 +386,27 @@ class Database(object):
             logger.debug('Unable to update simulation meta data, requires name key in update dictionary')
         self.open()
         meta_table = self.get_node('/', 'meta_data', create=False)
+        breaker = False        
         for row in meta_table.where('name == b"{}"'.format(properties['name'])):
-            if row['MC_running']:
-                logger.debug('Could not update simulation {}, not allowed when MC is running'.format(properties['name']))
-            for key, value in properties.items():
-                if key in meta_table.colnames:
-                    row[key] = value
-            row.update()
-            if purge:
-                self.purge_simulation(properties['name'])
-            break
-        else:
+            if not breaker:
+                if row['MC_running'] and cancel_if_running:
+                    logger.debug('Could not update simulation {}, not allowed when MC is running'.format(properties['name']))
+                    self.close()
+                    return
+                for key, value in properties.items():
+                    if key in meta_table.colnames:
+                        row[key] = value
+                row.update()
+                
+                breaker = True
+        if not breaker:
             row = meta_table.row
             for key, value in properties.items():
                 row[key] = value
             row.append()
         meta_table.flush()
+        if purge:
+            self.purge_simulation(properties['name'])
         self.close()
 
     def set_simulation_array(self, name, array, array_name):
