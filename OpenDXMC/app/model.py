@@ -313,7 +313,6 @@ class Importer(QtCore.QObject):
         self.running.emit(False)
 
 class Runner(QtCore.QThread):
-    mc_calculation_finished = QtCore.pyqtSignal()
     request_write_simulation_arrays = QtCore.pyqtSignal(str, dict)
     request_set_simulation_properties = QtCore.pyqtSignal(dict, bool, bool)
     request_runner_view_update = QtCore.pyqtSignal(dict, dict)
@@ -386,10 +385,25 @@ class Runner(QtCore.QThread):
         else:
             self.request_set_simulation_properties.emit(props_dict, False, False)
             self.request_write_simulation_arrays.emit(props_dict['name'], arr_dict)
+            # generating doe array, watching memory
+            energy_imparted = arr_dict.get('energy_imparted', None)
+            density = arr_dict.get('density', None)
+            c_factor = props_dict.get('conversion_factor_ctdiw')
+            if c_factor == 0:
+                c_factor = props_dict.get('conversion_factor_ctdiair')
+
+            if energy_imparted is not None and density is not None:
+                if c_factor > 0:
+                    del arr_dict
+                    try:
+                        dose = (energy_imparted / density) * (c_factor / np.prod(props_dict['spacing'] * props_dict['scaling']))
+                    except MemoryError:
+                        logger.error('Memory error in generating dose matrix')
+                    else:
+                        self.request_write_simulation_arrays.emit(props_dict['name'], {'dose': dose})
         self.simulation_properties = None
         self.simulation_arrays = None
         self.material_list = None
-        self.mc_calculation_finished.emit()
         self.request_save = False
 
 
@@ -399,7 +413,7 @@ class RunManager(QtCore.QObject):
         super().__init__(parent)
         self.runner = Runner()
         interface.send_MC_ready_simulation.connect(self.run_simulation)
-        self.runner.mc_calculation_finished.connect(interface.request_MC_ready_simulation)
+        self.runner.finished.connect(interface.request_MC_ready_simulation)
         self.runner.request_set_simulation_properties.connect(interface.set_simulation_properties)
         self.runner.request_write_simulation_arrays.connect(interface.write_simulation_arrays)
         self.runner.finished.connect(self.run_finished)
