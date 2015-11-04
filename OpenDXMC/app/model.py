@@ -6,6 +6,7 @@ Created on Tue Sep  8 10:10:58 2015
 """
 import numpy as np
 from PyQt4 import QtGui, QtCore
+from scipy.ndimage.interpolation import affine_transform, spline_filter
 from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator
 from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
@@ -757,6 +758,7 @@ class PropertiesEditWidget(QtGui.QWidget):
         super().__init__(parent)
         layout = QtGui.QVBoxLayout()
         table = QtGui.QTableView()
+        table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         model = PropertiesEditModel(database_interface, simulation_list_model)
         model.request_cancel_simulation.connect(run_manager.cancel_run)
         table.setModel(model)
@@ -789,308 +791,139 @@ class PropertiesEditWidget(QtGui.QWidget):
         model.current_simulation_is_running.connect(cancel_button.setEnabled)
 
 
+class OrganDoseModel(QtCore.QAbstractTableModel):
+    request_array = QtCore.pyqtSignal(str, str)
+    request_array_slice = QtCore.pyqtSignal(str, str, int, int)
+    def __init__(self, database_interface, simulation_list_model, parent=None):
+        super().__init__(parent)
+        self.current_simulation = ""
+
+        self.dose_z_lenght = []
+
+        self.organ_array = None
+        self.organ_material_map = None
+        self.organ_map = None
+
+        self._data = {}
+        self._data_keys = []
+
+        database_interface.send_view_array.connect(self.set_requested_array)
+        database_interface.send_view_array_slice.connect(self.reload_slice)
+        database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
+        self.request_array.connect(database_interface.request_view_array)
+        self.request_array_slice.connect(database_interface.request_view_array_slice)
+        simulation_list_model.request_viewing.connect(self.set_simulation)
+
+
+    def headerData(self, section, orientation, role):
+        if orientation == QtCore.Qt.Horizontal:
+            if section == 0:
+                return 'Organ'
+            elif section == 1:
+                return 'Material'
+            elif section == 2:
+                return 'Dose [mGy/100mAs]'
+        return None
+
+    def data(self, index, role):
+        if role == QtCore.Qt.DisplayRole:
+            r = index.row()
+            c = index.column()
+            if r >= len(self._data) or c > 2:
+               return None
+            if c == 2:
+                if self._data[self._data_keys[r]][c+1] == 0:
+                    return None
+                return str(round(self._data[self._data_keys[r]][c] / self._data[self._data_keys[r]][c+1], 2))
+            return self._data[self._data_keys[r]][c]
+        return None
+
+    def rowCount(self, index):
+        return len(self._data)
+    def columnCount(self, index):
+        return 3
+
+    @QtCore.pyqtSlot(str)
+    def set_simulation(self, name):
+        self.layoutAboutToBeChanged.emit()
+        self.organ_array = None
+        self.organ_material_map = None
+        self.organ_map = None
+        self._data = {}
+        self._data_keys = []
+        self.dose_z_lenght = []
+        self.current_simulation = name
+        self.layoutChanged.emit()
+
+    @QtCore.pyqtSlot(dict)
+    def set_simulation_properties(self, props_dict):
+        if props_dict.get('name', "") != self.current_simulation:
+            return
+        self.scale = props_dict.get('scaling', np.ones(3))
+        self.organ_array = None
+        self.organ_material_map = None
+        self.organ_map = None
+        self.request_array.emit(self.current_simulation, 'organ_map')
+        self.request_array.emit(self.current_simulation, 'organ_material_map')
+        self.request_array.emit(self.current_simulation, 'organ')
+
+    @QtCore.pyqtSlot(str, np.ndarray, str)
+    def set_requested_array(self, name, array, array_name):
+        if name != self.current_simulation:
+            return
+        if array_name == 'organ':
+            self.organ_array = affine_transform(array,
+                                 self.scale,
+                                 output_shape=np.floor(np.array(array.shape)/self.scale),
+                                 cval=0, output=np.uint8, prefilter=True,
+                                 order=0).astype(np.uint8)
+        elif array_name == 'organ_map':
+            self.organ_map = {array['organ'][i]: str(array['organ_name'][i], encoding='utf-8') for i in range(len(array))}
+        elif array_name == 'organ_material_map':
+            self.organ_material_map = {array['organ'][i]: str(array['material_name'][i], encoding='utf-8') for i in range(len(array))}
+
+        if self.organ_array is not None and self.organ_map is not None and self.organ_material_map is not None:
+            self.layoutAboutToBeChanged.emit()
+            self._data = {}
+            self._data_keys = []
+            for key, value in self.organ_map.items():
+                self._data[key] = [value, self.organ_material_map.get(key, 'Unknown'), 0, 0]
+                self._data_keys.append(key)
+            self.dose_z_lenght = list(range(self.organ_array.shape[2]))
+#            self.dataChanged.emit(self.index(0, 0), self.index(len(self._data), 2))
+            self.request_array_slice.emit(self.current_simulation, 'dose', 0, 2)
+            self.layoutChanged.emit()
+
+    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
+    def reload_slice(self, name, arr, array_name, index, orientation):
+        if orientation != 2 or array_name != 'dose' or name != self.current_simulation:
+            return
+        if index in self.dose_z_lenght:
+            for organ in np.unique(self.organ_array[:,:,index]):
+                if organ not in self._data:
+                    continue
+#                self.layoutAboutToBeChanged.emit()
+                ind_x, ind_y = np.nonzero(self.organ_array[:,:,index] == organ)
+                self._data[organ][2] += arr[ind_x, ind_y].sum()
+                self._data[organ][3] += len(ind_x)
+#                import pdb
+#                pdb.set_trace()
+                model_index = self.index(self._data_keys.index(organ), 2)
+#                self.layoutChanged.emit()
+                self.dataChanged.emit(model_index, model_index)
+
+            self.dose_z_lenght.remove(index)
+        if len(self.dose_z_lenght) > 0:
+            self.request_array_slice.emit(self.current_simulation, 'dose', self.dose_z_lenght[0], 2)
+
+
+class OrganDoseView(QtGui.QTableView):
+    def __init__(self, model, parent=None):
+        super().__init__(parent)
+        self.setModel(model)
+        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setVisible(True)
 
 
 
-#class PropertiesModel(QtCore.QAbstractTableModel):
-#    request_update_simulation = QtCore.pyqtSignal(dict, dict, bool, bool)
-#    unsaved_data_changed = QtCore.pyqtSignal(bool)
-#    properties_is_set = QtCore.pyqtSignal(bool)
-#
-#    def __init__(self, interface, parent=None):
-#        super().__init__(parent)
-#        self.__data = copy.copy(SIMULATION_DESCRIPTION)
-#        self.unsaved_data = {}
-#        self.__indices = list(self.__data.keys())
-#        self.__indices.sort()
-#        interface.request_simulation_view.connect(self.set_data)
-#        interface.simulation_updated.connect(self.update_data)
-#        self.request_update_simulation.connect(interface.update_simulation_properties)
-#        self.__simulation = Simulation('None')
-#
-#
-#    def properties_data(self):
-#        return self.__data, self.__indices
-#
-#    @QtCore.pyqtSlot()
-#    def reset_properties(self):
-#        self.unsaved_data = {}
-#        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
-#        self.test_for_unsaved_changes()
-#
-#    @QtCore.pyqtSlot()
-#    def apply_properties(self):
-#        self.__init_data = self.__data
-#        self.unsaved_data['name'] = self.__data['name'][0]
-#        self.unsaved_data['MC_ready'] = True
-#        self.unsaved_data['MC_finished'] = False
-#        self.unsaved_data['MC_running'] = False
-#        self.test_for_unsaved_changes()
-#        self.request_update_simulation.emit(self.unsaved_data, {}, True, True)
-#        self.properties_is_set.emit(True)
-##        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-#        self.unsaved_data = {}
-#        self.test_for_unsaved_changes()
-#
-##    @QtCore.pyqtSlot()
-##    def run_simulation(self):
-##        self.__data['MC_running'][0] = True
-##        self.__data['MC_ready'][0] = True
-###        self.request_simulation_update.emit({key: value[0] for key, value in self.__data.items()})
-##        self.unsaved_data_changed.emit(False)
-###        self.request_simulation_start.emit()
-#
-#    def test_for_unsaved_changes(self):
-#        for key, value in self.__simulation.description.items():
-#            if self.__data[key][3]:
-#                if isinstance(self.__data[key][0], np.ndarray):
-#                    if (value - self.__data[key][0]).sum() != 0.0:
-#                        self.unsaved_data[key] = value
-#                elif self.__data[key][0] != value:
-#                    self.unsaved_data[key] = value
-#        self.unsaved_data_changed.emit(len(self.unsaved_data) > 0)
-#        self.layoutAboutToBeChanged.emit()
-#        self.layoutChanged.emit()
-#
-#    @QtCore.pyqtSlot(Simulation)
-#    def set_data(self, sim):
-#        sim_description = sim.description
-#        self.update_data(sim_description, {})
-#
-#    @QtCore.pyqtSlot(dict, dict)
-#    def update_data(self, sim_description, array_dict):
-#        self.unsaved_data = {}
-#        self.layoutAboutToBeChanged.emit()
-#        self.__simulation = Simulation('None', sim_description)
-#        for key, value in sim_description.items():
-#            self.__data[key][0] = value
-#
-#        self.dataChanged.emit(self.createIndex(0,0), self.createIndex(len(self.__indices)-1 , 1))
-#        self.layoutChanged.emit()
-#        self.test_for_unsaved_changes()
-#        self.properties_is_set.emit(self.__data['MC_running'][0])
-#
-#    def rowCount(self, index):
-#        if not index.isValid():
-#            return len(self.__data)
-#        return 0
-#
-#    def columnCount(self, index):
-#        if not index.isValid():
-#            return 2
-#        return 0
-#
-#    def data(self, index, role):
-#        if not index.isValid():
-#            return None
-#        row = index.row()
-#        column = index.column()
-#
-#        var = self.__indices[row]
-#        if column == 0:
-#            value = self.__data[var][4]
-#        else:
-#            value = self.unsaved_data.get(var, self.__data[var][0])
-#
-#        if role == QtCore.Qt.DisplayRole:
-#            if (column == 1) and isinstance(value, np.ndarray):
-#                return ' '.join([str(round(p, 3)) for p in value])
-#            elif (column == 1) and isinstance(value, bool):
-#                return ''
-#            return value
-#        elif role == QtCore.Qt.DecorationRole:
-#            pass
-#        elif role == QtCore.Qt.ToolTipRole:
-#            pass
-#        elif role == QtCore.Qt.BackgroundRole:
-#            if not self.__data[var][3] and index.column() == 1:
-#                return QtGui.qApp.palette().brush(QtGui.qApp.palette().Window)
-#        elif role == QtCore.Qt.ForegroundRole:
-#            pass
-#        elif role == QtCore.Qt.CheckStateRole:
-#            if (column == 1) and isinstance(value, bool):
-#                if value:
-#                    return QtCore.Qt.Checked
-#                else:
-#                    return QtCore.Qt.Unchecked
-#        return None
-#
-#    def setData(self, index, value, role):
-#        if not index.isValid():
-#            return False
-#        if index.column() != 1:
-#            return False
-#        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
-##            var = self.__indices[index.row()]
-##            self.unsaved_data[var] = value
-##            self.dataChanged.emit(index, index)
-##            return True
-##        elif role == QtCore.Qt.EditRole:
-#            var = self.__indices[index.row()]
-#            try:
-#                setattr(self.__simulation, var, value)
-#            except Exception as e:
-#                logger.error(str(e))
-#                return False
-#            else:
-#                if value != self.__data[var][0]:
-#                    self.unsaved_data[var] = value
-#                else:
-#                    try:
-#                        del self.unsaved_data[var]
-#                    except KeyError:
-#                        pass
-#
-#            self.dataChanged.emit(index, index)
-#            self.test_for_unsaved_changes()
-#            return True
-#        elif role == QtCore.Qt.CheckStateRole:
-#            var = self.__indices[index.row()]
-#            if self.__data[var][0] != bool(value == QtCore.Qt.Checked):
-#                self.unsaved_data[var] = bool(value == QtCore.Qt.Checked)
-#            else:
-#                if var in self.unsaved_data:
-#                    del self.unsaved_data[var]
-#            self.test_for_unsaved_changes()
-#            self.dataChanged.emit(index, index)
-#            return True
-#
-#    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-#        return str(section)
-#
-#    def flags(self, index):
-#        if index.isValid():
-#            if self.__data[self.__indices[index.row()]][3] and index.column() == 1:
-#                if self.unsaved_data.get('MC_running', False):
-#                    return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-#                if isinstance(self.__data[self.__indices[index.row()]][0], bool):
-#                    return  QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable# | QtCore.Qt.ItemIsEditable
-#                return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
-#            return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
-#        return QtCore.Qt.NoItemFlags
-#
-#class ArrayEdit(QtGui.QLineEdit):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#
-#    def set_data(self, value):
-#        self.setText(' '.join([str(r) for r in value]))
-#
-#
-#class LineEdit(QtGui.QLineEdit):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#
-#    def set_data(self, value):
-#        self.setText(str(value))
-#
-#class IntSpinBox(QtGui.QSpinBox):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.setRange(-1e9, 1e9)
-#
-#    def set_data(self, value):
-#        self.setValue(int(value))
-#
-#
-#class DoubleSpinBox(QtGui.QDoubleSpinBox):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.setRange(-1e9, 1e9)
-#
-#    def set_data(self, value):
-#        self.setValue(float(value))
-#
-#class CheckBox(QtGui.QCheckBox):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#
-#    def set_data(self, value):
-#        self.setChecked(bool(value))
-#
-#
-#class PropertiesDelegate(QtGui.QItemDelegate):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#
-#    def createEditor(self, parent, option, index):
-#        data , ind= index.model().properties_data()
-#        var = ind[index.row()]
-#        if data[var][1] is np.bool:
-##            return CheckBox(parent)
-#            return None
-#        elif data[var][1] is np.double:
-#            return DoubleSpinBox(parent)
-#        elif data[var][1] is np.int:
-#            return IntSpinBox(parent)
-#        elif isinstance(data[var][0], np.ndarray):
-#            return ArrayEdit(parent)
-#        return None
-#
-#    def setEditorData(self, editor, index):
-#        data, ind= index.model().properties_data()
-#        var = ind[index.row()]
-#        editor.set_data(data[var][0])
-##        if isinstance(editor, QtGui.QCheckBox):
-##            editor.setChecked(data[var][0])
-##        elif isinstance(editor, QtGui.QSpinBox) or isinstance(editor, QtGui.QDoubleSpinBox):
-##            editor.setValue(data[var][0])
-##        elif isinstance(editor, QtGui.QTextEdit):
-##            editor.setText(data[var][0])
-###        self.setProperty('bool', bool)
-##        factory = QtGui.QItemEditorFactory()
-##        print(factory.valuePropertyName(QtCore.QVariant.Bool))
-##
-###        factory.registerEditor(QtCore.QVariant.Bool, QtGui.QCheckBox())
-##        self.setItemEditorFactory(factory)
-###        self.itemEditorFactory().setDefaultFactory(QtGui.QItemEditorFactory())
-#
-#class PropertiesView(QtGui.QTableView):
-#    def __init__(self, properties_model, parent=None):
-#        super().__init__(parent)
-#        self.setModel(properties_model)
-#        self.setItemDelegateForColumn(1, PropertiesDelegate())
-#
-#        self.setWordWrap(False)
-##        self.setTextElideMode(QtCore.Qt.ElideMiddle)
-##        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-#        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-##        self.horizontalHeader().setMinimumSectionSize(-1)
-#        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-#        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-#
-#    def resizeEvent(self, ev):
-##        self.resizeColumnsToContents()
-##        self.resizeRowsToContents()
-#        super().resizeEvent(ev)
-#
-#class PropertiesWidget(QtGui.QWidget):
-#    def __init__(self, properties_model, parent=None):
-#        super().__init__(parent)
-#        self.setLayout(QtGui.QVBoxLayout())
-#        self.layout().setContentsMargins(0, 0, 0, 0)
-#        view = PropertiesView(properties_model)
-#        self.layout().addWidget(view)
-#
-#        apply_button = QtGui.QPushButton()
-#        apply_button.setText('Reset')
-#        apply_button.clicked.connect(properties_model.reset_properties)
-#        apply_button.setEnabled(False)
-#        properties_model.unsaved_data_changed.connect(apply_button.setEnabled)
-#
-#        run_button = QtGui.QPushButton()
-#        run_button.setText('Apply and Run')
-#        run_button.clicked.connect(properties_model.apply_properties)
-#        properties_model.properties_is_set.connect(run_button.setDisabled)
-#
-#
-##        run_button = QtGui.QPushButton()
-##        run_button.setText('Run')
-##        run_button.clicked.connect(properties_model.request_simulation_start)
-#
-#        button_layout = QtGui.QHBoxLayout()
-#        button_layout.setContentsMargins(0, 0, 0, 0)
-#        button_layout.addWidget(apply_button)
-#        button_layout.addWidget(run_button)
-#
-#        self.layout().addLayout(button_layout)
+

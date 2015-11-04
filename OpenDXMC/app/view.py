@@ -57,7 +57,8 @@ class ViewController(QtCore.QObject):
         self.scenes = {'planning': PlanningScene(),
                        'running':  RunningScene(),
                        'material': MaterialScene(),
-                       'energy imparted': DoseScene()}
+                       'energy imparted': DoseScene(),
+                       'dose': DoseScene(front_array='dose')}
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
             scene.update_index.connect(self.update_index)
@@ -82,7 +83,7 @@ class ViewController(QtCore.QObject):
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
         self.current_simulation = name
-        self.request_metadata.emit(self.current_simulation)
+#        self.request_metadata.emit(self.current_simulation) # Not needed, propetiesmodel will request metadata
 
     @QtCore.pyqtSlot(dict)
     def set_simulation_properties(self, data_dict):
@@ -198,7 +199,6 @@ class Scene(QtGui.QGraphicsScene):
         self.index %= self.shape[self.view_orientation]
         self.update_index.emit(self.index)
         ev.accept()
-
 
 
 
@@ -1181,7 +1181,8 @@ class MaterialScene(Scene):
 
         self.map_item.prepareGeometryChange()
 
-        shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
+#        shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
+        shape = tuple(int(self.shape[i] / self.scaling[i]) for i in range(3) if i != self.view_orientation)
         rect = QtCore.QRectF(0, 0, shape[1], shape[0])
         self.map_item.setScale(self.image_item.mapRectToScene(rect).height() / self.map_item.boundingRect().height())
         self.map_item.setPos(self.image_item.mapRectToScene(rect).topRight())
@@ -1290,6 +1291,12 @@ class View(QtGui.QGraphicsView):
         self.setContentsMargins(0, 0, 0, 0)
         self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.black))
 
+        self.setRenderHints(QtGui.QPainter.Antialiasing |
+#                            QtGui.QPainter.SmoothPixmapTransform |
+                            QtGui.QPainter.TextAntialiasing)
+
+        self.mouse_down_pos = QtCore.QPoint(0, 0)
+
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
         self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
@@ -1298,6 +1305,45 @@ class View(QtGui.QGraphicsView):
         super().setScene(scene)
         self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
+    def mouseMoveEvent(self, e):
+        if e.buttons() == QtCore.Qt.LeftButton:
+            dist = self.mouse_down_pos - e.globalPos()
+            if dist.manhattanLength() > QtGui.QApplication.startDragDistance():
+                e.accept()
+                drag = QtGui.QDrag(self)
+                # lager mimedata
+                qim = self.toQImage()
+                md = QtCore.QMimeData()
+                md.setImageData(qim)
+                drag.setMimeData(md)
+                pix = QtGui.QPixmap.fromImage(qim.scaledToWidth(64))
+                drag.setPixmap(pix)
+                # initialiserer drops
+                drag.exec_(QtCore.Qt.CopyAction)
+
+    def mousePressEvent(self, e):
+        self.mouse_down_pos = e.globalPos()
+        e.setAccepted(False)
+
+
+    def toQImage(self):
+        rect = self.scene().sceneRect()
+        h = rect.height()
+        w = rect.width()
+        b = max([h, w])
+        if b >= 1024:
+            scale = 1
+        else:
+            scale = 1024/b
+        qim = QtGui.QImage(int(w * scale), int(h * scale),
+                           QtGui.QImage.Format_ARGB32_Premultiplied)
+        qim.fill(0)
+        painter = QtGui.QPainter()
+        painter.begin(qim)
+        painter.setRenderHints(painter.Antialiasing | painter.TextAntialiasing)
+        self.scene().render(painter, source=rect)
+        painter.end()
+        return qim
 
 #
 #class OrganListModelPopulator(QtCore.QThread):

@@ -8,7 +8,7 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import View, ViewController
-from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget
+from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget, OrganDoseModel, OrganDoseView
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -206,6 +206,11 @@ class MainWindow(QtGui.QMainWindow):
 
         central_splitter.addWidget(self.viewcontroller.view_widget())
 
+        self.organdosemodel = OrganDoseModel(self.interface, self.simulation_list_model)
+        organdoseview = OrganDoseView(self.organdosemodel)
+        central_splitter.addWidget(organdoseview)
+
+
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
 
@@ -216,8 +221,8 @@ class MainWindow(QtGui.QMainWindow):
         self.mc_thread = QtCore.QThread(self)
         self.mcrunner.moveToThread(self.mc_thread)
 
-#        self.properties_thread = QtCore.QThread(self)
-#        self.properties_model.moveToThread(self.properties_thread)
+        self.dose_thread = QtCore.QThread(self)
+#        self.organdosemodel.moveToThread(self.dose_thread)
 
         self.import_thread = QtCore.QThread(self)
         self.importer.moveToThread(self.import_thread)
@@ -225,7 +230,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.import_thread.start()
         self.mc_thread.start()
-#        self.properties_thread.start()
+        self.dose_thread.start()
         self.database_thread.start()
 
         self.mcrunner.runner.finished.emit()
