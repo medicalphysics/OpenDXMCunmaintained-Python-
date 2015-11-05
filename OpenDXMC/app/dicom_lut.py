@@ -178,8 +178,17 @@ def get_lut(name, alpha=255):
         name = 'gray'
     ind = _names.index(name)
     tb = _tables[ind]
+    try:
+        n_alpha = len(alpha)
+    except TypeError:
+        pass
+    else:
+        if n_alpha < 256:
+            raise AssertionError('Lenght of alpha must be grater or equal 256')
+        return [QtGui.QColor(tb[0][i], tb[1][i], tb[2][i], alpha[i]).rgba()
+                for i in range(256)]
+
     return [QtGui.QColor(tb[0][i], tb[1][i], tb[2][i], alpha).rgba()
             for i in range(256)]
-
 
 

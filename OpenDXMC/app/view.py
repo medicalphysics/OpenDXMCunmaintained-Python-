@@ -459,6 +459,7 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     back_qim = back_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, back_lut)#, flags=QtCore.Qt.DiffuseAlphaDither)
 
     p = QtGui.QPainter(back_qim)
+    p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationAtop)
 
     p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
 
@@ -564,8 +565,8 @@ class BlendImageItem(QtGui.QGraphicsItem):
         self.front_image = np.zeros((8, 8))
         self.front_level = (1000000, 10000)
 
-        self.back_alpha = 255
-        self.front_alpha = 127
+        self.back_alpha = 127
+        self.front_alpha = 255
         self.back_lut = get_lut('gray', self.back_alpha)
         self.front_lut = get_lut('pet', self.front_alpha)
 
@@ -885,9 +886,10 @@ class PlanningScene(Scene):
     def reload_slice(self, simulation_name, arr, array_name, index, orientation):
         if simulation_name != self.name:
             return
+
         if array_name not in ['ctarray', 'organ']:
-            self.index = index
             return
+        self.index = index
         if self.is_bit_array:
             self.image_item_bit.setImage(arr)
         else:
@@ -1197,8 +1199,8 @@ class MaterialScene(Scene):
         if simulation_name != self.name:
             return
         if array_name != 'material':
-            self.index = index
             return
+        self.index = index
         self.image_item.setImage(arr)
 
 class DoseScene(Scene):
@@ -1268,6 +1270,7 @@ class DoseScene(Scene):
     def reload_slice(self, name, arr, array_name, index, orientation):
         if name != self.name:
             return
+
         if array_name in self.array_names:
             if self.front_array is not None:
                 index_front = (index % self.shape[self.view_orientation]) // self.scaling[self.view_orientation]
@@ -1281,6 +1284,7 @@ class DoseScene(Scene):
                 self.image_item.setImage(front_image=im, back_image=arr)
         else:
             self.image_item.setImage(back_image=arr)
+
 
     @QtCore.pyqtSlot(int, int)
     def set_view_orientation(self, view_orientation, index):
