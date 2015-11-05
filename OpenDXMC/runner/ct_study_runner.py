@@ -191,7 +191,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         HU_bins = (np.array(material_HU_list)[:-1, 1] +
                    np.array(material_HU_list)[1:, 1]) / 2.
 
-        HU_bins[-1] = HU_bins[-2] + 300
+        HU_bins[-1] = HU_bins[-2] + 30
 
         material_array = np.digitize(
             ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)

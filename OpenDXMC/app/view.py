@@ -459,9 +459,12 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     back_qim = back_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, back_lut)#, flags=QtCore.Qt.DiffuseAlphaDither)
 
     p = QtGui.QPainter(back_qim)
-    p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationAtop)
+    p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOut)
+    p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
+    p.setCompositionMode(QtGui.QPainter.CompositionMode_Lighten)
 
     p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
+
 
     return back_qim
 
@@ -565,7 +568,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
         self.front_image = np.zeros((8, 8))
         self.front_level = (1000000, 10000)
 
-        self.back_alpha = 127
+        self.back_alpha = 255
         self.front_alpha = 255
         self.back_lut = get_lut('gray', self.back_alpha)
         self.front_lut = get_lut('pet', self.front_alpha)
@@ -1219,6 +1222,12 @@ class DoseScene(Scene):
 
         self.front_array = None
 
+        alpha = 1. -np.exp(-np.linspace(0, 3, 256))
+        alpha *= 255./alpha.max()
+
+        self.image_item.setLut(front_lut='gist_rainbow', front_alpha=alpha.astype(np.int))
+
+
     def setNoData(self):
         self.front_array = None
         self.nodata_item.setVisible(True)
@@ -1260,11 +1269,13 @@ class DoseScene(Scene):
         if array_name == 'organ_map':
             max_level = array['organ'].max()
             self.image_item.setLevels(back=(max_level/2, max_level/2))
+
         elif array_name == self.front_array_name:
             self.front_array = gaussian_filter(array, 1.)
-            max_level = array[array > array.max()*.1].mean()
-            self.image_item.setLevels(front=(max_level, max_level))
-#            self.update_index.emit(self.index)
+            max_level = array.max()/ 4
+            min_level = max_level / 4
+            self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
+
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):

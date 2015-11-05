@@ -28,14 +28,14 @@ def test_spiral_transformation():
     pitch = 1.
     collimation = 40.
     data_collection_center = [.2, -240.8, -93.6]
-    
+
     #generating rotation matrix from voxels to world
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
     s_norm = np.cross(*iop.T[:])
     R = np.eye(3)
     R[:, :2] = np.fliplr(iop)
     R[:, 2] = s_norm
-   
+
     #matrix from voxel indces to world
     M = np.eye(3)
     M[:3, :3] = R*spacing
@@ -54,52 +54,52 @@ def test_spiral_transformation():
 
 
 
-    
+
 
     start = np.array(pos)
     stop = start + np.dot(M, shape)
     n_spiral = 500
     spiral = np.zeros((3, n_spiral))
-    
+
     spiral[2, :] = np.linspace(start[2]-collimation/2, stop[2]+collimation/2, n_spiral)
     angle = spiral[2, :] / (pitch * collimation) * np.pi * 2.
     spiral[0, :] = -sdd/2 * np.cos(angle)
     spiral[1, :] = -sdd/2 * np.sin(angle)
-    
+
     spiral_center = np.array(data_collection_center)
     for i in range(2):
         spiral[i, :] += spiral_center[i]
-   
-   
+
+
     #image_space
-    RI = np.linalg.inv(R)   
-    im_space = lambda x: np.dot(RI, x.ravel() - np.array(pos))    
-    
+    RI = np.linalg.inv(R)
+    im_space = lambda x: np.dot(RI, x.ravel() - np.array(pos))
+
     for i in range(n_spiral):
         spiral[:, i] = im_space(spiral[:, i])
     for i in range(box.shape[0]):
         box[i, :] = im_space(box[i, :])
-    
-    
-#    
-#    
-#    spiral_center = np.array(pos) - 
+
+
+#
+#
+#    spiral_center = np.array(pos) -
 ##    spiral_center = (np.array(pos) + np.dot(M, shape)) / 2.
 #    spiral_center[2] = start[2]
 #    spiral = np.zeros((3, n_spiral))
 #    spiral[0, :] = sdd/2
 #    spiral[2,:] = spiral_z[:]
-#    RI = np.linalg.inv(R)   
+#    RI = np.linalg.inv(R)
 #
 #    for i in range(n_spiral):
 #        spiral[:, i] = np.dot(R_a(angle[i]), np.squeeze(spiral[:, i]))+spiral_center
-#  
+#
 #    for i in range(n_spiral):
 #        spiral[:, i] = np.dot(RI, spiral[:, i] - spiral_center)
 #    for i in range(box.shape[0]):
 #        box[i, :] = np.dot(RI, box[i, :].ravel() - np.array(pos))
-#    
-    
+#
+
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
@@ -109,7 +109,7 @@ def test_spiral_transformation():
 #    pdb.set_trace()
     plt.show()
     pdb.set_trace()
-    
+
 def image_world_matrix(orientation, spacing):
     iop = np.array(orientation, dtype=np.float).reshape(2, 3).T
     s_norm = np.cross(*iop.T[:])
@@ -131,6 +131,7 @@ def world_image_matrix(orientation):
 def test_spiral_phase_space():
     p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000A918"
     p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000AA17"
+    p = "C://test//abdomen"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//0000CB29"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00007706"
 #    p = "C://test//thorax//DICOM//00000058//AAE1C604//AAF19E09//00005B5E"
@@ -138,8 +139,8 @@ def test_spiral_phase_space():
 #    p = "C://test//abdomen"
 
 #    p = "C://test//caput//DICOM//000085FC//AA2CF108//AA661CAC//0000423E"
-    for pat, arrays in read_phantoms():
-#    for pat, arrays in import_ct_series([p]):
+#    for pat, arrays in read_phantoms():
+    for pat, arrays in import_ct_series([p]):
         pat['exposures'] = 16
         pat['histories'] = 1
         pat['batch_size'] = 1e6
@@ -149,11 +150,11 @@ def test_spiral_phase_space():
         M = image_world_matrix(pat['image_orientation'], pat['spacing'])
         M = np.eye(3) * pat['spacing']
         pos = pat['image_position'] * 0
-        
 
-        print(shape*pat['spacing'] / 2, pat['data_center'])      
-        
-        
+
+        print(shape*pat['spacing'] / 2, pat['data_center'])
+
+
         box = np.zeros((10, 3))
         box[0, :] = np.dot(M, np.zeros(3)) + np.array(pos)
         box[1, :] = np.dot(M, np.array([shape[0], 0, 0])) + np.array(pos)
@@ -165,44 +166,44 @@ def test_spiral_phase_space():
         box[7, :] = np.dot(M, np.array([shape[0], shape[1], shape[2]])) + np.array(pos)
         box[8, :] = np.dot(M, np.array([0, shape[1], shape[2]])) + np.array(pos)
         box[9, :] = np.dot(M, np.array([0, 0, shape[2]])) + np.array(pos)
-        
+
 #        R = world_image_matrix(pat.image_orientation)
 #        for i in range(box.shape[0]):
 #            box[i, :] = np.dot(R, box[i,:])
-#        
-        
-        
+#
+
+
 #        plt.plot(pat.exposure_modulation[:, 0], pat.exposure_modulation[:, 1])
 #        plt.show()
-        
+
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-                
+
         ax.plot(box[:, 0], box[:, 1],box[:, 2], label='box')
         ax.plot(box[:, 0], box[:, 1],box[:, 2], 'o')
-       
-        l = []        
+
+        l = []
         for arr, i, e in ct_phase_space(pat):
 #            pdb.set_trace()
-            print(i, e) 
+            print(i, e)
             ax.plot(arr[0, :].ravel(), arr[1, :].ravel(),arr[2, :].ravel(), 'o', label=i)
             ax.plot(arr[0, :] + arr[3,:]*30, arr[1, :]+arr[4,:]*30,arr[2, :]+arr[5,:]*30, 'o',label=i)
             for k in range(arr.shape[1]):
                 v = np.empty((3, 2))
-                v[:, 0] = arr[:3, k] 
+                v[:, 0] = arr[:3, k]
                 v[:, 1] = arr[3:6, k]*30 + v[:, 0]
                 l.append(ax.plot(v[0, :], v[1, :], v[2,:]))
-                
+
 #            for i in range(arr.shape[1]):
 #                ax.plot([arr[0,0], arr[0,0]+arr[3,0]*30],
 #                        [arr[1,0], arr[1,0]+arr[4,0]*30],
 #                        [arr[2,0], arr[2,0]+arr[5,0]*30])
-#                
+#
         ax.legend()
     #    pdb.set_trace()
         plt.show()
-#        pdb.set_trace() 
-    
+#        pdb.set_trace()
+
 
 
 def test_import():
@@ -218,11 +219,11 @@ def test_import():
 
     for pat in import_ct_series([p], scan_spacing=(.3, .3, .3)):
         pass
-        
 
-               
-        
-        
+
+
+
+
 
 #        k = pat.ctarray
 #        plt.subplot(1,3,1)
