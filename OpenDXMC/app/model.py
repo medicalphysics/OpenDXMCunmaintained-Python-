@@ -335,16 +335,32 @@ class Runner(QtCore.QThread):
         self.simulation_properties = None
         self.simulation_arrays = None
         self.material_list = None
+        
+        self.kill_me = False
+
 
     @QtCore.pyqtSlot()
     def set_request_save(self):
         self.mutex.lock()
         self.request_save = True
         self.mutex.unlock()
+    @QtCore.pyqtSlot()
+    def cancel_run(self):
+        self.mutex.lock()
+        self.kill_me = True
+        self.mutex.unlock()
 
-    def update_simulation_iteration(self, name, array_dict, exposure_number):
+    def update_simulation_iteration(self, name, array_dict, exposure_number, eta):
+        if self.kill_me:
+            self.mutex.lock()
+            self.kill_me = False
+            self.mutex.unlock()
+            self.terminated.emit()
+            self.terminate()
+            
         desc = {'name': name,
-                'start_at_exposure_no': exposure_number}
+                'start_at_exposure_no': exposure_number,
+                'eta': eta}
         if self.request_save:
             self.request_set_simulation_properties.emit(desc, False, False)
             self.request_write_simulation_arrays.emit(name, array_dict)
@@ -355,6 +371,10 @@ class Runner(QtCore.QThread):
         self.request_runner_view_update.emit(desc, array_dict)
 
     def run(self):
+        self.mutex.lock()
+        self.kill_me = False
+        self.mutex.unlock()
+
         if self.simulation_properties is None or self.simulation_arrays is None:
             return
         if self.material_list is None:
@@ -410,14 +430,18 @@ class Runner(QtCore.QThread):
 
 class RunManager(QtCore.QObject):
     mc_calculation_running = QtCore.pyqtSignal(bool)
+    kill_runner = QtCore.pyqtSignal()
     def __init__(self, interface, parent=None):
         super().__init__(parent)
         self.runner = Runner()
+        self.kill_runner.connect(self.runner.cancel_run)
         interface.send_MC_ready_simulation.connect(self.run_simulation)
         self.runner.finished.connect(interface.request_MC_ready_simulation)
+        self.runner.terminated.connect(interface.request_MC_ready_simulation)
         self.runner.request_set_simulation_properties.connect(interface.set_simulation_properties)
         self.runner.request_write_simulation_arrays.connect(interface.write_simulation_arrays)
         self.runner.finished.connect(self.run_finished)
+        self.runner.terminated.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
         self.current_simulation = ""
 
@@ -428,7 +452,8 @@ class RunManager(QtCore.QObject):
     @QtCore.pyqtSlot(str)
     def cancel_run(self, name):
         if name == self.current_simulation:
-            self.runner.quit()
+            self.kill_runner.emit()
+            self.current_simulation = ''
 
     @QtCore.pyqtSlot()
     def run_finished(self):
@@ -663,7 +688,9 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         propeties_dict, array_dict = self.validator.get_data()
         row = 0
         for key, value in propeties_dict.items():
-            self.setItem(row, 0, QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4]))
+            item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4])
+            item.setEditable(False)
+            self.setItem(row, 0, item)
             self.setItem(row, 1, PropertiesEditModelItem(key, value))
             row += 1
 
@@ -789,6 +816,8 @@ class PropertiesEditWidget(QtGui.QWidget):
         model.has_unsaved_changes.connect(reset_button.setEnabled)
         model.has_unsaved_changes.connect(apply_button.setEnabled)
         model.current_simulation_is_running.connect(cancel_button.setEnabled)
+        model.current_simulation_is_running.connect(run_button.setDisabled)
+        
 
 
 class OrganDoseModel(QtCore.QAbstractTableModel):

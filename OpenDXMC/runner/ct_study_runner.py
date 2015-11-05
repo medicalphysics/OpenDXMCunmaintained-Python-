@@ -36,6 +36,7 @@ def log_elapsed_time(time_start, elapsed_exposures, total_exposures,
         logger.info('{0}: [{1}%] estimated ETA is {2}, finished exposure {3}'
                     ' of {4}'.format(time.ctime(), p, human_time(eta),
                                      elapsed_exposures, total_exposures))
+    return human_time(eta)
 
 
 def recarray_to_dict(arr, key=None, value=None, value_is_string=False):
@@ -319,9 +320,9 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     for p, e, n in phase_space:
         score_energy(p, N, spacing, offset, material,
                      density, lut, energy_imparted)
-        log_elapsed_time(time_start, e+1, n)
+        eta = log_elapsed_time(time_start, e+1, n)
         if callback is not None:
-            callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1)
+            callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
         simulation['start_at_exposure_no'] = e + 1
 
     generate_dose_conversion_factor(simulation, materials)

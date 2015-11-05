@@ -22,7 +22,7 @@ PROPETIES_DICT_TEMPLATE = {
     #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION, ORDER
     'name': ['', np.dtype('a64'), False, False, 'Simulation ID', 0],
     'scan_fov': [50., np.dtype(np.double), True, True, 'Scan field of view [cm]', 0],
-    'sdd': [100.,  np.dtype(np.double), True, True, 'Source detector distance [cm]', 0],
+    'sdd': [110.,  np.dtype(np.double), True, True, 'Source detector distance [cm]', 0],
     'detector_width': [0.06,  np.dtype(np.double), True, True, 'Detector width [cm]', 0],
     'detector_rows': [64, np.dtype(np.int), True, True, 'Detector rows', 0],
     'collimation_width': [0.06 * 64,  np.dtype(np.double), True, True, 'Total collimation width [cm]', 2],
@@ -524,7 +524,15 @@ class Database(object):
         sim_node = self.get_node('/simulations/', name, create=False)
         if self.test_node(sim_node, 'volatiles'):
             self.db_instance.remove_node(sim_node, 'volatiles', recursive=True)
-        self.close()
+        if self.test_node('/', 'meta_data'):
+            meta_table = self.get_node('/', 'meta_data', create=False)
+            for row in meta_table.where('name == b"{}"'.format(name)):
+                row['MC_finished'] = False
+                row['conversion_factor_ctdiair'] = 0
+                row['conversion_factor_ctdiw'] = 0
+                row['start_at_exposure_no'] = 0
+                row.update()
+            meta_table.flush()
         logger.debug('Purged simulation {}'.format(name))
 
 #    def update_simulation(self, description_dict, volatiles_dict=None,

@@ -80,14 +80,14 @@ def read_voxels(path, name, organ_func, spacing, shape, header_len=4096):
     sim.start_scan = 0
     sim.stop_scan = sim.spacing[2] * N
     sim.stop = sim.spacing[2] * N
-    sim.data_center = np.array(sim.organ.shape) * sim.spacing / 2
+    sim.data_center = np.array(sim.organ.shape) * sim.spacing /2.
     aec = np.ones((N, 2))
     aec[:, 0] = np.linspace(0, sim.stop, N)
 
     sim.exposure_modulation = aec
 
 
-    sim.scaling=np.array([2,2,1], dtype=np.double)
+    sim.scaling=np.array([1,1,1], dtype=np.double)
     return sim
 
 

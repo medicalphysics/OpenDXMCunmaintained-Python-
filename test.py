@@ -12,8 +12,9 @@ import pylab as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform
-from opendxmc.study import import_ct_series
-from opendxmc.runner import ct_phase_space
+from opendxmc.database import import_ct_series
+from opendxmc.runner.phase_space import ct_phase_space
+from opendxmc.database.import_phantoms import read_phantoms
 import pdb
 
 
@@ -137,18 +138,22 @@ def test_spiral_phase_space():
 #    p = "C://test//abdomen"
 
 #    p = "C://test//caput//DICOM//000085FC//AA2CF108//AA661CAC//0000423E"
-
-    for pat in import_ct_series([p]):
-        pat.exposures = 36
-        pat.histories = 1
-        pat.batch_size = 1e6
-        pat.pitch = 1
+    for pat, arrays in read_phantoms():
+#    for pat, arrays in import_ct_series([p]):
+        pat['exposures'] = 16
+        pat['histories'] = 1
+        pat['batch_size'] = 1e6
+        pat['pitch'] = 1
 #        pdb.set_trace()
-        shape = np.array(pat.ctarray.shape)
-        M = image_world_matrix(pat.image_orientation, pat.spacing)
-        M = np.eye(3) * pat.spacing
-        pos = pat.image_position * 0
-        print(pos)
+        shape = pat['shape']
+        M = image_world_matrix(pat['image_orientation'], pat['spacing'])
+        M = np.eye(3) * pat['spacing']
+        pos = pat['image_position'] * 0
+        
+
+        print(shape*pat['spacing'] / 2, pat['data_center'])      
+        
+        
         box = np.zeros((10, 3))
         box[0, :] = np.dot(M, np.zeros(3)) + np.array(pos)
         box[1, :] = np.dot(M, np.array([shape[0], 0, 0])) + np.array(pos)
@@ -196,7 +201,7 @@ def test_spiral_phase_space():
         ax.legend()
     #    pdb.set_trace()
         plt.show()
-        pdb.set_trace() 
+#        pdb.set_trace() 
     
 
 

@@ -102,7 +102,7 @@ class ViewController(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
     def reload_slice(self, name, arr_name, arr, index, orientation):
-        if name == self.current_simulation:
+        if name == self.current_simulation and index == self.current_index:
             self.scenes[self.current_scene].reload_slice(name, arr_name, arr, index, orientation)
 
 
@@ -1027,7 +1027,8 @@ class RunningScene(Scene):
 
 
     def set_metadata(self, props, index=0):
-        self.setNoData()
+        if props['name'] != self.name:
+            self.setNoData()
         super().set_metadata(props, index)
         collimation = props['detector_rows']*props['detector_width']
         if props['is_spiral']:
@@ -1054,9 +1055,12 @@ class RunningScene(Scene):
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
         self.progress_item.setVisible(True)
+        msg = ""
         if 'start_at_exposure_no' in props:
-            self.progress_item.setPlainText("{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1) ))
-
+            msg += "{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1))
+        if 'eta' in props:
+            msg += " ETA: {}".format(props['eta'])
+        self.progress_item.setPlainText(msg)
 
         self.image_item.setLevels(self.defaultLevels(self.array))
         self.reloadImages()
@@ -1068,7 +1072,7 @@ class RunningScene(Scene):
         self.updateSceneTransform()
 
     def updateSceneTransform(self):
-        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+        sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
         if self.nodata_item.isVisible():
@@ -1255,7 +1259,7 @@ class DoseScene(Scene):
             max_level = array['organ'].max()
             self.image_item.setLevels(back=(max_level/2, max_level/2))
         elif array_name == self.front_array_name:
-            self.front_array = array
+            self.front_array = gaussian_filter(array, 1.)
             max_level = array[array > array.max()*.1].mean()
             self.image_item.setLevels(front=(max_level, max_level))
 #            self.update_index.emit(self.index)
