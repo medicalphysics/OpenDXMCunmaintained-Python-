@@ -216,7 +216,7 @@ class DatabaseInterface(QtCore.QObject):
             self.database_busy.emit(True)
             self.__db.copy_simulation(name)
             self.database_busy.emit(False)
-            self.get_simulation_list()
+            self.emit_simulation_list()
 
 
     @QtCore.pyqtSlot(str)
@@ -335,7 +335,7 @@ class Runner(QtCore.QThread):
         self.simulation_properties = None
         self.simulation_arrays = None
         self.material_list = None
-        
+
         self.kill_me = False
 
 
@@ -357,7 +357,7 @@ class Runner(QtCore.QThread):
             self.mutex.unlock()
             self.terminated.emit()
             self.terminate()
-            
+
         desc = {'name': name,
                 'start_at_exposure_no': exposure_number,
                 'eta': eta}
@@ -817,7 +817,7 @@ class PropertiesEditWidget(QtGui.QWidget):
         model.has_unsaved_changes.connect(apply_button.setEnabled)
         model.current_simulation_is_running.connect(cancel_button.setEnabled)
         model.current_simulation_is_running.connect(run_button.setDisabled)
-        
+
 
 
 class OrganDoseModel(QtCore.QAbstractTableModel):

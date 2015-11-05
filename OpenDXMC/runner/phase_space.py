@@ -280,7 +280,7 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 
     # total number of exposures + one total rotation
     exposures = int(exposures)
-    N = int(np.floor(abs(start - stop) / step))
+    N = int(np.ceil(abs(start - stop) / step))
     if N <= 0:
         N = 1
     e = N * exposures

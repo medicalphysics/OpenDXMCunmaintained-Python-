@@ -1039,7 +1039,9 @@ class RunningScene(Scene):
         if props['is_spiral']:
             self.n_exposures = props['exposures'] * (1 + abs(props['start'] - props['stop']) / collimation / props['pitch'])
         else:
-            self.n_exposures = 1
+            self.n_exposures = props['exposures'] * np.ceil(abs(props['start'] - props['stop']) / props['step'])
+            if self.n_exposures < 1:
+                self.n_exposures = 1
         self.updateSceneTransform()
 
 

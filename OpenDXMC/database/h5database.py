@@ -611,9 +611,9 @@ class Database(object):
             logger.debug('No simulations in database, no names to test')
             self.close()
             if not isinstance(name, str):
-                return 'NewName'
+                return 'newname'
             elif len(name) == 0:
-                return 'NewName'
+                return 'newname'
             else:
                 return name
 
@@ -621,12 +621,12 @@ class Database(object):
         meta_table = self.get_node('/', 'meta_data', create=False)
         i = 1
         if name is None:
-            name = 'NewName'
+            name = 'newname'
         else:
             assert isinstance(name, str)
             name = "".join([l for l in name.split() if len(l) > 0])
             if len(name) == 0:
-                name = 'NewName'
+                name = 'newname'
         while True:
             for row in meta_table.where('name == b"{}"'.format(name)):
                 break
