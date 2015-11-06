@@ -325,7 +325,12 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
             callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
         simulation['start_at_exposure_no'] = e + 1
 
+    if callback is not None:
+        callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
+
     generate_dose_conversion_factor(simulation, materials)
+    if callback is not None:
+        callback(simulation['name'], {'energy_imparted': None}, e + 1, '')
     simulation['start_at_exposure_no'] = 0
     simulation['MC_finished'] = True
     simulation['MC_running'] = False
