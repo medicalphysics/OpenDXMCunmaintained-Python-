@@ -167,8 +167,7 @@ class Scene(QtGui.QGraphicsScene):
         self.shape = np.ones(3, np.int)
         self.spacing = np.ones(3, np.double)
         self.scaling = np.ones(3, np.double)
-
-
+     
 
     def set_metadata(self, sim, index=0):
         self.name = sim.get('name', '')
@@ -419,7 +418,7 @@ class Scene(QtGui.QGraphicsScene):
 #    c.setAlpha(alpha)
 #    return c
 
-def blendArrayToQImage(front_array, back_array, front_level, back_level,
+def blendArrayToQImage(f_array, b_array, front_level, back_level,
                        front_lut, back_lut):
     """Convert the 2D numpy array `gray` into a 8-bit QImage with a gray
     colormap.  The first dimension represents the vertical image axis.
@@ -430,16 +429,14 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     collected (otherwise PyQt will throw away the wrapper, effectively
     freeing the underlying memory - boom!)."""
 
-    np.clip(front_array, front_level[0]-front_level[1],
-            front_level[0]+front_level[1],
-            out=front_array)
+    front_array = np.clip(f_array, front_level[0]-front_level[1],
+                          front_level[0]+front_level[1])
 
     front_array -= (front_level[0]-front_level[1])
     front_array *= 255./(front_level[1]*2.)
 
-    np.clip(back_array, back_level[0]-back_level[1],
-            back_level[0]+back_level[1],
-            out=back_array)
+    back_array = np.clip(b_array, back_level[0]-back_level[1],
+                         back_level[0]+back_level[1])
     back_array -= (back_level[0]-back_level[1])
     back_array *= 255./(back_level[1]*2.)
 
@@ -461,10 +458,11 @@ def blendArrayToQImage(front_array, back_array, front_level, back_level,
     p = QtGui.QPainter(back_qim)
     p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOut)
     p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
-    p.setCompositionMode(QtGui.QPainter.CompositionMode_Lighten)
+    p.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
 
     p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
-
+#    p.setPen(QtCore.Qt.white)
+#    p.drawText(QtCore.QPointF(0, back_w), "({0}, {1})".format(front_level[0], front_level[1]))
 
     return back_qim
 
@@ -572,8 +570,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
         self.front_alpha = 255
         self.back_lut = get_lut('gray', self.back_alpha)
         self.front_lut = get_lut('pet', self.front_alpha)
-
+        
         self.qimage = None
+        self.setAcceptedMouseButtons(QtCore.Qt.RightButton | QtCore.Qt.MiddleButton)
+#        self.setAcceptHoverEvents(True)
 
     def qImage(self):
         if self.qimage is None:
@@ -640,6 +640,36 @@ class BlendImageItem(QtGui.QGraphicsItem):
             self.render()
         painter.drawImage(QtCore.QPointF(0, 0), self.qimage)
 
+    def mousePressEvent(self, event):
+        event.accept()
+        
+    def mouseMoveEvent(self, event):
+        print(event.buttons())
+        if event.buttons() == QtCore.Qt.RightButton:
+            event.accept()    
+#            print(event.pos()- event.lastPos())
+            dp = event.pos()- event.lastPos()
+            x, y = self.front_level
+            x += dp.x()*.1
+            y += dp.y()*.1
+            if x < 0:
+                x=0
+            if y < 0:
+                y=0    
+            self.setLevels(front=(x, y))
+        elif event.buttons() == QtCore.Qt.MiddleButton:
+            event.accept()    
+#            print(event.pos()- event.lastPos())
+            dp = event.pos()- event.lastPos()
+            x, y = self.back_level
+            x += dp.x()
+            y += dp.y()
+            if x < 0:
+                x=0
+            if y < 0:
+                y=0    
+            self.setLevels(back=(x, y))
+        
 class BitImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1169,7 +1199,6 @@ class MaterialScene(Scene):
             return
         if array_name == 'material_map':
             organ_max_value = array['material'].max()
-            print(organ_max_value)
             lut =  [self.lut[i*255 // organ_max_value] for i in range(organ_max_value+1)]
             self.image_item.set_lut(lut)
             self.map_item.set_map(array, lut)
@@ -1224,10 +1253,10 @@ class DoseScene(Scene):
 
         self.front_array = None
 
-        alpha = 1. -np.exp(-np.linspace(0, 3, 256))
+        alpha = 1. -np.exp(-np.linspace(0, 6, 256))
         alpha *= 255./alpha.max()
 
-        self.image_item.setLut(front_lut='gist_rainbow', front_alpha=alpha.astype(np.int))
+        self.image_item.setLut(front_lut='jet', front_alpha=alpha.astype(np.int))
 
 
     def setNoData(self):
@@ -1341,10 +1370,13 @@ class View(QtGui.QGraphicsView):
                 drag.setPixmap(pix)
                 # initialiserer drops
                 drag.exec_(QtCore.Qt.CopyAction)
-
+        else:
+            return super().mouseMoveEvent(e)
     def mousePressEvent(self, e):
         self.mouse_down_pos = e.globalPos()
-        e.setAccepted(False)
+#       e.setAccepted(False)
+        return super().mousePressEvent(e)
+        
 
 
     def toQImage(self):
