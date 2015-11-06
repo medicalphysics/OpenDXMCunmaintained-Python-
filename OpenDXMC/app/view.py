@@ -167,7 +167,7 @@ class Scene(QtGui.QGraphicsScene):
         self.shape = np.ones(3, np.int)
         self.spacing = np.ones(3, np.double)
         self.scaling = np.ones(3, np.double)
-     
+
 
     def set_metadata(self, sim, index=0):
         self.name = sim.get('name', '')
@@ -570,7 +570,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
         self.front_alpha = 255
         self.back_lut = get_lut('gray', self.back_alpha)
         self.front_lut = get_lut('pet', self.front_alpha)
-        
+
         self.qimage = None
         self.setAcceptedMouseButtons(QtCore.Qt.RightButton | QtCore.Qt.MiddleButton)
 #        self.setAcceptHoverEvents(True)
@@ -642,11 +642,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
 
     def mousePressEvent(self, event):
         event.accept()
-        
+
     def mouseMoveEvent(self, event):
-        print(event.buttons())
         if event.buttons() == QtCore.Qt.RightButton:
-            event.accept()    
+            event.accept()
 #            print(event.pos()- event.lastPos())
             dp = event.pos()- event.lastPos()
             x, y = self.front_level
@@ -655,10 +654,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
             if x < 0:
                 x=0
             if y < 0:
-                y=0    
+                y=0
             self.setLevels(front=(x, y))
         elif event.buttons() == QtCore.Qt.MiddleButton:
-            event.accept()    
+            event.accept()
 #            print(event.pos()- event.lastPos())
             dp = event.pos()- event.lastPos()
             x, y = self.back_level
@@ -667,9 +666,9 @@ class BlendImageItem(QtGui.QGraphicsItem):
             if x < 0:
                 x=0
             if y < 0:
-                y=0    
+                y=0
             self.setLevels(back=(x, y))
-        
+
 class BitImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1376,7 +1375,7 @@ class View(QtGui.QGraphicsView):
         self.mouse_down_pos = e.globalPos()
 #       e.setAccepted(False)
         return super().mousePressEvent(e)
-        
+
 
 
     def toQImage(self):
