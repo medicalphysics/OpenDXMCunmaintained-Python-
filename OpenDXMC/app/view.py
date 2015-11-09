@@ -1420,10 +1420,16 @@ class View(QtGui.QGraphicsView):
                                                      "Save cineloop",
                                                      "/cine.mp4",
                                                      "Movie (*.mp4)")
-        writer = FFMPEG_VideoWriter(filename,
-                                    (width, height),
-                                    18)
-
+        try:
+            writer = FFMPEG_VideoWriter(filename,
+                                        (width, height),
+                                        18)
+        except FileNotFoundError:
+            logger.warning("FFMPEG executable not found")
+            return
+        else:
+            logger.debug('Writing cine movie')
+                                        
         for index in range(array.shape[self.cine_film_data['view_orientation']]):
             if self.cine_film_data['view_orientation'] == 1:
                 arr_slice = np.squeeze(array[:, index, :])
@@ -1445,6 +1451,7 @@ class View(QtGui.QGraphicsView):
             arr = np.array(ptr).reshape(height, width, 3)
             writer.write_frame(arr)
         writer.close()
+        logger.debug('Done writing cine movie')
 
 
         self.cine_film_data = {}

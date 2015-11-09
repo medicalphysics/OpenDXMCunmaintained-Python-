@@ -13,7 +13,7 @@ try:
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
-FFMPEG_BINARY = "E://ffmpeg//bin//ffmpeg"
+FFMPEG_BINARY = "ffmpeg.exe"
 
 class FFMPEG_VideoWriter:
     """ A class for FFMPEG-based video writing.
