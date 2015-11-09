@@ -97,7 +97,10 @@ class Database(object):
     def __init__(self, database_path=None):
         self.db_path = os.path.abspath(database_path)
         self.db_instance = None
+        self.filters = tb.Filters(complevel=1, complib='blosc', fletcher32=False, shuffle=False)
         self.init_new_database()
+
+
 
     def init_new_database(self):
         # setting up materials if not exist
@@ -123,7 +126,7 @@ class Database(object):
             if self.db_instance.isopen:
                 return
         self.db_instance = tb.open_file(self.db_path, mode='a',
-                                        filters=tb.Filters(complevel=9))
+                                        filters=self.filters)
 
     def close(self):
         if self.db_instance is not None:
@@ -499,7 +502,7 @@ class Database(object):
             raise ValueError('No simulations in database')
         meta_table = self.get_node('/', 'meta_data', create=False)
 
-        for row in meta_table.where('MC_ready & ~ MC_running'):
+        for row in meta_table.where('MC_ready'):
             name = str(row['name'], encoding='utf-8')
             break
         else:

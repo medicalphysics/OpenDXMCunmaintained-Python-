@@ -4,13 +4,13 @@ Created on Thu Jul 30 10:38:15 2015
 
 @author: erlean
 """
+
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from scipy.interpolate import interp1d, RegularGridInterpolator
 from PyQt4 import QtGui, QtCore
 from .dicom_lut import get_lut
-import copy
-import itertools
+from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -53,6 +53,8 @@ class ViewController(QtCore.QObject):
         self.current_scene = 'planning'
 
         self.graphicsview = View()
+        self.graphicsview.request_array.connect(database_interface.request_view_array)
+        database_interface.send_view_array.connect(self.graphicsview.cine_film_creation)
 
         self.scenes = {'planning': PlanningScene(),
                        'running':  RunningScene(),
@@ -134,9 +136,9 @@ class ViewController(QtCore.QObject):
 
         menu_widget = QtGui.QMenuBar(wid)
         menu_widget.setContentsMargins(0, 0, 0, 0)
+
         orientation_action = QtGui.QAction('Orientation', menu_widget)
         orientation_action.triggered.connect(self.selectViewOrientation)
-
         menu_widget.addAction(orientation_action)
 
         sceneSelect = SceneSelectGroup(wid)
@@ -146,6 +148,13 @@ class ViewController(QtCore.QObject):
 #        self.scene_selected.connect(sceneSelect.sceneSelected)
         for action in sceneSelect.actions():
             menu_widget.addAction(action)
+
+
+        cine_action = QtGui.QAction('Cine', menu_widget)
+        cine_action.triggered.connect(self.graphicsview.request_cine_film_creation)
+        menu_widget.addAction(cine_action)
+
+
 
         view_layout.addWidget(menu_widget)
 
@@ -507,7 +516,7 @@ class NoDataItem(QtGui.QGraphicsItem):
 
     def boundingRect(self):
 #        return  QtCore.QRectF(self.fontMetrics.boundingRect(self.msg))
-        return QtCore.QRectF(0, 0, 2000, 2000)
+        return QtCore.QRectF(0, 0, 200, 200)
 
     def paint(self, painter, style, widget=None):
         painter.setPen(QtGui.QPen(QtCore.Qt.white))
@@ -515,7 +524,7 @@ class NoDataItem(QtGui.QGraphicsItem):
 #        h = self.fontMetrics.boundingRect('A').height()
 #        painter.drawText(0, h ,self.msg)
 
-        painter.drawText(QtCore.QRectF(0, 0, 2000, 2000), QtCore.Qt.AlignCenter, self.msg)
+        painter.drawText(QtCore.QRectF(0, 0, 200, 200), QtCore.Qt.AlignCenter, self.msg)
 #
 #
 #        self.fontMetrics = QtGui.qApp.fontMetrics()
@@ -649,8 +658,8 @@ class BlendImageItem(QtGui.QGraphicsItem):
 #            print(event.pos()- event.lastPos())
             dp = event.pos()- event.lastPos()
             x, y = self.front_level
-            x += dp.x()*.1
-            y += dp.y()*.1
+            x += dp.x()*.01*abs(x)
+            y += dp.y()*.01*abs(y)
             if x < 0:
                 x=0
             if y < 0:
@@ -852,7 +861,7 @@ class PlanningScene(Scene):
         self.image_item_bit = BitImageItem()
         self.addItem(self.image_item)
         self.addItem(self.image_item_bit)
-
+        self.array_names = ['ctarray', 'organ']
 
         self.aec_item = AecItem()
         self.addItem(self.aec_item)
@@ -919,7 +928,7 @@ class PlanningScene(Scene):
         if simulation_name != self.name:
             return
 
-        if array_name not in ['ctarray', 'organ']:
+        if array_name not in self.array_names:
             return
         self.index = index
         if self.is_bit_array:
@@ -1081,6 +1090,7 @@ class RunningScene(Scene):
         self.nodata_item.setVisible(True)
 
     def defaultLevels(self, array):
+
         p = array.max() - array.min()
         return (p/2., p / 2. )
 
@@ -1097,8 +1107,8 @@ class RunningScene(Scene):
         if 'eta' in props:
             msg += " ETA: {}".format(props['eta'])
         self.progress_item.setPlainText(msg)
-
-        self.image_item.setLevels(self.defaultLevels(self.array))
+        if self.array is not None:
+            self.image_item.setLevels(self.defaultLevels(self.array))
         self.reloadImages()
         self.updateSceneTransform()
 
@@ -1335,6 +1345,9 @@ class DoseScene(Scene):
 
 
 class View(QtGui.QGraphicsView):
+    request_array = QtCore.pyqtSignal(str, str)
+
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
@@ -1345,6 +1358,8 @@ class View(QtGui.QGraphicsView):
                             QtGui.QPainter.TextAntialiasing)
 
         self.mouse_down_pos = QtCore.QPoint(0, 0)
+        self.cine_film_data = {}
+
 
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
@@ -1376,7 +1391,133 @@ class View(QtGui.QGraphicsView):
 #       e.setAccepted(False)
         return super().mousePressEvent(e)
 
+    @QtCore.pyqtSlot()
+    def request_cine_film_creation(self):
+        if not isinstance(self.scene(), Scene):
+            return
+        self.cine_film_data = {}
+        self.cine_film_data['view_orientation'] = self.scene().view_orientation
+        self.cine_film_data['array_names'] = self.scene().array_names
+        self.cine_film_data['name'] = self.scene().name
 
+        for arr_name in self.cine_film_data['array_names']:
+            self.request_array.emit(self.cine_film_data['name'], arr_name)
+
+
+    @QtCore.pyqtSlot(str, np.ndarray, str)
+    def cine_film_creation(self, name, array, array_name):
+        if len(self.cine_film_data) == 0:
+            return
+        if name != self.cine_film_data.get('name', ''):
+            return
+        if array_name not in self.cine_film_data['array_names']:
+            return
+
+        rect = self.toQImage().rect()
+        height, width = rect.height(), rect.width()
+
+        filename = QtGui.QFileDialog.getSaveFileName(self,
+                                                     "Save cineloop",
+                                                     "/cine.mp4",
+                                                     "Movie (*.mp4)")
+        writer = FFMPEG_VideoWriter(filename,
+                                    (width, height),
+                                    24)
+
+        for index in range(array.shape[self.cine_film_data['view_orientation']]):
+            if self.cine_film_data['view_orientation'] == 1:
+                arr_slice = np.squeeze(array[:, index, :])
+            elif self.cine_film_data['view_orientation'] == 0:
+                arr_slice = np.squeeze(array[index, :, :])
+            else:
+                arr_slice = np.squeeze(array[:,:,index])
+
+            self.scene().reload_slice(self.cine_film_data['name'],
+                                      arr_slice,
+                                      array_name,
+                                      index,
+                                      self.cine_film_data['view_orientation']
+                                      )
+            QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
+            qim = self.toQImage().convertToFormat(QtGui.QImage.Format_RGB888)
+            ptr = qim.bits()
+            ptr.setsize(qim.byteCount())
+            arr = np.array(ptr).reshape(height, width, 3)
+            writer.write_frame(arr)
+        writer.close()
+
+
+        self.cine_film_data = {}
+
+#    @QtCore.pyqtSlot(str, np.ndarray, str)
+#    def cine_film_creation(self, name, array, array_name):
+#        if len(self.cine_film_data) == 0:
+#            return
+#        if name != self.cine_film_data.get('name', ''):
+#            return
+#        if array_name not in self.cine_film_data['array_names']:
+#            return
+#
+#        rect = self.toQImage().rect()
+#        height, width = rect.height(), rect.width()
+#
+#
+#        FFMPEG_BIN = "E://ffmpeg//bin//ffmpeg"
+#        command = [ FFMPEG_BIN,
+#                   '-y', # (optional) overwrite output file if it exists
+#                   '-f', 'rawvideo',
+#                   '-vcodec','rawvideo',
+#                   '-s', "{0}x{1}".format(height, width),###'420x360', # size of one frame
+##                   '-pix_fmt', 'rgb24',
+#                   '-r', '24', # frames per second
+#                   '-i', '-', # The imput comes from a pipe
+#                   '-an', # Tells FFMPEG not to expect any audio
+#                   '-vcodec', 'mpeg4',
+#                   'my_output_videofile.mp4',
+#                   "-loglevel", "debug"]
+##        command = ['-y', '-vcodec', 'png', '-i', '-', '-vcodec', 'mpeg4', '-qscale', '5', '-r', '24', 'c:/test/video.avi',"-loglevel", "debug"]
+##        process = QtCore.QProcess(QtGui.qApp)
+##        process.setProcessChannelMode(process.ForwardedChannels)
+##        process.start(FFMPEG_BIN, command)
+#
+#        pipe = subprocess.Popen(command,
+#                                stdin=subprocess.PIPE,
+#                                stderr=subprocess.PIPE)
+#
+#        for index in range(array.shape[self.cine_film_data['view_orientation']]):
+#            if index > 10:
+#                break
+#            if self.cine_film_data['view_orientation'] == 1:
+#                arr_slice = np.squeeze(array[:, index, :])
+#            elif self.cine_film_data['view_orientation'] == 0:
+#                arr_slice = np.squeeze(array[index, :, :])
+#            else:
+#                arr_slice = np.squeeze(array[:,:,index])
+#
+#            self.scene().reload_slice(self.cine_film_data['name'],
+#                                      arr_slice,
+#                                      array_name,
+#                                      index,
+#                                      self.cine_film_data['view_orientation']
+#                                      )
+#            QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
+#            QtGui.qApp.processEvents()
+#            qim = self.toQImage().convertToFormat(QtGui.QImage.Format_RGB32)
+#            ptr = qim.bits()
+#            ptr.setsize(qim.byteCount())
+#            arr = np.array(ptr).reshape(height, width, 4)
+#
+##            qpx = QtGui.QPixmap.fromImage(self.toQImage())
+##            qpx.save(process, 'png')
+##            qpx.save("C:\\test\\test\\{0}.jpeg".format(index))
+#
+##            pipe.proc.stdin.write(qim.bits())
+#            pipe.stdin.write(arr.tostring())
+#
+##        process.closeWriteChannel()
+##        process.terminate()
+#
+#        self.cine_film_data = {}
 
     def toQImage(self):
         rect = self.scene().sceneRect()

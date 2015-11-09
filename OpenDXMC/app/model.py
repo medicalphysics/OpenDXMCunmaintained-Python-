@@ -98,6 +98,12 @@ class ImportScalingEdit(QtGui.QLineEdit):
         self.setPalette(palette)
 
 
+class ArrayBuffer(object):
+    def __init__(self):
+        self.name = ''
+
+
+
 class DatabaseInterface(QtCore.QObject):
     """ Async database interface, async provided with signal/slots resulting in
     two connections per task wished to be done, ie, signal/slot hell
