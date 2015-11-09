@@ -1422,7 +1422,7 @@ class View(QtGui.QGraphicsView):
                                                      "Movie (*.mp4)")
         writer = FFMPEG_VideoWriter(filename,
                                     (width, height),
-                                    24)
+                                    18)
 
         for index in range(array.shape[self.cine_film_data['view_orientation']]):
             if self.cine_film_data['view_orientation'] == 1:
