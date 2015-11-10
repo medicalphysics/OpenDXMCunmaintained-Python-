@@ -12,6 +12,7 @@ from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
 from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
+from opendxmc.utils import find_all_files
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -312,10 +313,11 @@ class Importer(QtCore.QObject):
             self.request_add_sim_to_database.emit(props, arrays, True)
         self.running.emit(False)
 
-    @QtCore.pyqtSlot()
-    def import_phantoms(self):
+    @QtCore.pyqtSlot(list)
+    def import_phantoms(self, qurl_list):
         self.running.emit(True)
-        for props, arrays in read_phantoms():
+        paths = [url.toLocalFile() for url in qurl_list]
+        for props, arrays in read_phantoms(find_all_files(paths)):
             self.request_add_sim_to_database.emit(props, arrays, False)
         self.running.emit(False)
 
@@ -486,10 +488,11 @@ class ListModel(QtCore.QAbstractListModel):
 
     request_data_list = QtCore.pyqtSignal()
     request_import_dicom = QtCore.pyqtSignal(list)
+    request_import_phantom = QtCore.pyqtSignal(list)
     request_viewing = QtCore.pyqtSignal(str)
     request_copy_elements = QtCore.pyqtSignal(list)
     request_removal = QtCore.pyqtSignal(str)
-    def __init__(self, interface, importer=None, parent=None, simulations=False,
+    def __init__(self, interface, importer=None, phantom_importer=None, parent=None, simulations=False,
                  materials=False):
         super().__init__(parent)
         self.__data = []
@@ -502,6 +505,8 @@ class ListModel(QtCore.QAbstractListModel):
             self.request_removal.connect(interface.remove_simulation)
             if importer:
                 self.request_import_dicom.connect(importer.import_urls)
+            if phantom_importer:
+                self.request_import_phantom.connect(phantom_importer.import_phantoms)
         elif materials:
             self.request_data_list.connect(interface.emit_material_list)
 
@@ -529,6 +534,7 @@ class ListModel(QtCore.QAbstractListModel):
 
     @QtCore.pyqtSlot(str)
     def request_removal_emit(self, name):
+        self.layoutAboutToBeChanged.emit()
         self.request_removal.emit(name)
 
 
@@ -541,6 +547,8 @@ class ListModel(QtCore.QAbstractListModel):
         if not index.isValid():
             return None
         row = index.row()
+        if row >= len(self.__data):
+            return None
         if role == QtCore.Qt.DisplayRole:
             return self.__data[row]
         elif role == QtCore.Qt.DecorationRole:
@@ -578,6 +586,7 @@ class ListModel(QtCore.QAbstractListModel):
         if mimedata.hasUrls():
             urls = [u for u in mimedata.urls() if u.isLocalFile()]
             self.request_import_dicom.emit(urls)
+            self.request_import_phantom.emit(urls)
             logger.debug(' '.join([u.toLocalFile() for u in urls]))
             return True
         elif mimedata.hasText():
@@ -752,9 +761,10 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
                 return False
             else:
                 if item.key not in self.unsaved_items:
-
                     self.unsaved_items[item.key] = item.value
-                item.update_data(getattr(self.validator, item.key))
+                for item in [self.item(i, 1) for i in range(self.rowCount())]:
+                    item.update_data(getattr(self.validator, item.key))
+#                self.dataChanged.emit(self.index(0,0), self.index(self.rowCount(), 1))
                 self.test_unsaved_changes()
             return True
         return super().setData(index, value, role)

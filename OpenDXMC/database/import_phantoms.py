@@ -7,16 +7,17 @@ Created on Tue Oct 13 11:03:25 2015
 
 import os
 import sys
+import zipfile
 import numpy as np
 from opendxmc.database.h5database import Validator
-from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs, child_organs, baby_organs
+from opendxmc.data.phantom_definitions import golem_organs, vishum_organs, donna_organs, helga_organs, irene_organs, eva_organs, adam_organs, frank_organs, katja_organs, child_organs, baby_organs, jo_organs
 import logging
 logger = logging.getLogger('OpenDXMC')
 
 
 PATH = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc', 'data', 'phantoms')
 
-def read_phantoms(materials=None):
+def read_phantoms(file_list):
 
     phantoms = {'golem': ('segm_golem', golem_organs, (2.08, 2.08, 8.), (256, 256, 220)),
                 'VisHum': ('segm_vishum', vishum_organs, (.91, .94, 5.), (512, 512, 250)),
@@ -29,20 +30,54 @@ def read_phantoms(materials=None):
                 'Katja': ('Katja', katja_organs, (1.775, 1.775, 4.84), (150, 299, 348)),
                 'Child': ('segm_child', child_organs, (1.54, 1.54, 8), (256, 256, 144)),
                 'Babynew': ('babynew_May2003', baby_organs, (.85, .85, 4.), (138, 267, 142)),
+                'Jo': ('Jo', jo_organs, (1.875, 1.875, 10.), (118, 226, 136)),
                 }
 
 
-    for key, value in phantoms.items():
-        path = os.path.join(PATH, key, value[0])
-        try:
-            sim = read_voxels(path, key, *value[1:])
-        except FileNotFoundError as e:
-            logger.debug('{0} phantom not found in {1}'.format(key, path))
-#            raise e
-        else:
-            logger.debug('{0} phantom read successfully'.format(key))
+    unzipped = False
+    for fil in file_list:
+        path = os.path.abspath(fil)
+        if zipfile.is_zipfile(fil):
+            logger.debug('Attempting to unzip file {}'.format(path))
+            with zipfile.ZipFile(path) as fz:
+                for phantom, values in phantoms.items():
+                    try:
+                        path = os.path.abspath(fz.extract(values[0], path=os.path.dirname(path)))
+                    except:
+                        pass
+                    else:
+                        logger.debug('File {0} unzipped to {1}'.format(values[0], path))
+                        unzipped = True
+                        break
+        filename = os.path.basename(path)
+        for key, value in phantoms.items():
+            if filename == value[0]:
+                try:
+                    sim = read_voxels(path, key, *value[1:])
+                except FileNotFoundError:
+                    logger.debug('{0} phantom not found in {1}'.format(key, path))
+                else:
+                    logger.debug('{0} phantom read successfully'.format(key))
+                    yield sim.get_data()
+                if unzipped:
+                    try:
+                        os.remove(path)
+                    except:
+                        pass
+                unzipped = False
 
-            yield sim.get_data()
+
+#    for key, value in phantoms.items():
+#        path = os.path.join(PATH, key, value[0])
+#        try:
+#            sim = read_voxels(path, key, *value[1:])
+#        except FileNotFoundError as e:
+#            logger.debug('{0} phantom not found in {1}'.format(key, path))
+##            raise e
+#        else:
+#            logger.debug('{0} phantom read successfully'.format(key))
+#
+#            yield sim.get_data()
 
 
 

@@ -42,6 +42,22 @@ class LogWidget(QtGui.QTextEdit):
         self.closed.emit(False)
         super().closeEvent(event)
 
+class ImportPushButton(QtGui.QPushButton):
+    files_to_import = QtCore.pyqtSignal(list)
+    def __init__(self, txt, parent=None):
+        super().__init__(txt, parent)
+        self.clicked.connect(self.request_files)
+
+    @QtCore.pyqtSlot()
+    def request_files(self):
+        files = QtGui.QFileDialog.getOpenFileNames(self,
+                                                   'Select Helmholtz Centrum phantoms to import',
+                                                   '/',
+                                                   'ZIP files (*.zip); Raw text (*)')
+        self.files_to_import.emit(files)
+
+
+
 
 class StatusBarButton(QtGui.QPushButton):
     def __init__(self, *args):
@@ -115,11 +131,13 @@ class MainWindow(QtGui.QMainWindow):
         database_busywidget = BusyWidget(tooltip='Writing or Reading to Database')
         simulation_busywidget = BusyWidget(tooltip='Monte Carlo simulation in progress')
         importer_busywidget = BusyWidget(tooltip='Importing DICOM files')
+        importer_phantoms_busywidget = BusyWidget(tooltip='Importing digital phantoms')
 
         # statusbar
         status_bar = QtGui.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
         status_bar.addPermanentWidget(importer_busywidget)
+        status_bar.addPermanentWidget(importer_phantoms_busywidget)
         status_bar.addPermanentWidget(simulation_busywidget)
         status_bar.addPermanentWidget(database_busywidget)
         status_bar.addPermanentWidget(statusbar_log_button)
@@ -154,12 +172,14 @@ class MainWindow(QtGui.QMainWindow):
         # importer
         self.importer = Importer(self.interface)
         self.importer.running.connect(importer_busywidget.busy)
+        self.importer_phantom = Importer(self.interface)
+        self.importer_phantom.running.connect(importer_phantoms_busywidget.busy)
 
         ## import scaling setter
         import_scaling_widget = ImportScalingEdit(self.importer, self)
 
-        import_phantoms_button = QtGui.QPushButton('Import Phantoms', self)
-        import_phantoms_button.clicked.connect(self.importer.import_phantoms)
+        import_phantoms_button = ImportPushButton('Import Phantoms', self)
+        import_phantoms_button.files_to_import.connect(self.importer.import_phantoms)
 
 
 #        self.properties_model = PropertiesEditModel(self.interface)
@@ -175,7 +195,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
         # Models
-        self.simulation_list_model = ListModel(self.interface, self.importer, self,
+        self.simulation_list_model = ListModel(self.interface, self.importer, self.importer_phantom, self,
                                                simulations=True)
         simulation_list_view = ListView()
         simulation_list_view.setModel(self.simulation_list_model)
@@ -226,9 +246,12 @@ class MainWindow(QtGui.QMainWindow):
 
         self.import_thread = QtCore.QThread(self)
         self.importer.moveToThread(self.import_thread)
+        self.import_phantom_thread = QtCore.QThread(self)
+        self.importer_phantom.moveToThread(self.import_phantom_thread)
 #        self.importer.moveToThread(self.database_thread)
 
         self.import_thread.start()
+        self.import_phantom_thread.start()
         self.mc_thread.start()
         self.dose_thread.start()
         self.database_thread.start()

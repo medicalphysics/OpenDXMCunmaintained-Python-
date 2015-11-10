@@ -15,6 +15,159 @@ __tissues = {1: 'hardbone',
                9: 'air',
                10: 'water',
                }
+
+__jo_organs = """1;Adrenal, left;4
+                2;Adrenal, right;4
+                3;Anterior nasal passage (ET1);9
+                4;Posterior nasal passage down to larynx (ET2);4
+                5;Oral mucosa, tongue;3
+                6;Oral mucosa, lips and cheeks;7
+                7;Trachea;4
+                8;Bronchi;8
+                9;Blood vessels, head;5
+                10;Blood vessels, trunk;5
+                11;Blood vessels, arms;5
+                12;Blood vessels, legs;5
+                13;Humeri, proximal end, cortical bone;1
+                14;Humeri, upper half, spongiosa;1
+                15;Humeri, upper half, medullary cavity;1
+                16;Humeri, lower half, cortical;1
+                17;Humeri, lower half, spongiosa;1
+                18;Humeri, lower half, medullary cavity;1
+                19;Ulnae and radii, cortical;1
+                20;Ulnae and radii, spongiosa;1
+                21;Ulnae and radii, medullary cavity;1
+                22;Wrists and hand bones, cortical;1
+                23;Wrists and hand bones, spongiosa;1
+                24;Clavicles, cortical;1
+                25;Clavicles, spongiosa;1
+                26;Cranium, cortical;1
+                27;Cranium, spongiosa;1
+                28;Femora, upper half, cortical;1
+                29;Femora, upper half, spongiosa;1
+                30;Femora, upper half, medullary cavity;1
+                31;Femora, lower half, cortical;1
+                32;Femora, lower half, spongiosa;1
+                33;Femora, lower half, medullary cavity;1
+                34;Tibiae, fibulae and patellae:;1
+                35;Tibiae, fibulae and patellae, spongiosa;1
+                36;Tibiae, fibulae and patellae, medullary cavity;1
+                37;Ankles and foot bones:;1
+                38;Ankles and foot bones, spongiosa;1
+                39;Mandible, cortical;1
+                40;Mandible, spongiosa;1
+                41;Pelvis, cortical;1
+                42;Pelvis, spongiosa;1
+                43;Ribs, cortical;1
+                44;Ribs, spongiosa;1
+                45;Scapulae, cortical;1
+                46;Scapulae, spongiosa;1
+                47;Cervical spine, cortical;1
+                48;Cervical spine, spongiosa;1
+                49;Thoracic spine, cortical;1
+                50;Thoracic spine, spongiosa;1
+                51;Lumbar spine, cortical;1
+                52;Lumbar spine, spongiosa;1
+                53;Sacrum, cortical;1
+                54;Sacrum, spongiosa;1
+                55;Sternum, cortical;1
+                56;Sternum, spongiosa;1
+                57;Cartilage, head;1
+                58;Cartilage, trunk;1
+                59;Cartilage, arms;1
+                60;Cartilage, legs;1
+                61;Brain;7
+                62;Breast, left, adipose tissue;7
+                63;Breast, left, glandular tissue;4
+                64;Breast, right, adipose tissue;7
+                65;Breast, right, glandular tissue;4
+                66;Eye lens, left;4
+                67;Eye bulb, left;4
+                68;Eye lens, right;4
+                69;Eye bulb, right;4
+                70;Gall bladder wall;4
+                71;Gall bladder contents;10
+                72;Stomach wall;4
+                73;Stomach contents;4
+                74;Small intestine wall;4
+                75;Small intestine contents;4
+                76;Ascending colon wall;4
+                77;Ascending colon contents;4
+                78;Transverse colon wall, right;4
+                79;Transverse colon contents, right;4
+                80;Transverse colon wall, left;4
+                81;Transverse colon contents, left;4
+                82;Descending colon wall;4
+                83;Descending colon contents;4
+                84;Sigmoid colon wall;4
+                85;Sigmoid colon contents;4
+                86;Rectum wall;4
+                87;Heart wall;3
+                88;Heart contents (blood);5
+                89;Kidney, left, cortex;4
+                90;Kidney, left, medulla;4
+                91;Kidney, left, pelvis;4
+                92;Kidney, right, cortex;4
+                93;Kidney, right, medulla;4
+                94;Kidney, right, pelvis;4
+                95;Liver;4
+                96;Lung, left, blood;5
+                97;Lung, left, tissue;8
+                98;Lung, right, blood;5
+                99;Lung, right, tissue;8
+                100;Lymphatic nodes, extrathoracic airways;4
+                101;Lymphatic nodes, thoracic airways;4
+                102;Lymphatic nodes, head;4
+                103;Lymphatic nodes, trunk;4
+                104;Lymphatic nodes, arms;4
+                105;Lymphatic nodes, legs;4
+                106;Muscle, head;3
+                107;Muscle, trunk;3
+                108;Muscle, arms;3
+                109;Muscle, legs;3
+                110;Oesophagus (wall);3
+                111;Ovary, left;4
+                112;Ovary, right;4
+                113;Pancreas;4
+                114;Pituitary gland;4
+                115;Prostate;4
+                116;Residual tissue, head;7
+                117;Residual tissue, trunk;7
+                118;Residual tissue, arms;7
+                119;Residual tissue, legs;7
+                120;Salivary glands, left;4
+                121;Salivary glands, right;4
+                122;Skin, head;2
+                123;Skin, trunk;2
+                124;Skin, arms;2
+                125;Skin, legs;2
+                126;Spinal cord;6
+                127;Spleen;4
+                128;Teeth;1
+                129;Testis, left;4
+                130;Testis, right;4
+                131;Thymus;4
+                132;Thyroid;4
+                133;Tongue (inner part);3
+                134;Tonsils;4
+                135;Ureter, left;4
+                136;Ureter, right;4
+                137;Urinary bladder wall;4
+                138;Urinary bladder contents;4
+                139;Uterus / Cervix;4
+                140;Air inside body;9
+                141;Skin at top and bottom;2"""
+
+
+def jo_organs():
+    lg = __jo_organs.replace('\n', ';').replace('\r', '').split(';')
+    while len(lg) > 0:
+        org = lg.pop(0)
+        desc = lg.pop(0)
+        tiss = lg.pop(0)
+        yield int(org), desc.strip(), __tissues[int(tiss)]
+
+
 __baby_organs = """0;Air;9
                     1;Adrenals;4
                     2;Bladder wall;4
@@ -91,8 +244,8 @@ def baby_organs():
         desc = lg.pop(0)
         tiss = lg.pop(0)
         yield int(org), desc.strip(), __tissues[int(tiss)]
-        
-__child_organs="""0;Air;9  
+
+__child_organs="""0;Air;9
                     1;Adrenals;4
                     2;Bladder wall;4
                     3;Brain;7
@@ -161,7 +314,7 @@ def child_organs():
         desc = lg.pop(0)
         tiss = lg.pop(0)
         yield int(org), desc.strip(), __tissues[int(tiss)]
-             
+
 __katja_organs="""0;Air;9
                 1;Adrenal, left;4
                 2;Adrenal, right;4
