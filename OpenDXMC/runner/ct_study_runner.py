@@ -282,7 +282,10 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
         None, but updates the energy_imparted property of simulation
     """
     logger.info('Preparing simulation for {}'.format(simulation['name']))
-    materials_organic = [m for m in materials if m.organic]
+    if simulation['is_phantom']:
+        materials_organic = [m for m in materials]
+    else:
+        materials_organic = [m for m in materials if m.organic]
 
     # Validating if everything is in place
     material, material_map, density = ct_runner_validate_simulation(materials, simulation,
