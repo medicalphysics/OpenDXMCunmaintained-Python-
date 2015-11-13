@@ -934,21 +934,21 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
             for key, value in self.organ_map.items():
                 self._data[key] = [value, self.organ_material_map.get(key, 'Unknown'), 0, 0]
                 self._data_keys.append(key)
-            self.dose_z_lenght = list(range(self.organ_array.shape[2]))
+            self.dose_z_lenght = list(range(self.organ_array.shape[0]))
 #            self.dataChanged.emit(self.index(0, 0), self.index(len(self._data), 2))
-            self.request_array_slice.emit(self.current_simulation, 'dose', 0, 2)
+            self.request_array_slice.emit(self.current_simulation, 'dose', 0, 0)
             self.layoutChanged.emit()
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
-        if orientation != 2 or array_name != 'dose' or name != self.current_simulation:
+        if orientation != 0 or array_name != 'dose' or name != self.current_simulation:
             return
         if index in self.dose_z_lenght:
-            for organ in np.unique(self.organ_array[:,:,index]):
+            for organ in np.unique(self.organ_array[index, :, :]):
                 if organ not in self._data:
                     continue
 #                self.layoutAboutToBeChanged.emit()
-                ind_x, ind_y = np.nonzero(self.organ_array[:,:,index] == organ)
+                ind_x, ind_y = np.nonzero(self.organ_array[index, :, :] == organ)
                 self._data[organ][2] += arr[ind_x, ind_y].sum()
                 self._data[organ][3] += len(ind_x)
 #                import pdb
@@ -959,7 +959,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
 
             self.dose_z_lenght.remove(index)
         if len(self.dose_z_lenght) > 0:
-            self.request_array_slice.emit(self.current_simulation, 'dose', self.dose_z_lenght[0], 2)
+            self.request_array_slice.emit(self.current_simulation, 'dose', self.dose_z_lenght[0], 0)
 
 
 class OrganDoseView(QtGui.QTableView):

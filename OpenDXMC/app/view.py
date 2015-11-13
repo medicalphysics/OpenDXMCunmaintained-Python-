@@ -660,8 +660,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
             x, y = self.front_level
             x += dp.x()*.01*abs(x)
             y += dp.y()*.01*abs(y)
-            if x < 0:
-                x=0
+
             if y < 0:
                 y=0
             self.setLevels(front=(x, y))
@@ -672,10 +671,9 @@ class BlendImageItem(QtGui.QGraphicsItem):
             x, y = self.back_level
             x += dp.x()
             y += dp.y()
-            if x < 0:
-                x=0
-            if y < 0:
-                y=0
+
+            if y < 1:
+                y=1
             self.setLevels(back=(x, y))
 
 class BitImageItem(QtGui.QGraphicsItem):
@@ -765,6 +763,20 @@ class ImageItem(QtGui.QGraphicsItem):
     def paint(self, painter, style, widget=None):
         painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
 
+    def mousePressEvent(self, event):
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == QtCore.Qt.MiddleButton:
+            event.accept()
+#            print(event.pos()- event.lastPos())
+            dp = event.pos()- event.lastPos()
+            x, y = self.level
+            x += dp.x()
+            y += dp.y()
+            if y < 1:
+                y=1
+            self.setLevels((x, y))
 
 class AecItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -1311,7 +1323,7 @@ class DoseScene(Scene):
             self.image_item.setLevels(back=(max_level/2, max_level/2))
 
         elif array_name == self.front_array_name:
-            self.front_array = gaussian_filter(array, 1.)
+            self.front_array = gaussian_filter(array, 0.2)
             max_level = array.max()/ 4
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
@@ -1429,7 +1441,7 @@ class View(QtGui.QGraphicsView):
             return
         else:
             logger.debug('Writing cine movie')
-                                        
+
         for index in range(array.shape[self.cine_film_data['view_orientation']]):
             if self.cine_film_data['view_orientation'] == 1:
                 arr_slice = np.squeeze(array[:, index, :])
