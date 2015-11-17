@@ -163,7 +163,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
                                    output_shape=np.floor(np.array(ctarray.shape)/scale),
                                    cval=-1000, output=np.int16, prefilter=False)
 
-        specter = (specter[0], specter[1]/specter[1].sum())
+        specter = (specter[0], specter[1]/specter[1].mean())
 
         water_key = None
         material_map = {}
@@ -175,11 +175,18 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
             material_map[i] = mat.name
             material_dens[i] = float(mat.density)
             # interpolationg and integrating attinuation coefficient
+#            material_att[i] =
             material_att[i] = np.trapz(np.interp(specter[0],
                                                  mat.attinuation['energy'],
                                                  mat.attinuation['total']),
                                        specter[0])
+            material_att[i] = np.sum(np.interp(specter[0],
+                                     mat.attinuation['energy'],
+                                     mat.attinuation['total'])*specter[1]
+                           )
+
             material_att[i] *= mat.density
+
             if mat.name == 'water':
                 water_key = i
         assert water_key is not None  # we need to include water in materials
@@ -187,6 +194,8 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         # getting a list of attinuation
         material_HU_list = [(key, (att / material_att[water_key] - 1.)*1000.)
                             for key, att in material_att.items()]
+        for key, HU in material_HU_list:
+            print (material_map[key], HU)
         material_HU_list.sort(key=lambda x: x[1])
         HU_bins = (np.array(material_HU_list)[:-1, 1] +
                    np.array(material_HU_list)[1:, 1]) / 2.
@@ -195,12 +204,21 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
 
         material_array = np.digitize(
             ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
-#        import pdb
-#        pdb.set_trace()
+        # Using densities fromdefined materials
         density_array = np.asarray(material_array, dtype=np.double)
         np.choose(material_array,
                   [material_dens[i] for i, _ in material_HU_list],
                   out=density_array)
+
+        # using densities defined by HU units in ct array
+        HU_list = np.zeros(len(material_HU_list), dtype=np.int)
+        for ind, HU in material_HU_list:
+            HU_list[ind] = HU
+        ctarray_model = np.choose(material_array, HU_list)
+        density_array *= np.clip((ctarray - ctarray.min()+1) / (ctarray_model - ctarray.min() + 1), 0.5, 1.5)
+        ##########################
+        import pdb
+        pdb.set_trace()
         return material_map, material_array, density_array
 
 
@@ -397,7 +415,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
-    simulation['conversion_factor_ctdiair'] = simulation['ctdi_air100'] / d * total_collimation
+    simulation['conversion_factor_ctdiair'] = np.nan_to_num(simulation['ctdi_air100'] / d * total_collimation)
 
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32.):
@@ -471,4 +489,5 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
-    simulation['conversion_factor_ctdiw'] = simulation['ctdi_w100'] / ctdiv * total_collimation
+    simulation['conversion_factor_ctdiw'] = np.nan_to_num(simulation['ctdi_w100'] / ctdiv * total_collimation)
+
