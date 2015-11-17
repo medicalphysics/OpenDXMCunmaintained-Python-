@@ -1267,6 +1267,7 @@ class DoseScene(Scene):
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
         self.array_names = ['ctarray', 'organ']
+#        self.array_names = ['density', 'organ']
         self.nodata_item.setVisible(True)
         self.image_item.setVisible(False)
 
@@ -1292,7 +1293,7 @@ class DoseScene(Scene):
         if sim['is_phantom']:
             self.request_array.emit(self.name, 'organ_map')
         else:
-            self.image_item.setLevels(back=(2, 2))
+            self.image_item.setLevels(back=(0, 500))
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
 
