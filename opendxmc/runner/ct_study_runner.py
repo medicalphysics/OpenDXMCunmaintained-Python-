@@ -143,7 +143,17 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
         material_map = {key: value for value, key in material_map.items()}
         return material_map, material_array.astype(np.int), density_array
 
+def attinuation_to_ct_numbers(material_attinuations, air_key, water_key):
+    a = 1000./(material_attinuations[water_key] -material_attinuations[air_key])
+    b = -a * material_attinuations[water_key]
+    atts = []
 
+    for key, att in material_attinuations.items():
+        HU = a * att + b
+        if HU > 1000:
+            HU=1000
+        atts.append((key,HU))
+    return atts
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
@@ -189,18 +199,22 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
 
             if mat.name == 'water':
                 water_key = i
+            elif mat.name == 'air':
+                air_key = i
+
         assert water_key is not None  # we need to include water in materials
+        assert air_key is not None  # we need to include water in materials
 
         # getting a list of attinuation
         material_HU_list = [(key, (att / material_att[water_key] - 1.)*1000.)
                             for key, att in material_att.items()]
-        for key, HU in material_HU_list:
-            print (material_map[key], HU)
+        material_HU_list = attinuation_to_ct_numbers(material_att, air_key, water_key)
         material_HU_list.sort(key=lambda x: x[1])
         HU_bins = (np.array(material_HU_list)[:-1, 1] +
                    np.array(material_HU_list)[1:, 1]) / 2.
 
-        HU_bins[-1] = HU_bins[-2] + 30
+        if HU_bins[-2] < 300:
+            HU_bins[-1] = 300
 
         material_array = np.digitize(
             ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
@@ -217,8 +231,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         ctarray_model = np.choose(material_array, HU_list)
         density_array *= np.clip((ctarray - ctarray.min()+1) / (ctarray_model - ctarray.min() + 1), 0.5, 1.5)
         ##########################
-        import pdb
-        pdb.set_trace()
+
         return material_map, material_array, density_array
 
 
@@ -231,9 +244,9 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
     # testing for required attributes
     if ctarray is not None:
         logger.info('Recalculating material mapping from CT array for {}'.format(simulation['name']))
-        specter = tungsten_specter(simulation['aquired_kV'],
+        specter = tungsten_specter(120.,
                                    filtration_materials='al',
-                                   filtration_mm=simulation['al_filtration'])
+                                   filtration_mm=0.5)
         vals = prepare_geometry_from_ct_array(ctarray,
                                               simulation['scaling'],
                                               specter,
