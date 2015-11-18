@@ -98,11 +98,58 @@ class ImportScalingEdit(QtGui.QLineEdit):
         palette.setColor(palette.Base, self.base_color)
         self.setPalette(palette)
 
-
 class ArrayBuffer(object):
     def __init__(self):
-        self.name = ''
+        self.array_name = ""
+        self.name = ""
+        self.buffer_size = 2  # number of slices to buffer
+        self.indices = np.arange(2, dtype=np.int)
+        self.slices = np.empty((2,2, 2))
+        self.view_orientation = 2
+        self.index_threshold_edge = (0, 1)
 
+    def set_buffer(self, slices, name, array_name, indices, orientation):
+        self.indices = indices
+        self.slices = slices
+        self.name = name
+        self.array_name = array_name
+        self.view_orientation = orientation
+
+        self.buffer_size = slices.shape[orientation]
+        self.index_threshold_edge = (indices[0], indices[-1])
+        logger.debug('Updating buffer, indices: {}'.format(indices))
+
+
+    def is_slice_available(self, name, array_name, index, orientation):
+        if orientation != self.view_orientation:
+            return False, 0
+        if name != self.name:
+            return False, 0
+        if array_name != self.array_name:
+            return False, 0
+        if index in self.indices:
+            if index == self.index_threshold_edge[0]:
+                return True, -1
+            if index == self.index_threshold_edge[1]:
+                return True, 1
+            return True, 0
+        return False, 0
+
+    def get_slice(self, name, array_name, index, orientation):
+        if orientation != self.view_orientation:
+            raise ValueError('Not same orientation')
+        if name != self.name:
+            raise ValueError('Not same name')
+        if array_name != self.array_name:
+            raise ValueError('Not same array_name')
+        if index not in self.indices:
+            raise ValueError('Array not in buffer')
+        sub_ind = np.nonzero(self.indices == index)
+        if self.view_orientation == 0:
+            return np.squeeze(self.slices[sub_ind, :, :])
+        if self.view_orientation == 1:
+            return np.squeeze(self.slices[:, sub_ind, :])
+        return np.squeeze(self.slices[:, :, sub_ind])
 
 
 class DatabaseInterface(QtCore.QObject):
@@ -122,6 +169,8 @@ class DatabaseInterface(QtCore.QObject):
 
 
 
+
+
 #    send_import_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
 #    send_view_sim_propeties = QtCore.pyqtSignal(dict)
 #    send_view_sim_propeties = QtCore.pyqtSignal(dict)
@@ -137,7 +186,8 @@ class DatabaseInterface(QtCore.QObject):
         super().__init__(parent)
         self.__db = None
         self.set_database(database_qurl)
-
+        self.array_buffer = ArrayBuffer()
+        self.array_buffer_size = 30
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
@@ -207,12 +257,45 @@ class DatabaseInterface(QtCore.QObject):
     @QtCore.pyqtSlot(str, str, int, int)
     def request_view_array_slice(self, simulation_name, array_name, index, orientation):
         self.database_busy.emit(True)
-        try:
-            arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
-        except:
-            pass
-        else:
+        buffer_has_index, buffer_direction = self.array_buffer.is_slice_available(simulation_name, array_name, index, orientation)
+        if buffer_has_index:
+            logger.debug('Buffer has index {0} in {1}'.format(index, array_name))
+            arr = self.array_buffer.get_slice(simulation_name, array_name, index, orientation)
             self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
+
+            if buffer_direction != 0:
+                if buffer_direction > 0:
+                    indices = np.arange(self.array_buffer_size, dtype=np.int) + index
+                else:
+                    indices = np.arange(self.array_buffer_size, dtype=np.int) + index - self.array_buffer_size + 1
+                try:
+                    arr = self.__db.get_simulation_array_slice(simulation_name, array_name, indices, orientation)
+                except:
+                    pass
+                else:
+                    logger.debug('Buffer need update, updating indices {0} in {1}'.format(indices, array_name))
+                    self.array_buffer.set_buffer(arr, simulation_name, array_name, indices, orientation)
+
+        else:
+            try:
+                arr = self.__db.get_simulation_array_slice(simulation_name, array_name, index, orientation)
+            except:
+                pass
+            else:
+                self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
+
+            indices = np.arange(self.array_buffer_size, dtype=np.int) + index - self.array_buffer_size // 2
+
+            try:
+                arr = self.__db.get_simulation_array_slice(simulation_name, array_name, indices, orientation)
+            except:
+                pass
+            else:
+                logger.debug('Buffer need update, updating indices {0} in {1}'.format(indices, array_name))
+                self.array_buffer.set_buffer(arr, simulation_name, array_name, indices, orientation)
+
+
+
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(list)

@@ -478,7 +478,7 @@ class Database(object):
         else:
             self.close()
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
-            return None
+
         orientation %= 3
         index %= node.shape[orientation]
         if orientation == 1:

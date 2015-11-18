@@ -1294,6 +1294,7 @@ class DoseScene(Scene):
             self.request_array.emit(self.name, 'organ_map')
         else:
             self.image_item.setLevels(back=(0, 500))
+#            self.image_item.setLevels(back=(1, 1))
         self.nodata_item.setVisible(False)
         self.image_item.setVisible(True)
 

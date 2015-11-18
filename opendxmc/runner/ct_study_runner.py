@@ -186,13 +186,13 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
             material_dens[i] = float(mat.density)
             # interpolationg and integrating attinuation coefficient
 #            material_att[i] =
-            material_att[i] = np.trapz(np.interp(specter[0],
-                                                 mat.attinuation['energy'],
-                                                 mat.attinuation['total']),
-                                       specter[0])
-            material_att[i] = np.sum(np.interp(specter[0],
+#            material_att[i] = np.trapz(np.interp(specter[0],
+#                                                 mat.attinuation['energy'],
+#                                                 mat.attinuation['total']),
+#                                       specter[0])
+            material_att[i] = np.sum(np.exp(-np.interp(specter[0],
                                      mat.attinuation['energy'],
-                                     mat.attinuation['total'])*specter[1]
+                                     mat.attinuation['total']))*specter[1]
                            )
 
             material_att[i] *= mat.density
@@ -244,9 +244,9 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
     # testing for required attributes
     if ctarray is not None:
         logger.info('Recalculating material mapping from CT array for {}'.format(simulation['name']))
-        specter = tungsten_specter(120.,
+        specter = tungsten_specter(simulation['aquired_kV'],
                                    filtration_materials='al',
-                                   filtration_mm=0.5)
+                                   filtration_mm=simulation['al_filtration'])
         vals = prepare_geometry_from_ct_array(ctarray,
                                               simulation['scaling'],
                                               specter,
