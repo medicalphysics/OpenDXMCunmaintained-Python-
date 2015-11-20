@@ -20,10 +20,10 @@ logger = logging.getLogger('OpenDXMC')
 
 
 def log_elapsed_time(time_start, elapsed_exposures, total_exposures,
-                     n_histories=None):
+                     start_exposure, n_histories=None):
     time_delta = time.clock() - time_start
     p = np.round(float(elapsed_exposures) / float(total_exposures) * 100., 1)
-    eta = time_delta * (total_exposures / float(elapsed_exposures) - 1.)
+    eta = time_delta * (float(total_exposures-start_exposure) / float(elapsed_exposures-start_exposure) - 1.)
     if elapsed_exposures == total_exposures:
         if n_histories is not None:
             logger.info('{0}: [{1}%] Finished {2} histories in {3}'.format(
@@ -296,7 +296,8 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
 
 def ct_runner(materials, simulation, ctarray=None, organ=None,
               organ_material_map=None, exposure_modulation=None,
-              energy_imparted_to_dose_conversion=True, callback=None, **kwargs):
+              energy_imparted_to_dose_conversion=True, callback=None,
+              energy_imparted=None, **kwargs):
     """Runs a MC simulation on a simulation object, and updates the
     energy_imparted property.
 
@@ -339,8 +340,9 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     lut = generate_attinuation_lut(materials_organic, material_map,
                                    max_eV=500.e3,
                                    ignore_air=simulation['ignore_air'])
+    if energy_imparted is None:
+        energy_imparted = np.zeros_like(density, dtype=np.double)
 
-    energy_imparted = np.zeros_like(density, dtype=np.double)
     tot_histories = simulation['histories'] * simulation['exposures']
 
     if tot_histories > 1e6:
@@ -350,11 +352,13 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     logger.info('{0}: Starting simulation with {1} histories per '
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
 #    raise ValueError('ERROR Material maps and arrays will not be stored. NOT VOLATILES')
+
+    start_exposure = simulation['start_at_exposure_no']
     time_start = time.clock()
     for p, e, n in phase_space:
         score_energy(p, N, spacing, offset, material,
                      density, lut, energy_imparted)
-        eta = log_elapsed_time(time_start, e+1, n)
+        eta = log_elapsed_time(time_start, e+1, n, start_exposure)
         if callback is not None:
             callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
         simulation['start_at_exposure_no'] = e + 1
