@@ -428,7 +428,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
     for batch, i, n in phase_space:
         score_energy(batch, N, spacing, offset, material_array,
                      density_array, lut, dose)
-        log_elapsed_time(t0, i+1, n)
+        log_elapsed_time(t0, i+1, n, 0)
 
     center = np.floor(N / 2).astype(np.int)
     d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
@@ -497,7 +497,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     for batch, i, n in phase_space:
         score_energy(batch, N, spacing, offset, material_array,
                      density_array, lut, dose)
-        log_elapsed_time(t0, i+1, n)
+        log_elapsed_time(t0, i+1, n, 0)
 
     d = []
     for p in meas_pos:

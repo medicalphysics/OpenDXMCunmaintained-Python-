@@ -52,7 +52,7 @@ PROPETIES_DICT_TEMPLATE = {
     'MC_finished': [False, np.dtype(np.bool), True, False, 'Simulation finished', 0],
     'MC_ready': [False, np.dtype(np.bool), True, False, 'Simulation ready', 0],
     'MC_running': [False, np.dtype(np.bool), True, False, 'Simulation is running', 0],
-    'ignore_air': [False, np.dtype(bool), True, True, 'Ignore air material in simulation', 0],
+    'ignore_air': [True, np.dtype(bool), True, True, 'Ignore air material in simulation', 0],
     'spacing': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image matrix spacing [cm]', 0],
     'shape': [np.ones(3, dtype=np.int), np.dtype((np.int, 3)), False, False, 'Image matrix dimensions', 0],
     'scaling': [np.ones(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Calculation matrix scaling (stacked on image matrix prescaling)', 0],
