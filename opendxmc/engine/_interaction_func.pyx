@@ -181,7 +181,7 @@ cdef void cumulative_interaction_prob(int* ind, double* lenghts, int N, int[:,:,
     cdef int e_index, N_energy, material, i
     N_energy = <int>attinuation_lut.shape[2]
     #finding upper energy
-    for e_index in range(N_energy):
+    for e_index in range(1, N_energy):
         if energy < attinuation_lut[0, 0, e_index]:
             break
     else:
@@ -235,7 +235,7 @@ cdef void interaction_point(double* particle, double[:] spacing, double[:] offse
                 delta_r = r1
                 dist = delta_r / cum_prob[i] * lenghts[i]
 
-            index[0] = <int>i
+            index[0] = 3*i
             for j in range(3):
                 stop[j] = _siddon_func.plane(spacing, offset, j, ind[i*3+j]) + dist * particle[j+3]
 #            print [_siddon_func.plane(spacing, offset, j, i) for j in range(3)], dist, cum_prob
