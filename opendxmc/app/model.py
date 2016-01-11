@@ -508,9 +508,9 @@ class Runner(QtCore.QThread):
                 if c_factor > 0:
                     del arr_dict
                     try:
-                        dose = (energy_imparted / density) * (c_factor / np.prod(props_dict['spacing'] * props_dict['scaling']))
+                        dose = energy_imparted * c_factor / (density * np.prod(props_dict['spacing'] * props_dict['scaling']))
                     except MemoryError:
-                        logger.error('Memory error in generating dose matrix')
+                        logger.error('Memory error in generating dose array')
                     else:
                         self.request_write_simulation_arrays.emit(props_dict['name'], {'dose': dose})
         self.simulation_properties = None

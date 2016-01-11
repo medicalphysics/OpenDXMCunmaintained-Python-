@@ -15,11 +15,12 @@ from opendxmc.utils import find_all_files
 
 logger = logging.getLogger('OpenDXMC')
 
-material_data_path = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc',
+MATERIAL_DATA_PATH = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc',
                                   'data', 'materials')
 
-
-def get_stored_materials():
+def get_stored_materials(material_data_path=None):
+    if material_data_path is None:
+        material_data_path = MATERIAL_DATA_PATH
     density_file = os.path.join(material_data_path, "densities.txt")
     organic_file = os.path.join(material_data_path, "organics.txt")
 

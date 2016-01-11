@@ -8,9 +8,12 @@ import numpy as np
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from scipy.ndimage.filters import gaussian_filter
 from opendxmc.engine import score_energy
+
+from opendxmc.enginecu import Engine
+
 from opendxmc.tube.tungsten import specter as tungsten_specter
-from opendxmc.runner.phase_space import ct_phase_space
-from opendxmc.runner.phase_space import ct_seq
+from opendxmc.runner.ct_sources import ct_source_space
+from opendxmc.runner.ct_sources import ct_seq
 from opendxmc.utils import circle_mask
 import time
 from opendxmc.utils import human_time
@@ -91,7 +94,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
             for j, key in enumerate(['total', 'rayleigh', 'photoelectric',
                                      'compton']):
                 lut[i, j+1, :] = np.interp(energies, a['energy'], a[key])
-    return lut
+    return lut.astype('float64')
 
 def prepare_geometry_from_organ_array(organ, organ_material_map, scale, materials):
         """genereate material and density arrays and material map from
@@ -291,7 +294,7 @@ def ct_runner_validate_simulation(materials, simulation, ctarray=None, organ=Non
                        'current simulation.')
         material_map = None
         raise ValueError('Error in material definitions for simulation')
-    return material, material_map, density
+    return material.astype('int32'), material_map, density.astype('float64')
 
 
 def ct_runner(materials, simulation, ctarray=None, organ=None,
@@ -330,18 +333,18 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 #                                   'material_map': simulation.material_map},
 #                 simulation.start_at_exposure_no)
 
-    phase_space = ct_phase_space(simulation, exposure_modulation)
+    phase_space = ct_source_space(simulation, exposure_modulation)
 
-    N = np.array(material.shape, dtype=np.double)
+    N = np.array(material.shape, dtype='int')
 
-    offset = np.zeros(3, dtype=np.double)
-    spacing = simulation['spacing'] * simulation['scaling']
+    offset = np.zeros(3, dtype='float64')
+    spacing = (simulation['spacing'] * simulation['scaling']).astype('float64')
 
     lut = generate_attinuation_lut(materials_organic, material_map,
                                    max_eV=500.e3,
                                    ignore_air=simulation['ignore_air'])
     if energy_imparted is None:
-        energy_imparted = np.zeros_like(density, dtype=np.double)
+        energy_imparted = np.zeros_like(density, dtype='float64')
 
     tot_histories = simulation['histories'] * simulation['exposures']
 
@@ -353,20 +356,50 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
 #    raise ValueError('ERROR Material maps and arrays will not be stored. NOT VOLATILES')
 
+    lut_shape = np.array(lut.shape, dtype='int')    
+    
+    logger.info('Initializing geometry')
+    
+    
+    
+    engine = Engine()
+    geometry = engine.setup_simulation(N, spacing, offset, material, density, lut_shape, lut, energy_imparted)
+    
+#    arrays = [N, spacing, offset, material, density, lut_shape, lut, energy_imparted]    
+    
+    
     start_exposure = simulation['start_at_exposure_no']
     time_start = time.clock()
+    exposure_time = time_start
     for p, e, n in phase_space:
-        score_energy(p, N, spacing, offset, material,
-                     density, lut, energy_imparted)
-        eta = log_elapsed_time(time_start, e+1, n, start_exposure)
-        if callback is not None:
-            callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
-        simulation['start_at_exposure_no'] = e + 1
+        source = engine.setup_source(*p)
+        
+        engine.run(source, simulation['histories'], geometry)
+        engine.cleanup(source=source)
+
+        if (time.clock() - exposure_time) > 5:
+            eta = log_elapsed_time(time_start, e+1, n, start_exposure)
+            if callback is not None:
+                callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
+            simulation['start_at_exposure_no'] = e + 1
+            exposure_time = time.clock()
+
+    
+    engine.cleanup(simulation=geometry, energy_imparted=energy_imparted)
+#    time_start = time.clock()
+#    for p, e, n in phase_space:
+#        score_energy(p, N, spacing, offset, material,
+#                     density, lut, energy_imparted)
+#        eta = log_elapsed_time(time_start, e+1, n, start_exposure)
+#        if callback is not None:
+#            callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
+#        simulation['start_at_exposure_no'] = e + 1
 
     if callback is not None:
         callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
 
     generate_dose_conversion_factor(simulation, materials)
+    
     if callback is not None:
         callback(simulation['name'], {'energy_imparted': None}, e + 1, '')
     simulation['start_at_exposure_no'] = 0
@@ -386,13 +419,13 @@ def generate_dose_conversion_factor(simulation, materials):
 
     if (simulation['ctdi_air100'] > 0.) and (air is not None):
         obtain_ctdiair_conversion_factor(simulation, air)
-    elif (simulation['ctdi_w100'] > 0.) and (pmma is not None) and (air is not None):
+    if (simulation['ctdi_w100'] > 0.) and (pmma is not None) and (air is not None):
         obtain_ctdiw_conversion_factor(simulation, pmma, air)
-    else:
-        msg = """Need a combination of air material and ctdi air or ctdi_w100
-                 pmma material and ctdiw_100 to generate energy to dose
-                 conversion factor."""
-        logger.warning(msg)
+#    else:
+#        msg = """Need a combination of air material and ctdi air or ctdi_w100
+#                 pmma material and ctdiw_100 to generate energy to dose
+#                 conversion factor."""
+#        logger.warning(msg)
 
 
 
@@ -400,87 +433,131 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
 
     logger.info('Starting simulating CTDIair100 measurement for '
                 '{0}. CTDIair100 is {1}mGy'.format(simulation['name'], simulation['ctdi_air100']))
-    spacing = np.array((1, 1, 10), dtype=np.double)
+    spacing = np.array((2, 2, 10), dtype='float64')
 
     N = np.rint(np.array((simulation['sdd'] / spacing[0],
                           simulation['sdd'] / spacing[1], 3),
-                         dtype=np.double))
+                         dtype='int32')).astype('int')
 
-    offset = -N * spacing / 2.
-    material_array = np.zeros(N, dtype=np.intc)
+    offset = (-N * spacing / 2.).astype('float64')
+    material_array = np.zeros(N, dtype='int32')
     material_map = {0: air_material.name}
-    density_array = np.zeros(N, dtype=np.double) + air_material.density
-    lut = generate_attinuation_lut([air_material], material_map, max_eV=0.5e6)
-    dose = np.zeros_like(density_array, dtype=np.double)
+    density_array = np.zeros(N, dtype='float64') + air_material.density
+
+    lut = generate_attinuation_lut([air_material], material_map, max_eV=0.15e6).astype('float64')
+    lut_shape = np.array(lut.shape, dtype='int32')
+    dose = np.zeros_like(density_array, dtype='float64')
 
     en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
                                   filtration_mm=simulation['al_filtration'])
     total_collimation = simulation['detector_rows'] * simulation['detector_width']
-    phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
-                         total_collimation, start=0, stop=0, step=0,
-                         exposures=simulation['exposures'],
-                         histories=simulation['histories'],
-                         energy_specter=en_specter,
-                         batch_size=simulation['batch_size'])
+    
+    import pylab as plt
 
-    t0 = time.clock()
-    for batch, i, n in phase_space:
-        score_energy(batch, N, spacing, offset, material_array,
-                     density_array, lut, dose)
-        log_elapsed_time(t0, i+1, n, 0)
-
+    engine = Engine()
+    geometry = engine.setup_simulation(N, spacing, offset, material_array, density_array, lut_shape, lut, dose)
+    teller = 0
     center = np.floor(N / 2).astype(np.int)
-    d = dose[center[0], center[1], center[2]] / (air_material.density * np.prod(spacing))
-    simulation['conversion_factor_ctdiair'] = np.nan_to_num(simulation['ctdi_air100'] / d * total_collimation)
+    center_dose = 0
+    while center_dose < en_specter[0].max()*5:
+        if teller > 0:
+            print('Not sufficient data, running again. Dose in center is now', center_dose, 'max dose: ', dose.max())
+#            plt.imshow(dose[:,:,1])
+#            plt.show()
+        teller += 1
+        phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                             total_collimation, start=0, stop=0, step=1,
+                             exposures=simulation['exposures'],
+                             histories=simulation['histories'],
+                             energy_specter=en_specter,
+                             batch_size=simulation['batch_size'])
+    
+        t0 = time.clock()
+        t1 = t0
+        for batch, e, n in phase_space:
+            source = engine.setup_source(*batch)
+            
+            engine.run(source, simulation['histories'], geometry)
+            engine.cleanup(source=source)
+    #        break
+            if (time.clock() - t1) > 5:
+                log_elapsed_time(t0, e+1, n, 0)
+                t1 = time.clock()
+        center_dose = np.sum(dose[N[0]//2-3:N[0]//2+3,N[1]//2-3:N[1]//2+3,1 ])
+    
+    engine.cleanup(simulation=geometry, energy_imparted=dose)
 
+#    engine.cleanup(simulation=geometry, energy_imparted=dose)
+#    dose = gaussian_filter(dose, (1., 1., 0.))
+    
+    d = center_dose / teller / (air_material.density * np.prod(spacing)*36)
+    simulation['conversion_factor_ctdiair'] = np.nan_to_num(1. / d * total_collimation)
+    return dose
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32.):
-    spacing = np.array((1, 1, 2.5), dtype=np.double)
+    spacing = np.array((.2, .2, 2.5), dtype='float64')
     N = np.rint(np.array((simulation['sdd'] / spacing[0],
                           simulation['sdd'] / spacing[1], 6),
-                         dtype=np.double))
+                         )).astype('int32')
 
-    offset = -N * spacing / 2.
-    material_array = np.zeros(N, dtype=np.intc)
-    radii_phantom = size * spacing[0]
-    radii_meas = 2. * spacing[0]
-    center = (N * spacing / 2.)[:2]
-    radii_pos = (size - 2.) * spacing[0]
+    offset = (-N * spacing / 2.).astype('float64')
+    material_array = np.zeros(N, dtype='int32')
+    radii_phantom = size / spacing[0]
+    radii_meas = (1. / spacing[0])
+    center = (N / 2.)[:2]
+    radii_pos = (size - 3.) / spacing[0]
     pos = [(center[0], center[1])]
+    
     for ang in [0, 90, 180, 270]:
         dx = radii_pos * np.sin(np.deg2rad(ang))
         dy = radii_pos * np.cos(np.deg2rad(ang))
         pos.append((center[0] + dx, center[1] + dy))
 
+    measure_indices = []
+
     for i in range(int(N[2])):
         material_array[:, :, i] += circle_mask((N[0], N[1]),
                                                radii_phantom)
+#        for x, y in pos:
+#            material_array
         for p in pos:
-            material_array[:, :, i] += circle_mask((N[0], N[1]),
-                                                   radii_meas,
-                                                   center=p)
+            mask = circle_mask((N[0], N[1]), radii_meas, center=p)
+            material_array[:, :, i] += mask
+            if i == 0:
+                measure_indices.append(np.argwhere(mask))                                                   
 
     material_map = {0: air.name, 1: pmma.name, 2: air.name}
-    density_array = np.zeros_like(material_array, dtype=np.double)
+    density_array = np.zeros_like(material_array, dtype='float64')
     density_array[material_array == 0] = air.density
     density_array[material_array == 1] = pmma.density
     density_array[material_array == 2] = air.density
 
 #        density_array = np.zeros(N, dtype=np.double) + material.density
     lut = generate_attinuation_lut([air, pmma], material_map, max_eV=0.5e6)
-    return N, spacing, offset, material_array, density_array, lut, pos
+    return N, spacing, offset, material_array, density_array, lut, measure_indices
 
 
 def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                    callback=None, phantom_size=32.):
+    import pylab as plt
 
     logger.info('Starting simulating CTDIw100 measurement for '
                 '{}'.format(simulation['name']))
     args = generate_ctdi_phantom(simulation, pmma, air, size=phantom_size)
     N, spacing, offset, material_array, density_array, lut, meas_pos = args
+    
 
-    dose = np.zeros_like(density_array)
+#    print('arr shape', material_array.shape)
+#    plt.imshow(material_array[:,:,1])
+#    plt.show()
+#    import pdb
+#    pdb.set_trace()
+
+
+    lut_shape = np.array(lut.shape, dtype='int32')
+
+    dose = np.zeros_like(density_array, dtype='float64')
 
     en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
                                   filtration_materials='Al',
@@ -493,18 +570,36 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                          energy_specter=en_specter,
                          batch_size=simulation['batch_size'])
 
+    engine = Engine()
+    geometry = engine.setup_simulation(N, spacing, offset, material_array,
+                            density_array, lut_shape, lut, dose)
     t0 = time.clock()
-    for batch, i, n in phase_space:
-        score_energy(batch, N, spacing, offset, material_array,
-                     density_array, lut, dose)
-        log_elapsed_time(t0, i+1, n, 0)
+    t1 = t0
+    for batch, e, n in phase_space:
+        source = engine.setup_source(*batch)
+        engine.run(source, simulation['histories'], geometry)
+        engine.cleanup(source=source)
 
+        if (time.clock() - t1) > 5:
+            log_elapsed_time(t0, e+1, n, 0)
+            t1 = time.clock()
+
+    engine.cleanup(simulation=geometry, energy_imparted=dose)
+#    
+#    plt.imshow(dose[:,:,1])
+#    plt.show()
+    dose = gaussian_filter(dose, [.5, .5, .1])
+#    plt.imshow(dose[:,:,1])
+#    plt.show()
     d = []
     for p in meas_pos:
-        x, y = int(p[0]), int(p[1])
-        d.append(dose[x, y, 1:-1].mean() / (air.density * np.prod(spacing)))
-
+        x, y = p[:, 0], p[:, 1]
+        d.append(dose[x, y, 1:-1].sum() / (air.density * np.prod(spacing)))
+#    pdb.set_trace()  
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.
     simulation['conversion_factor_ctdiw'] = np.nan_to_num(simulation['ctdi_w100'] / ctdiv * total_collimation)
-
+#    pdb.set_trace()
+#    import pdb
+#    pdb.set_trace()
+    return dose

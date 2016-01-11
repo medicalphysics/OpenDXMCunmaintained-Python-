@@ -1327,7 +1327,7 @@ class DoseScene(Scene):
             self.image_item.setLevels(back=(max_level/2, max_level/2))
 
         elif array_name == self.front_array_name:
-            self.front_array = gaussian_filter(array * self.front_scaling, 1.0)
+            self.front_array = array#gaussian_filter(array * self.front_scaling, 1.0)
             max_level = array.max()/ 4
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
