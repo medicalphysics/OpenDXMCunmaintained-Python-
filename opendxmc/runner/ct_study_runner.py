@@ -399,7 +399,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     if callback is not None:
         callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
 
-    generate_dose_conversion_factor(simulation, materials)
+    generate_dose_conversion_factor(simulation, materials, callback)
     
     if callback is not None:
         callback(simulation['name'], {'energy_imparted': None}, e + 1, '')
@@ -410,7 +410,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     return simulation, {'density': density, 'material': material, 'material_map': material_map, 'energy_imparted': energy_imparted}
 
 
-def generate_dose_conversion_factor(simulation, materials):
+def generate_dose_conversion_factor(simulation, materials, callback=None):
     air, pmma = None, None
     for m in materials:
         if m.name == 'pmma':
@@ -419,9 +419,10 @@ def generate_dose_conversion_factor(simulation, materials):
             air = m
 
     if (simulation['ctdi_air100'] > 0.) and (air is not None):
-        obtain_ctdiair_conversion_factor(simulation, air)
+        obtain_ctdiair_conversion_factor(simulation, air, callback=callback)
     if (simulation['ctdi_w100'] > 0.) and (pmma is not None) and (air is not None):
-        obtain_ctdiw_conversion_factor(simulation, pmma, air)
+        size = simulation['ctdi_phantom_diameter']
+        obtain_ctdiw_conversion_factor(simulation, pmma, air, size=size, callback=callback)
 #    else:
 #        msg = """Need a combination of air material and ctdi air or ctdi_w100
 #                 pmma material and ctdiw_100 to generate energy to dose
@@ -430,7 +431,7 @@ def generate_dose_conversion_factor(simulation, materials):
 
 
 
-def obtain_ctdiair_conversion_factor(simulation, air_material):
+def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
 
     logger.info('Starting simulating CTDIair100 measurement for '
                 '{0}. CTDIair100 is {1}mGy'.format(simulation['name'], simulation['ctdi_air100']))
@@ -482,8 +483,10 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
             engine.cleanup(source=source)
     #        break
             if (time.clock() - t1) > 5:
-                log_elapsed_time(t0, e+1, n, 0)
+                eta = log_elapsed_time(t0, e+1, n, 0)
                 t1 = time.clock()
+                if callback:
+                    callback(simulation['name'], {'energy_imparted':dose}, 0, eta, save=False)
         center_dose += np.sum(dose[center[0], center[1], center[2]])
     
     engine.cleanup(simulation=geometry, energy_imparted=dose)
@@ -495,7 +498,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
     simulation['conversion_factor_ctdiair'] = np.nan_to_num(1. / d * total_collimation)
     return dose
 
-def generate_ctdi_phantom(simulation, pmma, air, size=32.):
+def generate_ctdi_phantom(simulation, pmma, air, size=32., callback=None):
     spacing = np.array((.2, .2, 2.5), dtype='float64')
     N = np.rint(np.array((simulation['sdd'] / spacing[0],
                           simulation['sdd'] / spacing[1], 6),
@@ -539,12 +542,12 @@ def generate_ctdi_phantom(simulation, pmma, air, size=32.):
 
 
 def obtain_ctdiw_conversion_factor(simulation, pmma, air,
-                                   callback=None, phantom_size=32.):
+                                   size=32., callback=None):
   
 
     logger.info('Starting simulating CTDIw100 measurement for '
                 '{}'.format(simulation['name']))
-    args = generate_ctdi_phantom(simulation, pmma, air, size=phantom_size)
+    args = generate_ctdi_phantom(simulation, pmma, air, size=size)
     N, spacing, offset, material_array, density_array, lut, meas_pos = args
     
 
@@ -568,7 +571,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                          exposures=simulation['exposures'],
                          histories=simulation['histories'],
                          energy_specter=en_specter,
-                         batch_size=simulation['batch_size'])
+                         )
 
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material_array,
@@ -581,7 +584,9 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
         engine.cleanup(source=source)
 
         if (time.clock() - t1) > 5:
-            log_elapsed_time(t0, e+1, n, 0)
+            eta = log_elapsed_time(t0, e+1, n, 0)
+            if callback:
+                callback(simulation['name'], {'energy_imparted':dose}, 0, eta, save=False)
             t1 = time.clock()
 
     engine.cleanup(simulation=geometry, energy_imparted=dose)

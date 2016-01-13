@@ -7,7 +7,7 @@ Created on Tue Sep  8 10:10:58 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 from scipy.ndimage.interpolation import affine_transform, spline_filter
-from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator
+from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator, PROPETIES_DICT_TEMPLATE_GROUPING
 from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
 from opendxmc.materials import Material
@@ -441,7 +441,7 @@ class Runner(QtCore.QThread):
         self.kill_me = True
         self.mutex.unlock()
 
-    def update_simulation_iteration(self, name, array_dict, exposure_number, eta):
+    def update_simulation_iteration(self, name, array_dict, exposure_number, eta, save=True):
         if self.kill_me:
             self.mutex.lock()
             self.kill_me = False
@@ -452,7 +452,7 @@ class Runner(QtCore.QThread):
         desc = {'name': name,
                 'start_at_exposure_no': exposure_number,
                 'eta': eta}
-        if self.request_save:
+        if self.request_save and save:
             self.request_set_simulation_properties.emit(desc, False, False)
             self.request_write_simulation_arrays.emit(name, array_dict)
             self.mutex.lock()
@@ -733,15 +733,13 @@ class PropertiesEditModelItem(QtGui.QStandardItem):
         self.key = key
         self.value = None
 
-        init_val, dtype, volatile, editable, description, order = PROPETIES_DICT_TEMPLATE[key]
+        init_val, dtype, volatile, editable, description, order, grouping = PROPETIES_DICT_TEMPLATE[key]
         self.dtype = dtype
         self.setEditable(editable)
 
         if dtype.type is np.bool_:
             self.setCheckable(True)
         self.update_data(value)
-
-
 
 
     def update_data(self, value):
@@ -777,7 +775,6 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
 
         self.request_run_simulation.connect(database_interface.request_MC_ready_simulation)
 
-
         simulation_list_model.request_viewing.connect(self.set_simulation)
 
         self.validator = Validator()
@@ -785,12 +782,57 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
 
         propeties_dict, array_dict = self.validator.get_data()
         row = 0
+        parent_items = {}
+
+        values = list(PROPETIES_DICT_TEMPLATE_GROUPING.items())
+        values.sort(key=lambda x:x[0])
+
+        for key, value in values:
+                parent_item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE_GROUPING[key])
+                parent_item.font().setBold(True)
+                parent_item.setEditable(False)
+                self.setItem(row, 0, parent_item)    
+                self.setItem(row, 1, QtGui.QStandardItem(' '))
+                row += 1
+                parent_items[key] = parent_item
+            
+        
         for key, value in propeties_dict.items():
+            parent_ind = PROPETIES_DICT_TEMPLATE[key][6]
+            if parent_ind in parent_items.keys():
+                parent_item = parent_items[parent_ind]
+            else:
+                parent_item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE_GROUPING.get(parent_ind, 'Unknown'))
+                parent_item.font().setBold(True)
+                parent_item.setEditable(False)
+                self.setItem(row, 0, parent_item)    
+                self.setItem(row, 1, QtGui.QStandardItem(' '))
+                row += 1
+                parent_items[parent_ind] = parent_item
+                
             item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4])
             item.setEditable(False)
-            self.setItem(row, 0, item)
-            self.setItem(row, 1, PropertiesEditModelItem(key, value))
-            row += 1
+            parent_item.appendRow([item, PropertiesEditModelItem(key, value)])
+        
+        for parent_item in parent_items.values():
+            parent_item.sortChildren(0)
+#            parent_item.setChild(0, 0, item)
+#            parent_item.setChild(0, 1, PropertiesEditModelItem(key, value))
+#            self.setItem(row, 0, item)
+#            self.setItem(row, 1, PropertiesEditModelItem(key, value))
+#            row += 1
+
+    def headerData(self, ind, orient, role):
+        if (ind < 2) and (orient == QtCore.Qt.Horizontal):
+            return ['Description', 'Value'][ind]
+        return super().headerData(ind, orient, role)
+            
+
+    def data_item_iterator(self):
+        for row in range(self.rowCount()):
+            parent_item = self.item(row, 0)
+            for child_row in range(parent_item.rowCount()):
+                yield parent_item.child(child_row, 1)
 
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
@@ -805,9 +847,11 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         self.validator.set_data(props=data_dict, reset=True)
         
         self.unsaved_items = {}
-        for row in range(self.rowCount()):
-            item = self.item(row, 1)
+        for item in self.data_item_iterator():
             item.update_data(self.validator._props[item.key])
+#        for row in range(self.rowCount()):
+#            item = self.item(row, 1)
+#            item.update_data(self.validator._props[item.key])
         self.test_unsaved_changes()
         self.current_simulation_is_running.emit(self.validator.MC_running)
 
@@ -847,9 +891,11 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
             else:
                 if item.key not in self.unsaved_items:
                     self.unsaved_items[item.key] = item.value
-                for item in [self.item(i, 1) for i in range(self.rowCount())]:
+                
+#                for item in [self.item(i, 1) for i in range(self.rowCount())]:
+                for item in self.data_item_iterator():
                     item.update_data(getattr(self.validator, item.key))
-#                self.dataChanged.emit(self.index(0,0), self.index(self.rowCount(), 1))
+#                
                 self.test_unsaved_changes()
             return True
         return super().setData(index, value, role)
@@ -885,12 +931,17 @@ class PropertiesEditWidget(QtGui.QWidget):
     def __init__(self, database_interface, simulation_list_model, run_manager, parent=None):
         super().__init__(parent)
         layout = QtGui.QVBoxLayout()
-        table = QtGui.QTableView()
-        table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        table = QtGui.QTreeView()
+#        table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        table.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        table.setAnimated(True)
         model = PropertiesEditModel(database_interface, simulation_list_model)
         self.model = model
         model.request_cancel_simulation.connect(run_manager.cancel_run)
         table.setModel(model)
+        
+        table.showColumn(0)
+        table.showColumn(1)
         layout.addWidget(table)
         sub_layout = QtGui.QHBoxLayout()
         layout.addLayout(sub_layout)

@@ -31,7 +31,7 @@ def half_shuffle(arr):
 def ct_source_space(simulation, exposure_modulation=None, batch_size=None):
     arglist = ['scan_fov', 'sdd']
     kwarglist = ['start', 'stop', 'exposures', 'histories',
-                 'start_at_exposure_no', 'batch_size',
+                 'start_at_exposure_no',
                  ]
 
     args = [simulation.get(a) for a in arglist]
@@ -73,7 +73,7 @@ def rotation_z_matrix(alpha):
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
-              batch_size=0, rotation_center=None,
+              rotation_center=None,
               rotation_plane_cosines = None,
               exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
@@ -101,9 +101,6 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         energy_specter : [(N,), (N,)]
             [ndarray(energy), ndarray(intensity)] list/tuple of
             two ndarrays of lenght one, with energy and intensity of specter
-        batch_size : int
-            number of exposures per batch, if less than histories it is set to
-            histories.
         modulation_xy : [(N,), (N,)] (NOT IMPLEMENTED)
             tube current XY modulation, list/tuple of
             (ndarray(position), ndarray(scale_factors))
@@ -141,15 +138,6 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     ang = t / (pitch * total_collimation) * np.pi * 2.
 
     # rotation matrix along z-axis for an angle x
-
-
-    if batch_size is None:
-        batch_size = 1
-    if batch_size < 1:
-        batch_size = 1
-    batch_size *= histories
-
-    assert batch_size % histories == 0
 
     if energy_specter is None:
         energy_specter = [np.array([energy], dtype=np.double),
@@ -242,7 +230,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 def ct_seq(scan_fov, sdd, total_collimation, step=1,
               start=0, stop=1, exposures=100, histories=1,
               energy=70000., energy_specter=None,
-              batch_size=0, rotation_center=None,
+              rotation_center=None,
               rotation_plane_cosines = None,
               exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
@@ -270,9 +258,6 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
         energy_specter : [(N,), (N,)]
             [ndarray(energy), ndarray(intensity)] list/tuple of
             two ndarrays of lenght one, with energy and intensity of specter
-        batch_size : int
-            number of exposures per batch, if less than histories it is set to
-            histories.
         modulation_xy : [(N,), (N,)] (NOT IMPLEMENTED)
             tube current XY modulation, list/tuple of
             (ndarray(position), ndarray(scale_factors))
@@ -313,14 +298,6 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 
     t = half_shuffle(t)
     ang = half_shuffle(ang)
-
-    if batch_size is None:
-        batch_size = 1
-    if batch_size < 1:
-        batch_size = 1
-    batch_size *= histories
-
-    assert batch_size % histories == 0
 
     if energy_specter is None:
         energy_specter = [np.array([energy], dtype=np.double),
