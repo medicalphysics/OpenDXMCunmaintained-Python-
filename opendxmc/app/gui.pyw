@@ -221,6 +221,7 @@ class MainWindow(QtGui.QMainWindow):
         central_splitter.addWidget(list_view_collection_widget)
 
         simulation_editor = PropertiesEditWidget(self.interface, self.simulation_list_model, self.mcrunner)
+        self.viewcontroller.set_simulation_editor(simulation_editor.model)
         central_splitter.addWidget(simulation_editor)
 
 

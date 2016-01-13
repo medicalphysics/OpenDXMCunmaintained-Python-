@@ -16,8 +16,6 @@ import ctypes as ct
 import numpy as np
 import os
 import sys
-import matplotlib.pylab as plt
-import pdb
 import time
 
 #def get_kernel():
@@ -52,7 +50,7 @@ def get_kernel():
     
     os.chdir(dll_path)
     if sys.maxsize > 2**32:
-        dll = ct.CDLL('enginelib64.dll')
+        dll = ct.CDLL('enginelib64')
     else:
         dll = ct.CDLL('enginelib32.dll')
         
@@ -73,7 +71,8 @@ def get_kernel():
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
+                       ct.POINTER(ct.c_double),
+                       ct.POINTER(ct.c_double),
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_int)]
@@ -106,7 +105,7 @@ class Engine(object):
                  lut.ctypes.data_as(ct.POINTER(ct.c_double)), 
                  energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))
                  )        
-    def setup_source(self, source_position, source_direction, scan_axis, sdd, fov, collimation, specter_cpd, specter_energy):
+    def setup_source(self, source_position, source_direction, scan_axis, sdd, fov, collimation, weight, specter_cpd, specter_energy):
         n_specter = np.array(specter_cpd.shape, dtype='int')
         return self.c_sourcesetup(
                     source_position.ctypes.data_as(ct.POINTER(ct.c_double)),
@@ -115,6 +114,7 @@ class Engine(object):
                     sdd.ctypes.data_as(ct.POINTER(ct.c_double)),
                     fov.ctypes.data_as(ct.POINTER(ct.c_double)),
                     collimation.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    weight.ctypes.data_as(ct.POINTER(ct.c_double)),
                     specter_cpd.ctypes.data_as(ct.POINTER(ct.c_double)),
                     specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
                     n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
@@ -142,11 +142,12 @@ class Engine(object):
             self.c_sourcecleanup(source)
             
 def test():
-    engine = Engine()
-    material_map = np.zeros((128, 128, 128), dtype="int")
-    density_map = np.ones((128, 128, 128), dtype="float64")
+    import matplotlib.pylab as plt
+    res = 64
+    material_map = np.zeros((res, res, res), dtype="int")
+    density_map = np.ones((res, res, res), dtype="float64")
     
-    energy_imparted = np.zeros((128, 128, 128), dtype="float64")
+    energy_imparted = np.zeros((res, res, res), dtype="float64")
     
     # lut    
     lut = np.zeros((2, 5, 5), dtype="float64")
@@ -161,68 +162,91 @@ def test():
     spacing = np.array([.1, .1, .1], dtype="float64")
     offset = (-shape*spacing / 2. ).astype("float64")
     lut_shape = np.array(lut.shape, dtype="int")
-        
-    # test_setup
-    kernel_setup, kernel_run, kernel_cleanup = get_kernel()
+     
+         
+     
+    s_pos = np.array([100, 0, 0], dtype='float64')
+    s_dir = np.array([-1, 0, 0], dtype='float64')
+    axis = np.array([0, 0, 1], dtype='float64')
+    fov = np.array([50,], dtype='float64')
+    sdd = np.array([100,], dtype='float64')
+    collimation = np.array([4,], dtype='float64')
+    weight = np.array([1,], dtype='float64')
+    specter_cpd = np.cumsum(np.array([1, 1, 1], dtype='float64'))
+    specter_cpd /= specter_cpd.max()
+    specter_energy = np.array([60, 70, 80], dtype='float64')
+    n_specter = np.array([3], dtype='int')
     
-    void_ptr = engine.setup(shape, spacing, offset, material_map, density_map, lut_shape, lut, energy_imparted)
-
+    # test_setup
+    sim_setup, source_setup, kernel_run, sim_cleanup, source_cleanup = get_kernel()
+    
+    
+   
+#    pdb.set_trace()
 
     timer = time.clock()
 
+#    pdb.set_trace()
+    sim_ptr = sim_setup(
+                 shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 spacing.ctypes.data_as(ct.POINTER(ct.c_double)),
+                 offset.ctypes.data_as(ct.POINTER(ct.c_double)), 
+                 material_map.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 density_map.ctypes.data_as(ct.POINTER(ct.c_double)), 
+                 lut_shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 lut.ctypes.data_as(ct.POINTER(ct.c_double)), 
+                 energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))
+                 )
 
-#    void_ptr = kernel_setup(
-#                 shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-#                 spacing.ctypes.data_as(ct.POINTER(ct.c_double)),
-#                 offset.ctypes.data_as(ct.POINTER(ct.c_double)), 
-#                 material_map.ctypes.data_as(ct.POINTER(ct.c_int)), 
-#                 density_map.ctypes.data_as(ct.POINTER(ct.c_double)), 
-#                 lut_shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-#                 lut.ctypes.data_as(ct.POINTER(ct.c_double)), 
-#                 energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))
-#                 )
+    source_ptr = source_setup(
+                    s_pos.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    s_dir.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    axis.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    sdd.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    fov.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    collimation.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    weight.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    specter_cpd.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
+                    )
+
     
-    
+    #void_ptr_c = ct.c_void_p(void_ptr)
     print('Setup time', time.clock()-timer)
     
-    n_particles = 512*512
-    particles = np.zeros((n_particles, 8), dtype="float64")
-    particles[:, 0] = -1000
-    particles[:, 1] = 0
-    particles[:, 2] = 0
-    particles[:, 3] = 1
-    particles[:, 4] = 0
-    particles[:, 5] = 0
-    particles[:, 6] = 70000
-    particles[:, 7] = 1
-    
-    
-    
+    n_particles = 5000000
+            
     teller = 0
     timer_tot = time.clock()
-    while teller*n_particles < 10**6:
+    while True:
+        
         timer = time.clock()
-#        kernel_run(particles.ctypes.data_as(ct.POINTER(ct.c_double)), 
-#                   ct.c_size_t(n_particles), 
-#                   void_ptr)
-        engine.run(particles, void_ptr)
+        kernel_run(source_ptr, ct.c_size_t(n_particles), sim_ptr)
         print('histories per second', n_particles / (time.clock()-timer), time.clock()-timer)
         teller += 1
+        if teller > 5:
+            break
     print("total time for {} histories is {}".format((teller)*n_particles, time.clock()-timer_tot))
         
                    
 
     timer = time.clock()
-    engine.cleanup(void_ptr, energy_imparted)
-#    kernel_cleanup(void_ptr, 
-#                   shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-#                   energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))) 
+    sim_cleanup(sim_ptr, 
+                shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))) 
+    source_cleanup(source_ptr)
     print('cleanup time', time.clock()-timer)
     print(shape)
-    print(energy_imparted.max())
-    a=energy_imparted
-    plt.imshow(np.clip(energy_imparted, 0,energy_imparted.max()*.001).max(axis=-1))
-    plt.show()               
+    print('max value', energy_imparted[:, : , res//2].max())
+    cut = energy_imparted[:, : , res//2].max()/10000.
+    cut = 100000
+    print('cut', cut)
+    plt.subplot(121)
+    plt.imshow(np.clip(energy_imparted[:, : , res//2], 0,cut))
+    plt.subplot(122)
+    plt.imshow(energy_imparted[:, : , res//2])
+    plt.show()           
 if __name__ == '__main__':
     test()
 

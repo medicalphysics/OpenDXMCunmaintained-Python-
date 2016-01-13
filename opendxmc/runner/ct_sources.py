@@ -195,6 +195,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
                np.array([sdd], dtype='float64'), 
                np.array([scan_fov], dtype='float64'), 
                np.array([total_collimation], dtype='float64'),
+               np.array([mod_z(t[i])], dtype='float64'), 
                specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 
@@ -362,6 +363,7 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
                np.array([sdd], dtype='float64'), 
                np.array([scan_fov], dtype='float64'), 
                np.array([total_collimation], dtype='float64'),
+               np.array([mod_z(t[i])], dtype='float64'), 
                specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 

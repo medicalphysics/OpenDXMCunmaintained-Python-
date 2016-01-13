@@ -31,6 +31,7 @@ PROPETIES_DICT_TEMPLATE = {
     'ctdi_air100': [0., np.dtype(np.double), True, True, 'CTDIair [mGy/100mAs]', 0],
     'ctdi_vol100': [0., np.dtype(np.double), True, True, 'CTDIvol [mGy/100mAs/pitch]', 2],
     'ctdi_w100': [0., np.dtype(np.double), True, True, 'CTDIw [mGy/100mAs]', 2],
+    'ctdi_phantom_diameter': [32., np.dtype(np.double), True, True, 'CTDI phantom diameter [cm]', 2],
     'kV': [120., np.dtype(np.double), True, True, 'Simulation tube potential [kV]', 0],
     'aquired_kV': [0., np.dtype(np.double), False, False, 'Images aquired with tube potential [kV]', 0],
     'region': ['abdomen', np.dtype('a64'), False, False, 'Examination region', 0],
@@ -868,6 +869,14 @@ class Validator(object):
     @ctdi_air100.setter
     def ctdi_air100(self, value):
         self._props['ctdi_air100'] = self.float_validator(value, True)
+
+    @property
+    def ctdi_phantom_diameter(self):
+        return self._props['ctdi_phantom_diameter']
+    @ctdi_phantom_diameter.setter
+    def ctdi_phantom_diameter(self, value):
+        self._props['ctdi_phantom_diameter'] = self.float_validator(value, True)
+        assert self._props['ctdi_phantom_diameter'] >= 10.
 
     @property
     def ctdi_vol100(self):

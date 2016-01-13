@@ -481,7 +481,7 @@ class Runner(QtCore.QThread):
                                              callback=self.update_simulation_iteration,
                                              **self.simulation_arrays)
         except MemoryError:
-            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(self.simulation.name))
+            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(self.simulation_properties['name']))
             self.simulation_properties['MC_finished'] = False
             self.simulation_properties['MC_running'] = False
             self.simulation_properties['MC_ready'] = False
@@ -508,7 +508,7 @@ class Runner(QtCore.QThread):
                 if c_factor > 0:
                     del arr_dict
                     try:
-                        dose = energy_imparted * c_factor / (density * np.prod(props_dict['spacing'] * props_dict['scaling']))
+                        dose = (energy_imparted * c_factor) / (density * np.prod(props_dict['spacing'] * props_dict['scaling']))
                     except MemoryError:
                         logger.error('Memory error in generating dose array')
                     else:
@@ -801,7 +801,9 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
     def set_simulation_properties(self, data_dict):
         if data_dict['name'] != self.current_simulation:
             return
+    
         self.validator.set_data(props=data_dict, reset=True)
+        
         self.unsaved_items = {}
         for row in range(self.rowCount()):
             item = self.item(row, 1)
@@ -886,6 +888,7 @@ class PropertiesEditWidget(QtGui.QWidget):
         table = QtGui.QTableView()
         table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         model = PropertiesEditModel(database_interface, simulation_list_model)
+        self.model = model
         model.request_cancel_simulation.connect(run_manager.cancel_run)
         table.setModel(model)
         layout.addWidget(table)

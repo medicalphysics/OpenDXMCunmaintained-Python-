@@ -7,7 +7,7 @@ Created on Fri Aug 28 14:30:02 2015
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from scipy.ndimage.filters import gaussian_filter
-from opendxmc.engine import score_energy
+#from opendxmc.engine import score_energy
 
 from opendxmc.enginecu import Engine
 
@@ -74,7 +74,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
         except ValueError:
             raise ValueError('No material named '
                              '{0} in first argument. '
-                             'The material_map requires {0}'.format(value))
+                             'The material_map requires {0} material'.format(value))
         atts[key] = materials[ind].attinuation
         if value == 'air':
             air_key = key
@@ -85,7 +85,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
         raise ValueError('Supplied minimum or maximum energies '
                          'are out of range')
     energies = energies[e_ind]
-    lut = np.empty((len(atts), 5, len(energies)), dtype=np.double)
+    lut = np.empty((len(atts), 5, len(energies)), dtype='float64')
     for i, a in list(atts.items()):
         lut[i, 0, :] = energies
         if ignore_air and air_key == i:
@@ -94,7 +94,7 @@ def generate_attinuation_lut(materials, material_map, min_eV=None,
             for j, key in enumerate(['total', 'rayleigh', 'photoelectric',
                                      'compton']):
                 lut[i, j+1, :] = np.interp(energies, a['energy'], a[key])
-    return lut.astype('float64')
+    return lut
 
 def prepare_geometry_from_organ_array(organ, organ_material_map, scale, materials):
         """genereate material and density arrays and material map from
@@ -157,6 +157,7 @@ def attinuation_to_ct_numbers(material_attinuations, air_key, water_key):
             HU=1000
         atts.append((key,HU))
     return atts
+    
 def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """genereate material and density arrays and material map from
            a list of materials to use
@@ -453,7 +454,6 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
                                   filtration_mm=simulation['al_filtration'])
     total_collimation = simulation['detector_rows'] * simulation['detector_width']
     
-    import pylab as plt
 
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material_array, density_array, lut_shape, lut, dose)
@@ -484,14 +484,14 @@ def obtain_ctdiair_conversion_factor(simulation, air_material):
             if (time.clock() - t1) > 5:
                 log_elapsed_time(t0, e+1, n, 0)
                 t1 = time.clock()
-        center_dose = np.sum(dose[N[0]//2-3:N[0]//2+3,N[1]//2-3:N[1]//2+3,1 ])
+        center_dose += np.sum(dose[center[0], center[1], center[2]])
     
     engine.cleanup(simulation=geometry, energy_imparted=dose)
 
 #    engine.cleanup(simulation=geometry, energy_imparted=dose)
 #    dose = gaussian_filter(dose, (1., 1., 0.))
     
-    d = center_dose / teller / (air_material.density * np.prod(spacing)*36)
+    d = center_dose / teller / (air_material.density * np.prod(spacing))
     simulation['conversion_factor_ctdiair'] = np.nan_to_num(1. / d * total_collimation)
     return dose
 
@@ -540,7 +540,7 @@ def generate_ctdi_phantom(simulation, pmma, air, size=32.):
 
 def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                    callback=None, phantom_size=32.):
-    import pylab as plt
+  
 
     logger.info('Starting simulating CTDIw100 measurement for '
                 '{}'.format(simulation['name']))
@@ -594,7 +594,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     d = []
     for p in meas_pos:
         x, y = p[:, 0], p[:, 1]
-        d.append(dose[x, y, 1:-1].sum() / (air.density * np.prod(spacing)))
+        d.append(dose[x, y, 1:-1].mean() / (air.density * np.prod(spacing)))
 #    pdb.set_trace()  
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.

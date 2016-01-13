@@ -61,15 +61,12 @@ class ViewController(QtCore.QObject):
                        'material': MaterialScene(),
                        'energy imparted': DoseScene(),
                        'dose': DoseScene(front_array='dose')}
+        
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
             scene.update_index.connect(self.update_index)
             scene.request_array.connect(database_interface.request_view_array)
             database_interface.send_view_array.connect(scene.set_requested_array)
-
-
-
-
 
         self.request_array_slice.connect(database_interface.request_view_array_slice)
         database_interface.send_view_array_slice.connect(self.reload_slice)
@@ -77,6 +74,9 @@ class ViewController(QtCore.QObject):
         self.request_metadata.connect(database_interface.request_simulation_properties)
         database_interface.send_view_sim_propeties.connect(self.set_simulation_properties)
 
+    def set_simulation_editor(self, propertieseditmodel):
+        self.scenes['planning'].update_simulation_properties.connect(propertieseditmodel.set_simulation_properties)
+        
     def set_mc_runner(self, runner):
         if runner is not None:
             if 'running' in self.scenes:
@@ -123,7 +123,8 @@ class ViewController(QtCore.QObject):
             self.current_scene = scene_name
             self.graphicsview.setScene(self.scenes[self.current_scene])
             self.update_index(self.current_index)
-
+            self.graphicsview.fitInView(self.graphicsview.sceneRect(), QtCore.Qt.KeepAspectRatio)
+            
     def view_widget(self):
         wid = QtGui.QWidget()
         main_layout = QtGui.QHBoxLayout()
@@ -153,8 +154,6 @@ class ViewController(QtCore.QObject):
         cine_action = QtGui.QAction('Cine', menu_widget)
         cine_action.triggered.connect(self.graphicsview.request_cine_film_creation)
         menu_widget.addAction(cine_action)
-
-
 
         view_layout.addWidget(menu_widget)
 
@@ -465,8 +464,8 @@ def blendArrayToQImage(f_array, b_array, front_level, back_level,
     back_qim = back_qim.convertToFormat(QtGui.QImage.Format_ARGB32_Premultiplied, back_lut)#, flags=QtCore.Qt.DiffuseAlphaDither)
 
     p = QtGui.QPainter(back_qim)
-    p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOut)
-    p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
+#    p.setCompositionMode(QtGui.QPainter.CompositionMode_DestinationOut)
+#    p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
     p.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
 
     p.drawImage(QtCore.QRectF(back_qim.rect()), front_qim)
@@ -584,6 +583,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
         self.setAcceptedMouseButtons(QtCore.Qt.RightButton | QtCore.Qt.MiddleButton)
 #        self.setAcceptHoverEvents(True)
 
+        self.cbar = ColorBarItem()
+        
+        
+
     def qImage(self):
         if self.qimage is None:
             self.render()
@@ -605,6 +608,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
         update = False
         if front is not None:
             self.front_level = front
+            self.cbar.set_levels(front)
             update = True
         if back is not None:
             self.back_level = back
@@ -621,7 +625,9 @@ class BlendImageItem(QtGui.QGraphicsItem):
                 alpha = front_alpha
             else:
                 alpha = self.front_alpha
-            self.front_lut = get_lut(front_lut, alpha)
+            lut_raw = get_lut(front_lut, alpha)     
+            self.front_lut = lut_raw
+            self.cbar.set_lut(lut_raw)
             update = True
         if back_lut is not None:
             if back_alpha is not None:
@@ -675,6 +681,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
             if y < 1:
                 y=1
             self.setLevels(back=(x, y))
+
+    def setVisible(self, visible):
+        self.cbar.setVisible(visible)
+        super().setVisible(visible)
 
 class BitImageItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
@@ -764,7 +774,8 @@ class ImageItem(QtGui.QGraphicsItem):
         painter.drawImage(QtCore.QPointF(self.pos()), self.qImage())
 
     def mousePressEvent(self, event):
-        event.accept()
+        if event.buttons() == QtCore.Qt.MiddleButton:
+            event.accept()
 
     def mouseMoveEvent(self, event):
         if event.buttons() == QtCore.Qt.MiddleButton:
@@ -865,14 +876,122 @@ class AecItem(QtGui.QGraphicsItem):
         painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
 
+class ColorBarItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+#        self.setFlag(self.ItemIgnoresTransformations, True)        
+        
+        self._array = np.outer(np.linspace(0, 1, 128)[::-1], np.ones(20))
+        
+        self.fontMetrics = QtGui.qApp.fontMetrics()
+        self.box_size = self.fontMetrics.boundingRect('A').height()
+        
+        self._qim = None
+
+        self._text = ['test', 'lower']
+        self._units = 'mGy/100mAs'
+
+
+    def setUnits(self, units):
+        self._units = units
+        
+    def set_levels(self, level):
+        wc, ww = level
+        self._text = ["{:.2G} {}".format(wc+ww, self._units), "{:.2G} {}".format(wc-ww, self._units)]
+        self.update()
+    
+    def boundingRect(self):
+        w = max([self._array.shape[1], 
+                 self.fontMetrics.boundingRect(self._text[0]).width(),
+                 self.fontMetrics.boundingRect(self._text[1]).width()])
+        h = sum([self._array.shape[0], 
+                 self.fontMetrics.boundingRect(self._text[0]).height(),
+                 self.fontMetrics.boundingRect(self._text[1]).height()])
+        
+        return QtCore.QRectF(0, 0, w, h)
+    
+    def set_lut(self, lut):
+        self._qim = arrayToQImage(self._array, (.5, .5), lut)
+        
+    def paint(self, painter, style, widget=None):
+        if self._qim is not None:
+            im_rect = QtCore.QRectF(0, self.fontMetrics.boundingRect(self._text[0]).height(), self._array.shape[1], self._array.shape[0])
+            painter.drawImage(im_rect, self._qim)
+            painter.setPen(QtGui.QPen(QtCore.Qt.white))
+            painter.drawText(im_rect.topLeft(), self._text[0])
+            painter.drawText(self.boundingRect().bottomLeft(), self._text[1])
+#        super().paint(painter, style, widget)
+
+class PositionBarItem(QtGui.QGraphicsItem):
+    def __init__(self, parent=None, callback=None):
+        super().__init__(parent)
+        self.axes = np.eye(3)
+        self.orientation = 2
+        self.shape = np.ones(3) 
+        self.spacing = np.ones(3) 
+        self.pos = (0, 0)   
+        self.callback = callback
+   
+    def set_data(self, sim):
+        self.shape = sim['shape']
+        self.spacing = sim['spacing']*sim['scaling']
+        self.set_cosines(sim['image_orientation'])
+        self.pos = [sim['start']/self.spacing[2], sim['stop']/self.spacing[2]]
+        self.pos.sort()
+        self.update()
+        
+    def set_orientation(self, orientation):
+        self.orientation = orientation
+        self.update()
+       
+    def set_cosines(self, cosines):
+        self.axes[0, :] = cosines[:3]
+        self.axes[1, :] = cosines[3:6]
+        self.axes[2, :] = np.cross(cosines[:3], cosines[3:6])
+        
+    def boundingRect(self):        
+        x, y = [i for i in range(3) if i != self.orientation]
+        return QtCore.QRectF(0, 0, y, x)
+
+#    def points(self):
+        
+    def mousePressEvent(self, event):
+        print('mouse event')
+        if event.button()==QtCore.Qt.LeftButton and self.callback:
+            event.accept()
+            pos = event.pos()
+            intersect = sum(self.pos) / 2
+            if pos.x() < intersect:
+                self.pos[0] = pos.x()
+                self.callback(start=self.pos[0])
+            else:
+                self.pos[1] = pos.x()
+                self.callback(stop=self.pos[1])
+            
+                
+    def paint(self, painter, style, widget=None):
+        i, j = [i for i in range(3) if i != self.orientation]
+       
+        painter.setPen(QtCore.Qt.white) 
+        x1 = 0
+        x2 = self.shape[i]
+        for pos in self.pos:
+            y1 = pos
+            y2 = pos + self.axes[i, 2] / self.spacing[j] * self.shape[j]
+            painter.drawLine(y1, x1, y2, x2)
+        
 
 class PlanningScene(Scene):
+    update_simulation_properties = QtCore.pyqtSignal(dict)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
         self.image_item_bit = BitImageItem()
+        self.position_item = PositionBarItem()
         self.addItem(self.image_item)
         self.addItem(self.image_item_bit)
+        self.addItem(self.position_item)
         self.array_names = ['ctarray', 'organ']
 
         self.aec_item = AecItem()
@@ -886,7 +1005,7 @@ class PlanningScene(Scene):
         self.is_bit_array = sim.get('is_phantom', False)
         self.image_item.setVisible(not self.is_bit_array)
         self.image_item_bit.setVisible(self.is_bit_array)
-
+        self.position_item.set_data(sim)
         if self.is_bit_array:
             self.array_names = ['organ']
             self.request_array.emit(self.name, 'organ_map')
@@ -896,7 +1015,15 @@ class PlanningScene(Scene):
 
         self.updateSceneTransform()
 
-
+    def position_callback(self, start=None, stop=None):
+        update = {}
+        if start:
+            update['start'] = start
+        if stop:
+            update['stop'] = stop
+        if len(update) > 0:
+            update['name'] = self.name
+            self.update_simulation_properties.emit(update)
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, array, array_name):
@@ -913,6 +1040,7 @@ class PlanningScene(Scene):
         self.view_orientation = view_orientation
         self.aec_item.setViewOrientation(view_orientation)
         self.index = index % self.shape[self.view_orientation]
+        self.position_item.set_orientation(self.view_orientation)
         self.updateSceneTransform()
 
     def updateSceneTransform(self):
@@ -925,6 +1053,7 @@ class PlanningScene(Scene):
 
         self.aec_item.setTransform(transform)
         self.aec_item.prepareGeometryChange()
+        self.position_item.setTransform(transform)
         shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
         rect = QtCore.QRectF(0, 0, shape[1], shape[0])
         if self.is_bit_array:
@@ -1264,23 +1393,27 @@ class DoseScene(Scene):
 
         self.image_item = BlendImageItem()
         self.addItem(self.image_item)
+        self.addItem(self.image_item.cbar)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
+#        self.colorbar_item = ColorBarItem()
+#        self.addItem(self.colorbar_item)
         self.array_names = ['ctarray', 'organ']
-#        self.array_names = ['density', 'organ']
-        self.nodata_item.setVisible(True)
-        self.image_item.setVisible(False)
-
+        
+        
+        
         self.front_array_name = front_array
-
+        self.image_item.cbar.setUnits('mGy/100mAs' if front_array == 'dose' else 'eV')        
+        
         self.front_array = None
 
-        self.front_scaling = 1.
+#        self.front_scaling = 1.
 
         alpha = 1. -np.exp(-np.linspace(0, 6, 256))
         alpha *= 255./alpha.max()
-
         self.image_item.setLut(front_lut='jet', front_alpha=alpha.astype(np.int))
+#        self.colorbar_item.set_lut('jet')
+        self.setNoData()
 
 
     def setNoData(self):
@@ -1289,34 +1422,67 @@ class DoseScene(Scene):
         self.image_item.setVisible(False)
 
     def set_metadata(self, sim, index=0):
-        self.front_array = None
         super().set_metadata(sim, index)
+        self.front_array = None
+        self.nodata_item.setVisible(False)
+        self.image_item.setVisible(True)
         self.request_array.emit(self.name, self.front_array_name)
         if sim['is_phantom']:
             self.request_array.emit(self.name, 'organ_map')
         else:
             self.image_item.setLevels(back=(0, 500))
-#            self.image_item.setLevels(back=(1, 1))
-        self.nodata_item.setVisible(False)
-        self.image_item.setVisible(True)
 
         self.updateSceneTransform()
 
-        index2 = self.index % self.shape[self.view_orientation]
-        index2 /= self.scaling[self.view_orientation]
 
     def updateSceneTransform(self):
-        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
-        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-        self.image_item.setTransform(transform)
-        if self.nodata_item.isVisible():
-            self.setSceneRect(self.nodata_item.sceneBoundingRect())
-        else:
+        if not self.nodata_item.isVisible():
+            sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
+            transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+            self.image_item.setTransform(transform)
+    
             shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
-            rect = QtCore.QRectF(0, 0, shape[1], shape[0])
-            self.setSceneRect(self.image_item.mapRectToScene(rect))
+            rect = self.image_item.mapRectToScene(QtCore.QRectF(0, 0, shape[1], shape[0]))
+            c_rect = self.image_item.cbar.boundingRect()
+            
+            if rect.height() >= rect.width():
+                self.image_item.cbar.setScale(rect.height() / (10 * c_rect.height()))
+                c_rect = self.image_item.cbar.sceneBoundingRect()
+                self.image_item.cbar.setPos(-c_rect.width(), 0)
+            else:
+                
+                self.image_item.cbar.setScale(rect.width()  / (10 * c_rect.height()))                
+                c_rect = self.image_item.cbar.sceneBoundingRect()
+                self.image_item.cbar.setPos(0, -c_rect.height())
+                
+            self.setSceneRect(rect.united(self.image_item.cbar.sceneBoundingRect()))
+            
+            
+        else:
+            self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
 
+#    def updateSceneTransform(self):
+#        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
+#        nx, ny = [self.shape[i] for i in range(3) if i != self.view_orientation]
+#        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+#        self.image_item.setTransform(transform)
+#        if self.nodata_item.isVisible():
+#            scene_rect = self.nodata_item.sceneBoundingRect()
+#        else:
+#            
+#            rect = self.image_item.mapRectToScene(QtCore.QRectF(0, 0, ny, nx))
+#            crect = self.image_item.cbar.boundingRect()
+#            if ny >= nx:
+#                pos = rect.topLeft()-QtCore.QPointF(0, crect.height())
+#            else:
+#                pos = rect.topLeft()-QtCore.QPointF(crect.width(), 0)
+#            
+#            self.image_item.cbar.setPos(pos)
+#            scene_rect = rect.united(self.image_item.cbar.boundingRect())
+#
+#        self.setSceneRect(scene_rect)
+        
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, array, array_name):
@@ -1327,7 +1493,7 @@ class DoseScene(Scene):
             self.image_item.setLevels(back=(max_level/2, max_level/2))
 
         elif array_name == self.front_array_name:
-            self.front_array = array#gaussian_filter(array * self.front_scaling, 1.0)
+            self.front_array = array#gaussian_filter(array, 0.5)
             max_level = array.max()/ 4
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
