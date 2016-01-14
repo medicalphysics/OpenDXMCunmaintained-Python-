@@ -185,8 +185,11 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
                                                           np.array(dc[0x20, 0x37].value),
                                                           spacing)
 
-#        patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
-        patient.ctarray = array_from_dicom_list_low_memory(dc_list, import_scaling)
+        try:
+            patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
+        except MemoryError:
+            logger.warning('Memory error when importing {}. Attempting low memory import method.'.format(name))
+            patient.ctarray = array_from_dicom_list_low_memory(dc_list, import_scaling)
         patient.shape = np.array(patient.ctarray.shape, dtype=np.int)
         patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.

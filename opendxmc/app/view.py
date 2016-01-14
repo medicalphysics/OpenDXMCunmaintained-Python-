@@ -935,7 +935,7 @@ class PositionBarItem(QtGui.QGraphicsItem):
    
     def set_data(self, sim):
         self.shape = sim['shape']
-        self.spacing = sim['spacing']*sim['scaling']
+        self.spacing = sim['spacing']#*sim['scaling']
         self.set_cosines(sim['image_orientation'])
         self.pos = [sim['start']/self.spacing[2], sim['stop']/self.spacing[2]]
         self.pos.sort()

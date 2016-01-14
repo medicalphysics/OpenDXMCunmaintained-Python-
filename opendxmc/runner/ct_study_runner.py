@@ -7,9 +7,8 @@ Created on Fri Aug 28 14:30:02 2015
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from scipy.ndimage.filters import gaussian_filter
-#from opendxmc.engine import score_energy
 
-from opendxmc.enginecu import Engine
+from opendxmc.engine import Engine
 
 from opendxmc.tube.tungsten import specter as tungsten_specter
 from opendxmc.runner.ct_sources import ct_source_space
