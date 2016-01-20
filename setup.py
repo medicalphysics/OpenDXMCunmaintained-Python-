@@ -53,8 +53,8 @@ setup(
         'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
-        'Intended Audience :: Medcal Physicists',
-        'Topic :: Simulation :: x-ray MonteCarlo',
+        'Intended Audience :: Science/Research',
+        'Topic :: Education',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -63,6 +63,7 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Operating System :: Microsoft',
     ],
 
     # What does your project relate to?

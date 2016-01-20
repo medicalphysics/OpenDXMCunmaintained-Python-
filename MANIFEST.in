@@ -1,17 +1,22 @@
-include opendxmc/data/materials/attinuation/adipose.txt
-include opendxmc/data/materials/attinuation/air.txt
-include opendxmc/data/materials/attinuation/hardbone.txt
-include opendxmc/data/materials/attinuation/lead.txt
-include opendxmc/data/materials/attinuation/lung.txt
-include opendxmc/data/materials/attinuation/muscle.txt
-include opendxmc/data/materials/attinuation/pmma.txt
-include opendxmc/data/materials/attinuation/redbonemarrow.txt
-include opendxmc/data/materials/attinuation/skin.txt
-include opendxmc/data/materials/attinuation/soft.txt
-include opendxmc/data/materials/attinuation/water.txt
-include opendxmc/data/materials/attinuation/yellowbonemarrow.txt
-include opendxmc/data/materials/densities.txt
-include opendxmc/data/materials/organics.txt
+ #include opendxmc/data/materials/attinuation/adipose.txt
+ #include opendxmc/data/materials/attinuation/air.txt
+ #include opendxmc/data/materials/attinuation/hardbone.txt
+ #include opendxmc/data/materials/attinuation/lead.txt
+ #include opendxmc/data/materials/attinuation/lung.txt
+ #include opendxmc/data/materials/attinuation/muscle.txt
+ #include opendxmc/data/materials/attinuation/pmma.txt
+ #include opendxmc/data/materials/attinuation/redbonemarrow.txt
+ #include opendxmc/data/materials/attinuation/skin.txt
+ #include opendxmc/data/materials/attinuation/soft.txt
+ #include opendxmc/data/materials/attinuation/water.txt
+ #include opendxmc/data/materials/attinuation/yellowbonemarrow.txt
+ #include opendxmc/data/materials/densities.txt
+ #include opendxmc/data/materials/organics.txt
+
 
 include opendxmc/engine/enginelib32.dll
 include opendxmc/engine/enginelib64.dll
+
+recursive-include opendxmc/data/materials *
+
+recursive-include opendxmc/engine/src *
