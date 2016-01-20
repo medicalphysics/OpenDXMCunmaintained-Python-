@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+#database
+*.h5
+
 # C extensions
 *.so
 
