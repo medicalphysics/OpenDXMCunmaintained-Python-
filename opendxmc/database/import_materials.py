@@ -18,9 +18,16 @@ logger = logging.getLogger('OpenDXMC')
 MATERIAL_DATA_PATH = os.path.join(os.path.dirname(sys.argv[0]), 'opendxmc',
                                   'data', 'materials')
 
+BASE_PATH = os.path.dirname(os.path.dirname(__file__))
+
+MATERIAL_DATA_PATH = os.path.join(BASE_PATH,
+                                  'data', 'materials')
+
+
 def get_stored_materials(material_data_path=None):
     if material_data_path is None:
         material_data_path = MATERIAL_DATA_PATH
+    logger.debug('Importing materials from {}'.format(material_data_path))
     density_file = os.path.join(material_data_path, "densities.txt")
     organic_file = os.path.join(material_data_path, "organics.txt")
 

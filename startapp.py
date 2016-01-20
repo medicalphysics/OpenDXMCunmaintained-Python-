@@ -14,5 +14,9 @@ LOG_FORMAT = ("[%(asctime)s %(name)s %(levelname)s]  -  %(message)s  -  in metho
     "%(lineno)d filename: %(filename)s")
 
 
-if __name__ == '__main__':
+def main():
     start()
+
+if __name__ == '__main__':
+    main()
+    

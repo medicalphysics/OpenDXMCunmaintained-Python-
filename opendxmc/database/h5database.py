@@ -8,7 +8,6 @@ Created on Fri Aug 21 10:16:46 2015
 import numpy as np
 import tables as tb
 import os
-import itertools
 
 from opendxmc.materials import Material
 from opendxmc.database.import_materials import get_stored_materials

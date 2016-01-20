@@ -128,6 +128,10 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'icon.png')))
+        self.setWindowIconText('OpenDXMC')
+        self.setWindowTitle('OpenDXMC')        
+        
         database_busywidget = BusyWidget(tooltip='Writing or Reading to Database')
         simulation_busywidget = BusyWidget(tooltip='Monte Carlo simulation in progress')
         importer_busywidget = BusyWidget(tooltip='Importing DICOM files')
@@ -166,7 +170,8 @@ class MainWindow(QtGui.QMainWindow):
 
         # Databse interface
 #        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/test/test.h5'))
+        database_path = os.path.join(os.path.dirname(sys.argv[0]), 'database.h5')
+        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile(database_path))
         self.interface.database_busy.connect(database_busywidget.busy)
 
         # importer
