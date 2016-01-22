@@ -20,12 +20,12 @@ import sys
 
 def get_kernel():
     dll_path = os.path.abspath(os.path.dirname(__file__))
-    
     os.chdir(dll_path)
+    print(dll_path)
     if sys.maxsize > 2**32:
-        dll = ct.CDLL('enginelib64')
+        dll = ct.CDLL('enginelib64.dll')
     else:
-        dll = ct.CDLL('enginelib32')        
+        dll = ct.CDLL('enginelib32.dll')        
     
     setup = dll.setup_simulation
     setup.argtypes = [ct.POINTER(ct.c_int), 

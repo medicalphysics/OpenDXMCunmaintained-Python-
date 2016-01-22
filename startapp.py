@@ -18,5 +18,7 @@ def main():
     start()
 
 if __name__ == '__main__':
+    from opendxmc.engine import Engine
+    e = Engine()
     main()
     
