@@ -25,8 +25,8 @@ def get_kernel():
     if sys.maxsize > 2**32:
         dll = ct.CDLL('enginelib64')
     else:
-        dll = ct.CDLL('enginelib32.dll')
-        
+        dll = ct.CDLL('enginelib32')        
+    
     setup = dll.setup_simulation
     setup.argtypes = [ct.POINTER(ct.c_int), 
                       ct.POINTER(ct.c_double), 

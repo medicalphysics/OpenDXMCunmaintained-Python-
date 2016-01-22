@@ -169,7 +169,6 @@ class MainWindow(QtGui.QMainWindow):
 
 
         # Databse interface
-#        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile('C:/Users/ander/Documents/GitHub/test.h5'))
         database_path = os.path.join(os.path.dirname(sys.argv[0]), 'database.h5')
         self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile(database_path))
         self.interface.database_busy.connect(database_busywidget.busy)
