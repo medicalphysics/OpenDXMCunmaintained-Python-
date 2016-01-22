@@ -20,3 +20,5 @@ include opendxmc/engine/enginelib64.dll
 recursive-include opendxmc/data/materials *
 
 recursive-include opendxmc/engine/src *
+
+include README.md
