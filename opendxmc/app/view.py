@@ -6,8 +6,8 @@ Created on Thu Jul 30 10:38:15 2015
 """
 
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
-from scipy.interpolate import interp1d, RegularGridInterpolator
+#from scipy.ndimage.filters import gaussian_filter
+#from scipy.interpolate import interp1d, RegularGridInterpolator
 from PyQt4 import QtGui, QtCore
 from .dicom_lut import get_lut
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter

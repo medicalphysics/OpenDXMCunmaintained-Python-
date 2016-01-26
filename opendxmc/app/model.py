@@ -6,11 +6,10 @@ Created on Tue Sep  8 10:10:58 2015
 """
 import numpy as np
 from PyQt4 import QtGui, QtCore
-from scipy.ndimage.interpolation import affine_transform, spline_filter
+from scipy.ndimage.interpolation import affine_transform
 from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator, PROPETIES_DICT_TEMPLATE_GROUPING
 from opendxmc.database.import_phantoms import read_phantoms
 from opendxmc.database import import_ct_series
-from opendxmc.materials import Material
 from opendxmc.runner import ct_runner
 from opendxmc.utils import find_all_files
 import logging

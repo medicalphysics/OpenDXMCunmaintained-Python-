@@ -18,14 +18,21 @@ import os
 import sys
 
 
+def find_dll():
+    """
+    Searching for dlls in various places depending on freezed application or
+    importded as a package
+    """
+    
+
 def get_kernel():
     dll_path = os.path.abspath(os.path.dirname(__file__))
-    os.chdir(dll_path)
+#    os.chdir(dll_path)
     print(dll_path)
     if sys.maxsize > 2**32:
-        dll = ct.CDLL('enginelib64.dll')
+        dll = ct.CDLL(os.path.join(dll_path, 'enginelib64.dll'))
     else:
-        dll = ct.CDLL('enginelib32.dll')        
+        dll = ct.CDLL(os.path.join(dll_path, 'enginelib32.dll'))
     
     setup = dll.setup_simulation
     setup.argtypes = [ct.POINTER(ct.c_int), 
