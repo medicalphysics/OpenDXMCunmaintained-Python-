@@ -6,8 +6,6 @@ Created on Thu Jul 30 10:38:15 2015
 """
 
 import numpy as np
-#from scipy.ndimage.filters import gaussian_filter
-#from scipy.interpolate import interp1d, RegularGridInterpolator
 from PyQt4 import QtGui, QtCore
 from .dicom_lut import get_lut
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
@@ -953,8 +951,6 @@ class PositionBarItem(QtGui.QGraphicsItem):
     def boundingRect(self):        
         x, y = [i for i in range(3) if i != self.orientation]
         return QtCore.QRectF(0, 0, y, x)
-
-#    def points(self):
         
     def mousePressEvent(self, event):
         print('mouse event')
@@ -967,8 +963,7 @@ class PositionBarItem(QtGui.QGraphicsItem):
                 self.callback(start=self.pos[0])
             else:
                 self.pos[1] = pos.x()
-                self.callback(stop=self.pos[1])
-            
+                self.callback(stop=self.pos[1])            
                 
     def paint(self, painter, style, widget=None):
         i, j = [i for i in range(3) if i != self.orientation]
@@ -1063,7 +1058,6 @@ class PlanningScene(Scene):
             self.aec_item.setPos(self.image_item.mapRectToScene(rect).bottomLeft())
             self.setSceneRect(self.image_item.mapRectToScene(rect).united(self.aec_item.sceneBoundingRect()))
 
-
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, simulation_name, arr, array_name, index, orientation):
         if simulation_name != self.name:
@@ -1077,119 +1071,6 @@ class PlanningScene(Scene):
         else:
             self.image_item.setImage(arr)
         self.aec_item.setIndex(self.index)
-
-#    def wheelEvent(self, ev):
-#        if ev.delta() > 0:
-#            self.index += 1
-#        elif ev.delta() < 0:
-#            self.index -= 1
-#        self.index %= self.shape[self.view_orientation]
-#        self.request_reload_slice.emit(self.name, self.array_name, self.index, self.view_orientation)
-#        ev.accept()
-
-#class PlanningScene(QtGui.QGraphicsScene):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.image_item = ImageItem()
-#        self.image_item_bit = BitImageItem()
-#        self.addItem(self.image_item)
-#        self.addItem(self.image_item_bit)
-#
-#        self.aec_item = AecItem()
-#        self.addItem(self.aec_item)
-#        self.array = np.random.uniform(size=(8, 8, 8))
-#        self.shape = np.array((8, 8, 8))
-#        self.spacing = np.array((1., 1., 1.))
-#        self.index = 0
-#        self.view_orientation = 2
-#        self.image_item.setLevels((0, 500))
-#        self.is_bit_array = False
-#        self.bit_lut = get_lut('pet')
-#
-#    def setCtArray(self, ct, spacing, aec):
-#        self.is_bit_array = False
-#        self.image_item.setVisible(True)
-#        self.image_item_bit.setVisible(False)
-#        self.array = ct
-#        self.shape = ct.shape
-#        self.spacing = spacing
-#        self.index = self.index % self.shape[self.view_orientation]
-#        if aec is None:
-#            aec = np.ones((2,2))
-#            aec[0, 0] = 0
-#        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
-#        self.reloadImages()
-#        self.updateSceneTransform()
-#
-#    def setBitArray(self, ct, spacing, aec):
-#        self.is_bit_array = True
-#        self.image_item.setVisible(False)
-#        self.image_item_bit.setVisible(True)
-#
-#        self.array = ct
-#        self.shape = ct.shape
-#        self.spacing = spacing
-#        self.index = self.index % self.shape[self.view_orientation]
-#        if aec is None:
-#            aec = np.ones((2,2))
-#            aec[0, 0] = 0
-#        self.aec_item.set_aec(aec, self.view_orientation, ct.shape)
-#        number_of_elements = self.array.max()
-#        qlut = [QtGui.QColor(self.bit_lut[i * 255 // number_of_elements]) for i in range(number_of_elements)]
-#        self.image_item_bit.set_lut(qlut)
-#        self.reloadImages()
-#        self.updateSceneTransform()
-#
-#    @QtCore.pyqtSlot(int)
-#    def setViewOrientation(self, view_orientation):
-#        self.view_orientation = view_orientation
-#        self.aec_item.setViewOrientation(view_orientation)
-#        self.reloadImages()
-#        self.updateSceneTransform()
-#
-#    def updateSceneTransform(self):
-#        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
-#        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-#        if self.is_bit_array:
-#            self.image_item_bit.setTransform(transform)
-#        else:
-#            self.image_item.setTransform(transform)
-#
-#        self.aec_item.setTransform(transform)
-#        self.aec_item.prepareGeometryChange()
-#        if self.is_bit_array:
-#            self.aec_item.setPos(self.image_item_bit.mapToScene(self.image_item.boundingRect().bottomLeft()))
-#            self.setSceneRect(self.image_item_bit.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
-#        else:
-#            self.aec_item.setPos(self.image_item.mapToScene(self.image_item.boundingRect().bottomLeft()))
-#            self.setSceneRect(self.image_item.sceneBoundingRect().united(self.aec_item.sceneBoundingRect()))
-#
-##        self.setSceneRect(self.itemsBoundingRect())
-#
-#    def getSlice(self, array, index):
-#        if self.view_orientation == 2:
-#            return np.copy(np.squeeze(array[: ,: ,index % self.shape[self.view_orientation]]))
-#        elif self.view_orientation == 1:
-#            return np.copy(np.squeeze(array[:, index % self.shape[self.view_orientation], :]))
-#        elif self.view_orientation == 0:
-#            return np.copy(np.squeeze(array[index % self.shape[self.view_orientation], :, :]))
-#        raise ValueError('view must select one of 0,1,2 dimensions')
-#
-#    def reloadImages(self):
-#        if self.is_bit_array:
-#            self.image_item_bit.setImage(self.getSlice(self.array, self.index))
-#        else:
-#            self.image_item.setImage(self.getSlice(self.array, self.index))
-#        self.aec_item.setIndex(self.index)
-#
-#    def wheelEvent(self, ev):
-#        if ev.delta() > 0:
-#            self.index += 1
-#        elif ev.delta() < 0:
-#            self.index -= 1
-#        self.index %= self.shape[self.view_orientation]
-#        self.reloadImages()
-#        ev.accept()
 
 
 class RunningScene(Scene):
@@ -1396,25 +1277,17 @@ class DoseScene(Scene):
         self.addItem(self.image_item.cbar)
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
-#        self.colorbar_item = ColorBarItem()
-#        self.addItem(self.colorbar_item)
         self.array_names = ['ctarray', 'organ']
-        
-        
         
         self.front_array_name = front_array
         self.image_item.cbar.setUnits('mGy/100mAs' if front_array == 'dose' else 'eV')        
         
         self.front_array = None
 
-#        self.front_scaling = 1.
-
         alpha = 1. -np.exp(-np.linspace(0, 6, 256))
         alpha *= 255./alpha.max()
         self.image_item.setLut(front_lut='jet', front_alpha=alpha.astype(np.int))
-#        self.colorbar_item.set_lut('jet')
         self.setNoData()
-
 
     def setNoData(self):
         self.front_array = None
@@ -1437,7 +1310,7 @@ class DoseScene(Scene):
 
     def updateSceneTransform(self):
         if not self.nodata_item.isVisible():
-            sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
+            sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
             transform = QtGui.QTransform.fromScale(sy / sx, 1.)
             self.image_item.setTransform(transform)
     
@@ -1462,28 +1335,6 @@ class DoseScene(Scene):
             self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
 
-#    def updateSceneTransform(self):
-#        sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
-#        nx, ny = [self.shape[i] for i in range(3) if i != self.view_orientation]
-#        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-#        self.image_item.setTransform(transform)
-#        if self.nodata_item.isVisible():
-#            scene_rect = self.nodata_item.sceneBoundingRect()
-#        else:
-#            
-#            rect = self.image_item.mapRectToScene(QtCore.QRectF(0, 0, ny, nx))
-#            crect = self.image_item.cbar.boundingRect()
-#            if ny >= nx:
-#                pos = rect.topLeft()-QtCore.QPointF(0, crect.height())
-#            else:
-#                pos = rect.topLeft()-QtCore.QPointF(crect.width(), 0)
-#            
-#            self.image_item.cbar.setPos(pos)
-#            scene_rect = rect.united(self.image_item.cbar.boundingRect())
-#
-#        self.setSceneRect(scene_rect)
-        
-
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, array, array_name):
         if name != self.name:
@@ -1493,11 +1344,10 @@ class DoseScene(Scene):
             self.image_item.setLevels(back=(max_level/2, max_level/2))
 
         elif array_name == self.front_array_name:
-            self.front_array = array#gaussian_filter(array, 0.5)
+            self.front_array = array
             max_level = array.max()/ 4
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
-
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
@@ -1536,7 +1386,6 @@ class View(QtGui.QGraphicsView):
         self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.black))
 
         self.setRenderHints(QtGui.QPainter.Antialiasing |
-#                            QtGui.QPainter.SmoothPixmapTransform |
                             QtGui.QPainter.TextAntialiasing)
 
         self.mouse_down_pos = QtCore.QPoint(0, 0)
@@ -1557,7 +1406,7 @@ class View(QtGui.QGraphicsView):
             if dist.manhattanLength() > QtGui.QApplication.startDragDistance():
                 e.accept()
                 drag = QtGui.QDrag(self)
-                # lager mimedata
+                # creating mimedata
                 qim = self.toQImage()
                 md = QtCore.QMimeData()
                 md.setImageData(qim)
@@ -1570,7 +1419,6 @@ class View(QtGui.QGraphicsView):
             return super().mouseMoveEvent(e)
     def mousePressEvent(self, e):
         self.mouse_down_pos = e.globalPos()
-#       e.setAccepted(False)
         return super().mousePressEvent(e)
 
     @QtCore.pyqtSlot()
@@ -1634,79 +1482,7 @@ class View(QtGui.QGraphicsView):
             writer.write_frame(arr)
         writer.close()
         logger.debug('Done writing cine movie')
-
-
         self.cine_film_data = {}
-
-#    @QtCore.pyqtSlot(str, np.ndarray, str)
-#    def cine_film_creation(self, name, array, array_name):
-#        if len(self.cine_film_data) == 0:
-#            return
-#        if name != self.cine_film_data.get('name', ''):
-#            return
-#        if array_name not in self.cine_film_data['array_names']:
-#            return
-#
-#        rect = self.toQImage().rect()
-#        height, width = rect.height(), rect.width()
-#
-#
-#        FFMPEG_BIN = "E://ffmpeg//bin//ffmpeg"
-#        command = [ FFMPEG_BIN,
-#                   '-y', # (optional) overwrite output file if it exists
-#                   '-f', 'rawvideo',
-#                   '-vcodec','rawvideo',
-#                   '-s', "{0}x{1}".format(height, width),###'420x360', # size of one frame
-##                   '-pix_fmt', 'rgb24',
-#                   '-r', '24', # frames per second
-#                   '-i', '-', # The imput comes from a pipe
-#                   '-an', # Tells FFMPEG not to expect any audio
-#                   '-vcodec', 'mpeg4',
-#                   'my_output_videofile.mp4',
-#                   "-loglevel", "debug"]
-##        command = ['-y', '-vcodec', 'png', '-i', '-', '-vcodec', 'mpeg4', '-qscale', '5', '-r', '24', 'c:/test/video.avi',"-loglevel", "debug"]
-##        process = QtCore.QProcess(QtGui.qApp)
-##        process.setProcessChannelMode(process.ForwardedChannels)
-##        process.start(FFMPEG_BIN, command)
-#
-#        pipe = subprocess.Popen(command,
-#                                stdin=subprocess.PIPE,
-#                                stderr=subprocess.PIPE)
-#
-#        for index in range(array.shape[self.cine_film_data['view_orientation']]):
-#            if index > 10:
-#                break
-#            if self.cine_film_data['view_orientation'] == 1:
-#                arr_slice = np.squeeze(array[:, index, :])
-#            elif self.cine_film_data['view_orientation'] == 0:
-#                arr_slice = np.squeeze(array[index, :, :])
-#            else:
-#                arr_slice = np.squeeze(array[:,:,index])
-#
-#            self.scene().reload_slice(self.cine_film_data['name'],
-#                                      arr_slice,
-#                                      array_name,
-#                                      index,
-#                                      self.cine_film_data['view_orientation']
-#                                      )
-#            QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
-#            QtGui.qApp.processEvents()
-#            qim = self.toQImage().convertToFormat(QtGui.QImage.Format_RGB32)
-#            ptr = qim.bits()
-#            ptr.setsize(qim.byteCount())
-#            arr = np.array(ptr).reshape(height, width, 4)
-#
-##            qpx = QtGui.QPixmap.fromImage(self.toQImage())
-##            qpx.save(process, 'png')
-##            qpx.save("C:\\test\\test\\{0}.jpeg".format(index))
-#
-##            pipe.proc.stdin.write(qim.bits())
-#            pipe.stdin.write(arr.tostring())
-#
-##        process.closeWriteChannel()
-##        process.terminate()
-#
-#        self.cine_film_data = {}
 
     def toQImage(self):
         rect = self.scene().sceneRect()
@@ -1726,81 +1502,3 @@ class View(QtGui.QGraphicsView):
         self.scene().render(painter, source=rect)
         painter.end()
         return qim
-
-#
-#class OrganListModelPopulator(QtCore.QThread):
-#    new_dose_item = QtCore.pyqtSignal(str, float)
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.organ = None
-#        self.dose = None
-#        self.organ_map = None
-#
-#    def run(self):
-#        if self.organ is None or self.dose is None or self.organ_map is None:
-#            return
-#        shape_scale = np.array(self.organ.shape, dtype=np.double) / np.array(self.dose.shape, dtype=np.double)
-#        interp = RegularGridInterpolator(tuple(np.arange(self.dose.shape[i]) * shape_scale[i] for i in range(3)),
-#                                         self.dose,
-#                                         method='nearest',
-#                                         bounds_error=False,
-#                                         fill_value=0)
-#        for key, value in zip(self.organ_map['key'], self.organ_map['value']):
-#            points = np.array(np.nonzero(self.organ == key), dtype=np.int).T
-#            dose = np.mean(interp(points))
-#            if np.isnan(dose):
-#                dose = 0.
-#            self.new_dose_item.emit(str(value, encoding='utf-8'), round(dose, 2))
-#
-#
-#class OrganListModel(QtGui.QStandardItemModel):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.populator = OrganListModelPopulator()
-#        self.populator.new_dose_item.connect(self.add_dose_item)
-#
-#
-#    @QtCore.pyqtSlot(str, float)
-#    def add_dose_item(self, organ, dose):
-#        item1 = QtGui.QStandardItem(organ)
-#        item2 = QtGui.QStandardItem(str(dose))
-#        self.layoutAboutToBeChanged.emit()
-#
-#        self.appendRow([item1, item2])
-#        self.sort(0)
-#        item2.setData(dose, QtCore.Qt.DisplayRole)
-#        self.layoutChanged.emit()
-#
-#    def set_data(self, dose, organ, organ_map):
-#        self.clear()
-#        self.setHorizontalHeaderLabels(['Organ', 'Dose [mGy/100mAs]'])
-#        if self.populator.isRunning():
-#            self.populator.wait()
-#        self.populator.dose = dose
-#        self.populator.organ = organ
-#        self.populator.organ_map = organ_map
-#        self.populator.start()
-#
-#
-#
-#class OrganDoseWidget(QtGui.QTableView):
-#    def __init__(self, parent=None):
-#        super().__init__(parent)
-#        self.setModel(OrganListModel(self))
-#        self.model().layoutChanged.connect(self.resizeColumnToContents)
-#        self.name = ""
-#        self.setWordWrap(False)
-##        self.setTextElideMode(QtCore.Qt.ElideMiddle)
-##        self.verticalHeader().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
-#        self.horizontalHeader().setStretchLastSection(True)
-##        self.horizontalHeader().setMinimumSectionSize(-1)
-##        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-##        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-#        self.setSortingEnabled(True)
-#
-#    @QtCore.pyqtSlot()
-#    def resizeColumnToContents(self, col=0):
-#        super().resizeColumnToContents(col)
-#
-#    def set_data(self, dose, organ, organ_map):
-#        self.model().set_data(dose, organ, organ_map)

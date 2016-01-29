@@ -1,24 +1,27 @@
 
-#define USINGCUDA
+//#define USINGCUDA
 #ifndef USINGCUDA
 #include <omp.h>
+#include <stdbool.h>
 #else
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #endif
+
+
 #include "math.h"
-//#include "curand.h"
-//#include "curand_kernel.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
 
+#include "enginelib.h"
+
 
 // CUDA Constants
 #ifdef USINGCUDA
-__device__ __constant__ double ERRF = 0e-9; // Precision error
-__device__ __constant__ double ERRG = 0e-3; // Geometric error
+__device__ __constant__ double ERRF = 1e-9; // Precision error
+__device__ __constant__ double ERRG = 1e-3; // Geometric error
 __device__ __constant__ double ELECTRON_MASS = 510998.9;  //  eV/(c*c)
 __device__ __constant__ double PI = 3.14159265359;
 __device__ __constant__ double ENERGY_CUTOFF = 1000; // eV
@@ -26,7 +29,7 @@ __device__ __constant__ double ENERGY_MAXVAL = 300000; // eV
 __device__ __constant__ double WEIGHT_CUTOFF = 0.01;
 __device__ __constant__ double RUSSIAN_RULETTE_CHANCE = .2;  // CHANCE probability of photon survival
 #else
-const double ERRF = 0e-9; // Precision error
+const double ERRF = 1e-9; // Precision error
 const double ELECTRON_MASS = 510998.9;  //  eV/(c*c)
 const double PI = 3.14159265359;
 const double ENERGY_CUTOFF = 1000; // eV
@@ -53,8 +56,6 @@ __device__
 #endif
 double randomduniform(uint64_t *seed)
 { 
-	//uint64_t k = xorshift128plus(seed);
-	//double a = (double)xorshift128plus(seed) / (double)UINT64_MAX;
 	return (double)xorshift128plus(seed) / (double)UINT64_MAX;
 }
 
@@ -291,12 +292,6 @@ bool woodcock_step(size_t *volume_index, double *particle, int *shape, double *s
 		smin = fmax(smin, lut_interpolator(i, 1, particle[6], att_shape, attenuation_lut, &lut_index));
 	}
 	smin *= max_density[0];
-	// we limit max step size. This is corrected for when we sample an interaction
-	if (smin < 0.1)
-	{
-		//printf("correcting smin from %f to %f", smin, 0.1);
-		smin = 0.1;
-	}
 
 	while (valid && !interaction)
 	{
@@ -595,38 +590,6 @@ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
 }
 #endif
 
-
-extern "C"
-{
-	typedef struct
-	{
-		int *shape;
-		double *spacing;
-		double *offset;
-		int *material_map;
-		double *density_map;
-		int *lut_shape; 
-		double *attenuation_lut;
-		double *energy_imparted; 
-		double *max_density;
-		uint64_t *seed;
-	}Simulation;
-
-	typedef struct
-	{
-		double *source_position;
-		double *source_direction;
-		double *scan_axis;
-		double *sdd;
-		double *fov;
-		double *collimation;
-		double *weight;
-		int *specter_elements;
-		double *specter_cpd;
-		double *specter_energy;
-	}Source;
-		
-	__declspec(dllexport)
 	#ifdef USINGCUDA
 	__host__ int number_of_cuda_devices()
 	{
@@ -640,7 +603,7 @@ extern "C"
 		int number_of_cuda_devices(){return -1;}
 	#endif
 	
-	__declspec(dllexport)
+
 	#ifdef USINGCUDA
 	__host__ void cuda_device_name(int device_number, char* name )
 	{
@@ -657,7 +620,7 @@ extern "C"
 	#endif
 
 	#ifdef USINGCUDA
-	__declspec(dllexport) __host__ void* setup_simulation(int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *lut_shape, double *attenuation_lut, double *energy_imparted)
+	__host__ void* setup_simulation(int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *lut_shape, double *attenuation_lut, double *energy_imparted)
 	{
 
 		// device declarations
@@ -728,7 +691,7 @@ extern "C"
 		return (void*)sim_dev;
 	}
 	#else
-	__declspec(dllexport) void* setup_simulation(int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *lut_shape, double *attenuation_lut, double *energy_imparted)
+	void* setup_simulation(int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *lut_shape, double *attenuation_lut, double *energy_imparted)
 	{
 		Simulation *sim_dev = (Simulation*)malloc(sizeof(Simulation));
 		sim_dev->shape = shape;
@@ -758,7 +721,7 @@ extern "C"
 
 
 #ifdef USINGCUDA
-	__declspec(dllexport) __host__ void* setup_source(double *source_position, double *source_direction, double *scan_axis, double *sdd, double *fov, double *collimation, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements)
+	 __host__ void* setup_source(double *source_position, double *source_direction, double *scan_axis, double *sdd, double *fov, double *collimation, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements)
 	{
 		// device declarations
 		double *source_position_dev;
@@ -822,7 +785,7 @@ extern "C"
 	}
 
 #else
-	__declspec(dllexport) void* setup_source(double *source_position, double *source_direction, double *scan_axis, double *sdd, double *fov, double *collimation, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements)
+	void* setup_source(double *source_position, double *source_direction, double *scan_axis, double *sdd, double *fov, double *collimation, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements)
 	{
 		Source *source_dev = (Source*)malloc(sizeof(Source));
 		source_dev->source_position = source_position;
@@ -842,8 +805,8 @@ extern "C"
 
 
 	
-	#ifdef USINGCUDA
-	__declspec(dllexport) __host__ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
+#ifdef USINGCUDA
+	__host__ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 	{
 		dim3 blocks((int)(n_particles / 512 + 1), 1, 1);
 		dim3 threads(512, 1, 1);
@@ -945,25 +908,23 @@ extern "C"
 		}
 		return;
 	}
-	#else
-	__declspec(dllexport) void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
+#else
+	void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 	{		
 		// simulating particles
 
 		size_t thread_number;
-		
 		size_t n_threads = omp_get_max_threads();
+		
 		uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
 		
 		init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
-		
 		#pragma omp parallel num_threads(n_threads) private(thread_number)
 		{
-			
 			thread_number = omp_get_thread_num();
-			
+			long long int i;
 			#pragma omp for
-			for (long long int i = 0; i < n_particles; i++)
+			for ( i = 0; i < n_particles; i++)
 			{
 				transport_particles
 					(
@@ -988,10 +949,7 @@ extern "C"
 					((Simulation*)dev_simulation)->energy_imparted,
 					((Simulation*)dev_simulation)->max_density,
 					states);
-
-			}
-
-			
+			}		
 		}
 		// free  memory
 		if (states)
@@ -1000,10 +958,10 @@ extern "C"
 		}
 		return;
 	}
-	#endif
+#endif
 
-	#ifdef USINGCUDA
-	__declspec(dllexport) __host__ void cleanup_simulation(void *dev_simulation, int *shape, double *energy_imparted)
+#ifdef USINGCUDA
+	__host__ void cleanup_simulation(void *dev_simulation, int *shape, double *energy_imparted)
 	{
 		//struct Simulation *dev_sim = ((struct Simulation*)dev_simulation);
 		//copy energy_imparted from device memory to host
@@ -1028,11 +986,12 @@ extern "C"
 		
 		return;
 	}
-	#else
-	__declspec(dllexport) void cleanup_simulation(void *dev_simulation, int *shape, double *energy_imparted)
+#else
+	void cleanup_simulation(void *dev_simulation, int *shape, double *energy_imparted)
 	{
+		
+		// free memory
 		/*
-		// free device memory
 		free(((Simulation*)dev_simulation)->shape);
 		free(((Simulation*)dev_simulation)->spacing);
 		free(((Simulation*)dev_simulation)->offset);
@@ -1047,10 +1006,10 @@ extern "C"
 		free(dev_simulation);
 		return;
 	}
-	#endif
+#endif
 
-	#ifdef USINGCUDA
-	__declspec(dllexport) __host__ void cleanup_source(void *dev_source)
+#ifdef USINGCUDA
+	__host__ void cleanup_source(void *dev_source)
 	{
 		// free device memory
 		cudaFree(((Source*)dev_source)->source_position);
@@ -1063,186 +1022,27 @@ extern "C"
 		cudaFree(((Source*)dev_source)->specter_elements);
 		cudaFree(((Source*)dev_source)->specter_cpd);
 		cudaFree(((Source*)dev_source)->specter_energy);
+		
 		free(dev_source);
-
 		return;
 	}
-	#else
-	__declspec(dllexport) void cleanup_source(void *dev_source)
+#else
+	void cleanup_source(void *dev_source)
 	{
+		/*
+		free(((Source*)dev_source)->source_position);
+		free(((Source*)dev_source)->source_direction);
+		free(((Source*)dev_source)->scan_axis);
+		free(((Source*)dev_source)->sdd);
+		free(((Source*)dev_source)->fov);
+		free(((Source*)dev_source)->collimation);
+		free(((Source*)dev_source)->weight);
+		free(((Source*)dev_source)->specter_elements);
+		free(((Source*)dev_source)->specter_cpd);
+		free(((Source*)dev_source)->specter_energy);
+		*/
 		free(dev_source);
 		return;
 	}
-	#endif
-}
-
-//
-//__global__ void particle_is_intersecting_volume_test_kernel(double *particles, size_t *n_particles, int *shape, double *spacing, double *offset, bool *result)
-//{
-//	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
-//	double particle[8];
-//	if (id < n_particles[0])
-//	{
-//		for (size_t j = 0; j < 8; j++)
-//			particle[j] = particles[id * 8 + j];
-//		result[id] = particle_is_intersecting_volume(&particle[0], shape, spacing, offset);
-//		for (size_t j = 0; j < 8; j++)
-//			particles[j + id * 8] = particle[j];
-//	}
-//}
-//__global__ void lut_interpolator_test_kernel(double *particles, size_t *n_particles, int *lut_shape, double *lut)
-//{
-//	int id = threadIdx.x + blockIdx.x * blockDim.x;
-//	double particle[8];
-//	size_t lower_index;
-//	if (id < n_particles[0])
-//	{
-//		for (int j = 0; j < 8; j++)
-//			particle[j] = particles[id * 8 + j];
-//		particles[7 + id * 8] = lut_interpolator(0, 4, particle[6], lut_shape, lut, &lower_index);
-//	}
-//}
-//
-//__global__ void woodcock_test_kernel(double *particles, size_t *n_particles, int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *att_shape, double *attenuation_lut, double *energy_imparted, uint64_t *states, bool *result)
-//{
-//	int id = threadIdx.x + blockIdx.x * blockDim.x;
-//	double particle[8];
-//
-//	size_t volume_index;
-//	if (id < n_particles[0])
-//	{
-//		for (int j = 0; j < 8; j++)
-//			particle[j] = particles[id * 8 + j];
-//		result[id] = woodcock_step(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, states);
-//		for (int j = 0; j < 8; j++)
-//			particles[id * 8 + j] = particle[j];
-//	}
-//}
-//
-//
-//
-//__host__ void setup_test_environment(double *particles, size_t n_particles, int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *att_shape, double *attenuation_lut, double *energy_imparted)
-//{
-//	int i, j, k;
-//	size_t ind;
-//
-//	//geometry
-//	for (i = 0; i < 3; i++)
-//	{
-//		spacing[i] = 0.1;
-//		offset[i] = -shape[i] * spacing[i] / 2.;
-//		//offset[i] = 0;
-//	}
-//
-//
-//	//particles
-//	for (i = 0; i < (int)n_particles; i++)
-//	{
-//		particles[i * 8] = -1000.;
-//		particles[i * 8 + 1] = 0;
-//		particles[i * 8 + 2] = 0;
-//		particles[i * 8 + 3] = 1;
-//		particles[i * 8 + 4] = 0;
-//		particles[i * 8 + 5] = 0;
-//		particles[i * 8 + 6] = 70000;
-//		particles[i * 8 + 7] = 1;
-//	}
-//	for (i = 0; i < shape[0]; i++)
-//		for (j = 0; j < shape[1]; j++)
-//			for (k = 0; k < shape[2]; k++)
-//			{
-//				ind = i * shape[2] * shape[1] + j * shape[2] + k;
-//				material_map[ind] = 0;
-//				density_map[ind] = 1;
-//				energy_imparted[ind] = 0;
-//			}
-//
-//	//lut
-//	for (int i = 0; i < 2; i++)
-//	{
-//		//energy 
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 0 * att_shape[2] + 0] = 1000;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 2 * att_shape[2] + 0] = 0.34;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 4 * att_shape[2] + 0] = 0.05;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 3 * att_shape[2] + 0] = 6.8;
-//
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 0 * att_shape[2] + 1] = 10000;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 2 * att_shape[2] + 1] = 0.0246;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 4 * att_shape[2] + 1] = 0.358;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 3 * att_shape[2] + 1] = 0.00277;
-//
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 0 * att_shape[2] + 2] = 50000;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 2 * att_shape[2] + 2] = 0.00101;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 4 * att_shape[2] + 2] = 0.3344;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 3 * att_shape[2] + 2] = 0.000011;
-//
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 0 * att_shape[2] + 3] = 69000;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 2 * att_shape[2] + 3] = 0.00005;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 4 * att_shape[2] + 3] = 0.317;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 3 * att_shape[2] + 3] = 0.000003;
-//
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 0 * att_shape[2] + 4] = 100000;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 2 * att_shape[2] + 4] = 0.000276;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 4 * att_shape[2] + 4] = 0.29;
-//		attenuation_lut[i*att_shape[1] * att_shape[2] + 3 * att_shape[2] + 4] = 0.000000987;
-//
-//		for (int k = 0; k < 5; k++)
-//		{
-//			ind = i*att_shape[1] * att_shape[2] + 1 * att_shape[2] + k;
-//			attenuation_lut[ind] = 0;
-//		}
-//
-//		for (int j = 2; j < 5; j++)
-//		{
-//			for (int k = 0; k < 5; k++)
-//			{
-//				ind = i*att_shape[1] * att_shape[2] + j * att_shape[2] + k;
-//				attenuation_lut[i*att_shape[1] * att_shape[2] + 1 * att_shape[2] + k] += attenuation_lut[ind];
-//			}
-//		}
-//	}
-//}
-//
-//
-//int main()
-//{
-//	// init geometry
-//	size_t n_particles = 100000;
-//	int shape[3] = { 64, 64, 64 };
-//	int lut_shape[3] = { 2, 5, 5 };
-//	double spacing[3];
-//	double offset[3];
-//
-//	// init geometry variables
-//	double *particles = (double *)malloc(n_particles * 8 * sizeof(double));
-//	int *material_map = (int *)malloc(shape[0] * shape[1] * shape[2] * sizeof(int));
-//	double *density_map = (double *)malloc(shape[0] * shape[1] * shape[2] * sizeof(double));
-//	double *attenuation_lut = (double *)malloc(lut_shape[0] * lut_shape[1] * lut_shape[2] * sizeof(double));
-//	double *energy_imparted = (double *)malloc(shape[0] * shape[1] * shape[2] * sizeof(double));
-//
-//	// initialazing geometry
-//	setup_test_environment(particles, n_particles, shape, spacing, offset, material_map, density_map, lut_shape, attenuation_lut, energy_imparted);
-//
-//	void * sim;
-//	sim = setup_simulation(shape, spacing, offset, material_map, density_map, lut_shape, attenuation_lut, energy_imparted);
-//	run_simulation(particles, n_particles, sim);
-//	cleanup_simulation(sim, shape, energy_imparted);
-//	/*
-//	size_t index;
-//	for (int i = 0; i < shape[0]; i++)
-//	{
-//		for (int j = 0; j < shape[1]; j++)
-//		{
-//			for (int k = 0; k < shape[2]; k++)
-//			{
-//				index = shape[1] * shape[2] * i + shape[2] * j + k;
-//				if (energy_imparted[index] > 0)
-//				{
-//					printf("\n energy in %d %d %d = %f", i, j, k, energy_imparted[index]);
-//				}
-//			}
-//		}
-//	}
-//	*/
-//	return 0;
+#endif
 //}

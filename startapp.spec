@@ -2,6 +2,8 @@
 
 block_cipher = None
 
+excludes = ['_tkinter', 'matplotlib', 'pandas', 'PIL', 'statsmodels', 'tcl', 'sqlalchemy']
+
 extra_data = [('opendxmc/data/materials/*.txt', 'opendxmc/data/materials'),
               ('opendxmc/data/materials/attinuation/*.txt', 'opendxmc/data/materials/attinuation'),
               ('opendxmc/engine/*.dll', 'opendxmc/engine'),
@@ -14,7 +16,7 @@ a = Analysis(['startapp.py'],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
-             excludes=[],
+             excludes=excludes,
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
@@ -23,7 +25,7 @@ pyz = PYZ(a.pure, a.zipped_data,
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
-          name='startapp',
+          name='OpenDXMC',
           debug=False,
           strip=False,
           upx=True,

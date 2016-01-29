@@ -2,15 +2,13 @@
 
 block_cipher = None
 
-
 extra_data = [('opendxmc/data/materials/*.txt', 'opendxmc/data/materials'),
               ('opendxmc/data/materials/attinuation/*.txt', 'opendxmc/data/materials/attinuation'),
               ('opendxmc/engine/*.dll', 'opendxmc/engine'),
               ('opendxmc/app/icon.png', 'opendxmc/app')]
 
-
 a = Analysis(['startapp.py'],
-             pathex=['c:\\Users\\ander\\Documents\\GitHub\\OpenDXMC'],
+             pathex=['C:\\Users\\ander\\Documents\\GitHub\\OpenDXMC'],
              binaries=None,
              datas=extra_data,
              hiddenimports=[],
@@ -25,11 +23,11 @@ pyz = PYZ(a.pure, a.zipped_data,
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
-          name='startapp',
+          name='OpenDXMC',
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False , icon='icon.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

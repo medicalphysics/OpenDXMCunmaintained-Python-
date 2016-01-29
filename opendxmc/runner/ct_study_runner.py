@@ -460,18 +460,16 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     teller = 0
     center = np.floor(N / 2).astype(np.int)
     center_dose = 0
-    while center_dose < en_specter[0].max()*5:
+    while center_dose < en_specter[0].max()*1000:
         if teller > 0:
-            print('Not sufficient data, running again. Dose in center is now', center_dose, 'max dose: ', dose.max())
-#            plt.imshow(dose[:,:,1])
-#            plt.show()
+            logger.debug('Not sufficient data, running again. Dose in center is now {0}, max dose: {1}.'.format(center_dose, dose.max()))
         teller += 1
         phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
                              total_collimation, start=0, stop=0, step=1,
                              exposures=simulation['exposures'],
                              histories=simulation['histories'],
                              energy_specter=en_specter,
-                             batch_size=simulation['batch_size'])
+                             )
     
         t0 = time.clock()
         t1 = t0
@@ -481,7 +479,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
             engine.run(source, simulation['histories'], geometry)
             engine.cleanup(source=source)
     #        break
-            if (time.clock() - t1) > 5:
+            if (time.clock() - t1) > 1:
                 eta = log_elapsed_time(t0, e+1, n, 0)
                 t1 = time.clock()
                 if callback:
@@ -535,7 +533,6 @@ def generate_ctdi_phantom(simulation, pmma, air, size=32., callback=None):
     density_array[material_array == 1] = pmma.density
     density_array[material_array == 2] = air.density
 
-#        density_array = np.zeros(N, dtype=np.double) + material.density
     lut = generate_attinuation_lut([air, pmma], material_map, max_eV=0.5e6)
     return N, spacing, offset, material_array, density_array, lut, measure_indices
 
@@ -543,20 +540,11 @@ def generate_ctdi_phantom(simulation, pmma, air, size=32., callback=None):
 def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                                    size=32., callback=None):
   
-
     logger.info('Starting simulating CTDIw100 measurement for '
                 '{}'.format(simulation['name']))
     args = generate_ctdi_phantom(simulation, pmma, air, size=size)
     N, spacing, offset, material_array, density_array, lut, meas_pos = args
     
-
-#    print('arr shape', material_array.shape)
-#    plt.imshow(material_array[:,:,1])
-#    plt.show()
-#    import pdb
-#    pdb.set_trace()
-
-
     lut_shape = np.array(lut.shape, dtype='int32')
 
     dose = np.zeros_like(density_array, dtype='float64')
@@ -575,11 +563,19 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material_array,
                             density_array, lut_shape, lut, dose)
+
+    
+    history_factor = int(1e8 / simulation['histories'] / simulation['exposures'])
+    if history_factor < 1:
+        history_factor = 1
+    histories = simulation['histories'] * history_factor
     t0 = time.clock()
     t1 = t0
+
+    
     for batch, e, n in phase_space:
         source = engine.setup_source(*batch)
-        engine.run(source, simulation['histories'], geometry)
+        engine.run(source, histories, geometry)
         engine.cleanup(source=source)
 
         if (time.clock() - t1) > 5:
@@ -588,17 +584,23 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                 callback(simulation['name'], {'energy_imparted':dose}, 0, eta, save=False)
             t1 = time.clock()
 
+    if callback:
+        callback(simulation['name'], {'energy_imparted':dose}, 0, 'Done', save=False)
+
+    dose /= history_factor
+
     engine.cleanup(simulation=geometry, energy_imparted=dose)
 #    
 #    plt.imshow(dose[:,:,1])
 #    plt.show()
-    dose = gaussian_filter(dose, [.5, .5, .1])
+#    dose = gaussian_filter(dose, [.5, .5, .1])
 #    plt.imshow(dose[:,:,1])
 #    plt.show()
     d = []
     for p in meas_pos:
         x, y = p[:, 0], p[:, 1]
-        d.append(dose[x, y, 1:-1].mean() / (air.density * np.prod(spacing)))
+        d.append(dose[x, y, 1:-2].mean() / (air.density * np.prod(spacing)))
+    logger.debug('Estimated dose for CTDI phantom; center: {0}, periphery: {1}, {2}, {3}, {4}.'.format(*d))
 #    pdb.set_trace()  
     ctdiv = d.pop(0) / 3.
     ctdiv += 2. * sum(d) / 3. / 4.

@@ -1079,6 +1079,8 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
     def reload_slice(self, name, arr, array_name, index, orientation):
         if orientation != 0 or array_name != 'dose' or name != self.current_simulation:
             return
+        if self.organ_array is None:
+            return
         if index in self.dose_z_lenght:
             for organ in np.unique(self.organ_array[index, :, :]):
                 if organ not in self._data:
