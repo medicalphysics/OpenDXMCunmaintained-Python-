@@ -74,7 +74,9 @@ class ImportScalingEdit(QtGui.QLineEdit):
         self.base_color = self.palette().color(self.palette().Base)
 
         self.request_set_import_scaling.connect(importer.set_import_scaling)
-
+        help_txt = "Select scaling factor per dimension when importing DICOM images"
+        self.setWhatsThis(help_txt)
+        self.setToolTip(help_txt)
         self.editingFinished.connect(self.set_import_scaling)
         self.textEdited.connect(self.text_was_edited)
         self.setValidator(ImportScalingValidator(self))
@@ -156,30 +158,14 @@ class DatabaseInterface(QtCore.QObject):
     two connections per task wished to be done, ie, signal/slot hell
     """
     database_busy = QtCore.pyqtSignal(bool)
-
     send_simulation_list = QtCore.pyqtSignal(list)
     send_material_list = QtCore.pyqtSignal(list)
-
     send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
-
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
 
-
-
-
-
-#    send_import_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
-#    send_view_sim_propeties = QtCore.pyqtSignal(dict)
-#    send_view_sim_propeties = QtCore.pyqtSignal(dict)
-
-#    send_material_obj = QtCore.pyqtSignal(Material)
-
-
-#    send_mc_ready = QtCore.pyqtSignal(dict, list)  # sim properties and list of Material objects
-
-
+    send_proper_database_path = QtCore.pyqtSignal(QtCore.QUrl)
 
     def __init__(self, database_qurl, parent=None):
         super().__init__(parent)
@@ -217,6 +203,7 @@ class DatabaseInterface(QtCore.QObject):
         self.database_busy.emit(False)
         self.emit_material_list()
         self.emit_simulation_list()
+        self.send_proper_database_path.emit(QtCore.QUrl.fromLocalFile(path.absoluteFilePath()))
 
 
     @QtCore.pyqtSlot()
@@ -969,7 +956,6 @@ class PropertiesEditWidget(QtGui.QWidget):
         model.has_unsaved_changes.connect(apply_button.setEnabled)
         model.current_simulation_is_running.connect(cancel_button.setEnabled)
         model.current_simulation_is_running.connect(run_button.setDisabled)
-
 
 
 class OrganDoseModel(QtCore.QAbstractTableModel):

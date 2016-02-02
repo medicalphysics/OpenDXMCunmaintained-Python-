@@ -99,13 +99,11 @@ def SIMULATION_DTYPE():
 
 
 class Database(object):
-    def __init__(self, database_path=None):
+    def __init__(self, database_path):
         self.db_path = os.path.abspath(database_path)
         self.db_instance = None
         self.filters = tb.Filters(complevel=1, complib='blosc', fletcher32=False, shuffle=False)
         self.init_new_database()
-
-
 
     def init_new_database(self):
         # setting up materials if not exist

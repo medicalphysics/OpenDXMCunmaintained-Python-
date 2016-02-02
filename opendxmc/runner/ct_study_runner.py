@@ -491,7 +491,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
 #    engine.cleanup(simulation=geometry, energy_imparted=dose)
 #    dose = gaussian_filter(dose, (1., 1., 0.))
     
-    d = center_dose / teller / (air_material.density * np.prod(spacing))
+    d = center_dose / teller / (air_material.density * np.prod(spacing)) / simulation['pitch']
     simulation['conversion_factor_ctdiair'] = np.nan_to_num(1. / d * total_collimation)
     return dose
 

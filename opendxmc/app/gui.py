@@ -42,22 +42,61 @@ class LogWidget(QtGui.QTextEdit):
         self.closed.emit(False)
         super().closeEvent(event)
 
-class ImportPushButton(QtGui.QPushButton):
-    files_to_import = QtCore.pyqtSignal(list)
-    def __init__(self, txt, parent=None):
-        super().__init__(txt, parent)
-        self.clicked.connect(self.request_files)
 
-    @QtCore.pyqtSlot()
-    def request_files(self):
-        files = QtGui.QFileDialog.getOpenFileNames(self,
-                                                   'Select Helmholtz Centrum phantoms to import',
-                                                   '/',
-                                                   'ZIP files (*.zip); Raw text (*)')
-        self.files_to_import.emit(files)
-
-
-
+class SelectDatabaseWidget(QtGui.QWidget):
+    set_database_path = QtCore.pyqtSignal(QtCore.QUrl)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setLayout(QtGui.QHBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
+  
+        
+        settings = QtCore.QSettings('OpenDXMC', 'gui')
+        if settings.contains('database/path'):
+            self.path = QtCore.QUrl.fromLocalFile(settings.value('database/path'))
+        else:
+            self.path = QtCore.QUrl.fromLocalFile(os.path.join(os.path.dirname(sys.argv[0]), 'database.h5'))
+            settings.setValue('database/path', self.path.toLocalFile())
+        
+        self.applybutton = QtGui.QToolButton()
+        self.applybutton.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self.applybutton.setText('Apply')
+        self.applybutton.setContentsMargins(0, 0, 0, 0)
+        
+        self.txtedit = QtGui.QLineEdit()
+        self.txtedit.setContentsMargins(0, 0, 0, 0)
+        self.txtedit.setText(self.path.toLocalFile())
+        completer = QtGui.QCompleter(self)
+        self.model = QtGui.QFileSystemModel(completer)
+        self.model.setRootPath(os.path.dirname(self.path.toLocalFile()))
+        completer.setModel(self.model)
+        self.txtedit.setCompleter(completer)
+        
+        self.layout().addWidget(self.txtedit, 10)
+        self.layout().addWidget(self.applybutton, 1)
+    
+        self.applybutton.clicked.connect(self.apply)    
+#        self.setMaximumHeight(max([self.txtedit.minimumHeight(), self.applybutton.minimumHeight()]))
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+    
+    @QtCore.pyqtSlot()    
+    def apply(self):
+        self.path = QtCore.QUrl.fromLocalFile(self.txtedit.text())
+        self.set_database_path.emit(self.path)
+   
+    @QtCore.pyqtSlot(QtCore.QUrl)    
+    def validate_apply(self, url):
+        self.path = url
+        settings = QtCore.QSettings('OpenDXMC', 'gui')
+        settings.setValue('database/path', self.path.toLocalFile())
+        self.model.setRootPath(self.path.toLocalFile())
+    
+    @QtCore.pyqtSlot(bool)    
+    def locked(self, val):
+        self.setDisabled(val)
+        self.applybutton.setDisabled(val)
+        
 
 class StatusBarButton(QtGui.QPushButton):
     def __init__(self, *args):
@@ -166,28 +205,24 @@ class MainWindow(QtGui.QMainWindow):
         central_layout.setContentsMargins(0, 0, 0, 0)
 
 
-
-
         # Databse interface
-        database_path = os.path.join(os.path.dirname(sys.argv[0]), 'database.h5')
-        self.interface = DatabaseInterface(QtCore.QUrl.fromLocalFile(database_path))
+        database_selector_widget = SelectDatabaseWidget()
+        self.interface = DatabaseInterface(database_selector_widget.path)
         self.interface.database_busy.connect(database_busywidget.busy)
+        self.interface.database_busy.connect(database_selector_widget.locked)
+        database_selector_widget.set_database_path.connect(self.interface.set_database)
+        self.interface.send_proper_database_path.connect(database_selector_widget.validate_apply)
 
         # importer
         self.importer = Importer(self.interface)
         self.importer.running.connect(importer_busywidget.busy)
+        self.importer.running.connect(database_selector_widget.locked)
         self.importer_phantom = Importer(self.interface)
         self.importer_phantom.running.connect(importer_phantoms_busywidget.busy)
+        self.importer_phantom.running.connect(database_selector_widget.locked)
 
         ## import scaling setter
         import_scaling_widget = ImportScalingEdit(self.importer, self)
-
-        import_phantoms_button = ImportPushButton('Import Phantoms', self)
-        import_phantoms_button.files_to_import.connect(self.importer.import_phantoms)
-
-
-#        self.properties_model = PropertiesEditModel(self.interface)
-
 
         self.viewcontroller = ViewController(self.interface)
 
@@ -195,6 +230,7 @@ class MainWindow(QtGui.QMainWindow):
         ## MC runner
         self.mcrunner = RunManager(self.interface)
         self.mcrunner.mc_calculation_running.connect(simulation_busywidget.busy)
+        self.mcrunner.mc_calculation_running.connect(database_selector_widget.locked)
         self.viewcontroller.set_mc_runner(self.mcrunner.runner)
 
 
@@ -219,9 +255,9 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.setLayout(QtGui.QVBoxLayout())
         list_view_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
         list_view_collection_widget.layout().addWidget(import_scaling_widget, 1)
-        list_view_collection_widget.layout().addWidget(import_phantoms_button, 1)
-        list_view_collection_widget.layout().addWidget(simulation_list_view, 3)
-        list_view_collection_widget.layout().addWidget(material_list_view, 1)
+        list_view_collection_widget.layout().addWidget(database_selector_widget, 1)
+        list_view_collection_widget.layout().addWidget(simulation_list_view, 300)
+        list_view_collection_widget.layout().addWidget(material_list_view, 100)
         central_splitter.addWidget(list_view_collection_widget)
 
         simulation_editor = PropertiesEditWidget(self.interface, self.simulation_list_model, self.mcrunner)
