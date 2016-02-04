@@ -593,8 +593,7 @@ class ListModel(QtCore.QAbstractListModel):
     @QtCore.pyqtSlot(list)
     def recive_data_list(self, sims):
         self.layoutAboutToBeChanged.emit()
-        #muste update persistent index
-        self.__data = sims
+        self.__data = sims        
         self.layoutChanged.emit()
 
     @QtCore.pyqtSlot(str)

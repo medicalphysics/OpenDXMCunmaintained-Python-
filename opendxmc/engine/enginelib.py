@@ -18,17 +18,10 @@ import os
 import sys
 
 
-def find_dll():
-    """
-    Searching for dlls in various places depending on freezed application or
-    importded as a package
-    """
-    
 
 def get_kernel():
     dll_path = os.path.abspath(os.path.dirname(__file__))
 #    os.chdir(dll_path)
-    print(dll_path)
     if sys.maxsize > 2**32:
         dll = ct.CDLL(os.path.join(dll_path, 'enginelib64.dll'))
     else:
@@ -84,7 +77,8 @@ class Engine(object):
                  lut_shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
                  lut.ctypes.data_as(ct.POINTER(ct.c_double)), 
                  energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))
-                 )        
+                 ) 
+                 
     def setup_source(self, source_position, source_direction, scan_axis, sdd, fov, collimation, weight, specter_cpd, specter_energy):
         n_specter = np.array(specter_cpd.shape, dtype='int')
         return self.c_sourcesetup(
@@ -99,6 +93,7 @@ class Engine(object):
                     specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
                     n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
                     )
+                    
     def run(self, source_ptr, n_particles, sim_ptr):
 
 #        try:

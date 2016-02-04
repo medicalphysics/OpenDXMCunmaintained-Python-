@@ -51,6 +51,8 @@ class SelectDatabaseWidget(QtGui.QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setContentsMargins(0, 0, 0, 0)
   
+        help_msg = "Location of database file"        
+        self.setToolTip(help_msg)        
         
         settings = QtCore.QSettings('OpenDXMC', 'gui')
         if settings.contains('database/path'):
@@ -65,6 +67,7 @@ class SelectDatabaseWidget(QtGui.QWidget):
         self.applybutton.setContentsMargins(0, 0, 0, 0)
         
         self.txtedit = QtGui.QLineEdit()
+        self.txtedit.setToolTip(help_msg)
         self.txtedit.setContentsMargins(0, 0, 0, 0)
         self.txtedit.setText(self.path.toLocalFile())
         completer = QtGui.QCompleter(self)
@@ -77,6 +80,7 @@ class SelectDatabaseWidget(QtGui.QWidget):
         self.layout().addWidget(self.applybutton, 1)
     
         self.applybutton.clicked.connect(self.apply)    
+        self.applybutton.setToolTip(help_msg)
 #        self.setMaximumHeight(max([self.txtedit.minimumHeight(), self.applybutton.minimumHeight()]))
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
     

@@ -28,9 +28,9 @@ PROPETIES_DICT_TEMPLATE = {
     'name': ['', np.dtype('a64'), False, False, 'Simulation ID', 0, 0],
     'scan_fov': [50., np.dtype(np.double), True, True, 'Scan field of view [cm]', 0, 1],
     'sdd': [110.,  np.dtype(np.double), True, True, 'Source detector distance [cm]', 0, 1],
-    'detector_width': [0.06,  np.dtype(np.double), True, True, 'Detector width [cm]', 0, 1],
+    'detector_width': [0.06,  np.dtype(np.double), True, True, 'Detector width [cm]', 2, 1],
     'detector_rows': [64, np.dtype(np.int), True, True, 'Detector rows', 0, 1],
-    'collimation_width': [0.06 * 64,  np.dtype(np.double), True, True, 'Total collimation width [cm]', 2, 1],
+    'collimation_width': [0.06 * 64,  np.dtype(np.double), True, True, 'Total collimation width [cm]', 0, 1],
     'al_filtration': [7., np.dtype(np.double), True, True, 'Filtration of primary beam [mmAl]', 0, 2],
     'xcare': [False, np.dtype(np.bool), True, True, 'XCare [NOT IMPLEMENTED YET]', 0, 2],
     'ctdi_air100': [0., np.dtype(np.double), True, True, 'CTDIair [mGy/100mAs]', 0, 4],
@@ -836,6 +836,7 @@ class Validator(object):
     @detector_width.setter
     def detector_width(self, value):
         self._props['detector_width'] = self.float_validator(value, True)
+        self._props['collimation_width'] = self.detector_width * self.detector_rows
 
     @property
     def detector_rows(self):
@@ -843,6 +844,7 @@ class Validator(object):
     @detector_rows.setter
     def detector_rows(self, value):
         self._props['detector_rows'] = self.int_validator(value, True)
+        self._props['collimation_width'] = self.detector_width * self.detector_rows
 
     @property
     def collimation_width(self):
@@ -850,7 +852,8 @@ class Validator(object):
     @collimation_width.setter
     def collimation_width(self, value):
         self._props['collimation_width'] = self.float_validator(value, True)
-
+        self._props['detector_width'] = self.collimation_width / self.detector_rows
+        
     @property
     def al_filtration(self):
         return self._props['al_filtration']

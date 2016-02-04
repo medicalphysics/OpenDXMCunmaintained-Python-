@@ -503,7 +503,35 @@ def arrayToQImage(array_un, level, lut):
     result.ndarray = array
     return result
 
-
+def qImageToArray(img, copy=False, transpose=True):
+    """
+    Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
+    the QImage is collected before the array, there may be trouble).
+    The array will have shape (width, height, (b,g,r,a)).
+    """
+    fmt = img.format()
+    ptr = img.bits()
+    ptr.setsize(img.byteCount())
+    arr = np.asarray(ptr)
+    if img.byteCount() != arr.size * arr.itemsize:
+        # Required for Python 2.6, PyQt 4.10
+        # If this works on all platforms, then there is no need to use np.asarray..
+        arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
+    
+    if fmt == img.Format_RGB32:
+        arr = arr.reshape(img.height(), img.width(), 3)
+    elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
+        arr = arr.reshape(img.height(), img.width(), 4)
+    
+    if copy:
+        arr = arr.copy()
+        
+    if transpose:
+        return arr.transpose((1,0,2))
+    else:
+        return arr
+        
 class NoDataItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1443,7 +1471,7 @@ class View(QtGui.QGraphicsView):
         if array_name not in self.cine_film_data['array_names']:
             return
 
-        rect = self.toQImage().rect()
+        rect = self.toQImage(square=False).rect()
         height, width = rect.height(), rect.width()
 
         filename = QtGui.QFileDialog.getSaveFileName(self,
@@ -1462,11 +1490,11 @@ class View(QtGui.QGraphicsView):
 
         for index in range(array.shape[self.cine_film_data['view_orientation']]):
             if self.cine_film_data['view_orientation'] == 1:
-                arr_slice = np.squeeze(array[:, index, :])
+                arr_slice = np.ascontiguousarray(np.squeeze(array[:, index, :]))
             elif self.cine_film_data['view_orientation'] == 0:
-                arr_slice = np.squeeze(array[index, :, :])
+                arr_slice = np.ascontiguousarray(np.squeeze(array[index, :, :]))
             else:
-                arr_slice = np.squeeze(array[:,:,index])
+                arr_slice = np.ascontiguousarray(np.squeeze(array[:,:,index]))
 
             self.scene().reload_slice(self.cine_film_data['name'],
                                       arr_slice,
@@ -1475,26 +1503,43 @@ class View(QtGui.QGraphicsView):
                                       self.cine_film_data['view_orientation']
                                       )
             QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
-            qim = self.toQImage().convertToFormat(QtGui.QImage.Format_RGB888)
-            ptr = qim.bits()
-            ptr.setsize(qim.byteCount())
-            arr = np.array(ptr).reshape(height, width, 3)
+            qim = self.toQImage(square=False)#.convertToFormat(QtGui.QImage.Format_RGB888)
+            
+            arr = qImageToArray(qim, transpose=False)
+            print(arr.shape)
+#            ptr = qim.bits()
+#            ptr.setsize(qim.byteCount())
+#            ptr.setsize(width*height*3)
+            
+#            arr = np.array(ptr).reshape(height, -1, 3)
+#            arr = np.array(ptr).reshape(width, height, 3)
+            arr = np.ascontiguousarray(arr[:,:,:3])
             writer.write_frame(arr)
         writer.close()
         logger.debug('Done writing cine movie')
         self.cine_film_data = {}
 
-    def toQImage(self):
+    def toQImage(self, scale=True, square=False):
         rect = self.scene().sceneRect()
         h = rect.height()
+        h -= h % 4
         w = rect.width()
+        w -= w % 4
         b = max([h, w])
-        if b >= 1024:
-            scale = 1
+        if scale:
+            b = max([h, w])
+            if b >= 1024:
+                s = 1
+            else:
+                s = int(round(1024/b))
         else:
-            scale = 1024/b
-        qim = QtGui.QImage(int(w * scale), int(h * scale),
-                           QtGui.QImage.Format_ARGB32_Premultiplied)
+            s = 1
+        if square:
+            qim = QtGui.QImage(b, b,
+                               QtGui.QImage.Format_ARGB32_Premultiplied)
+        else:
+            qim = QtGui.QImage(int(w * s), int(h * s),
+                               QtGui.QImage.Format_ARGB32_Premultiplied)
         qim.fill(0)
         painter = QtGui.QPainter()
         painter.begin(qim)

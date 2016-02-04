@@ -522,7 +522,6 @@ void transport_particles(double *source_position, double *source_direction, doub
 		if (rayleight > r_interaction) //rayleigh scatter event
 		{
 			rayleigh_event_draw_theta(&scatter_angle, &states[id * 2]);
-			//rotate_particle(particle, scatter_angle, (curand_uniform(&states[id]) * 2. - 1. ) * PI);
 			rotate_particle(particle, scatter_angle, (randomduniform(&states[id * 2]) * 2. - 1.) * PI);
 		}
 		else if ((rayleight + photoelectric) > r_interaction) //photoelectric event
