@@ -8,6 +8,7 @@ Created on Thu Jul 30 10:38:15 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 from .dicom_lut import get_lut
+from scipy.ndimage.filters import gaussian_filter 
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
 import logging
 logger = logging.getLogger('OpenDXMC')
@@ -994,6 +995,8 @@ class PositionBarItem(QtGui.QGraphicsItem):
                 self.callback(stop=self.pos[1])            
                 
     def paint(self, painter, style, widget=None):
+        if self.orientation == 2:
+            return
         i, j = [i for i in range(3) if i != self.orientation]
        
         painter.setPen(QtCore.Qt.white) 
@@ -1152,10 +1155,11 @@ class RunningScene(Scene):
         self.image_item.setVisible(True)
         self.progress_item.setVisible(True)
         msg = ""
-        if 'start_at_exposure_no' in props:
-            msg += "{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1))
-        if 'eta' in props:
-            msg += " ETA: {}".format(props['eta'])
+        if len(props.get('eta', '')) > 0:
+            if 'start_at_exposure_no' in props:
+                msg += "{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1))
+            if 'eta' in props:
+                msg += " ETA: {}".format(props['eta'])
         self.progress_item.setPlainText(msg)
         if self.array is not None:
             self.image_item.setLevels(self.defaultLevels(self.array))
@@ -1372,7 +1376,7 @@ class DoseScene(Scene):
             self.image_item.setLevels(back=(max_level/2, max_level/2))
 
         elif array_name == self.front_array_name:
-            self.front_array = array
+            self.front_array = gaussian_filter(array, 0.5)
             max_level = array.max()/ 4
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
@@ -1481,7 +1485,7 @@ class View(QtGui.QGraphicsView):
         try:
             writer = FFMPEG_VideoWriter(filename,
                                         (width, height),
-                                        18)
+                                        15, threads=4)
         except FileNotFoundError:
             logger.warning("FFMPEG executable not found")
             return
@@ -1506,14 +1510,14 @@ class View(QtGui.QGraphicsView):
             qim = self.toQImage(square=False)#.convertToFormat(QtGui.QImage.Format_RGB888)
             
             arr = qImageToArray(qim, transpose=False)
-            print(arr.shape)
 #            ptr = qim.bits()
 #            ptr.setsize(qim.byteCount())
 #            ptr.setsize(width*height*3)
             
 #            arr = np.array(ptr).reshape(height, -1, 3)
 #            arr = np.array(ptr).reshape(width, height, 3)
-            arr = np.ascontiguousarray(arr[:,:,:3])
+#            arr = np.ascontiguousarray(arr[:,:,:3])
+            arr = np.ascontiguousarray(arr[:,:,[2, 1, 0]])
             writer.write_frame(arr)
         writer.close()
         logger.debug('Done writing cine movie')

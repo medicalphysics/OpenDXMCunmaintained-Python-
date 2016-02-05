@@ -460,6 +460,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     teller = 0
     center = np.floor(N / 2).astype(np.int)
     center_dose = 0
+    t1 = time.clock()
     while center_dose < en_specter[0].max()*1000:
         if teller > 0:
             logger.debug('Not sufficient data, running again. Dose in center is now {0}, max dose: {1}.'.format(center_dose, dose.max()))
@@ -471,19 +472,16 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
                              energy_specter=en_specter,
                              )
     
-        t0 = time.clock()
-        t1 = t0
         for batch, e, n in phase_space:
-            source = engine.setup_source(*batch)
-            
+            source = engine.setup_source(*batch)            
             engine.run(source, simulation['histories'], geometry)
             engine.cleanup(source=source)
     #        break
             if (time.clock() - t1) > 1:
-                eta = log_elapsed_time(t0, e+1, n, 0)
+#                eta = log_elapsed_time(t0, e+1, n, 0)
                 t1 = time.clock()
                 if callback:
-                    callback(simulation['name'], {'energy_imparted':dose}, 0, eta, save=False)
+                    callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
         center_dose += np.sum(dose[center[0], center[1], center[2]])
     
     engine.cleanup(simulation=geometry, energy_imparted=dose)
@@ -579,9 +577,9 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
         engine.cleanup(source=source)
 
         if (time.clock() - t1) > 5:
-            eta = log_elapsed_time(t0, e+1, n, 0)
+#            eta = log_elapsed_time(t0, e+1, n, 0)
             if callback:
-                callback(simulation['name'], {'energy_imparted':dose}, 0, eta, save=False)
+                callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
             t1 = time.clock()
 
     if callback:

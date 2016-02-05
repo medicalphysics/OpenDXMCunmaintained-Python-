@@ -2,7 +2,7 @@
 
 block_cipher = None
 
-excludes = ['_tkinter', 'matplotlib', 'pandas', 'PIL', 'statsmodels', 'tcl', 'sqlalchemy']
+excludes = []#['_tkinter', 'matplotlib', 'pandas', 'PIL', 'statsmodels', 'tcl', 'sqlalchemy']
 
 extra_data = [('opendxmc/data/materials/*.txt', 'opendxmc/data/materials'),
               ('opendxmc/data/materials/attinuation/*.txt', 'opendxmc/data/materials/attinuation'),

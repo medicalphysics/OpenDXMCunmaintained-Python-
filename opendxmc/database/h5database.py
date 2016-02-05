@@ -41,9 +41,9 @@ PROPETIES_DICT_TEMPLATE = {
     'aquired_kV': [0., np.dtype(np.double), False, False, 'Images aquired with tube potential [kV]', 0, 2],
     'region': ['abdomen', np.dtype('a64'), False, False, 'Examination region', 0, 5],
     # per 1000000 histories
-    'conversion_factor_ctdiair': [0., np.dtype(np.double), True, False, 'CTDIair to dose conversionfactor', 0, 4],
+    'conversion_factor_ctdiair': [0., np.dtype(np.double), True, False, 'CTDIair to dose conversion factor', 0, 4],
     # per 1000000 histories to dose
-    'conversion_factor_ctdiw': [0., np.dtype(np.double), True, False, 'CTDIw to dose conversionfactor', 0, 4],
+    'conversion_factor_ctdiw': [0., np.dtype(np.double), True, False, 'CTDIw to dose conversion factor', 0, 4],
     'is_spiral': [True, np.dtype(np.bool), True, True, 'Helical aqusition', 0, 3],
     'pitch': [1, np.dtype(np.double), True, True, 'Pitch', 0, 3],
     'exposures': [1200, np.dtype(np.int), True, True, 'Number of exposures in one rotation', 0, 3],
@@ -313,6 +313,9 @@ class Database(object):
             self.close()
             return
 
+        # removing array data
+        self.remove_node('/simulations', name)
+        
         index_to_remove = None
         meta_table = self.get_node('/', 'meta_data')
         for row in meta_table.where('name == b"{}"'.format(name)):
@@ -329,8 +332,6 @@ class Database(object):
         elif index_to_remove is not None:
             meta_table.remove_row(index_to_remove)
 
-        # removing array data
-        self.remove_node('/simulations', name)
         self.close()
         logger.debug('Removed simulation {}'.format(name))
         return
@@ -527,7 +528,15 @@ class Database(object):
 
     def purge_simulation(self, name):
         logger.debug('Attempting to purge simulation {}'.format(name))
-        sim_node = self.get_node('/simulations/', name, create=False)
+        try:
+            sim_node = self.get_node('/simulations/', name, create=False)
+        except ValueError:
+            logger.debug('Error in array data for {}, removing simulation.'.format(name))
+            self.remove_simulation(name)
+            return
+        
+            
+            
         if self.test_node(sim_node, 'volatiles'):
             self.db_instance.remove_node(sim_node, 'volatiles', recursive=True)
         if self.test_node('/', 'meta_data'):
