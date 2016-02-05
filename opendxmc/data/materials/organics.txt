@@ -1,0 +1,7 @@
+hardbone
+muscle
+soft
+adipose
+lung
+air
+water

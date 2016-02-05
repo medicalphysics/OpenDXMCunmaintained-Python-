@@ -1,0 +1,13 @@
+#including monte carlo library and source
+include opendxmc/engine/enginelib32.dll
+include opendxmc/engine/enginelib64.dll
+recursive-include opendxmc/engine/src *
+
+#include material data
+recursive-include opendxmc/data/materials *
+
+#include application data
+include opendxmc/app/icon.png
+
+#include readme
+include README.md
