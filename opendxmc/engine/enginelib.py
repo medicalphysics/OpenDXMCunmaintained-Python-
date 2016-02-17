@@ -21,12 +21,17 @@ import sys
 
 def get_kernel():
     dll_path = os.path.abspath(os.path.dirname(__file__))
-#    os.chdir(dll_path)
-    if sys.maxsize > 2**32:
-        dll = ct.CDLL(os.path.join(dll_path, 'enginelib64.dll'))
-    else:
-        dll = ct.CDLL(os.path.join(dll_path, 'enginelib32.dll'))
-    
+    try:
+        if sys.maxsize > 2**32:
+            dll = ct.CDLL(os.path.join(dll_path, 'enginelib64'))
+        else:
+            dll = ct.CDLL(os.path.join(dll_path, 'enginelib32'))
+    except OSError:
+        if sys.maxsize > 2**32:
+            dll = ct.CDLL('enginelib64')
+        else:
+            dll = ct.CDLL('enginelib32')
+
     setup = dll.setup_simulation
     setup.argtypes = [ct.POINTER(ct.c_int), 
                       ct.POINTER(ct.c_double), 
@@ -49,10 +54,29 @@ def get_kernel():
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_double), 
                        ct.POINTER(ct.c_int)]
-    source.restype = ct.c_void_p
+    source.restype = ct.c_void_p   
+    
+    source_bowtie = dll.setup_source_bowtie
+    source_bowtie.argtypes = [ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double),
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_int),
+                              ct.POINTER(ct.c_double),
+                              ct.POINTER(ct.c_double), 
+                              ct.POINTER(ct.c_int)]                        
+    source_bowtie.restype = ct.c_void_p    
+    
     
     run = dll.run_simulation
     run.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]
+    
+    run_bowtie = dll.run_simulation_bowtie
+    run_bowtie.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]    
     
     cleanup = dll.cleanup_simulation
     cleanup.argtypes = [ct.c_void_p, ct.POINTER(ct.c_int), ct.POINTER(ct.c_double)]
@@ -61,11 +85,11 @@ def get_kernel():
     cleanup_source.argtypes = [ct.c_void_p]
     #info = dll.device_info
     
-    return setup, source, run, cleanup, cleanup_source
+    return setup, source, source_bowtie, run, run_bowtie, cleanup, cleanup_source
 
 class Engine(object):
     def __init__(self):
-        self.c_simsetup, self.c_sourcesetup, self.crun, self.c_simcleanup, self.c_sourcecleanup = get_kernel()
+        self.c_simsetup, self.c_sourcesetup, self.c_sourcesetup_bowtie, self.crun, self.crun_bowtie, self.c_simcleanup, self.c_sourcecleanup = get_kernel()
 
     def setup_simulation(self, shape, spacing, offset, material_map, density_map, lut_shape, lut, energy_imparted):
         return self.c_simsetup(
@@ -93,18 +117,32 @@ class Engine(object):
                     specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
                     n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
                     )
-                    
+    def setup_source_bowtie(self, source_position, source_direction, scan_axis, scan_angle, rot_angle, weight, specter_cpd, specter_energy, bowtie_weight, bowtie_angle):
+        n_specter = np.array(specter_cpd.shape, dtype='int')
+        n_bowtie = np.array(bowtie_weight.shape, dtype='int')
+        return self.c_sourcesetup(
+                    source_position.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    source_direction.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    scan_axis.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    scan_angle.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    rot_angle.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    weight.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    specter_cpd.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int)),
+                    bowtie_weight.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    bowtie_angle.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    n_bowtie.ctypes.data_as(ct.POINTER(ct.c_int))
+                    )
     def run(self, source_ptr, n_particles, sim_ptr):
-
-#        try:
         self.crun(source_ptr, 
                    ct.c_size_t(n_particles), 
                    sim_ptr)
-#        except OSError as err:
-#            print(err)
-#            import pdb
-#            pdb.set_trace()
-          
+    def run_bowtie(self, source_ptr, n_particles, sim_ptr):
+        self.crun_bowtie(source_ptr, 
+                         ct.c_size_t(n_particles), 
+                         sim_ptr)
+
     def cleanup(self, simulation=None, energy_imparted=None, source=None):
         if simulation:
             if energy_imparted is None:

@@ -458,10 +458,8 @@ void generate_particle(double *source_position, double *source_direction, double
 	v_rot[1] = scan_axis[2] * source_direction[0] - scan_axis[0] * source_direction[2];
 	v_rot[2] = scan_axis[0] * source_direction[1] - scan_axis[1] * source_direction[0];
 
-	
 	v_z_lenght = collimation[0] / (2 * sdd[0]) * (randomduniform(state) - 0.5) * 2;
 	v_rot_lenght = fov[0] * 2 / sdd[0] * (randomduniform(state) - 0.5) * 2;
-
 	
 	double inv_vec_lenght = 1. / sqrt(1. + v_rot_lenght * v_rot_lenght + v_z_lenght * v_z_lenght);
 
@@ -489,6 +487,72 @@ void generate_particle(double *source_position, double *source_direction, double
 	particle[7] = weight[0];
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
+void generate_particle_bowtie(double *source_position, double *source_direction, double *scan_axis, double *scan_angle, double *rot_angle, double *weight, 
+							  int *specter_elements, double *specter_cpd, double *specter_energy, 
+							  int *bowtie_elements, double *bowtie_weight, double *bowtie_angle,
+							  double *particle, uint64_t *state)
+{
+	double v_rot[3];
+	double v_z_lenght, v_rot_lenght;
+	// cross product scan_axis x source_direction
+	v_rot[0] = scan_axis[1] * source_direction[2] - scan_axis[2] * source_direction[1];
+	v_rot[1] = scan_axis[2] * source_direction[0] - scan_axis[0] * source_direction[2];
+	v_rot[2] = scan_axis[0] * source_direction[1] - scan_axis[1] * source_direction[0];
+
+	v_z_lenght = asin(scan_angle[0] * (randomduniform(state) - 0.5) * 2);
+	v_rot_lenght = asin(rot_angle[0] * (randomduniform(state) - 0.5) * 2);
+
+	double inv_vec_lenght = 1. / sqrt(1. + v_rot_lenght * v_rot_lenght + v_z_lenght * v_z_lenght);
+
+	for (size_t i = 0; i < 3; i++)
+	{
+		particle[i] = source_position[i];
+		particle[i + 3] = (source_direction[i] + v_rot[i] * v_rot_lenght + scan_axis[i] * v_z_lenght) * inv_vec_lenght;
+	}
+	double r1 = randomduniform(state);
+	size_t j;
+	for (j = 0; j < specter_elements[0]; j++)
+	{
+		if (specter_cpd[j] > r1)
+		{
+			particle[6] = specter_energy[j];
+			break;
+		}
+	}
+
+	if (j == specter_elements[0])
+	{
+		particle[6] = specter_energy[specter_elements[0] - 1];
+	}
+
+	particle[7] = weight[0];
+	if (bowtie_elements[0] == 0)
+	{
+		particle[7] *= bowtie_weight[0];
+	}
+	else if (rot_angle[0] < bowtie_angle[0])
+	{
+		particle[7] *= bowtie_weight[0];
+	}
+	else
+	{
+		for (j = 1; j < bowtie_elements[0]; j++)
+		{
+			if (bowtie_angle[j] > rot_angle[0])
+			{
+				particle[7] *= interp(rot_angle[0], bowtie_angle[j - 1], bowtie_angle[j], bowtie_weight[j - 1], bowtie_weight[j]);
+				break;
+			}
+		}
+		if (j == bowtie_elements[0])
+		{
+			particle[7] *= bowtie_weight[j - 1];
+		}
+	}
+}
 
 
 #ifdef USINGCUDA
@@ -560,6 +624,74 @@ void transport_particles(double *source_position, double *source_direction, doub
 	}
 }
 
+#ifdef USINGCUDA
+__global__
+#endif
+void transport_particles_bowtie(double *source_position, double *source_direction, double* scan_axis,  double *scan_angle, double *rot_angle, double *weight, int *specter_elements, double *specter_cpd, double *specter_energy, int *bowtie_elements, double *bowtie_weight, double *bowtie_angle, size_t *n_particles, int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *att_shape, double *attenuation_lut, double *energy_imparted, double *max_density, uint64_t *states)
+{
+#ifdef USINGCUDA
+	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
+	if (id >= n_particles[0])
+	{
+		return;
+	}
+#else
+	size_t id = n_particles[0];
+#endif
+
+	double particle[8];
+	double rayleight, photoelectric, r_interaction, scatter_angle, scatter_energy;
+	size_t volume_index, lut_index;
+	generate_particle_bowtie(source_position, source_direction, scan_axis, scan_angle, rot_angle, weight, specter_elements, specter_cpd, specter_energy, bowtie_elements, bowtie_weight, bowtie_angle, particle, &states[id * 2]);
+
+	// preforming woodcock until interaction
+	while (woodcock_step(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
+	{
+		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
+		photoelectric = interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2] * 3], attenuation_lut[lut_index + att_shape[2] * 3 + 1]);
+
+		r_interaction = randomduniform(&states[id * 2]) * interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2]], attenuation_lut[lut_index + att_shape[2] + 1]);
+
+		if (rayleight > r_interaction) //rayleigh scatter event
+		{
+			rayleigh_event_draw_theta(&scatter_angle, &states[id * 2]);
+			rotate_particle(particle, scatter_angle, (randomduniform(&states[id * 2]) * 2. - 1.) * PI);
+		}
+		else if ((rayleight + photoelectric) > r_interaction) //photoelectric event
+		{
+			atomicAdd(&energy_imparted[volume_index], particle[6] * particle[7]);
+			break;
+		}
+		else // compton event
+		{
+			scatter_energy = compton_event_draw_energy_theta(particle[6], &scatter_angle, &states[id * 2]);
+			rotate_particle(particle, scatter_angle, (randomduniform(&states[id * 2]) * 2. - 1.) * PI);
+			atomicAdd(&energy_imparted[volume_index], (particle[6] - scatter_energy) * particle[7]);
+			particle[6] = scatter_energy;
+		}
+
+		//test for energy cutoff and weight cutoff
+
+		if (particle[6] < ENERGY_CUTOFF)
+		{
+			atomicAdd(&energy_imparted[volume_index], particle[6] * particle[7]);
+			break;
+		}
+
+		//test for low weight threshold and do a russian rulette photon termination
+		if (particle[7] < WEIGHT_CUTOFF)
+		{
+			if (RUSSIAN_RULETTE_CHANCE < randomduniform(&states[id * 2]))
+			{
+				particle[7] /= RUSSIAN_RULETTE_CHANCE;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+}
 
 #ifdef USINGCUDA
 __global__ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
@@ -799,6 +931,23 @@ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
 		source_dev->specter_energy = specter_energy;
 		return (void*)source_dev;
 	}
+	void* setup_source_bowtie(double *source_position, double *source_direction, double *scan_axis, double *scan_angle, double *rot_angle, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements, double* bowtie_weight, double* bowtie_angle, int* bowtie_elements)
+	{
+		SourceBowtie *source_dev = (SourceBowtie*)malloc(sizeof(SourceBowtie));
+		source_dev->source_position = source_position;
+		source_dev->source_direction = source_direction;
+		source_dev->scan_axis = scan_axis;
+		source_dev->scan_angle = scan_angle;
+		source_dev->rot_angle = rot_angle;
+		source_dev->weight = weight;
+		source_dev->specter_elements = specter_elements;
+		source_dev->specter_cpd = specter_cpd;
+		source_dev->specter_energy = specter_energy;
+		source_dev->bowtie_elements = bowtie_elements;
+		source_dev->bowtie_weight = bowtie_weight;
+		source_dev->bowtie_angle = bowtie_angle;
+		return (void*)source_dev;
+	}
 #endif
 
 
@@ -949,6 +1098,57 @@ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
 					((Simulation*)dev_simulation)->max_density,
 					states);
 			}		
+		}
+		// free  memory
+		if (states)
+		{
+			free(states);
+		}
+		return;
+	}
+	void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simulation)
+	{
+		// simulating particles
+
+		size_t thread_number;
+		size_t n_threads = omp_get_max_threads();
+
+		uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
+
+		init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
+		#pragma omp parallel num_threads(n_threads) private(thread_number)
+		{
+			thread_number = omp_get_thread_num();
+			long long int i;
+			#pragma omp for
+			for ( i = 0; i < n_particles; i++)
+			{
+				transport_particles_bowtie
+					(
+					((SourceBowtie*)dev_source)->source_position,
+					((SourceBowtie*)dev_source)->source_direction,
+					((SourceBowtie*)dev_source)->scan_axis,
+					((SourceBowtie*)dev_source)->scan_angle,
+					((SourceBowtie*)dev_source)->rot_angle,
+					((SourceBowtie*)dev_source)->weight,
+					((SourceBowtie*)dev_source)->specter_elements,
+					((SourceBowtie*)dev_source)->specter_cpd,
+					((SourceBowtie*)dev_source)->specter_energy,
+					((SourceBowtie*)dev_source)->bowtie_elements,
+					((SourceBowtie*)dev_source)->bowtie_weight,
+					((SourceBowtie*)dev_source)->bowtie_angle,
+					&thread_number,
+					((Simulation*)dev_simulation)->shape,
+					((Simulation*)dev_simulation)->spacing,
+					((Simulation*)dev_simulation)->offset,
+					((Simulation*)dev_simulation)->material_map,
+					((Simulation*)dev_simulation)->density_map,
+					((Simulation*)dev_simulation)->lut_shape,
+					((Simulation*)dev_simulation)->attenuation_lut,
+					((Simulation*)dev_simulation)->energy_imparted,
+					((Simulation*)dev_simulation)->max_density,
+					states);
+	}
 		}
 		// free  memory
 		if (states)

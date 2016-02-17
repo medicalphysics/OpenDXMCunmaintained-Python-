@@ -172,7 +172,7 @@ class DatabaseInterface(QtCore.QObject):
         self.__db = None
         self.set_database(database_qurl)
         self.array_buffer = ArrayBuffer()
-        self.array_buffer_size = 30
+        self.array_buffer_size = 60
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
