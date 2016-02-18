@@ -443,7 +443,7 @@ def blendArrayToQImage(f_array, b_array, front_level, back_level,
     front_array *= 255./(front_level[1]*2.)
 
     back_array = np.clip(b_array, back_level[0]-back_level[1],
-                         back_level[0]+back_level[1])
+                         back_level[0]+back_level[1]).astype(np.float)
     back_array -= (back_level[0]-back_level[1])
     back_array *= 255./(back_level[1]*2.)
 
@@ -485,7 +485,7 @@ def arrayToQImage(array_un, level, lut):
     freeing the underlying memory - boom!)."""
 
     WC, WW = level[0], level[1]
-    array = np.clip(array_un, WC-WW, WC+WW)
+    array = np.clip(array_un, WC-WW, WC+WW).astype(np.float)
 
     array -= (WC - WW)
     array *= 255./(WW*2)
