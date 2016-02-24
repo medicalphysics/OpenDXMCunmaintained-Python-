@@ -268,13 +268,14 @@ class MainWindow(QtGui.QMainWindow):
         self.viewcontroller.set_simulation_editor(simulation_editor.model)
         central_splitter.addWidget(simulation_editor)
 
-
-        central_splitter.addWidget(self.viewcontroller.view_widget())
+        for wwid in self.viewcontroller.view_widget():
+            central_splitter.addWidget(wwid)
 
         self.organdosemodel = OrganDoseModel(self.interface, self.simulation_list_model)
         organdoseview = OrganDoseView(self.organdosemodel)
         central_splitter.addWidget(organdoseview)
 
+        central_splitter.setSizes([100]*5)
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
