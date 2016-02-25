@@ -522,7 +522,8 @@ class Database(object):
                     arrays[key] = self.get_simulation_array(name, key)
                 except ValueError:
                     pass
-
+        if properties['start_at_exposure_no'] != 0:
+            arrays['energy_imparted'] = self.get_simulation_array(name, 'energy_imparted')
         self.close()
         return properties, arrays
 

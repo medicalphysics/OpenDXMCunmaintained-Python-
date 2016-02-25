@@ -7,7 +7,7 @@ Created on Thu Jul 30 10:38:15 2015
 
 import numpy as np
 from PyQt4 import QtGui, QtCore
-import pyqtgraph.opengl as gl
+import pyqtgraph as pg #pg.opengl as gl
 from .dicom_lut import get_lut, get_lut_raw
 from scipy.ndimage.filters import gaussian_filter 
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
@@ -62,8 +62,7 @@ class ViewController(QtCore.QObject):
                        'energy imparted': DoseScene(),
                        'dose': DoseScene(front_array='dose'),
                        }
-        self.glwidgets = {'dose': View3D2(arrays=['ctarray','dose'], lut_names=['gist_earth','jet'], dim_scale=False, custom_data_range=[(0, 500), None]),
-                          'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True),
+        self.glwidgets = {'dose': View3D(array='dose', lut_name='jet', dim_scale=True),
 #                          'energy_imparted': View3D(array='energy_imparted', lut_name='pet', dim_scale=True),
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
                           'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 500))}
@@ -150,44 +149,7 @@ class ViewController(QtCore.QObject):
                 
             
     def view_widget(self):
-        wid = QtGui.QWidget()
-        main_layout = QtGui.QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        view_layout = QtGui.QVBoxLayout()
-        view_layout.setContentsMargins(0, 0, 0, 0)
-
-        menu_widget = QtGui.QMenuBar(wid)
-        menu_widget.setContentsMargins(0, 0, 0, 0)
-
-        orientation_action = QtGui.QAction('Orientation', menu_widget)
-        orientation_action.triggered.connect(self.selectViewOrientation)
-        menu_widget.addAction(orientation_action)
-
-        sceneSelect = SceneSelectGroup(wid)
-        for scene_name in self.scenes.keys():
-            sceneSelect.addAction(scene_name)
-        sceneSelect.scene_selected.connect(self.selectScene)
-
-        main_layout.addWidget(menu_widget)
-        
-        main_layout.addWidget(self.graphicsview)
-        
-        for name in self.glwidgets:
-            view_layout.addWidget(self.glwidgets[name])
-
-        for action in sceneSelect.actions():
-            menu_widget.addAction(action)
-            
-        cine_action = QtGui.QAction('Cine', menu_widget)
-        cine_action.triggered.connect(self.graphicsview.request_cine_film_creation)
-        menu_widget.addAction(cine_action)
-        
-#        main_layout.addLayout(view_layout)
-        wid.setLayout(view_layout)
-        main_layout.addWidget(wid)
-        wid2 = QtGui.QWidget()
-        wid2.setLayout(main_layout)
-        return wid2, wid
+        return widget
 
 
 
@@ -1374,48 +1336,47 @@ class View3Dworker(QtCore.QThread):
     def __init__(self):
         super().__init__()
     
-        self.data = []
+        self.data = None
         self.mutex = QtCore.QMutex()
 
     @QtCore.pyqtSlot(list)
     def generate_tf(self, args):
         self.mutex.lock()
-        self.data.append(args)
+        self.data = args
         self.mutex.unlock()
         self.start()
                 
     def run(self):
-        while len(self.data) > 0:
-            self.mutex.lock()
-            data, vmin, vmax, magic_value, lut_name = self.data.pop(0)
-            self.mutex.unlock()
-            data= data.astype('float32')
-            if (vmin is None) or (vmax is None):
-                vmin = np.percentile(data[data > 0], 20)
-                vmax = np.percentile(data[data > 0], 90)
-            if magic_value is None:
-                use_magic_number = False
-            else:
-                use_magic_number = True
+        self.mutex.lock()
+        data, vmin, vmax, magic_value, lut_name = self.data
+        self.mutex.unlock()
+        data= data.astype('float32')
+        if (vmin is None) or (vmax is None):
+            vmin = np.percentile(data[data > 0], 20)
+            vmax = np.percentile(data[data > 0], 90)
+        if magic_value is None:
+            use_magic_number = False
+        else:
+            use_magic_number = True
+        
+        lut = [np.array(l) for l in get_lut_raw(lut_name)]
+        d2 = np.zeros(data.shape + (4,), dtype=np.ubyte)
+        data = np.clip(((255*(gaussian_filter(data, .5)-vmin))/(vmax-vmin)).astype(np.int), 0, 255)
+        
+        d2[...,0] = lut[0][data]
+        d2[...,1] = lut[1][data]
+        d2[...,2] = lut[2][data]
+
+        if use_magic_number:
+            magic_value = (100.- vmin)/(vmax-vmin)*255
+            d2[..., 3] =  (.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255
+        else:
+#            d2[..., 3] =  (.02*np.exp(-(data-255)**2 / 64**2))**.5 * 255
+#            d2[..., 3] =  .1*(np.exp(-(255-data)**2/150**2)-np.exp(-255**2 / 150**2))**.2 * 255
+            d2[..., 3] =  .1*np.exp(-(255-data)**2/128**2) * 255 * (data > 1)
+        self.opengl_array.emit(d2)
             
-            lut = [np.array(l) for l in get_lut_raw(lut_name)]
-            d2 = np.zeros(data.shape + (4,), dtype=np.ubyte)
-            data = np.clip(((255*(gaussian_filter(data, .5)-vmin))/(vmax-vmin)).astype(np.int), 0, 255)
-            
-            d2[...,0] = lut[0][data]
-            d2[...,1] = lut[1][data]
-            d2[...,2] = lut[2][data]
-    
-            if use_magic_number:
-                magic_value = (100.- vmin)/(vmax-vmin)*255
-                d2[..., 3] =  (.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255
-            else:
-    #            d2[..., 3] =  (.02*np.exp(-(data-255)**2 / 64**2))**.5 * 255
-    #            d2[..., 3] =  .1*(np.exp(-(255-data)**2/150**2)-np.exp(-255**2 / 150**2))**.2 * 255
-                d2[..., 3] =  .1*np.exp(-(255-data)**2/128**2) * 255 * (data > 1)
-            self.opengl_array.emit(d2)
-                
-class View3D(gl.GLViewWidget):
+class View3D(pg.opengl.GLViewWidget):
     request_array = QtCore.pyqtSignal(str, str)
     request_opengl_array = QtCore.pyqtSignal(list)
     def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=None, **kwargs):
@@ -1435,7 +1396,6 @@ class View3D(gl.GLViewWidget):
         self.spacing = np.ones(3, np.double)
         self.scaling = np.ones(3, np.double)
         
-        
         self.worker = View3Dworker()
         self.request_opengl_array.connect(self.worker.generate_tf)
         self.worker.opengl_array.connect(self.set_gl_array)
@@ -1444,11 +1404,6 @@ class View3D(gl.GLViewWidget):
 
 
     def set_metadata(self, sim, index=0):
-        if self.name != sim.get('name', ''):
-            if self.__glitem is not None:
-                self.removeItem(self.__glitem)
-                self.__glitem = None
-            
         self.name = sim.get('name', '')
         self.spacing = sim.get('spacing', np.ones(3, np.double))
         self.shape = sim.get('shape', np.ones(3, np.int))
@@ -1484,114 +1439,12 @@ class View3D(gl.GLViewWidget):
         
     @QtCore.pyqtSlot(np.ndarray)
     def set_gl_array(self, d2):
-        if self.__glitem is not None:
-            self.removeItem(self.__glitem)
-            self.__glitem = None
         #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-        self.__glitem = gl.GLVolumeItem(d2, glOptions='translucent', smooth=True, sliceDensity=1)
+        self.__glitem = pg.opengl.GLVolumeItem(d2, glOptions='translucent', smooth=True, sliceDensity=1)
         #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
         S = self.spacing * self.scaling
         scaling =((S/(np.sum(S*S))**.5))
         self.__glitem.scale(*scaling)
         self.__glitem.translate(*(-self.shape / 2*scaling))
         self.addItem(self.__glitem)
-
-class View3D2(gl.GLViewWidget):
-    request_array = QtCore.pyqtSignal(str, str)
-    request_opengl_array = QtCore.pyqtSignal(list)
-    def __init__(self, *args, arrays=None, lut_names=None, dim_scale=False, custom_data_range=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.name = ''
-        self.custom_data_range = custom_data_range
-        if arrays:
-            self.array_names = arrays
-        if lut_names:
-            self.lut_names = lut_names
-        else:
-            self.lut_names = ['gray']*len(self.array_names)
-        self.dim_scaling = dim_scale
-       
-        self.shape = np.ones(3, np.int)
-        self.spacing = np.ones(3, np.double)
-        self.scaling = np.ones(3, np.double)
-        
-        self.worker = View3Dworker()
-        self.request_opengl_array.connect(self.worker.generate_tf)
-        self.worker.opengl_array.connect(self.set_gl_array)
-
-        self.__glitem = None
-        self.processed_index = []
-
-    def set_metadata(self, sim, index=0):
-        self.name = sim.get('name', '')
-        self.spacing = sim.get('spacing', np.ones(3, np.double))
-        self.shape = sim.get('shape', np.ones(3, np.int))
-        if self.dim_scaling:
-            self.scaling = sim.get('scaling', np.ones(3, np.double))
-        else:
-            self.scaling = np.ones(3, np.double)
-        self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
-        self.processed_index = []
-        for arr_name in self.array_names:
-            self.request_array.emit(self.name, arr_name)
-        if self.__glitem is not None:
-            for item in self.__glitem:
-                self.removeItem(item)
-            self.__glitem = None
-#        self.index = index % self.shape[self.view_orientation]
-
-    @QtCore.pyqtSlot(str, np.ndarray, str)
-    def set_requested_array(self, name, data, array_name):
-        if name != self.name:
-            if self.__glitem is not None:
-                for item in self.__glitem:
-                    self.removeItem(item)
-                self.__glitem = None
-            return
-        if array_name not in self.array_names:
-            return
-      
-        index = self.array_names.index(array_name)        
-        if index not in self.processed_index:
-            self.processed_index.append(index)
-        else:
-            return
-        print('got array', array_name)
-        if self.custom_data_range[index] is None:
-            self.request_opengl_array.emit([data, None, None, None, self.lut_names[index]])
-        else:
-            self.request_opengl_array.emit([data, self.custom_data_range[index][0], self.custom_data_range[index][1], 100, self.lut_names[index]])
-        
-      
-        
-    @QtCore.pyqtSlot(np.ndarray)
-    def set_gl_array(self, d2):  
-        print('got an array')
-        if self.__glitem is None:
-            self.dumarr = [d2]
-            self.__glitem=[]
-        else:
-            self.dumarr.append(d2)
-        
-        if len(self.dumarr) == 2:
-            
-            d1 = ((self.dumarr[0]).astype(np.float)) / 255.
-            d2 = ((self.dumarr[1]).astype(np.float)) / 255.
-            d12=np.empty_like(d1)
-            for i in range(3):
-                d12[...,i] = d1[...,i]  + d2[...,i]*(1.-d1[...,3])
-            d12[...,3] = d1[...,3] + d2[...,3]*(1.-d1[...,3])                
-            d12=(d12*255).astype(np.ubyte)
-#            d12 = (self.dumarr[0]//2+self.dumarr[1]//2)
-            print('composing', d12.dtype, d12[...,3].max(), d12[...,3].min())
-            self.__glitem.append( gl.GLVolumeItem(d12, glOptions='translucent', smooth=True, sliceDensity=1))
-        
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
-            S = self.spacing * self.scaling
-            scaling =((S/(np.sum(S*S))**.5))
-            self.__glitem[0].scale(*scaling)
-            self.__glitem[0].translate(*(-self.shape / 2 * scaling))
-            self.addItem(self.__glitem[0])
-            
+  

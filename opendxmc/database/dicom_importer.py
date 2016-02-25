@@ -130,6 +130,10 @@ def z_stop_estimator(iop, spacing, shape):
 
 
 def import_ct_series(paths, import_scaling=(2, 2, 2)):
+
+    import_scaling=np.rint(np.array(import_scaling)).astype(np.int)
+    import_scaling[import_scaling < 1] = 1    
+    
     series = {}
     for p in find_all_files(paths):
         try:

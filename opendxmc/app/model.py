@@ -460,7 +460,6 @@ class Runner(QtCore.QThread):
         self.request_set_simulation_properties.emit({'name': self.simulation_properties['name'],
                                                      'MC_running': True},
                                                      False, False)
-
         try:
             props_dict, arr_dict = ct_runner(self.material_list, self.simulation_properties,
                                              energy_imparted_to_dose_conversion=True,
