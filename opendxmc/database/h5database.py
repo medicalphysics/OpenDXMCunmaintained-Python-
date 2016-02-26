@@ -68,17 +68,17 @@ PROPETIES_DICT_TEMPLATE = {
     'is_phantom': [False, np.dtype(np.bool), False, False, 'Matematical phantom', 0, 5]}
 
 ARRAY_TEMPLATES = {
-    # TAG: DTYPE, VOLATILE
-    'ctarray': [np.int16, False],
-    'exposure_modulation': [np.double, False],
-    'organ': [np.uint8, False],
-    'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False],
-    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], False],
-    'energy_imparted': [np.double, True],
-    'density': [np.double, True],
-    'dose': [np.double, True],
-    'material': [np.uint8, True],
-    'material_map': [[('material', np.uint8), ('material_name', 'a128')], True],
+    # TAG: DTYPE, VOLATILE, PRERECORD_VALUES
+    'ctarray': [np.int16, False, True],
+    'exposure_modulation': [np.double, False, True],
+    'organ': [np.uint8, False, True],
+    'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False, False],
+    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], False, False],
+    'energy_imparted': [np.double, True, True],
+    'density': [np.double, True, True],
+    'dose': [np.double, True, True],
+    'material': [np.uint8, True, True],
+    'material_map': [[('material', np.uint8), ('material_name', 'a128')], True, False],
    }
 
 
@@ -435,6 +435,18 @@ class Database(object):
             array = Validator().validate_structured_array(array, array_name)
 
         self.get_node(node_path, array_name, create=True, overwrite=True, obj=array)
+        
+        if ARRAY_TEMPLATES[array_name][2]:
+            ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=True, obj=np.dtype([('name', 'a64'), ('min', np.double), ('max', np.double)]))
+            arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
+            if array_name in arr_names:
+                index = arr_names.index(array_name)
+                ex_table[index] = [array_name, array.min(), array.max()]
+            else:
+                ex_table.append([(array_name, float(array.min()), array.max())])
+            ex_table.flush()
+            
+        
         logger.debug('Wrote array {0} to database for simulation {1}'.format(array_name, name))
         self.close()
         return
@@ -470,6 +482,34 @@ class Database(object):
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
             return
         arr = node.read()
+        self.close()
+        return arr
+
+    def get_simulation_array_bytescaled(self, name, array_name, amin=0., amax=1.):
+        self.open()
+        if self.test_node('/simulations/{0}'.format(name), array_name):
+            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
+        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
+            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
+        else:
+            self.close()
+            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
+            return
+        if amin == amax:
+            ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=False)
+        
+            arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
+            if array_name in arr_names:
+                index = arr_names.index(array_name)
+                _, amin, amax = list(ex_table[index])
+            else:
+                raise ValueError('Array {} in database have no recorded min or max values, remove simulation {} from database.'.format(array_name, name))
+            
+        arr = np.empty(node.shape, dtype=np.ubyte)
+        amax*=.5
+        r_divisor = 255./(amax-amin)
+        for ind, r in enumerate(node):
+            arr[ind, ...] = r.clip(amin, amax)*r_divisor 
         self.close()
         return arr
 

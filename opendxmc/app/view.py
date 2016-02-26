@@ -62,11 +62,11 @@ class ViewController(QtCore.QObject):
                        'energy imparted': DoseScene(),
                        'dose': DoseScene(front_array='dose'),
                        }
-        self.glwidgets = {'dose': View3D2(arrays=['ctarray','dose'], lut_names=['gist_earth','jet'], dim_scale=False, custom_data_range=[(0, 500), None]),
+        self.glwidgets = {#'dose': View3D2(arrays=['ctarray','dose'], lut_names=['gist_earth','jet'], dim_scale=False, custom_data_range=[(0, 500), None]),
                           'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True),
 #                          'energy_imparted': View3D(array='energy_imparted', lut_name='pet', dim_scale=True),
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
-                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 500))}
+                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 700))}
         
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
@@ -76,8 +76,8 @@ class ViewController(QtCore.QObject):
 
         for name, glwidget in self.glwidgets.items():
             # connecting scenes to request array slot
-            glwidget.request_array.connect(database_interface.request_view_array)
-            database_interface.send_view_array.connect(glwidget.set_requested_array)
+            glwidget.request_array.connect(database_interface.request_view_array_bytescaled)
+            database_interface.send_view_array_bytescaled.connect(glwidget.set_requested_array)
 
 
         self.request_array_slice.connect(database_interface.request_view_array_slice)
@@ -1373,7 +1373,6 @@ class View3Dworker(QtCore.QThread):
     
     def __init__(self):
         super().__init__()
-    
         self.data = []
         self.mutex = QtCore.QMutex()
 
@@ -1383,48 +1382,59 @@ class View3Dworker(QtCore.QThread):
         self.data.append(args)
         self.mutex.unlock()
         self.start()
-                
+    def generate_lut(self, magic_value=None):
+        data = np.arange(256)
+        
+        
+        
+        if magic_value:
+            return ((.4*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
+        
+        lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
+#        lut = ((.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
+        
+        return lut.astype(np.ubyte)
+         
     def run(self):
         while len(self.data) > 0:
             self.mutex.lock()
-            data, vmin, vmax, magic_value, lut_name = self.data.pop(0)
+            data, magic_value, lut_name = self.data.pop(0)
             self.mutex.unlock()
-            data= data.astype('float32')
-            if (vmin is None) or (vmax is None):
-                vmin = np.percentile(data[data > 0], 20)
-                vmax = np.percentile(data[data > 0], 90)
-            if magic_value is None:
-                use_magic_number = False
-            else:
-                use_magic_number = True
+#            if magic_value is None:
+#                use_magic_number = False
+#            else:
+#                use_magic_number = True
             
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
-            d2 = np.zeros(data.shape + (4,), dtype=np.ubyte)
-            data = np.clip(((255*(gaussian_filter(data, .5)-vmin))/(vmax-vmin)).astype(np.int), 0, 255)
+            d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
             
             d2[...,0] = lut[0][data]
             d2[...,1] = lut[1][data]
             d2[...,2] = lut[2][data]
     
-            if use_magic_number:
-                magic_value = (100.- vmin)/(vmax-vmin)*255
-                d2[..., 3] =  (.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255
-            else:
+            
+               
+            d2[...,3] = self.generate_lut(magic_value)[data]
+            print('glarray', data.min(), data.max(), d2.min(), d2.max())
+#                d2[..., 3] =  (.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255
+            
+            
     #            d2[..., 3] =  (.02*np.exp(-(data-255)**2 / 64**2))**.5 * 255
     #            d2[..., 3] =  .1*(np.exp(-(255-data)**2/150**2)-np.exp(-255**2 / 150**2))**.2 * 255
-                d2[..., 3] =  .1*np.exp(-(255-data)**2/128**2) * 255 * (data > 1)
+#                d2[..., 3] =  .1*np.exp(-(255-data)**2/128**2) * 255 * (data > 1)
             self.opengl_array.emit(d2)
                 
 class View3D(gl.GLViewWidget):
-    request_array = QtCore.pyqtSignal(str, str)
+    request_array = QtCore.pyqtSignal(str, str, float, float)
     request_opengl_array = QtCore.pyqtSignal(list)
-    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=None, **kwargs):
+    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=(0, 0), **kwargs):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.name = ''
         self.custom_data_range = custom_data_range
+        
         if array:
-            self.array_names = [array]
+            self.array_name = array
         if lut_name:
             self.lut_name = lut_name
         else:
@@ -1456,8 +1466,14 @@ class View3D(gl.GLViewWidget):
             self.scaling = sim.get('scaling', np.ones(3, np.double))
         else:
             self.scaling = np.ones(3, np.double)
+            
+        if self.array_name == 'dose':
+            self.custom_data_range = (0, sim.get('ctdi_air100', sim.get('ctdi_air100', 0)))
+        
+        
+        
         self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
-        self.request_array.emit(self.name, self.array_names[0])
+        self.request_array.emit(self.name, self.array_name, *self.custom_data_range)
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
@@ -1470,18 +1486,17 @@ class View3D(gl.GLViewWidget):
                 self.removeItem(self.__glitem)
                 self.__glitem = None
             return
-        if array_name not in self.array_names:
+        if array_name not in self.array_name:
             return
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
         if self.custom_data_range is None:
-            self.request_opengl_array.emit([data, None, None, None, self.lut_name])
+            self.request_opengl_array.emit([data, None, self.lut_name])
         else:
-            self.request_opengl_array.emit([data, self.custom_data_range[0], self.custom_data_range[1], 100, self.lut_name])
-        
+            
+            self.request_opengl_array.emit([data, 50, self.lut_name])
       
-        
     @QtCore.pyqtSlot(np.ndarray)
     def set_gl_array(self, d2):
         if self.__glitem is not None:
@@ -1497,7 +1512,7 @@ class View3D(gl.GLViewWidget):
         self.addItem(self.__glitem)
 
 class View3D2(gl.GLViewWidget):
-    request_array = QtCore.pyqtSignal(str, str)
+    request_array = QtCore.pyqtSignal(str, str, float, float)
     request_opengl_array = QtCore.pyqtSignal(list)
     def __init__(self, *args, arrays=None, lut_names=None, dim_scale=False, custom_data_range=None, **kwargs):
         super().__init__(*args, **kwargs)

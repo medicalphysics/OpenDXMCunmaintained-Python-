@@ -8,37 +8,14 @@ Created on Thu Jul 30 10:38:15 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg #pg.opengl as gl
-from .dicom_lut import get_lut, get_lut_raw
+from opendxmc.app.dicom_lut import get_lut, get_lut_raw
 from scipy.ndimage.filters import gaussian_filter 
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
 import logging
 logger = logging.getLogger('OpenDXMC')
 
 
-class SceneSelectGroup(QtGui.QActionGroup):
-    scene_selected = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setExclusive(True)
-        self.triggered.connect(self.relay_clicked)
-
-    def addAction(self, name, pretty_name=None):
-        if pretty_name is None:
-            pretty_name = name
-        action = super().addAction(pretty_name)
-        action.scene_name = name
-
-    @QtCore.pyqtSlot(QtGui.QAction)
-    def relay_clicked(self, action):
-        self.scene_selected.emit(action.scene_name)
-
-    @QtCore.pyqtSlot(str)
-    def sceneSelected(self, name):
-        for action in self.actions():
-            if action.scene_name == name:
-                action.setChecked()
-                return
 
 class ViewController(QtCore.QObject):
     request_metadata = QtCore.pyqtSignal(str)
@@ -46,6 +23,22 @@ class ViewController(QtCore.QObject):
 
     def __init__(self, database_interface, parent=None):
         super().__init__(parent)
+
+
+        
+        
+
+        self.widget = QtGui.QWidget()
+        self.widget.setContentsMargins(0, 0, 0, 0)
+        self.widget.setLayout(QtGui.QGridLayout())
+        
+        
+        
+
+        self.view_widget = pg.GraphicsLayoutWidget()
+        self.view_widget
+
+
 
         self.current_simulation = " "
         self.current_index = 0
@@ -89,9 +82,8 @@ class ViewController(QtCore.QObject):
     def set_simulation_editor(self, propertieseditmodel):
         self.scenes['planning'].update_simulation_properties.connect(propertieseditmodel.set_simulation_properties)
     def set_mc_runner(self, runner):
-        if runner is not None:
-            if 'running' in self.scenes:
-                runner.request_runner_view_update.connect(self.scenes['running'].set_running_data)
+        pass
+       
 
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
@@ -148,9 +140,7 @@ class ViewController(QtCore.QObject):
 #            print('showing')
                 
             
-    def view_widget(self):
-        return widget
-
+    
 
 
 class Scene(QtGui.QGraphicsScene):
@@ -1447,4 +1437,5 @@ class View3D(pg.opengl.GLViewWidget):
         self.__glitem.scale(*scaling)
         self.__glitem.translate(*(-self.shape / 2*scaling))
         self.addItem(self.__glitem)
-  
+        
+        

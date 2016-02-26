@@ -161,6 +161,7 @@ class DatabaseInterface(QtCore.QObject):
     send_simulation_list = QtCore.pyqtSignal(list)
     send_material_list = QtCore.pyqtSignal(list)
     send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
+    send_view_array_bytescaled = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
@@ -238,6 +239,17 @@ class DatabaseInterface(QtCore.QObject):
             pass
         else:
             self.send_view_array.emit(simulation_name, arr, array_name)
+        self.database_busy.emit(False)
+    
+    @QtCore.pyqtSlot(str, str, float, float)
+    def request_view_array_bytescaled(self, simulation_name, array_name, amin, amax):
+        self.database_busy.emit(True)
+        try:
+            arr = self.__db.get_simulation_array_bytescaled(simulation_name, array_name, amin, amax)
+        except ValueError:
+            pass
+        else:
+            self.send_view_array_bytescaled.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str, int, int)
