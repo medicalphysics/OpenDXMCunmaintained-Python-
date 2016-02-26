@@ -1388,11 +1388,14 @@ class View3Dworker(QtCore.QThread):
         
         
         if magic_value:
-            return ((.4*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
-        
-        lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
+#            lut= ((.1*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
+            lut = ((.1*np.exp(-(data-magic_value)**2 / (10*magic_value)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)            
+        else:
+#        lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
+            lut = np.exp(-(255-np.arange(256))**2/64**2) * 20 * (np.arange(256) > 1)
+            lut[2:]+=1
 #        lut = ((.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
-        
+        lut[0]=0
         return lut.astype(np.ubyte)
          
     def run(self):
@@ -1404,7 +1407,7 @@ class View3Dworker(QtCore.QThread):
 #                use_magic_number = False
 #            else:
 #                use_magic_number = True
-            
+            data = gaussian_filter(data, 1)
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
             d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
             
@@ -1427,11 +1430,14 @@ class View3Dworker(QtCore.QThread):
 class View3D(gl.GLViewWidget):
     request_array = QtCore.pyqtSignal(str, str, float, float)
     request_opengl_array = QtCore.pyqtSignal(list)
-    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=(0, 0), **kwargs):
+    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.name = ''
-        self.custom_data_range = custom_data_range
+        if custom_data_range is None:
+            self.custom_data_range = (0, 0)
+        else:
+            self.custom_data_range = custom_data_range
         
         if array:
             self.array_name = array
@@ -1467,10 +1473,7 @@ class View3D(gl.GLViewWidget):
         else:
             self.scaling = np.ones(3, np.double)
             
-        if self.array_name == 'dose':
-            self.custom_data_range = (0, sim.get('ctdi_air100', sim.get('ctdi_air100', 0)))
-        
-        
+      
         
         self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
         self.request_array.emit(self.name, self.array_name, *self.custom_data_range)
@@ -1491,7 +1494,7 @@ class View3D(gl.GLViewWidget):
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
-        if self.custom_data_range is None:
+        if self.custom_data_range[0] ==self.custom_data_range[1]:
             self.request_opengl_array.emit([data, None, self.lut_name])
         else:
             
