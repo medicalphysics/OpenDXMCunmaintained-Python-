@@ -443,7 +443,7 @@ class Database(object):
                 index = arr_names.index(array_name)
                 ex_table[index] = [array_name, np.percentile(array,20), np.percentile(array,80)]
             else:
-                ex_table.append([(array_name, float(array.min()), array.max())])
+                ex_table.append([(array_name, np.percentile(array,20), np.percentile(array,80))])
             ex_table.flush()
             
         

@@ -66,7 +66,7 @@ class ViewController(QtCore.QObject):
                           'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True),
 #                          'energy_imparted': View3D(array='energy_imparted', lut_name='pet', dim_scale=True),
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
-                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 700))}
+                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 500))}
         
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
@@ -1382,19 +1382,25 @@ class View3Dworker(QtCore.QThread):
         self.data.append(args)
         self.mutex.unlock()
         self.start()
-    def generate_lut(self, magic_value=None):
-        data = np.arange(256)
+    def generate_lut(self, array, magic_value=None):
+        data=np.arange(256)
         
         
         
-        if magic_value:
+        if magic_value is not None:
+            corr = (array == int(magic_value)).sum() / (array > 0).sum()
+            lut =(np.exp(-(data-magic_value)**2/(15**2))*.1*(1-corr)**2 + .7*np.exp(-(data-255)**2/64**2))*255
+         
 #            lut= ((.1*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
-            lut = ((.1*np.exp(-(data-magic_value)**2 / (10*magic_value)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)            
+#            lut = ((.2*np.exp(-(data-magic_value)**2 / (10*magic_value)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)            
+#            lut[:int(magic_value)]=0
         else:
 #        lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
-            lut = np.exp(-(255-np.arange(256))**2/64**2) * 20 * (np.arange(256) > 1)
-            lut[2:]+=1
-#        lut = ((.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)
+#            lut = np.exp(-(255-np.arange(256))**2/64**2) * 20 * (np.arange(256) > 1)
+            corr = (array >= 250).sum() / (array > 0).sum()
+            lut=(np.exp(-(data-50)**2/(50**2))*.05 + (1.-corr)*.1*np.exp(-(data-255)**2/128**2))*128
+            lut -= lut.min()       
+        
         lut[0]=0
         return lut.astype(np.ubyte)
          
@@ -1403,10 +1409,8 @@ class View3Dworker(QtCore.QThread):
             self.mutex.lock()
             data, magic_value, lut_name = self.data.pop(0)
             self.mutex.unlock()
-#            if magic_value is None:
-#                use_magic_number = False
-#            else:
-#                use_magic_number = True
+#         
+#            data=np.rollaxis(data,2, 1 )
             data = gaussian_filter(data, 1)
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
             d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
@@ -1417,14 +1421,9 @@ class View3Dworker(QtCore.QThread):
     
             
                
-            d2[...,3] = self.generate_lut(magic_value)[data]
-            print('glarray', data.min(), data.max(), d2.min(), d2.max())
-#                d2[..., 3] =  (.3*np.exp(-(data-magic_value)**2 / (magic_value*.5)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255
+            d2[...,3] = self.generate_lut(data, magic_value)[data]
             
-            
-    #            d2[..., 3] =  (.02*np.exp(-(data-255)**2 / 64**2))**.5 * 255
-    #            d2[..., 3] =  .1*(np.exp(-(255-data)**2/150**2)-np.exp(-255**2 / 150**2))**.2 * 255
-#                d2[..., 3] =  .1*np.exp(-(255-data)**2/128**2) * 255 * (data > 1)
+#    
             self.opengl_array.emit(d2)
                 
 class View3D(gl.GLViewWidget):
@@ -1473,7 +1472,11 @@ class View3D(gl.GLViewWidget):
         else:
             self.scaling = np.ones(3, np.double)
             
-      
+            
+        if self.array_name == 'dose':
+            self.custom_data_range=(0, .05*sim.get('ctdi_air100', 20*sim.get('ctdi_w100',0)))
+        elif self.array_name == 'ctarray':
+            self.custom_data_range=(0, 500)
         
         self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
         self.request_array.emit(self.name, self.array_name, *self.custom_data_range)
@@ -1494,7 +1497,7 @@ class View3D(gl.GLViewWidget):
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
-        if self.custom_data_range[0] ==self.custom_data_range[1]:
+        if self.array_name=='dose':
             self.request_opengl_array.emit([data, None, self.lut_name])
         else:
             
@@ -1510,8 +1513,11 @@ class View3D(gl.GLViewWidget):
         #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
         S = self.spacing * self.scaling
         scaling =((S/(np.sum(S*S))**.5))
-        self.__glitem.scale(*scaling)
-        self.__glitem.translate(*(-self.shape / 2*scaling))
+#        scaling = scaling[[0, 2, 1]]
+        self.__glitem.scale(*scaling)        
+#        self.__glitem.translate(*(-self.shape[[0, 2, 1]] / 2 * scaling))
+        self.__glitem.translate(*(-self.shape / 2 * scaling))
+        
         self.addItem(self.__glitem)
 
 class View3D2(gl.GLViewWidget):
@@ -1575,7 +1581,7 @@ class View3D2(gl.GLViewWidget):
             self.processed_index.append(index)
         else:
             return
-        print('got array', array_name)
+        
         if self.custom_data_range[index] is None:
             self.request_opengl_array.emit([data, None, None, None, self.lut_names[index]])
         else:
@@ -1610,6 +1616,6 @@ class View3D2(gl.GLViewWidget):
             S = self.spacing * self.scaling
             scaling =((S/(np.sum(S*S))**.5))
             self.__glitem[0].scale(*scaling)
-            self.__glitem[0].translate(*(-self.shape / 2 * scaling))
+            self.__glitem[0].translate(*(-self.shape / 2. * scaling))
             self.addItem(self.__glitem[0])
             
