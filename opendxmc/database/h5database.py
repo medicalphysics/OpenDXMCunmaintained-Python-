@@ -441,9 +441,9 @@ class Database(object):
             arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
             if array_name in arr_names:
                 index = arr_names.index(array_name)
-                ex_table[index] = [array_name, np.percentile(array,20), np.percentile(array,80)]
+                ex_table[index] = [array_name, array.min(), array.max()]
             else:
-                ex_table.append([(array_name, np.percentile(array,20), np.percentile(array,80))])
+                ex_table.append([(array_name, array.min(), array.max())])
             ex_table.flush()
             
         

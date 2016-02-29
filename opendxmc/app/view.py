@@ -63,10 +63,10 @@ class ViewController(QtCore.QObject):
                        'dose': DoseScene(front_array='dose'),
                        }
         self.glwidgets = {#'dose': View3D2(arrays=['ctarray','dose'], lut_names=['gist_earth','jet'], dim_scale=False, custom_data_range=[(0, 500), None]),
-                          'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True),
+                          'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True, smoothness=.5),
 #                          'energy_imparted': View3D(array='energy_imparted', lut_name='pet', dim_scale=True),
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
-                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 500))}
+                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 500), smoothness=1.)}
         
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
@@ -1395,23 +1395,31 @@ class View3Dworker(QtCore.QThread):
 #            lut = ((.2*np.exp(-(data-magic_value)**2 / (10*magic_value)**2) +  .7*np.exp(-(data-255)**2 / 128**2))**2 * 255).astype(np.ubyte)            
 #            lut[:int(magic_value)]=0
         else:
-#        lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
+#            lut = ((np.exp(-((255-np.arange(256))/128)**2)**2)*255).astype(np.ubyte)
 #            lut = np.exp(-(255-np.arange(256))**2/64**2) * 20 * (np.arange(256) > 1)
-            corr = (array >= 250).sum() / (array > 0).sum()
-            lut=(np.exp(-(data-50)**2/(50**2))*.05 + (1.-corr)*.1*np.exp(-(data-255)**2/128**2))*128
-            lut -= lut.min()       
-        
+#            corr = (array >= 250).sum() / (array > 0).sum()
+#            lut=(np.exp(-(data-50)**2/(64**2))*(1.-corr)*.5 + .5*(1.-corr)*np.exp(-(data-255)**2/64**2))*128
+#            lut -= lut.min() 
+#            w = 16
+#            lut = 200 * sum([np.exp(-(data-val)**2/w**2)*(ind)/255 for ind, val in enumerate([32, 64, 128, 172, 236, 255])])
+#            lut = 20 * sum([np.exp(-(data-val)**2/w**2)*() for val in list(range(16, 255, 64)) + [255]])
+            lut = np.exp(-(data-64)**2/256**2)**1*10
+            lut[[0, 1, 2]] = 0
+            
+#            lut =16 * np.exp(-(data-250)**2/w**2) + 16 * np.exp(-(data-64)**2/w**2) + 16 * np.exp(-(data-64)**2/w**2)
+            
         lut[0]=0
         return lut.astype(np.ubyte)
          
     def run(self):
         while len(self.data) > 0:
             self.mutex.lock()
-            data, magic_value, lut_name = self.data.pop(0)
+            data, magic_value, lut_name, smoothness = self.data.pop(0)
             self.mutex.unlock()
 #         
 #            data=np.rollaxis(data,2, 1 )
-            data = gaussian_filter(data, 1)
+            if smoothness:
+                data = gaussian_filter(data, smoothness)
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
             d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
             
@@ -1429,7 +1437,7 @@ class View3Dworker(QtCore.QThread):
 class View3D(gl.GLViewWidget):
     request_array = QtCore.pyqtSignal(str, str, float, float)
     request_opengl_array = QtCore.pyqtSignal(list)
-    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=None, **kwargs):
+    def __init__(self, *args, array=None, lut_name=None, dim_scale=False, custom_data_range=None, smoothness=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.name = ''
@@ -1437,6 +1445,11 @@ class View3D(gl.GLViewWidget):
             self.custom_data_range = (0, 0)
         else:
             self.custom_data_range = custom_data_range
+        
+        if smoothness:
+            self.smoothness = smoothness
+        else:
+            self.smoothness = None
         
         if array:
             self.array_name = array
@@ -1474,11 +1487,12 @@ class View3D(gl.GLViewWidget):
             
             
         if self.array_name == 'dose':
-            self.custom_data_range=(0, .05*sim.get('ctdi_air100', 20*sim.get('ctdi_w100',0)))
+#            self.custom_data_range=(0, .05*sim.get('ctdi_air100', 20*sim.get('ctdi_w100',0)))
+            self.custom_data_range=(0, 0)
         elif self.array_name == 'ctarray':
             self.custom_data_range=(0, 500)
         
-        self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
+        self.opts['distance'] = np.sum((self.shape*self.spacing/self.scaling)**2)**.5 * 4
         self.request_array.emit(self.name, self.array_name, *self.custom_data_range)
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
@@ -1498,10 +1512,9 @@ class View3D(gl.GLViewWidget):
             self.removeItem(self.__glitem)
             self.__glitem = None
         if self.array_name=='dose':
-            self.request_opengl_array.emit([data, None, self.lut_name])
+            self.request_opengl_array.emit([data, None, self.lut_name, self.smoothness])
         else:
-            
-            self.request_opengl_array.emit([data, 50, self.lut_name])
+            self.request_opengl_array.emit([data, 50, self.lut_name, self.smoothness])
       
     @QtCore.pyqtSlot(np.ndarray)
     def set_gl_array(self, d2):
@@ -1514,9 +1527,10 @@ class View3D(gl.GLViewWidget):
         S = self.spacing * self.scaling
         scaling =((S/(np.sum(S*S))**.5))
 #        scaling = scaling[[0, 2, 1]]
+#        self.__glitem.translate(*(sh/2 for sh in d2.shape))
         self.__glitem.scale(*scaling)        
-#        self.__glitem.translate(*(-self.shape[[0, 2, 1]] / 2 * scaling))
-        self.__glitem.translate(*(-self.shape / 2 * scaling))
+#        self.__glitem.translate(*(-self.shape[[2, 0, 1]] / 2 * scaling))
+        self.__glitem.translate(*(-self.shape * .5 * scaling / self.scaling))
         
         self.addItem(self.__glitem)
 
