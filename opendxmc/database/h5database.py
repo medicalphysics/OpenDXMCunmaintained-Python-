@@ -485,7 +485,7 @@ class Database(object):
         self.close()
         return arr
 
-    def get_simulation_array_bytescaled(self, name, array_name, amin=0., amax=1.):
+    def get_simulation_array_bytescaled(self, name, array_name, amin=0., amax=1., minmax_is_modifier=False):
         self.open()
         if self.test_node('/simulations/{0}'.format(name), array_name):
             node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
@@ -495,6 +495,15 @@ class Database(object):
             self.close()
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
             return
+        
+        if minmax_is_modifier:
+            minmod = amin
+            maxmod = amax
+            amin, amax = 0, 0
+        else:
+            minmod = 1.
+            maxmod = 1.
+            
         if amin == amax:
             ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=False)
         
@@ -504,12 +513,15 @@ class Database(object):
                 _, amin, amax = list(ex_table[index])
             else:
                 raise ValueError('Array {} in database have no recorded min or max values, remove simulation {} from database.'.format(array_name, name))
-            
+
+        amin *= minmod
+        amax *= maxmod    
+        
         arr = np.empty(node.shape, dtype=np.ubyte)
-        amax*=.5
+        
         r_divisor = 255./(amax-amin)
         for ind, r in enumerate(node):
-            arr[ind, ...] = r.clip(amin, amax)*r_divisor 
+            arr[ind, ...] = np.clip((r-amin)*r_divisor, 0, 255)
         self.close()
         return arr
 

@@ -241,11 +241,11 @@ class DatabaseInterface(QtCore.QObject):
             self.send_view_array.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
     
-    @QtCore.pyqtSlot(str, str, float, float)
-    def request_view_array_bytescaled(self, simulation_name, array_name, amin, amax):
+    @QtCore.pyqtSlot(str, str, float, float, bool)
+    def request_view_array_bytescaled(self, simulation_name, array_name, amin, amax, vals_is_modifier):
         self.database_busy.emit(True)
         try:
-            arr = self.__db.get_simulation_array_bytescaled(simulation_name, array_name, amin, amax)
+            arr = self.__db.get_simulation_array_bytescaled(simulation_name, array_name, amin, amax, vals_is_modifier)
         except ValueError:
             pass
         else:
