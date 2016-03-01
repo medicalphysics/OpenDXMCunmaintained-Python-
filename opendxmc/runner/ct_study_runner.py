@@ -38,7 +38,7 @@ def log_elapsed_time(time_start, elapsed_exposures, total_exposures,
         logger.info('{0}: [{1}%] estimated ETA is {2}, finished exposure {3}'
                     ' of {4}'.format(time.ctime(), p, human_time(eta),
                                      elapsed_exposures, total_exposures))
-    return human_time(eta)
+    return '{0}%: '.format(p) + human_time(eta)
 
 
 def recarray_to_dict(arr, key=None, value=None, value_is_string=False):
@@ -359,13 +359,9 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     lut_shape = np.array(lut.shape, dtype='int')    
     
     logger.info('Initializing geometry')
-    
-    
-    
+        
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material, density, lut_shape, lut, energy_imparted)
-    
-#    arrays = [N, spacing, offset, material, density, lut_shape, lut, energy_imparted]    
     
     
     start_exposure = simulation['start_at_exposure_no']
@@ -380,8 +376,8 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
         if (time.clock() - exposure_time) > 5:
             eta = log_elapsed_time(time_start, e+1, n, start_exposure)
             if callback is not None:
-                callback(simulation['name'], {'energy_imparted': energy_imparted}, e + 1, eta)
-            simulation['start_at_exposure_no'] = e + 1
+                callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=1)), spacing[0] ,spacing[2] ,eta, True])
+                simulation['start_at_exposure_no'] = e + 1
             exposure_time = time.clock()
 
     
@@ -396,12 +392,13 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 #        simulation['start_at_exposure_no'] = e + 1
 
     if callback is not None:
-        callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
+        callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=1)), spacing[0] ,spacing[2] ,'Preforming dose calibration', True])
+#        callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
 
     generate_dose_conversion_factor(simulation, materials, callback)
     
     if callback is not None:
-        callback(simulation['name'], {'energy_imparted': None}, e + 1, '')
+        callback(simulation['name'], {'energy_imparted': None}, e + 1, progressbar_data=[np.squeeze(energy_imparted.max(axis=1)), spacing[0] ,spacing[2] ,'Done', False])
     simulation['start_at_exposure_no'] = 0
     simulation['MC_finished'] = True
     simulation['MC_running'] = False
@@ -481,9 +478,10 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
 #                eta = log_elapsed_time(t0, e+1, n, 0)
                 t1 = time.clock()
                 if callback:
-                    callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
+                    callback(simulation['name'], progressbar_data=[np.squeeze(dose.max(axis=2)), spacing[0] ,spacing[1] ,'Run number {0}'.format(teller+1), True])
+#                    callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
         center_dose += np.sum(dose[center[0], center[1], center[2]])
-    
+    callback(simulation['name'], progressbar_data=[np.squeeze(dose.max(axis=2)), spacing[0] ,spacing[1] ,'Done', True])
     engine.cleanup(simulation=geometry, energy_imparted=dose)
 
 #    engine.cleanup(simulation=geometry, energy_imparted=dose)
@@ -577,13 +575,15 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
         engine.cleanup(source=source)
 
         if (time.clock() - t1) > 5:
-#            eta = log_elapsed_time(t0, e+1, n, 0)
+            eta = log_elapsed_time(t0, e+1, n, 0)
             if callback:
-                callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
+                callback(simulation['name'], progressbar_data=[np.squeeze(dose.max(axis=2)), spacing[0] ,spacing[1] ,eta, True])
+#                callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
             t1 = time.clock()
 
     if callback:
-        callback(simulation['name'], {'energy_imparted':dose}, 0, 'Done', save=False)
+        callback(simulation['name'], progressbar_data=[np.squeeze(dose.max(axis=2)), spacing[0] ,spacing[1] ,'Done', True])
+#        callback(simulation['name'], {'energy_imparted':dose}, 0, 'Done', save=False)
 
     dose /= history_factor
 

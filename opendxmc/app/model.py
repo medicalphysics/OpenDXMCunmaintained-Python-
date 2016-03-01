@@ -405,7 +405,7 @@ class Importer(QtCore.QObject):
 class Runner(QtCore.QThread):
     request_write_simulation_arrays = QtCore.pyqtSignal(str, dict)
     request_set_simulation_properties = QtCore.pyqtSignal(dict, bool, bool)
-    request_runner_view_update = QtCore.pyqtSignal(dict, dict)
+    request_runner_view_update = QtCore.pyqtSignal(np.ndarray, float, float, str, bool)
 
     start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
@@ -439,25 +439,27 @@ class Runner(QtCore.QThread):
         self.kill_me = True
         self.mutex.unlock()
 
-    def update_simulation_iteration(self, name, array_dict, exposure_number, eta, save=True):
+    def update_simulation_iteration(self, name, array_dict=None, exposure_number=None, progressbar_data=None, save=True):
         if self.kill_me:
+            self.request_runner_view_update.emit(np.ones((3, 3)), 1, 1, '', False)
             self.mutex.lock()
             self.kill_me = False
             self.mutex.unlock()
             self.terminated.emit()
             self.terminate()
-
-        desc = {'name': name,
+        
+        if all([self.request_save, save, array_dict is not None, 
+                exposure_number is not None]):
+            desc = {'name': name,
                 'start_at_exposure_no': exposure_number,
-                'eta': eta}
-        if self.request_save and save:
+                }
             self.request_set_simulation_properties.emit(desc, False, False)
             self.request_write_simulation_arrays.emit(name, array_dict)
             self.mutex.lock()
             self.request_save = False
             self.mutex.unlock()
-
-        self.request_runner_view_update.emit(desc, array_dict)
+        if progressbar_data is not None:
+            self.request_runner_view_update.emit(*progressbar_data)
 
     def run(self):
         self.mutex.lock()
@@ -519,7 +521,7 @@ class Runner(QtCore.QThread):
 class RunManager(QtCore.QObject):
     mc_calculation_running = QtCore.pyqtSignal(bool)
     kill_runner = QtCore.pyqtSignal()
-    def __init__(self, interface, parent=None):
+    def __init__(self, interface, progressbar, parent=None):
         super().__init__(parent)
         self.runner = Runner()
         self.kill_runner.connect(self.runner.cancel_run)
@@ -531,6 +533,7 @@ class RunManager(QtCore.QObject):
         self.runner.finished.connect(self.run_finished)
         self.runner.terminated.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
+        self.runner.request_runner_view_update.connect(progressbar.set_data)
         self.current_simulation = ""
 
     @QtCore.pyqtSlot()

@@ -57,7 +57,7 @@ class ViewController(QtCore.QObject):
         database_interface.send_view_array.connect(self.graphicsview.cine_film_creation)
 
         self.scenes = {'planning': PlanningScene(),
-                       'running':  RunningScene(),
+#                       'running':  RunningScene(),
                        'material': MaterialScene(),
                        'energy imparted': DoseScene(),
                        'dose': DoseScene(front_array='dose'),
@@ -90,10 +90,7 @@ class ViewController(QtCore.QObject):
 
     def set_simulation_editor(self, propertieseditmodel):
         self.scenes['planning'].update_simulation_properties.connect(propertieseditmodel.set_simulation_properties)
-    def set_mc_runner(self, runner):
-        if runner is not None:
-            if 'running' in self.scenes:
-                runner.request_runner_view_update.connect(self.scenes['running'].set_running_data)
+    
 
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
@@ -916,88 +913,88 @@ class PlanningScene(Scene):
         self.aec_item.setIndex(self.index)
 
 
-class RunningScene(Scene):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.image_item = ImageItem()
-        self.addItem(self.image_item)
-        self.image_item.setLut(get_lut('hot_iron'))
-        self.nodata_item = NoDataItem()
-        self.addItem(self.nodata_item)
-        self.nodata_item.setVisible(True)
-
-        self.progress_item = self.addText('0 %')
-        self.progress_item.setDefaultTextColor(QtCore.Qt.white)
-
-        self.n_exposures = 1
-        self.array = None
-        self.view_orientation = 1
-
-
-    def set_metadata(self, props, index=0):
-        if props['name'] != self.name:
-            self.setNoData()
-        super().set_metadata(props, index)
-        collimation = props['detector_rows']*props['detector_width']
-        if props['is_spiral']:
-            self.n_exposures = props['exposures'] * (1 + abs(props['start'] - props['stop']) / collimation / props['pitch'])
-        else:
-            self.n_exposures = props['exposures'] * np.ceil(abs(props['start'] - props['stop']) / props['step'])
-            if self.n_exposures < 1:
-                self.n_exposures = 1
-        self.updateSceneTransform()
-
-
-    def setNoData(self):
-        self.array = None
-        self.image_item.setVisible(False)
-        self.progress_item.setVisible(False)
-        self.nodata_item.setVisible(True)
-
-    def defaultLevels(self, array):
-
-        p = array.max() - array.min()
-        return (p/2., p / 2. )
-
-    @QtCore.pyqtSlot(dict, dict)
-    def set_running_data(self, props, arr_dict):
-        self.array = arr_dict.get('energy_imparted', None)
-
-        self.nodata_item.setVisible(False)
-        self.image_item.setVisible(True)
-        self.progress_item.setVisible(True)
-        msg = ""
-        if len(props.get('eta', '')) > 0:
-            if 'start_at_exposure_no' in props:
-                msg += "{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1))
-            if 'eta' in props:
-                msg += " ETA: {}".format(props['eta'])
-        self.progress_item.setPlainText(msg)
-        if self.array is not None:
-            self.image_item.setLevels(self.defaultLevels(self.array))
-        self.reloadImages()
-        self.updateSceneTransform()
-
-    def set_view_orientation(self, orientation, index):
-        self.view_orientation = orientation
-        self.reloadImages()
-        self.updateSceneTransform()
-
-    def updateSceneTransform(self):
-        sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
-        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
-        self.image_item.setTransform(transform)
-        if self.nodata_item.isVisible():
-            self.setSceneRect(self.nodata_item.sceneBoundingRect())
-        else:
-            self.setSceneRect(self.image_item.sceneBoundingRect())
-
-    def reloadImages(self):
-        if self.array is not None:
-            self.image_item.setImage(self.array.max(axis=self.view_orientation))
-
-    def wheelEvent(self, ev):
-        pass
+#class RunningScene(Scene):
+#    def __init__(self, parent=None):
+#        super().__init__(parent)
+#        self.image_item = ImageItem()
+#        self.addItem(self.image_item)
+#        self.image_item.setLut(get_lut('hot_iron'))
+#        self.nodata_item = NoDataItem()
+#        self.addItem(self.nodata_item)
+#        self.nodata_item.setVisible(True)
+#
+#        self.progress_item = self.addText('0 %')
+#        self.progress_item.setDefaultTextColor(QtCore.Qt.white)
+#
+#        self.n_exposures = 1
+#        self.array = None
+#        self.view_orientation = 1
+#
+#
+#    def set_metadata(self, props, index=0):
+#        if props['name'] != self.name:
+#            self.setNoData()
+#        super().set_metadata(props, index)
+#        collimation = props['detector_rows']*props['detector_width']
+#        if props['is_spiral']:
+#            self.n_exposures = props['exposures'] * (1 + abs(props['start'] - props['stop']) / collimation / props['pitch'])
+#        else:
+#            self.n_exposures = props['exposures'] * np.ceil(abs(props['start'] - props['stop']) / props['step'])
+#            if self.n_exposures < 1:
+#                self.n_exposures = 1
+#        self.updateSceneTransform()
+#
+#
+#    def setNoData(self):
+#        self.array = None
+#        self.image_item.setVisible(False)
+#        self.progress_item.setVisible(False)
+#        self.nodata_item.setVisible(True)
+#
+#    def defaultLevels(self, array):
+#
+#        p = array.max() - array.min()
+#        return (p/2., p / 2. )
+#
+#    @QtCore.pyqtSlot(dict, dict)
+#    def set_running_data(self, props, arr_dict):
+#        self.array = arr_dict.get('energy_imparted', None)
+#
+#        self.nodata_item.setVisible(False)
+#        self.image_item.setVisible(True)
+#        self.progress_item.setVisible(True)
+#        msg = ""
+#        if len(props.get('eta', '')) > 0:
+#            if 'start_at_exposure_no' in props:
+#                msg += "{} %".format(round(props['start_at_exposure_no'] / self.n_exposures *100, 1))
+#            if 'eta' in props:
+#                msg += " ETA: {}".format(props['eta'])
+#        self.progress_item.setPlainText(msg)
+#        if self.array is not None:
+#            self.image_item.setLevels(self.defaultLevels(self.array))
+#        self.reloadImages()
+#        self.updateSceneTransform()
+#
+#    def set_view_orientation(self, orientation, index):
+#        self.view_orientation = orientation
+#        self.reloadImages()
+#        self.updateSceneTransform()
+#
+#    def updateSceneTransform(self):
+#        sx, sy = [self.spacing[i]*self.scaling[i] for i in range(3) if i != self.view_orientation]
+#        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+#        self.image_item.setTransform(transform)
+#        if self.nodata_item.isVisible():
+#            self.setSceneRect(self.nodata_item.sceneBoundingRect())
+#        else:
+#            self.setSceneRect(self.image_item.sceneBoundingRect())
+#
+#    def reloadImages(self):
+#        if self.array is not None:
+#            self.image_item.setImage(self.array.max(axis=self.view_orientation))
+#
+#    def wheelEvent(self, ev):
+#        pass
 
 
 class MaterialMapItem(QtGui.QGraphicsItem):
@@ -1178,7 +1175,6 @@ class DoseScene(Scene):
         else:
             self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
-
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, array, array_name):
         if name != self.name:
@@ -1193,11 +1189,11 @@ class DoseScene(Scene):
             min_level = max_level / 4
             self.image_item.setLevels(front=(min_level/2. + max_level/2.,min_level/2. + max_level/2.))
             self.image_item.setVisible(True)
+    
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
         if name != self.name:
             return
-
         if array_name in self.array_names:
             if self.front_array is not None:
                 index_front = (index % self.shape[self.view_orientation]) // self.scaling[self.view_orientation]
@@ -1212,7 +1208,6 @@ class DoseScene(Scene):
         else:
             self.image_item.setImage(back_image=arr)
 
-
     @QtCore.pyqtSlot(int, int)
     def set_view_orientation(self, view_orientation, index):
         self.view_orientation = view_orientation % 3
@@ -1220,9 +1215,68 @@ class DoseScene(Scene):
         self.updateSceneTransform()
 
 
+class RunningScene(QtGui.QGraphicsScene):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.image_item = ImageItem()
+        self.addItem(self.image_item)
+        self.image_item.setLut(get_lut('hot_iron'))
+#        self.nodata_item = NoDataItem()
+#        self.addItem(self.nodata_item)
+#        self.nodata_item.setVisible(True)
+
+        self.progress_item = self.addText('0 %')
+        self.progress_item.setDefaultTextColor(QtCore.Qt.white)
+
+    def defaultLevels(self, array):
+
+        p = array.max() - array.min()
+        return (p/2., p / 2. )
+
+    def set_running_data(self, array, sx, sy, msg):
+        self.progress_item.setPlainText(msg)
+        
+        self.image_item.setLevels(self.defaultLevels(array))
+        self.image_item.setImage(array)
+        transform = QtGui.QTransform.fromScale(sy / sx, 1.)
+        self.image_item.setTransform(transform)
+        self.setSceneRect(self.image_item.sceneBoundingRect())
+
+
+class RunnerView(QtGui.QGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setBackgroundBrush(QtGui.QBrush(QtCore.Qt.black))
+
+        self.setRenderHints(QtGui.QPainter.Antialiasing |
+                            QtGui.QPainter.TextAntialiasing)
+        self.setScene(RunningScene())
+        self.hide()
+        
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        if self.isVisible():
+            self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
+
+    def setScene(self, scene):
+        super().setScene(scene)
+        self.fitInView(self.sceneRect(), QtCore.Qt.KeepAspectRatio)
+
+    def fitInView(self, *args):
+        if self.isVisible():
+            super().fitInView(*args)
+
+    @QtCore.pyqtSlot(np.ndarray, float, float, str, bool)
+    def set_data(self, array, sx, sy, msg, visible):
+        if visible:
+            self.show()
+            self.scene().set_running_data(array, sx, sy, msg)
+        else:
+            self.hide()
+
 class View(QtGui.QGraphicsView):
     request_array = QtCore.pyqtSignal(str, str)
-
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1385,8 +1439,6 @@ class View3Dworker(QtCore.QThread):
         self.start()
     def generate_lut(self, array, magic_value=None):
         data=np.arange(256)
-        
-        
         
         if magic_value is not None:
             corr = (array == int(magic_value)).sum() / (array > 0).sum()

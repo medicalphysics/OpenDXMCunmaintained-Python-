@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from opendxmc.app.view import View, ViewController
+from opendxmc.app.view import View, ViewController, RunnerView
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget, OrganDoseModel, OrganDoseView
 import logging
 
@@ -180,6 +180,8 @@ class MainWindow(QtGui.QMainWindow):
         importer_busywidget = BusyWidget(tooltip='Importing DICOM files')
         importer_phantoms_busywidget = BusyWidget(tooltip='Importing digital phantoms')
 
+        mc_progressbar = RunnerView()
+
         # statusbar
         status_bar = QtGui.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
@@ -217,6 +219,8 @@ class MainWindow(QtGui.QMainWindow):
         database_selector_widget.set_database_path.connect(self.interface.set_database)
         self.interface.send_proper_database_path.connect(database_selector_widget.validate_apply)
 
+
+
         # importer
         self.importer = Importer(self.interface)
         self.importer.running.connect(importer_busywidget.busy)
@@ -232,10 +236,9 @@ class MainWindow(QtGui.QMainWindow):
 
 
         ## MC runner
-        self.mcrunner = RunManager(self.interface)
+        self.mcrunner = RunManager(self.interface, mc_progressbar)
         self.mcrunner.mc_calculation_running.connect(simulation_busywidget.busy)
         self.mcrunner.mc_calculation_running.connect(database_selector_widget.locked)
-        self.viewcontroller.set_mc_runner(self.mcrunner.runner)
 
 
         # Models
@@ -264,9 +267,17 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(material_list_view, 100)
         central_splitter.addWidget(list_view_collection_widget)
 
+        properties_collection_widget = QtGui.QWidget()
+        properties_collection_widget.setContentsMargins(0, 0, 0, 0)
+        properties_collection_widget.setLayout(QtGui.QVBoxLayout())
+        properties_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
+        properties_collection_widget.layout().addWidget(import_scaling_widget, 1)
+        
         simulation_editor = PropertiesEditWidget(self.interface, self.simulation_list_model, self.mcrunner)
         self.viewcontroller.set_simulation_editor(simulation_editor.model)
-        central_splitter.addWidget(simulation_editor)
+        properties_collection_widget.layout().addWidget(simulation_editor, 3)
+        properties_collection_widget.layout().addWidget(mc_progressbar, 1)
+        central_splitter.addWidget(properties_collection_widget)
 
         for wwid in self.viewcontroller.view_widget():
             central_splitter.addWidget(wwid)
