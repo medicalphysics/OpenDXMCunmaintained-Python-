@@ -38,7 +38,7 @@ def log_elapsed_time(time_start, elapsed_exposures, total_exposures,
         logger.info('{0}: [{1}%] estimated ETA is {2}, finished exposure {3}'
                     ' of {4}'.format(time.ctime(), p, human_time(eta),
                                      elapsed_exposures, total_exposures))
-    return '{0}%: '.format(p) + human_time(eta)
+    return '{0}% ETA'.format(p) + human_time(eta)
 
 
 def recarray_to_dict(arr, key=None, value=None, value_is_string=False):
@@ -348,7 +348,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 
     tot_histories = simulation['histories'] * simulation['exposures']
 
-    if tot_histories > 1e6:
+    if tot_histories > 1e7:
         coffe_msg = ', go get coffe!'
     else:
         coffe_msg = '.'
@@ -376,7 +376,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
         if (time.clock() - exposure_time) > 5:
             eta = log_elapsed_time(time_start, e+1, n, start_exposure)
             if callback is not None:
-                callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=1)), spacing[0] ,spacing[2] ,eta, True])
+                callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=0)), spacing[1] ,spacing[2] ,eta, True])
                 simulation['start_at_exposure_no'] = e + 1
             exposure_time = time.clock()
 
@@ -392,7 +392,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 #        simulation['start_at_exposure_no'] = e + 1
 
     if callback is not None:
-        callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=1)), spacing[0] ,spacing[2] ,'Preforming dose calibration', True])
+        callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=0)), spacing[1] ,spacing[2] ,'Preforming dose calibration', True])
 #        callback(simulation['name'], {'energy_imparted': None}, e + 1, 'Preforming dose calibration')
 
     generate_dose_conversion_factor(simulation, materials, callback)

@@ -1,9 +1,22 @@
 #ifndef ENGINELIB
 #define ENGINELIB
 
-#include <stdio.h>
+//#define USINGCUDA
+#ifndef USINGCUDA
+#include <omp.h>
+#include <stdbool.h>
+#else
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#endif
+
+
+#include "math.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 #include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

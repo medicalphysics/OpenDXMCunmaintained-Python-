@@ -1,20 +1,4 @@
 
-//#define USINGCUDA
-#ifndef USINGCUDA
-#include <omp.h>
-#include <stdbool.h>
-#else
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#endif
-
-
-#include "math.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdint.h>
-
 #include "enginelib.h"
 
 
@@ -205,7 +189,7 @@ double interp(double x, double x1, double x2, double y1, double y2)
 	return y1 + (y2 - y1) * ((x - x1) / (x2 - x1));
 }
 
-#ifdef USINGCUDA
+/*#ifdef USINGCUDA
 __device__
 #endif
 double lut_interpolator(int material, int interaction, double energy, int *lut_shape, double *lut, size_t *lower_index)
@@ -245,7 +229,42 @@ double lut_interpolator(int material, int interaction, double energy, int *lut_s
 	// end binary search
 	lower_index[0] = ind + middle;
 	return interp(energy, lut[lower_index[0]], lut[lower_index[0] + 1], lut[lower_index[0] + lut_shape[2] * interaction], lut[lower_index[0] + lut_shape[2] * interaction + 1]);
+}*/
+
+
+#ifdef USINGCUDA
+__device__
+#endif
+void binary_search(double *arr, double value, size_t *start, size_t *stop)
+{
+	size_t mid = (stop[0] + start[0]) / 2;
+	while (mid != start[0])
+	{
+		if (value < arr[mid])
+		{
+			stop[0] = mid;
+		}
+		else
+		{
+			start[0] = mid;
+		}
+		mid = (stop[0] + start[0]) / 2;
+	}
 }
+
+#ifdef USINGCUDA
+__device__
+#endif
+double lut_interpolator(int material, int interaction, double energy, int *lut_shape, double *lut, size_t *lower_index)
+{
+	lower_index[0] = material * lut_shape[1] * lut_shape[2];
+	size_t higher_index = lower_index[0] + lut_shape[2] - 1;
+	binary_search(lut, energy, lower_index, &higher_index);
+	return interp(energy, lut[lower_index[0]], lut[lower_index[0] + 1], lut[lower_index[0] + lut_shape[2] * interaction], lut[lower_index[0] + lut_shape[2] * interaction + 1]);
+}
+
+
+
 
 #ifdef USINGCUDA
 __device__
