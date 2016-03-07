@@ -1,6 +1,46 @@
 #ifndef ENGINELIB
 #define ENGINELIB
 
+#include "math.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <stdint.h>
+
+//#define USING_FLOAT
+#define USING_SIDDON
+//#define USINGCUDA
+
+#ifndef USING_FLOAT
+#define FLOAT double
+#define FMAX fmax
+#define FMIN fmin
+#define SQRT sqrt
+#define FABS fabs
+#define EXP exp
+#define LOG log
+#define SIN sin
+#define COS cos
+#define TAN tan
+#define ACOS acos
+#define ASIN asin
+#define POW pow
+#else
+#define FLOAT float
+#define FMAX fmaxf
+#define FMIN fminf
+#define SQRT sqrtf
+#define FABS fabsf
+#define EXP expf
+#define LOG logf
+#define SIN sinf
+#define COS cosf
+#define TAN tanf
+#define ACOS acosf
+#define ASIN asinf
+#define POW powf
+#endif
+
 //#define USINGCUDA
 #ifndef USINGCUDA
 #include <omp.h>
@@ -10,12 +50,30 @@
 #include "device_launch_parameters.h"
 #endif
 
+#ifdef _MSC_VER
+#define INLINE __forceinline
+#else
+#define INLINE inline
+#endif
 
-#include "math.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdint.h>
+// CUDA Constants
+#ifdef USINGCUDA
+__device__ __constant__ FLOAT ERRF = 1e-9; // Precision error
+__device__ __constant__ FLOAT ELECTRON_MASS = 510998.9;  //  eV/(c*c)
+__device__ __constant__ FLOAT PI = 3.14159265359;
+__device__ __constant__ FLOAT ENERGY_CUTOFF = 1000; // eV
+__device__ __constant__ FLOAT WEIGHT_CUTOFF = 0.01;
+__device__ __constant__ FLOAT RUSSIAN_RULETTE_CHANCE = .2;  // CHANCE probability of photon survival
+#else
+const FLOAT ERRF = 1e-6; // Precision error
+const FLOAT ELECTRON_MASS = 510998.9;  //  eV/(c*c)
+const FLOAT PI = 3.14159265359;
+const FLOAT ENERGY_CUTOFF = 1000; // eV
+const FLOAT WEIGHT_CUTOFF = 0.01;
+const FLOAT RUSSIAN_RULETTE_CHANCE = .2; //CHANCE probability of photon survival
+#endif
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,65 +82,67 @@ extern "C" {
 	typedef struct
 	{
 		int *shape;
-		double *spacing;
-		double *offset;
+		FLOAT *spacing;
+		FLOAT *offset;
 		int *material_map;
-		double *density_map;
+		FLOAT *density_map;
 		int *lut_shape;
-		double *attenuation_lut;
-		double *energy_imparted;
-		double *max_density;
+		FLOAT *attenuation_lut;
+		FLOAT *energy_imparted;
+		FLOAT *max_density;
 		uint64_t *seed;
+		int *use_siddon;
 	}Simulation;
 
 	typedef struct
 	{
-		double *source_position;
-		double *source_direction;
-		double *scan_axis;
-		double *sdd;
-		double *fov;
-		double *collimation;
-		double *weight;
+		FLOAT *source_position;
+		FLOAT *source_direction;
+		FLOAT *scan_axis;
+		FLOAT *sdd;
+		FLOAT *fov;
+		FLOAT *collimation;
+		FLOAT *weight;
 		int *specter_elements;
-		double *specter_cpd;
-		double *specter_energy;
+		FLOAT *specter_cpd;
+		FLOAT *specter_energy;
 	}Source;
 
 	typedef struct
 	{
-		double *source_position;
-		double *source_direction;
-		double *scan_axis;
-		double *scan_angle;
-		double *rot_angle;
-		double *weight;
+		FLOAT *source_position;
+		FLOAT *source_direction;
+		FLOAT *scan_axis;
+		FLOAT *scan_axis_fan_angle;
+		FLOAT *rot_axis_fan_angle;
+		FLOAT *weight;
 		int *specter_elements;
-		double *specter_cpd;
-		double *specter_energy;
+		FLOAT *specter_cpd;
+		FLOAT *specter_energy;
 		int *bowtie_elements;
-		double *bowtie_weight;
-		double *bowtie_angle;
+		FLOAT *bowtie_weight;
+		FLOAT *bowtie_angle;
 	}SourceBowtie;
 
 	__declspec(dllexport) int number_of_cuda_devices();
 
 	__declspec(dllexport) void cuda_device_name(int device_number, char* name);
 
-	__declspec(dllexport) void* setup_simulation(int *shape, double *spacing, double *offset, int *material_map, double *density_map, int *lut_shape, double *lut, double *energy_imparted);
+	__declspec(dllexport) void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *lut, FLOAT *energy_imparted);
 
-	__declspec(dllexport) void* setup_source(double *source_position, double *source_direction, double *scan_axis, double *sdd, double *fov, double *collimation, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements);
+	__declspec(dllexport) void* setup_source(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements);
 
-	__declspec(dllexport) void* setup_source_bowtie(double *source_position, double *source_direction, double *scan_axis, double *scan_angle, double *rot_angle, double *weight, double *specter_cpd, double *specter_energy, int *specter_elements, double* bowtie_weight, double* bowtie_angle, int* bowtie_elements);
+	__declspec(dllexport) void* setup_source_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements, FLOAT* bowtie_weight, FLOAT* bowtie_angle, int* bowtie_elements);
 
 	__declspec(dllexport) void run_simulation(void *source, size_t n_particles, void *simulation);
 
 	__declspec(dllexport) void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simulation);
 
-	__declspec(dllexport) void cleanup_simulation(void *simulation, int *shape, double *energy_imparted);
+	__declspec(dllexport) void cleanup_simulation(void *simulation, int *shape, FLOAT *energy_imparted);
 
 	__declspec(dllexport) void cleanup_source(void *source);
 #ifdef __cplusplus
 }
 #endif
+
 #endif 

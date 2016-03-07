@@ -1,6 +1,6 @@
 // enginetest.cpp : Defines the entry point for the console application.
 //
-
+/*
 #include <stdlib.h>
 #include "enginelib.h"
 #include <math.h>
@@ -120,10 +120,8 @@ int main()
 
 
 	run_simulation(geo, n_particles, sim);
-	/*run_simulation(particles, n_particles, sim);
-	run_simulation(particles, n_particles, sim);
-	run_simulation(particles, n_particles, sim);
-	run_simulation(particles, n_particles, sim);*/
+	
+	
 
 	cleanup_simulation(sim, shape, energy_imparted);
 	cleanup_source(geo);
@@ -138,12 +136,7 @@ int main()
 		{
 			for (int k = 0; k < shape[2]; k++)
 			{
-				/*index = shape[1] * shape[2] * i + shape[2] * j + k;
-				if (((Simulation*)sim)->energy_imparted[index] > 0.000000000001)
-				{
-					energy1234 = ((Simulation*)sim)->energy_imparted[index];
-					printf("\n energy in %d %d %d = %f", i, j, k, ((Simulation*)sim)->energy_imparted[index]);
-				}*/
+				
 				index = shape[1] * shape[2] * i + shape[2] * j + k;
 				if (energy_imparted[index] > 0.000000000001)
 				{
@@ -155,4 +148,5 @@ int main()
 	}
 	
 }
+*/
 

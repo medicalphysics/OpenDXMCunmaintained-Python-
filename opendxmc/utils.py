@@ -119,6 +119,19 @@ def circle_mask(array_shape, radius, center=None):
     a[cx-radius:cx+radius+1, cy-radius:cy+radius+1][index] = 1
     return a
 
+def sphere_mask(array_shape, radius, center=None):
+    a = np.zeros(array_shape, np.int)
+    if not center:
+        cx = array_shape[0] / 2
+        cy = array_shape[1] / 2
+        cz = array_shape[2] / 2
+    else:
+        cx, cy, cz= center
+    x, y, z = np.ogrid[-radius: radius, -radius: radius, -radius: radius]
+    index = x**2 + y**2 + z**2 <= radius**2
+    a[cx-radius:cx+radius+1, cy-radius:cy+radius+1, cz-radius:cz+radius+1][index] = 1
+    return a
+
 
 def find_all_files(pathList):
     for p in pathList:

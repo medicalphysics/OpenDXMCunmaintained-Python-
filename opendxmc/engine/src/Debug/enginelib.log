@@ -1,25 +1,22 @@
-﻿Build started 02.03.2016 22:31:55.
+﻿Build started 05.03.2016 23:41:46.
      1>Project "C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\enginelib.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D ENGINELIB_EXPORTS /D _WINDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt enginelib.c enginetest.c
-         enginetest.c
-     1>enginetest.c(83): warning C4101: 'number_of_devices' : unreferenced local variable
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D ENGINELIB_EXPORTS /Gm /EHsc /RTCc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt enginelib.c
          enginelib.c
-     1>enginelib.c(277): warning C4018: '>=' : signed/unsigned mismatch
-     1>enginelib.c(279): warning C4018: '>=' : signed/unsigned mismatch
-     1>enginelib.c(281): warning C4018: '>=' : signed/unsigned mismatch
-     1>enginelib.c(492): warning C4018: '<' : signed/unsigned mismatch
-     1>enginelib.c(536): warning C4018: '<' : signed/unsigned mismatch
-     1>enginelib.c(561): warning C4018: '<' : signed/unsigned mismatch
-     1>enginelib.c(859): warning C4018: '<' : signed/unsigned mismatch
-         Generating Code...
+     1>enginelib.c(165): warning C4018: '>=' : signed/unsigned mismatch
+     1>enginelib.c(167): warning C4018: '>=' : signed/unsigned mismatch
+     1>enginelib.c(169): warning C4018: '>=' : signed/unsigned mismatch
+     1>enginelib.c(1027): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(278): warning C4756: overflow in constant arithmetic
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(245): warning C4756: overflow in constant arithmetic
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(270): warning C4756: overflow in constant arithmetic
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.dll" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.lib" /MACHINE:X86 /DLL Debug\enginelib.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.pdb" /SUBSYSTEM:CONSOLE /LARGEADDRESSAWARE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.lib" /MACHINE:X86 Debug\enginelib.obj
          Debug\enginetest.obj
             Creating library C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.lib and object C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.exp
-         enginelib.vcxproj -> C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.dll
+         enginelib.vcxproj -> C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib32.exe
      1>Done Building Project "C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\enginelib.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.52
+Time Elapsed 00:00:01.10
