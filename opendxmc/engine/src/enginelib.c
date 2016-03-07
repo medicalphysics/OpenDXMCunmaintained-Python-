@@ -149,9 +149,6 @@ FLOAT lut_interpolator(int material, int interaction, FLOAT energy, int *lut_sha
 {
 	lower_index[0] = material * lut_shape[1] * lut_shape[2];
 	size_t higher_index = lower_index[0] + lut_shape[2] - 1;
-	if (lower_index[0] > 1000000){
-		int a = 0;
-	}
 	binary_search(lut, energy, lower_index, &higher_index);
 	return interp(energy, lut[lower_index[0]], lut[lower_index[0] + 1], lut[lower_index[0] + lut_shape[2] * interaction], lut[lower_index[0] + lut_shape[2] * interaction + 1]);
 }
@@ -274,20 +271,31 @@ void calculate_alphas_extreme(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset,
 
 }
 
-void calculate_first_indices(FLOAT *ray, FLOAT *spacing, FLOAT *offset, FLOAT *aglobalmin, FLOAT *aglobalmax, int *indicesmin, int *indexupdate)
+void calculate_first_indices(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aglobalmin, FLOAT *aupdate, int *indicesmin, int *indexupdate)
 {
+	FLOAT a_cand = aglobalmin[0]+ERRF;
 	for (size_t i = 0; i < 3; i++)
 	{
 		if (ray[i + 3] > 0.f)
 		{
-			indicesmin[i] = (int)((ray[i] + aglobalmin[0] * ray[i + 3] - offset[i]) / spacing[i] + ERRF);
+			indicesmin[i] =  (int)((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
 			indexupdate[i] = 1;
 		}
 		else
 		{
-			indicesmin[i] = (int)((ray[i] + aglobalmin[0] * ray[i + 3] - offset[i]) / spacing[i] - ERRF);
+			indicesmin[i] = (int)((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
 			indexupdate[i] = -1;
 		}
+
+		if (indicesmin[i] < 0)
+		{
+			indicesmin[i] = 0;
+		}
+		else if (indicesmin[i] > (N[i] - 1))
+		{
+			indicesmin[i] = N[i] - 1;
+		}
+
 	}
 }
 
@@ -303,14 +311,14 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 	FLOAT amin[3], aupdate[3], aglobalmin, aglobalmax;
 	calculate_alphas_extreme(ray, N, spacing, offset, aupdate, &aglobalmin, &aglobalmax);
 
-	if (ABS(aglobalmin - aglobalmax)<ERRF)
+	if (FABS(aglobalmin - aglobalmax) < ERRF)
 	{ //ray is not intersecting
 		return false;
 	}
 
 	int indices[3];
 	int indexupdate[3];
-	calculate_first_indices(ray, spacing, offset, &aglobalmin, &aglobalmax, indices, indexupdate);
+	calculate_first_indices(ray, N, spacing, offset, &aglobalmin, aupdate, indices, indexupdate);
 
 	size_t dim_index;
 	size_t attenuation_index;
@@ -322,6 +330,8 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 	FLOAT attenuation_coef;
 	FLOAT r1 = randomduniform(state);
 
+	//FLOAT cum_pixel_path_lenght = 0;
+
 	//doing one iteration to get indicec right
 
 	amin[0] = aglobalmin + aupdate[0];
@@ -332,6 +342,7 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 	{
 		dim_index = min_index3(amin);
 		pixel_path_lenght = amin[dim_index] - aglobalmin;
+		//cum_pixel_path_lenght += pixel_path_lenght;
 		volume_index[0] = (size_t)(indices[0] * (size_t)N[1] * (size_t)N[2] + indices[1] * (size_t)N[2] + indices[2]);
 		attenuation_coef = density_map[volume_index[0]] * lut_interpolator(material_map[volume_index[0]], 1, ray[6], att_shape, attenuation_lut, &attenuation_index);
 		interaction_prob = EXP(-attenuation_coef  * pixel_path_lenght);
@@ -339,7 +350,7 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 		if (cum_interaction_prob <= r1)
 		{
 			//finding interaction path lenght in voxel
-			pixel_interaction_lenght = aglobalmin + LOG(1 - r1+ cum_interaction_prob) / (-attenuation_coef);
+			pixel_interaction_lenght = aglobalmin + LOG(r1 *interaction_prob / cum_interaction_prob) / (-attenuation_coef);
 			ray[0] += ray[3] * pixel_interaction_lenght;
 			ray[1] += ray[4] * pixel_interaction_lenght;
 			ray[2] += ray[5] * pixel_interaction_lenght;
@@ -1243,11 +1254,11 @@ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 	uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
 
 	init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
-//#pragma omp parallel num_threads(n_threads) private(thread_number)
+#pragma omp parallel num_threads(n_threads) private(thread_number)
 	{
 		thread_number = omp_get_thread_num();
 		int64_t i;
-//#pragma omp for
+#pragma omp for
 		for (i = 0; i < n_particles; i++)
 		{
 			transport_particles
@@ -1293,11 +1304,11 @@ void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simul
 	uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
 
 	init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
-//#pragma omp parallel num_threads(n_threads) private(thread_number)
+#pragma omp parallel num_threads(n_threads) private(thread_number)
 	{
 		thread_number = omp_get_thread_num();
 		int64_t i;
-//#pragma omp for
+#pragma omp for
 		for (i = 0; i < n_particles; i++)
 		{
 			transport_particles_bowtie(
@@ -1488,9 +1499,9 @@ int main()
 {
 
 	size_t n_particles = 1000000;
-	int shape[3] = { 6, 6, 6 };
+	int shape[3] = { 10, 10, 10 };
 	int lut_shape[3] = { 2, 5, 5 };
-	FLOAT spacing[3] = { 10, 10, 10 };
+	FLOAT spacing[3] = { 1, 1, 1 };
 	FLOAT offset[3];
 
 	// init geometry variables
@@ -1508,12 +1519,14 @@ int main()
 	sim = setup_simulation(shape, spacing, offset, material_map, density_map, lut_shape, attenuation_lut, energy_imparted);
 
 	//init source variables
-	FLOAT source_position[3] = { 100, 0, 0 };
-	FLOAT source_direction[3] = { -1, 0, 0 };
+	FLOAT source_position[3] = { -7, 0, 0 };
+	FLOAT source_direction[3] = { 1, 1, 0 };
+	normalize_3Dvector(source_direction);
+
 	FLOAT scan_axis[3] = { 0, 0, 1 };
 	FLOAT sdd = 119;
-	FLOAT fov = 50;
-	FLOAT collimation = 4;
+	FLOAT fov = 0;// 50;
+	FLOAT collimation = 0;// 4;
 	FLOAT weight = 1;
 
 	FLOAT rot_angle = TAN(fov / sdd) * 2.f;
@@ -1533,7 +1546,7 @@ int main()
 
 	void *geo2 = setup_source_bowtie(source_position, source_direction, scan_axis, &scan_angle, &rot_angle, &weight, specter_cpd, specter_energy, &specter_elements, bowtie_weights, bowtie_angle, &bowtie_size);
 
-	//run_simulation(geo, n_particles, sim);
+	run_simulation(geo, n_particles, sim);
 	run_simulation_bowtie(geo2, n_particles, sim);
 
 

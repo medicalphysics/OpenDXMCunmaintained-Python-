@@ -1,12 +1,12 @@
-﻿Build started 07.03.2016 01:01:23.
+﻿Build started 08/03/2016 00:26:39.
      1>Project "C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\enginelib.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _WINDOWS /D _USRDLL /D ENGINELIB_EXPORTS /Gm /EHsc /RTCc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TC /errorReport:prompt enginelib.c
          enginelib.c
-     1>enginelib.c(1251): warning C4018: '<' : signed/unsigned mismatch
-     1>enginelib.c(1301): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(248): warning C4756: overflow in constant arithmetic
-     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(271): warning C4756: overflow in constant arithmetic
+     1>enginelib.c(1262): warning C4018: '<' : signed/unsigned mismatch
+     1>enginelib.c(1312): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(245): warning C4756: overflow in constant arithmetic
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(268): warning C4756: overflow in constant arithmetic
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib64.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib64.pdb" /SUBSYSTEM:CONSOLE /LARGEADDRESSAWARE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Debug\enginelib64.lib" /MACHINE:X64 x64\Debug\enginelib.obj
          x64\Debug\enginetest.obj
@@ -16,4 +16,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.40
+Time Elapsed 00:00:00.91

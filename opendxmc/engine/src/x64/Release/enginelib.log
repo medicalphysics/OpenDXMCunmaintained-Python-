@@ -1,15 +1,14 @@
-﻿Build started 05.03.2016 23:41:58.
+﻿Build started 08/03/2016 00:27:29.
      1>Project "C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\enginelib.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /nologo /W3 /WX- /sdl- /Ox /Ob2 /Oi /Ot /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D ENGINELIB_EXPORTS /D _WINDLL /Gm- /MD /GS /Qpar /arch:AVX2 /fp:fast /Zc:wchar_t- /Zc:forScope /GR- /openmp /Fo"x64\Release\\" /Fd"x64\Release\vc120.pdb" /Gd /TC /errorReport:prompt enginelib.c enginetest.c
          enginelib.c
-     1>enginelib.c(1263): warning C4018: '<' : signed/unsigned mismatch
-     1>enginelib.c(1313): warning C4018: '<' : signed/unsigned mismatch
+     1>enginelib.c(1262): warning C4018: '<' : signed/unsigned mismatch
+     1>enginelib.c(1312): warning C4018: '<' : signed/unsigned mismatch
          enginetest.c
          Generating Code...
      1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(245): warning C4756: overflow in constant arithmetic
-     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(278): warning C4756: overflow in constant arithmetic
-     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(270): warning C4756: overflow in constant arithmetic
+     1>c:\users\ander\documents\github\opendxmc\opendxmc\engine\src\enginelib.c(268): warning C4756: overflow in constant arithmetic
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Release\enginelib64.dll" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Release\enginelib64.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\ander\Documents\GitHub\OpenDXMC\opendxmc\engine\src\Release\enginelib64.lib" /MACHINE:X64 /DLL x64\Release\enginelib.obj
          x64\Release\enginetest.obj
@@ -19,4 +18,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.58
+Time Elapsed 00:00:00.75

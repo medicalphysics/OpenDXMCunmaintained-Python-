@@ -25,6 +25,7 @@
 #define ACOS acos
 #define ASIN asin
 #define POW pow
+#define CEIL ceil
 #else
 #define FLOAT float
 #define FMAX fmaxf
@@ -39,6 +40,7 @@
 #define ACOS acosf
 #define ASIN asinf
 #define POW powf
+#define CEIL ceilf
 #endif
 
 //#define USINGCUDA
@@ -91,7 +93,6 @@ extern "C" {
 		FLOAT *energy_imparted;
 		FLOAT *max_density;
 		uint64_t *seed;
-		int *use_siddon;
 	}Simulation;
 
 	typedef struct
