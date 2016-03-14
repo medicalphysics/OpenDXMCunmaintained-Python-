@@ -103,11 +103,16 @@ class ViewController(QtCore.QObject):
             return
         for scene in self.scenes.values():
             scene.set_metadata(data_dict)
-        for glwid in self.glwidgets.values():
-            glwid.set_metadata(data_dict)
+        if data_dict['is_phantom']:
+            for glwid in self.glwidgets.values():
+                glwid.set_metadata(data_dict)
+        else:
+            for glwid in [value for key, value in self.glwidgets.items() if key != 'dens']:
+                glwid.set_metadata(data_dict)
         self.selectScene('planning')
         self.update_index(self.current_index)
         self.graphicsview.fitInView(self.graphicsview.sceneRect(), QtCore.Qt.KeepAspectRatio)
+        
 
     @QtCore.pyqtSlot(int)
     def update_index(self, index):
@@ -1206,6 +1211,7 @@ class RunningScene(QtGui.QGraphicsScene):
         self.progress_item = self.addText('0 %')
         self.progress_item.setDefaultTextColor(QtCore.Qt.white)
         self.progress_item.setFlag(self.progress_item.ItemIgnoresTransformations, True)
+        self.progress_item
     def defaultLevels(self, array):
 
         p = array.max() - array.min()
@@ -1465,6 +1471,7 @@ class View3D(gl.GLViewWidget):
     request_opengl_array = QtCore.pyqtSignal(list)
     def __init__(self, *args, array=None, lut_name=None, dim_scale=False, magic_number=None, custom_data_range=None, smoothness=None, custom_data_range_is_modifier=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setMinimumWidth(100)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.name = ''
         if custom_data_range is None:
@@ -1499,7 +1506,7 @@ class View3D(gl.GLViewWidget):
         self.worker.opengl_array.connect(self.set_gl_array)
 
         self.__glitem = None
-
+        self.hide()
 
     def set_metadata(self, sim, index=0):
         if self.name != sim.get('name', ''):
@@ -1521,24 +1528,26 @@ class View3D(gl.GLViewWidget):
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
+        self.hide()
+        
 #        self.index = index % self.shape[self.view_orientation]
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, data, array_name):
+        
         if name != self.name:
             if self.__glitem is not None:
                 self.removeItem(self.__glitem)
                 self.__glitem = None
             return
-        if array_name not in self.array_name:
+        if array_name != self.array_name:
             return
+            
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
-        if self.array_name=='dose':
-            self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
-        else:
-            self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
+        self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
+
       
     @QtCore.pyqtSlot(np.ndarray)
     def set_gl_array(self, d2):
@@ -1557,103 +1566,105 @@ class View3D(gl.GLViewWidget):
         self.__glitem.translate(*(-self.shape * .5 * scaling / self.scaling))
         
         self.addItem(self.__glitem)
+     
+        self.show()
 
-class View3D2(gl.GLViewWidget):
-    request_array = QtCore.pyqtSignal(str, str, float, float)
-    request_opengl_array = QtCore.pyqtSignal(list)
-    def __init__(self, *args, arrays=None, lut_names=None, dim_scale=False, custom_data_range=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-        self.name = ''
-        self.custom_data_range = custom_data_range
-        if arrays:
-            self.array_names = arrays
-        if lut_names:
-            self.lut_names = lut_names
-        else:
-            self.lut_names = ['gray']*len(self.array_names)
-        self.dim_scaling = dim_scale
-       
-        self.shape = np.ones(3, np.int)
-        self.spacing = np.ones(3, np.double)
-        self.scaling = np.ones(3, np.double)
-        
-        self.worker = View3Dworker()
-        self.request_opengl_array.connect(self.worker.generate_tf)
-        self.worker.opengl_array.connect(self.set_gl_array)
-
-        self.__glitem = None
-        self.processed_index = []
-
-    def set_metadata(self, sim, index=0):
-        self.name = sim.get('name', '')
-        self.spacing = sim.get('spacing', np.ones(3, np.double))
-        self.shape = sim.get('shape', np.ones(3, np.int))
-        if self.dim_scaling:
-            self.scaling = sim.get('scaling', np.ones(3, np.double))
-        else:
-            self.scaling = np.ones(3, np.double)
-        self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
-        self.processed_index = []
-        for arr_name in self.array_names:
-            self.request_array.emit(self.name, arr_name)
-        if self.__glitem is not None:
-            for item in self.__glitem:
-                self.removeItem(item)
-            self.__glitem = None
-#        self.index = index % self.shape[self.view_orientation]
-
-    @QtCore.pyqtSlot(str, np.ndarray, str)
-    def set_requested_array(self, name, data, array_name):
-        if name != self.name:
-            if self.__glitem is not None:
-                for item in self.__glitem:
-                    self.removeItem(item)
-                self.__glitem = None
-            return
-        if array_name not in self.array_names:
-            return
-      
-        index = self.array_names.index(array_name)        
-        if index not in self.processed_index:
-            self.processed_index.append(index)
-        else:
-            return
-        
-        if self.custom_data_range[index] is None:
-            self.request_opengl_array.emit([data, None, None, None, self.lut_names[index]])
-        else:
-            self.request_opengl_array.emit([data, self.custom_data_range[index][0], self.custom_data_range[index][1], 100, self.lut_names[index]])
-        
-      
-        
-    @QtCore.pyqtSlot(np.ndarray)
-    def set_gl_array(self, d2):  
-        print('got an array')
-        if self.__glitem is None:
-            self.dumarr = [d2]
-            self.__glitem=[]
-        else:
-            self.dumarr.append(d2)
-        
-        if len(self.dumarr) == 2:
-            
-            d1 = ((self.dumarr[0]).astype(np.float)) / 255.
-            d2 = ((self.dumarr[1]).astype(np.float)) / 255.
-            d12=np.empty_like(d1)
-            for i in range(3):
-                d12[...,i] = d1[...,i]  + d2[...,i]*(1.-d1[...,3])
-            d12[...,3] = d1[...,3] + d2[...,3]*(1.-d1[...,3])                
-            d12=(d12*255).astype(np.ubyte)
-#            d12 = (self.dumarr[0]//2+self.dumarr[1]//2)
-            print('composing', d12.dtype, d12[...,3].max(), d12[...,3].min())
-            self.__glitem.append( gl.GLVolumeItem(d12, glOptions='translucent', smooth=True, sliceDensity=1))
-        
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
-            S = self.spacing * self.scaling
-            scaling =((S/(np.sum(S*S))**.5))
-            self.__glitem[0].scale(*scaling)
-            self.__glitem[0].translate(*(-self.shape / 2. * scaling))
-            self.addItem(self.__glitem[0])
-            
+#class View3D2(gl.GLViewWidget):
+#    request_array = QtCore.pyqtSignal(str, str, float, float)
+#    request_opengl_array = QtCore.pyqtSignal(list)
+#    def __init__(self, *args, arrays=None, lut_names=None, dim_scale=False, custom_data_range=None, **kwargs):
+#        super().__init__(*args, **kwargs)
+#        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+#        self.name = ''
+#        self.custom_data_range = custom_data_range
+#        if arrays:
+#            self.array_names = arrays
+#        if lut_names:
+#            self.lut_names = lut_names
+#        else:
+#            self.lut_names = ['gray']*len(self.array_names)
+#        self.dim_scaling = dim_scale
+#       
+#        self.shape = np.ones(3, np.int)
+#        self.spacing = np.ones(3, np.double)
+#        self.scaling = np.ones(3, np.double)
+#        
+#        self.worker = View3Dworker()
+#        self.request_opengl_array.connect(self.worker.generate_tf)
+#        self.worker.opengl_array.connect(self.set_gl_array)
+#
+#        self.__glitem = None
+#        self.processed_index = []
+#
+#    def set_metadata(self, sim, index=0):
+#        self.name = sim.get('name', '')
+#        self.spacing = sim.get('spacing', np.ones(3, np.double))
+#        self.shape = sim.get('shape', np.ones(3, np.int))
+#        if self.dim_scaling:
+#            self.scaling = sim.get('scaling', np.ones(3, np.double))
+#        else:
+#            self.scaling = np.ones(3, np.double)
+#        self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
+#        self.processed_index = []
+#        for arr_name in self.array_names:
+#            self.request_array.emit(self.name, arr_name)
+#        if self.__glitem is not None:
+#            for item in self.__glitem:
+#                self.removeItem(item)
+#            self.__glitem = None
+##        self.index = index % self.shape[self.view_orientation]
+#
+#    @QtCore.pyqtSlot(str, np.ndarray, str)
+#    def set_requested_array(self, name, data, array_name):
+#        if name != self.name:
+#            if self.__glitem is not None:
+#                for item in self.__glitem:
+#                    self.removeItem(item)
+#                self.__glitem = None
+#            return
+#        if array_name not in self.array_names:
+#            return
+#      
+#        index = self.array_names.index(array_name)        
+#        if index not in self.processed_index:
+#            self.processed_index.append(index)
+#        else:
+#            return
+#        
+#        if self.custom_data_range[index] is None:
+#            self.request_opengl_array.emit([data, None, None, None, self.lut_names[index]])
+#        else:
+#            self.request_opengl_array.emit([data, self.custom_data_range[index][0], self.custom_data_range[index][1], 100, self.lut_names[index]])
+#        
+#      
+#        
+#    @QtCore.pyqtSlot(np.ndarray)
+#    def set_gl_array(self, d2):  
+#        print('got an array')
+#        if self.__glitem is None:
+#            self.dumarr = [d2]
+#            self.__glitem=[]
+#        else:
+#            self.dumarr.append(d2)
+#        
+#        if len(self.dumarr) == 2:
+#            
+#            d1 = ((self.dumarr[0]).astype(np.float)) / 255.
+#            d2 = ((self.dumarr[1]).astype(np.float)) / 255.
+#            d12=np.empty_like(d1)
+#            for i in range(3):
+#                d12[...,i] = d1[...,i]  + d2[...,i]*(1.-d1[...,3])
+#            d12[...,3] = d1[...,3] + d2[...,3]*(1.-d1[...,3])                
+#            d12=(d12*255).astype(np.ubyte)
+##            d12 = (self.dumarr[0]//2+self.dumarr[1]//2)
+#            print('composing', d12.dtype, d12[...,3].max(), d12[...,3].min())
+#            self.__glitem.append( gl.GLVolumeItem(d12, glOptions='translucent', smooth=True, sliceDensity=1))
+#        
+#        #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
+#        #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
+#            S = self.spacing * self.scaling
+#            scaling =((S/(np.sum(S*S))**.5))
+#            self.__glitem[0].scale(*scaling)
+#            self.__glitem[0].translate(*(-self.shape / 2. * scaling))
+#            self.addItem(self.__glitem[0])
+#            

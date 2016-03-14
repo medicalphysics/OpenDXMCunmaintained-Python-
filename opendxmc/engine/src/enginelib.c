@@ -58,49 +58,6 @@ FLOAT interp(FLOAT x, FLOAT x1, FLOAT x2, FLOAT y1, FLOAT y2)
 	return y1 + ((y2 - y1) * ((x - x1)) / (x2 - x1));
 }
 
-/*#ifdef USINGCUDA
-__device__
-#endif
-FLOAT lut_interpolator(int material, int interaction, FLOAT energy, int *lut_shape, FLOAT *lut, size_t *lower_index)
-{
-// binary search for indices in the lut closest to the requested value , the lower index pointer vil
-int first = 0;
-int last = lut_shape[2] - 1;
-int middle = (first + last) / 2;
-size_t ind = material * lut_shape[1] * lut_shape[2];
-
-while (first <= last) {
-if (lut[ ind + middle + 1] < energy)
-first = middle + 1;
-else if ((lut[ind + middle] <= energy) && (lut[ind + middle + 1] > energy)) {
-
-break;
-}
-else
-last = middle - 1;
-middle = (first + last) / 2;
-}
-if (first > last)
-{
-// if we dont find the element we return the extreme values at the appropriate side of the table
-
-if (energy <= lut[ind])
-{
-lower_index[0] = 0;
-return lut[ind + interaction * lut_shape[2]];
-}
-else
-{
-lower_index[0] = lut_shape[2] - 1;
-return lut[ind + interaction * lut_shape[2] + lut_shape[2] - 1];
-}
-}
-// end binary search
-lower_index[0] = ind + middle;
-return interp(energy, lut[lower_index[0]], lut[lower_index[0] + 1], lut[lower_index[0] + lut_shape[2] * interaction], lut[lower_index[0] + lut_shape[2] * interaction + 1]);
-}*/
-
-
 #ifdef USINGCUDA
 __device__
 #endif
@@ -120,6 +77,7 @@ void binary_search(FLOAT *arr, FLOAT value, size_t *start, size_t *stop)
 		mid = (stop[0] + start[0]) / 2;
 	}
 }
+
 #ifdef USINGCUDA
 __device__
 #endif
@@ -174,18 +132,10 @@ size_t particle_array_index(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *
 ///////////////////////////////////siddon/////////////////////////////////
 
 
-
-INLINE FLOAT max3(FLOAT *a)
-{
-	return FMAX(FMAX(a[0], a[1]), a[2]);
-}
-
-INLINE FLOAT min3(FLOAT *a)
-{
-	return FMIN(FMIN(a[0], a[1]), a[2]);
-}
-
-INLINE int min_index3(FLOAT *arr)
+#ifdef USINGCUDA
+__device__
+#endif
+int min_index3(FLOAT *arr)
 {
 	if ((arr[0] <= arr[1]) && (arr[0] <= arr[2]))
 	{
@@ -197,47 +147,22 @@ INLINE int min_index3(FLOAT *arr)
 	}
 	return 2;
 }
-INLINE size_t flat_index3(int *N, size_t *index)
-{
-	return index[0] * N[1] * N[2] + index[1] * N[2] + index[2];
-}
 
 
-void binary_searchf(FLOAT *arr, FLOAT *value, size_t *start, size_t *stop)
-{
-	size_t mid = (stop[0] + start[0]) / 2;
-	while (mid != start[0])
-	{
-		if (value[0] < arr[mid])
-		{
-			stop[0] = mid;
-		}
-		else
-		{
-			start[0] = mid;
-		}
-		mid = (stop[0] + start[0]) / 2;
-	}
-}
-
-FLOAT interpf(FLOAT *xarr, FLOAT *yarr, size_t arr_size, FLOAT xval)
-{
-	size_t i0 = 0;
-	size_t i1 = arr_size - 1;
-	binary_searchf(xarr, &xval, &i0, &i1);
-	return yarr[i0] + (yarr[i1] - yarr[i0]) * (xval - xarr[i0]) / (xarr[i1] - xarr[i0]);
-}
-
-
+#ifdef USINGCUDA
+__device__
+#endif
 void normalize_ray(FLOAT *ray)
 {
-
 	FLOAT inv_len = 1.f / SQRT(ray[3] * ray[3] + ray[4] * ray[4] + ray[5] * ray[5]);
 	ray[3] *= inv_len;
 	ray[4] *= inv_len;
 	ray[5] *= inv_len;
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void calculate_alphas_extreme(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aupdate, FLOAT *aglobalmin, FLOAT *aglobalmax)
 //calculates alpha for planes , planes : int[3]
 {
@@ -271,34 +196,45 @@ void calculate_alphas_extreme(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset,
 
 }
 
-void calculate_first_indices(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aglobalmin, FLOAT *aupdate, int *indicesmin, int *indexupdate)
+#ifdef USINGCUDA
+__device__
+#endif
+void calculate_first_indices(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aglobalmin, FLOAT *aupdate, size_t *indicesmin, int *indexupdate)
 {
-	FLOAT a_cand = aglobalmin[0]+ERRF;
+	FLOAT a_cand = aglobalmin[0] + ERRF;
+	FLOAT index;
 	for (size_t i = 0; i < 3; i++)
 	{
 		if (ray[i + 3] > 0.f)
 		{
-			indicesmin[i] =  (int)((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
+			index = ((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
 			indexupdate[i] = 1;
 		}
 		else
 		{
-			indicesmin[i] = (int)((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
+			index = ((ray[i] + a_cand * ray[i + 3] - offset[i]) / spacing[i]);
 			indexupdate[i] = -1;
 		}
-
-		if (indicesmin[i] < 0)
+		
+		indicesmin[i] = (size_t)index;
+		if (index < 0)
 		{
 			indicesmin[i] = 0;
 		}
-		else if (indicesmin[i] > (N[i] - 1))
+		else if (index > (N[i] - 1))
 		{
 			indicesmin[i] = N[i] - 1;
 		}
-
+		else
+		{
+			indicesmin[i] = (size_t)index;
+		}
 	}
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *max_density, uint64_t *state)
 {
 	/*
@@ -316,7 +252,7 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 		return false;
 	}
 
-	int indices[3];
+	size_t indices[3];
 	int indexupdate[3];
 	calculate_first_indices(ray, N, spacing, offset, &aglobalmin, aupdate, indices, indexupdate);
 
@@ -333,7 +269,6 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 	//FLOAT cum_pixel_path_lenght = 0;
 
 	//doing one iteration to get indicec right
-
 	amin[0] = aglobalmin + aupdate[0];
 	amin[1] = aglobalmin + aupdate[1];
 	amin[2] = aglobalmin + aupdate[2];
@@ -497,11 +432,11 @@ bool woodcock_step(size_t *volume_index, FLOAT *particle, int *shape, FLOAT *spa
 
 	FLOAT smin, scur, w_step;
 	size_t lut_index;
-	int i;
+	size_t i;
 	smin = 0;
 	for (i = 0; i < att_shape[0]; i++)
 	{
-		smin = FMAX(smin, lut_interpolator(i, 1, particle[6], att_shape, attenuation_lut, &lut_index));
+		smin = FMAX(smin, lut_interpolator((int)i, 1, particle[6], att_shape, attenuation_lut, &lut_index));
 	}
 	smin *= max_density[0];
 
@@ -569,7 +504,7 @@ void rotate_3Dvector(FLOAT *vector, FLOAT *axis, FLOAT angle)
 __device__
 #endif
 void rotate_particle(FLOAT *particle, FLOAT theta, FLOAT phi)
-// rotates a particle theta degrees from its current direction theta degrees about a random axis orthogonal to the direction vector (this axis is rotated phi degrees about the particles direction vector)
+// rotates a particle theta degrees from its current direction phi degrees about a random axis orthogonal to the direction vector (this axis is rotated phi degrees about the particles direction vector)
 {
 	// First we find a vector orthogonal to the particle direction
 	// k_xy = v x k   where k = ({1, 0, 0} , {0, 1, 0}, {0, 0, 1}) depending on the smallest magnitude of the particles direction vector (we do this to make the calculation more robust)
@@ -601,9 +536,16 @@ void rotate_particle(FLOAT *particle, FLOAT theta, FLOAT phi)
 		k_xy[2] = -k_xy[2];
 	}
 	rotate_3Dvector(k_xy, &particle[3], phi);
-	rotate_3Dvector(&particle[3], k_xy, theta);
+	
+	//rotate_3Dvector(&particle[3], k_xy, theta);
+	//This is cheaper
+	FLOAT tsin = SIN(theta);
+	FLOAT tcos = COS(theta);
+	for (size_t i = 0; i < 3; i++)
+	{
+		particle[i+3] = particle[i+3] * tcos + k_xy[i] * tsin;
+	}
 }
-
 #ifdef USINGCUDA
 __device__
 #endif
@@ -681,17 +623,15 @@ void generate_particle(FLOAT *source_position, FLOAT *source_direction, FLOAT *s
 	}
 
 	FLOAT r1 = randomduniform(state);
-	particle[6] = interp_array(specter_cpd, specter_energy, (size_t)specter_elements[0], r1);
+
+	particle[6] = interp_array(specter_cpd, specter_energy, specter_elements[0], r1);
 	particle[7] = weight[0];
 }
 
 #ifdef USINGCUDA
 __device__
 #endif
-void generate_particle_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, 
-FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight,
-int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy,
-int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle,
+void generate_particle_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle,
 FLOAT *particle, uint64_t *state)
 {
 	FLOAT v_rot[3];
@@ -716,7 +656,7 @@ FLOAT *particle, uint64_t *state)
 
 	/////////////selecting energy///////////////////
 	FLOAT r1 = randomduniform(state);
-	particle[6] = interp_array(specter_cpd, specter_energy, (size_t)specter_elements[0], r1);
+	particle[6] = interp_array(specter_cpd, specter_energy, specter_elements[0], r1);
 	//selecting weight of particle
 	particle[7] = weight[0];
 	if (bowtie_elements[0] == 1)
@@ -725,7 +665,7 @@ FLOAT *particle, uint64_t *state)
 	}
 	else
 	{
-		particle[7] *= interp_array(bowtie_angle, bowtie_weight, (size_t)bowtie_elements[0], r_ang);
+		particle[7] *= interp_array(bowtie_angle, bowtie_weight, bowtie_elements[0], r_ang);
 	}
 }
 
@@ -733,7 +673,7 @@ FLOAT *particle, uint64_t *state)
 #ifdef USINGCUDA
 __global__
 #endif
-void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, uint64_t *states)
+void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, trackingFuncPtr tracking_func, uint64_t *states)
 {
 #ifdef USINGCUDA
 	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -750,12 +690,7 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 	size_t volume_index, lut_index;
 	generate_particle(source_position, source_direction, scan_axis, sdd, fov, collimation, weight, specter_elements, specter_cpd, specter_energy, particle, &states[id * 2]);
 
-	// preforming woodcock or siddon stepping until particle is absorbed or exists volume
-#ifdef USING_SIDDON
-	while (siddon_path(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
-#else
-	while (woodcock_step(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
-#endif
+	while ((*tracking_func)(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
 	{
 		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
 		photoelectric = interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2] * 3], attenuation_lut[lut_index + att_shape[2] * 3 + 1]);
@@ -806,7 +741,7 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 #ifdef USINGCUDA
 __global__
 #endif
-void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, uint64_t *states)
+void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, trackingFuncPtr tracking_func, uint64_t *states)
 {
 #ifdef USINGCUDA
 	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -823,12 +758,7 @@ void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction,
 	size_t volume_index, lut_index;
 	generate_particle_bowtie(source_position, source_direction, scan_axis, scan_axis_fan_angle, rot_axis_fan_angle, weight, specter_elements, specter_cpd, specter_energy, bowtie_elements, bowtie_weight, bowtie_angle, particle, &states[id * 2]);
 
-	// preforming woodcock until interaction
-#ifdef USING_SIDDON
-	while (siddon_path(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
-#else
-	while (woodcock_step(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
-#endif
+	while ((*tracking_func)(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
 	{
 		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
 		//Here we take a shortcut, instead of interpolating the array again we just jump to the already calculated index in the lut table and do a between two points interpolation 
@@ -1008,7 +938,7 @@ __host__ void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *
 	return (void*)sim_dev;
 }
 #else
-void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted)
+void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, int *use_siddon)
 {
 	Simulation *sim_dev = (Simulation*)malloc(sizeof(Simulation));
 	sim_dev->shape = shape;
@@ -1019,11 +949,12 @@ void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_
 	sim_dev->lut_shape = lut_shape;
 	sim_dev->attenuation_lut = attenuation_lut;
 	sim_dev->energy_imparted = energy_imparted;
+	sim_dev->use_siddon_pathing = use_siddon;
 
 	FLOAT *max_dens = (FLOAT*)malloc(sizeof(FLOAT));
 	max_dens[0] = 0;
 
-	for (size_t i = 0; i < shape[0] * shape[1] * shape[2]; i++)
+	for (size_t i = 0; i < sim_dev->shape[0] * sim_dev->shape[1] * sim_dev->shape[2]; i++)
 	{
 		max_dens[0] = FMAX(max_dens[0], density_map[i]);
 	}
@@ -1251,9 +1182,20 @@ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 	size_t thread_number;
 	size_t n_threads = omp_get_max_threads();
 
-	uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
+	trackingFuncPtr tracking_func;
 
+	if (((Simulation*)dev_simulation)->use_siddon_pathing[0] == 1)
+	{
+		tracking_func = &siddon_path;
+	}
+	else
+	{
+		tracking_func = &woodcock_step;
+	}
+
+	uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
 	init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
+
 #pragma omp parallel num_threads(n_threads) private(thread_number)
 	{
 		thread_number = omp_get_thread_num();
@@ -1283,6 +1225,7 @@ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 				((Simulation*)dev_simulation)->attenuation_lut,
 				((Simulation*)dev_simulation)->energy_imparted,
 				((Simulation*)dev_simulation)->max_density,
+				tracking_func,
 				states);
 		}
 	}
@@ -1304,6 +1247,19 @@ void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simul
 	uint64_t *states = (uint64_t*)malloc(2 * n_threads * sizeof(uint64_t));
 
 	init_random_seed(((Simulation*)dev_simulation)->seed, &n_threads, states);
+
+	trackingFuncPtr tracking_func;
+
+	if (((Simulation*)dev_simulation)->use_siddon_pathing[0] == 1)
+	{
+		tracking_func = &siddon_path;
+	}
+	else
+	{
+		tracking_func = &woodcock_step;
+	}
+
+
 #pragma omp parallel num_threads(n_threads) private(thread_number)
 	{
 		thread_number = omp_get_thread_num();
@@ -1334,6 +1290,7 @@ void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simul
 				((Simulation*)dev_simulation)->attenuation_lut,
 				((Simulation*)dev_simulation)->energy_imparted,
 				((Simulation*)dev_simulation)->max_density,
+				tracking_func,
 				states);
 		}
 	}
@@ -1373,7 +1330,7 @@ __host__ void cleanup_simulation(void *dev_simulation, int *shape, FLOAT *energy
 	return;
 }
 #else
-void cleanup_simulation(void *dev_simulation, int *shape, FLOAT *energy_imparted)
+void cleanup_simulation(void *dev_simulation)
 {
 	// free memory
 	free(((Simulation*)dev_simulation)->max_density);
@@ -1433,7 +1390,7 @@ void setup_test_environment(int *shape, FLOAT *spacing, FLOAT *offset, int *mate
 	//geometry
 	for (i = 0; i < 3; i++)
 	{
-		offset[i] = -shape[i] * spacing[i] / 2.f;
+		offset[i] = -(FLOAT)shape[i] * spacing[i] / 2.f;
 	}
 
 	//particles
@@ -1497,9 +1454,9 @@ void setup_test_environment(int *shape, FLOAT *spacing, FLOAT *offset, int *mate
 
 int main()
 {
-
-	size_t n_particles = 1000000;
-	int shape[3] = { 10, 10, 10 };
+	int use_siddon = 0;
+	size_t n_particles = 500000;
+	int shape[3] = { 100, 100, 100 };
 	int lut_shape[3] = { 2, 5, 5 };
 	FLOAT spacing[3] = { 1, 1, 1 };
 	FLOAT offset[3];
@@ -1516,7 +1473,7 @@ int main()
 
 
 	void* sim;
-	sim = setup_simulation(shape, spacing, offset, material_map, density_map, lut_shape, attenuation_lut, energy_imparted);
+	sim = setup_simulation(shape, spacing, offset, material_map, density_map, lut_shape, attenuation_lut, energy_imparted, &use_siddon);
 
 	//init source variables
 	FLOAT source_position[3] = { -7, 0, 0 };
@@ -1550,10 +1507,10 @@ int main()
 	run_simulation_bowtie(geo2, n_particles, sim);
 
 
-	cleanup_simulation(sim, shape, energy_imparted);
+	cleanup_simulation(sim);
 	cleanup_source(geo);
 
-
+	return 1;
 
 	size_t index;
 	FLOAT energy1234 = 0;

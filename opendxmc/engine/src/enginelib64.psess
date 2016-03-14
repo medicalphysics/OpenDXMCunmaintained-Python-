@@ -36,7 +36,7 @@
   </PostinstrumentEvent>
   <Binaries>
     <ProjBinary>
-      <Path>Release\enginelib64.exe</Path>
+      <Path>Debug\enginelib32.exe</Path>
       <ArgumentTimestamp>01/01/0001 00:00:00</ArgumentTimestamp>
       <Instrument>true</Instrument>
       <Sample>true</Sample>
@@ -48,7 +48,7 @@
       <LaunchProject>true</LaunchProject>
       <OverrideProjectSettings>false</OverrideProjectSettings>
       <LaunchMethod>Executable</LaunchMethod>
-      <ExecutablePath>Release\enginelib64.exe</ExecutablePath>
+      <ExecutablePath>Debug\enginelib32.exe</ExecutablePath>
       <StartupDirectory>.\</StartupDirectory>
       <Arguments>
       </Arguments>
@@ -67,6 +67,11 @@
       <ProjName>enginelib</ProjName>
     </ProjBinary>
   </Binaries>
+  <Reports>
+    <Report>
+      <Path>enginelib32160308.vsp</Path>
+    </Report>
+  </Reports>
   <Launches>
     <ProjBinary>
       <Path>:PB:{3E6C781F-9071-4401-B42C-9661EF93F1FF}|enginelib.vcxproj</Path>

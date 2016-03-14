@@ -286,7 +286,7 @@ class MainWindow(QtGui.QMainWindow):
         organdoseview = OrganDoseView(self.organdosemodel)
         central_splitter.addWidget(organdoseview)
 
-        central_splitter.setSizes([100]*5)
+        central_splitter.setSizes([100, 100, 100, 0, 0])
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -295,11 +295,11 @@ class MainWindow(QtGui.QMainWindow):
         self.database_thread = QtCore.QThread(self)
         self.interface.moveToThread(self.database_thread)
 
-        self.mc_thread = QtCore.QThread(self)
-        self.mcrunner.moveToThread(self.mc_thread)
+#        self.mc_thread = QtCore.QThread(self)
+#        self.mcrunner.moveToThread(self.mc_thread)
 
         self.dose_thread = QtCore.QThread(self)
-#        self.organdosemodel.moveToThread(self.dose_thread)
+        self.organdosemodel.moveToThread(self.dose_thread)
 
         self.import_thread = QtCore.QThread(self)
         self.importer.moveToThread(self.import_thread)
@@ -309,7 +309,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.import_thread.start()
         self.import_phantom_thread.start()
-        self.mc_thread.start()
+#        self.mc_thread.start()
         self.dose_thread.start()
         self.database_thread.start()
 

@@ -328,11 +328,6 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
                                                                     organ_material_map=organ_material_map,
                                                                     organ=organ)
 
-#    if callback is not None:
-#        callback(simulation.name, {'material': simulation.material,
-#                                   'material_map': simulation.material_map},
-#                 simulation.start_at_exposure_no)
-
     phase_space = ct_source_space(simulation, exposure_modulation)
 
     N = np.array(material.shape, dtype='int')
@@ -343,8 +338,11 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
     lut = generate_attinuation_lut(materials_organic, material_map,
                                    max_eV=500.e3,
                                    ignore_air=simulation['ignore_air'])
+    del energy_imparted                                   
+    energy_imparted = None
     if energy_imparted is None:
         energy_imparted = np.zeros_like(density, dtype='float64')
+
 
     tot_histories = simulation['histories'] * simulation['exposures']
 
@@ -354,23 +352,22 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
         coffe_msg = '.'
     logger.info('{0}: Starting simulation with {1} histories per '
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
-#    raise ValueError('ERROR Material maps and arrays will not be stored. NOT VOLATILES')
 
     lut_shape = np.array(lut.shape, dtype='int')    
     
     logger.info('Initializing geometry')
-        
+    use_siddon = np.array([simulation['use_siddon']], dtype=np.int)
     engine = Engine()
-    geometry = engine.setup_simulation(N, spacing, offset, material, density, lut_shape, lut, energy_imparted)
-    
-    
+    geometry = engine.setup_simulation(N, spacing, offset, material, density, lut_shape, lut, energy_imparted, use_siddon)
+      
     start_exposure = simulation['start_at_exposure_no']
     time_start = time.clock()
     exposure_time = time_start
+    
     for p, e, n in phase_space:
-        source = engine.setup_source(*p)
+        source = engine.setup_source_bowtie(*p)
         
-        engine.run(source, simulation['histories'], geometry)
+        engine.run_bowtie(source, simulation['histories'], geometry)
         engine.cleanup(source=source)
 
         if (time.clock() - exposure_time) > 5:
@@ -381,7 +378,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
             exposure_time = time.clock()
 
     
-    engine.cleanup(simulation=geometry, energy_imparted=energy_imparted)
+    engine.cleanup(simulation=geometry)
 #    time_start = time.clock()
 #    for p, e, n in phase_space:
 #        score_energy(p, N, spacing, offset, material,
@@ -453,7 +450,8 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     
 
     engine = Engine()
-    geometry = engine.setup_simulation(N, spacing, offset, material_array, density_array, lut_shape, lut, dose)
+    use_siddon = np.array([simulation['use_siddon']], dtype=np.int)
+    geometry = engine.setup_simulation(N, spacing, offset, material_array, density_array, lut_shape, lut, dose, use_siddon)
     teller = 0
     center = np.floor(N / 2).astype(np.int)
     center_dose = 0
@@ -467,11 +465,13 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
                              exposures=simulation['exposures'],
                              histories=simulation['histories'],
                              energy_specter=en_specter,
+                             bowtie_radius=simulation['bowtie_radius'],
+                             bowtie_distance=simulation['bowtie_distance']
                              )
     
         for batch, e, n in phase_space:
-            source = engine.setup_source(*batch)            
-            engine.run(source, simulation['histories'], geometry)
+            source = engine.setup_source_bowtie(*batch)            
+            engine.run_bowtie(source, simulation['histories'], geometry)
             engine.cleanup(source=source)
     #        break
             if (time.clock() - t1) > 1:
@@ -482,7 +482,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
 #                    callback(simulation['name'], {'energy_imparted':dose}, 0, '', save=False)
         center_dose += np.sum(dose[center[0], center[1], center[2]])
     callback(simulation['name'], progressbar_data=[np.squeeze(dose.max(axis=2)), spacing[0] ,spacing[1] ,'Done', True])
-    engine.cleanup(simulation=geometry, energy_imparted=dose)
+    engine.cleanup(simulation=geometry)
 
 #    engine.cleanup(simulation=geometry, energy_imparted=dose)
 #    dose = gaussian_filter(dose, (1., 1., 0.))
@@ -492,17 +492,20 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     return dose
 
 def generate_ctdi_phantom(simulation, pmma, air, size=32., callback=None):
-    spacing = np.array((.2, .2, 2.5), dtype='float64')
-    N = np.rint(np.array((simulation['sdd'] / spacing[0],
-                          simulation['sdd'] / spacing[1], 6),
+    spacing = np.array((.1, .1, 2.5), dtype='float64')
+#    N = np.rint(np.array((simulation['sdd'] / spacing[0],
+#                          simulation['sdd'] / spacing[0], 6),
+#                         )).astype('int32')
+    N = np.rint(np.array((size*1.15 / spacing[0],
+                          size*1.15 / spacing[0], 6),
                          )).astype('int32')
 
     offset = (-N * spacing / 2.).astype('float64')
     material_array = np.zeros(N, dtype='int32')
-    radii_phantom = size / spacing[0]
-    radii_meas = (1. / spacing[0])
+    radii_phantom = size / spacing[0] / 2
+    radii_meas = (1.3 / 2 / spacing[0])
     center = (N / 2.)[:2]
-    radii_pos = (size - 3.) / spacing[0]
+    radii_pos = radii_phantom - (1 + 1.3 / 2) / spacing[0]
     pos = [(center[0], center[1])]
     
     for ang in [0, 90, 180, 270]:
@@ -529,7 +532,7 @@ def generate_ctdi_phantom(simulation, pmma, air, size=32., callback=None):
     density_array[material_array == 1] = pmma.density
     density_array[material_array == 2] = air.density
 
-    lut = generate_attinuation_lut([air, pmma], material_map, max_eV=0.5e6)
+    lut = generate_attinuation_lut([air, pmma], material_map)
     return N, spacing, offset, material_array, density_array, lut, measure_indices
 
 
@@ -554,11 +557,13 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                          exposures=simulation['exposures'],
                          histories=simulation['histories'],
                          energy_specter=en_specter,
+                         bowtie_radius=simulation['bowtie_radius'],
+                         bowtie_distance=simulation['bowtie_distance']
                          )
-
+    use_siddon = np.array([simulation['use_siddon']], dtype=np.int)
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material_array,
-                            density_array, lut_shape, lut, dose)
+                            density_array, lut_shape, lut, dose, use_siddon)
 
     
     history_factor = int(1e8 / simulation['histories'] / simulation['exposures'])
@@ -570,8 +575,8 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     
     for batch, e, n in phase_space:
-        source = engine.setup_source(*batch)
-        engine.run(source, histories, geometry)
+        source = engine.setup_source_bowtie(*batch)
+        engine.run_bowtie(source, histories, geometry)
         engine.cleanup(source=source)
 
         if (time.clock() - t1) > 5:
@@ -587,7 +592,7 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     dose /= history_factor
 
-    engine.cleanup(simulation=geometry, energy_imparted=dose)
+    engine.cleanup(simulation=geometry)
 #    
 #    plt.imshow(dose[:,:,1])
 #    plt.show()
@@ -598,10 +603,11 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
     for p in meas_pos:
         x, y = p[:, 0], p[:, 1]
         d.append(dose[x, y, 1:-2].mean() / (air.density * np.prod(spacing)))
+        dose[x, y, 1:-2] = dose.max()
     logger.debug('Estimated dose for CTDI phantom; center: {0}, periphery: {1}, {2}, {3}, {4}.'.format(*d))
 #    pdb.set_trace()  
     ctdiv = d.pop(0) / 3.
-    ctdiv += 2. * sum(d) / 3. / 4.
+    ctdiv += (2. * sum(d) / 3. / 4.)
     simulation['conversion_factor_ctdiw'] = np.nan_to_num(simulation['ctdi_w100'] / ctdiv * total_collimation)
 #    pdb.set_trace()
 #    import pdb
