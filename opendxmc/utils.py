@@ -61,7 +61,15 @@ def interpolate3d(array, scaling):
                 
     return res
     
-    
+def rebin( a, newshape ):
+    '''Rebin an array to a new shape.
+    '''
+    assert len(a.shape) == len(newshape)
+
+    slices = [ slice(0,old, float(old)/new) for old,new in zip(a.shape,newshape) ]
+    coordinates = np.mgrid[slices]
+    indices = coordinates.astype('i')   #choose the biggest smaller integer index
+    return a[tuple(indices)]    
     
 def test_interpolate():
     n = 512
@@ -117,6 +125,19 @@ def circle_mask(array_shape, radius, center=None):
     y, x = np.ogrid[-radius: radius, -radius: radius]
     index = x**2 + y**2 <= radius**2
     a[cx-radius:cx+radius+1, cy-radius:cy+radius+1][index] = 1
+    return a
+
+def sphere_mask(array_shape, radius, center=None):
+    a = np.zeros(array_shape, np.int)
+    if not center:
+        cx = array_shape[0] / 2
+        cy = array_shape[1] / 2
+        cz = array_shape[2] / 2
+    else:
+        cx, cy, cz= center
+    x, y, z = np.ogrid[-radius: radius, -radius: radius, -radius: radius]
+    index = x**2 + y**2 + z**2 <= radius**2
+    a[cx-radius:cx+radius+1, cy-radius:cy+radius+1, cz-radius:cz+radius+1][index] = 1
     return a
 
 

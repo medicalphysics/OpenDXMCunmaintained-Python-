@@ -65,20 +65,26 @@ PROPETIES_DICT_TEMPLATE = {
     'image_orientation': [np.array([1, 0, 0, 0, 1, 0], dtype=np.double), np.dtype((np.double, 6)), False, False, 'Image patient orientation cosines', 0, 2],
     'image_position': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), False, False, 'Image position (position of first voxel in volume) [cm]', 0, 2],
     'data_center': [np.zeros(3, dtype=np.double), np.dtype((np.double, 3)), True, True, 'Data collection center (relative to first voxel in volume) [cm]', 0, 3],
-    'is_phantom': [False, np.dtype(np.bool), False, False, 'Matematical phantom', 0, 5]}
+    'is_phantom': [False, np.dtype(np.bool), False, False, 'Matematical phantom', 0, 5],
+    'use_siddon': [False, np.dtype(np.bool), True, True, 'Use Siddon tracking, default is Woodcock tracking', 0, 3],
+    'anode_angle': [12., np.dtype(np.double), True, True, 'Angle of anode in x-ray tube [deg]', 0, 3],
+    'tube_start_angle': [0, np.dtype(np.double), True, True, 'Tube start angle [deg]', 0, 3],
+    'bowtie_radius': [15, np.dtype(np.double), True, True, 'Bowtie filter radius', 0, 3],
+    'bowtie_distance': [10, np.dtype(np.double), True, True, 'Bowtie filter distance factor', 2, 3],
+    }
 
 ARRAY_TEMPLATES = {
-    # TAG: DTYPE, VOLATILE
-    'ctarray': [np.int16, False],
-    'exposure_modulation': [np.double, False],
-    'organ': [np.uint8, False],
-    'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False],
-    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], False],
-    'energy_imparted': [np.double, True],
-    'density': [np.double, True],
-    'dose': [np.double, True],
-    'material': [np.uint8, True],
-    'material_map': [[('material', np.uint8), ('material_name', 'a128')], True],
+    # TAG: DTYPE, VOLATILE, PRERECORD_VALUES
+    'ctarray': [np.int16, False, True],
+    'exposure_modulation': [np.double, False, True],
+    'organ': [np.uint8, False, True],
+    'organ_map': [[('organ', np.uint8), ('organ_name', 'a128')], False, False],
+    'organ_material_map': [[('organ', np.uint8), ('material_name', 'a128')], False, False],
+    'energy_imparted': [np.double, True, True],
+    'density': [np.double, True, True],
+    'dose': [np.double, True, True],
+    'material': [np.uint8, True, True],
+    'material_map': [[('material', np.uint8), ('material_name', 'a128')], True, False],
    }
 
 
@@ -177,6 +183,8 @@ class Database(object):
 
     def remove_node(self, where, name):
         self.open()
+        if name == '':
+            return
         try:
             self.db_instance.remove_node(where, name=name, recursive=True)
         except tb.NoSuchNodeError:
@@ -435,6 +443,18 @@ class Database(object):
             array = Validator().validate_structured_array(array, array_name)
 
         self.get_node(node_path, array_name, create=True, overwrite=True, obj=array)
+        
+        if ARRAY_TEMPLATES[array_name][2]:
+            ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=True, obj=np.dtype([('name', 'a64'), ('min', np.double), ('max', np.double)]))
+            arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
+            if array_name in arr_names:
+                index = arr_names.index(array_name)
+                ex_table[index] = [array_name, array.min(), array.max()]
+            else:
+                ex_table.append([(array_name, array.min(), array.max())])
+            ex_table.flush()
+            
+        
         logger.debug('Wrote array {0} to database for simulation {1}'.format(array_name, name))
         self.close()
         return
@@ -470,6 +490,46 @@ class Database(object):
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
             return
         arr = node.read()
+        self.close()
+        return arr
+
+    def get_simulation_array_bytescaled(self, name, array_name, amin=0., amax=1., minmax_is_modifier=False):
+        self.open()
+        if self.test_node('/simulations/{0}'.format(name), array_name):
+            node = self.get_node('/simulations/{0}'.format(name),  array_name, create=False)
+        elif self.test_node('/simulations/{0}/volatiles/'.format(name), array_name):
+            node = self.get_node('/simulations/{0}/volatiles/'.format(name),  array_name, create=False)
+        else:
+            self.close()
+            raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
+            return
+        
+        if minmax_is_modifier:
+            minmod = amin
+            maxmod = amax
+            amin, amax = 0, 0
+        else:
+            minmod = 1.
+            maxmod = 1.
+            
+        if amin == amax:
+            ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=False)
+        
+            arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
+            if array_name in arr_names:
+                index = arr_names.index(array_name)
+                _, amin, amax = list(ex_table[index])
+            else:
+                raise ValueError('Array {} in database have no recorded min or max values, remove simulation {} from database.'.format(array_name, name))
+
+        amin *= minmod
+        amax *= maxmod    
+        
+        arr = np.empty(node.shape, dtype=np.ubyte)
+        
+        r_divisor = 255./(amax-amin)
+        for ind, r in enumerate(node):
+            arr[ind, ...] = np.clip((r-amin)*r_divisor, 0, 255)
         self.close()
         return arr
 
@@ -522,7 +582,8 @@ class Database(object):
                     arrays[key] = self.get_simulation_array(name, key)
                 except ValueError:
                     pass
-
+        if properties['start_at_exposure_no'] != 0:
+            arrays['energy_imparted'] = self.get_simulation_array(name, 'energy_imparted')
         self.close()
         return properties, arrays
 
@@ -1180,6 +1241,59 @@ class Validator(object):
         self._props['is_phantom'] = self.bool_validator(value)
 
     @property
+    def use_siddon(self):
+        return self._props['use_siddon']
+    @use_siddon.setter
+    def use_siddon(self, value):
+        self._props['use_siddon'] = self.bool_validator(value)
+
+    @property
+    def anode_angle(self):
+        return self._props['anode_angle']
+    @anode_angle.setter
+    def anode_angle(self, value):
+        self._props['anode_angle'] = self.float_validator(value)
+        assert self._props['anode_angle'] > 0.
+
+    @property
+    def tube_start_angle(self):
+        return self._props['tube_start_angle']
+    @tube_start_angle.setter
+    def tube_start_angle(self, value):
+        ang = self.float_validator(value)
+        ang = ang % 360
+        ang = (ang + 360) % 360
+        if ang > 180:
+            ang -= 360
+        self._props['tube_start_angle'] = self.float_validator(ang)    
+
+    @property
+    def bowtie_radius(self):
+        return self._props['bowtie_radius']
+    @bowtie_radius.setter
+    def bowtie_radius(self, value):
+        self._props['bowtie_radius'] = self.float_validator(value)
+        assert self._props['bowtie_radius'] > 0.
+        
+    @property
+    def bowtie_radius(self):
+        return self._props['bowtie_radius']
+    @bowtie_radius.setter
+    def bowtie_radius(self, value):
+        self._props['bowtie_radius'] = self.float_validator(value)
+        if self._props['bowtie_radius'] < 0:
+            self._props['bowtie_radius'] = 0
+    
+    @property
+    def bowtie_distance(self):
+        return self._props['bowtie_distance']
+    @bowtie_distance.setter
+    def bowtie_distance(self, value):
+        self._props['bowtie_distance'] = self.float_validator(value)
+        if self._props['bowtie_distance'] < 0:
+            self._props['bowtie_distance'] = 0
+            
+    @property
     def material(self):
         return self._arrays['material']
     @material.setter
@@ -1196,7 +1310,7 @@ class Validator(object):
         assert isinstance(value, np.ndarray)
         assert len(value.shape) == 3
         if self._arrays['density'] is not None:
-            del self._arrays['density']
+            self._arrays['density'] = None
         self._arrays['density'] = value.astype(self._at['density'][0])
 
     @property
@@ -1232,7 +1346,6 @@ class Validator(object):
     @energy_imparted.setter
     def energy_imparted(self, value):
         if value is None:
-            del self._arrays['energy_imparted']
             self._arrays['energy_imparted'] = None
             return
         assert isinstance(value, np.ndarray)
