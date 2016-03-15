@@ -19,100 +19,150 @@ import sys
 
 
 
-def get_kernel():
+def get_kernel(precision):
     dll_path = os.path.abspath(os.path.dirname(__file__))
-#    os.chdir(dll_path)
-    if sys.maxsize > 2**32:
-        dll = ct.CDLL(os.path.join(dll_path, 'enginelib64.dll'))
-    else:
-        dll = ct.CDLL(os.path.join(dll_path, 'enginelib32.dll'))
-    
+    try:
+        if sys.maxsize > 2**32:
+            dll = ct.CDLL(os.path.join(dll_path, 'enginelib64'))
+        else:
+            dll = ct.CDLL(os.path.join(dll_path, 'enginelib32'))
+    except OSError:
+        if sys.maxsize > 2**32:
+            dll = ct.CDLL('enginelib64')
+        else:
+            dll = ct.CDLL('enginelib32')
+
     setup = dll.setup_simulation
-    setup.argtypes = [ct.POINTER(ct.c_int), 
-                      ct.POINTER(ct.c_double), 
-                      ct.POINTER(ct.c_double),
-                      ct.POINTER(ct.c_int),
-                      ct.POINTER(ct.c_double),
-                      ct.POINTER(ct.c_int),
-                      ct.POINTER(ct.c_double), 
-                      ct.POINTER(ct.c_double)]
+    setup.argtypes = [ct.POINTER(ct.c_int), #shape
+                      ct.POINTER(precision), #spacing
+                      ct.POINTER(precision), #offset
+                      ct.POINTER(ct.c_int), #materialmap
+                      ct.POINTER(precision), #density_map
+                      ct.POINTER(ct.c_int), #lut_shape
+                      ct.POINTER(precision), #lut
+                      ct.POINTER(precision), #energy_imparted
+                      ct.POINTER(ct.c_int) #use_siddon
+                      ]
     setup.restype = ct.c_void_p
     
     source = dll.setup_source
-    source.argtypes = [ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double),
-                       ct.POINTER(ct.c_double),
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_double), 
-                       ct.POINTER(ct.c_int)]
-    source.restype = ct.c_void_p
+    source.argtypes = [ct.POINTER(precision), #src_pos
+                       ct.POINTER(precision), #src_dir
+                       ct.POINTER(precision), #scan_axis
+                       ct.POINTER(precision), #sdd
+                       ct.POINTER(precision), #fov 
+                       ct.POINTER(precision), #coll
+                       ct.POINTER(precision), #weigh
+                       ct.POINTER(precision), #specter cpd
+                       ct.POINTER(precision), #specter energy
+                       ct.POINTER(ct.c_int) #specter size
+                       ]
+    source.restype = ct.c_void_p   
+    
+    source_bowtie = dll.setup_source_bowtie
+    source_bowtie.argtypes = [ct.POINTER(precision), #pos
+                              ct.POINTER(precision), #dir
+                              ct.POINTER(precision), #scan axis
+                              ct.POINTER(precision), #scan angle
+                              ct.POINTER(precision), #rot angle
+                              ct.POINTER(precision), #weight
+                              ct.POINTER(precision), #specter energy
+                              ct.POINTER(precision), #spectercpd
+                              ct.POINTER(ct.c_int),    #n_specter
+                              ct.POINTER(precision), #bowtie_angle 
+                              ct.POINTER(precision), #bowtiw weight
+                              ct.POINTER(ct.c_int)]    #n_bowtie                    
+    source_bowtie.restype = ct.c_void_p    
+    
     
     run = dll.run_simulation
     run.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]
+    run.restype=None    
+    
+    run_bowtie = dll.run_simulation_bowtie
+    run_bowtie.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]    
+    run_bowtie.restype=None    
     
     cleanup = dll.cleanup_simulation
-    cleanup.argtypes = [ct.c_void_p, ct.POINTER(ct.c_int), ct.POINTER(ct.c_double)]
+    cleanup.argtypes = [ct.c_void_p]
+    cleanup.restype=None
    
     cleanup_source = dll.cleanup_source
     cleanup_source.argtypes = [ct.c_void_p]
+    cleanup_source.restype=None
     #info = dll.device_info
     
-    return setup, source, run, cleanup, cleanup_source
+    return setup, source, source_bowtie, run, run_bowtie, cleanup, cleanup_source
 
 class Engine(object):
-    def __init__(self):
-        self.c_simsetup, self.c_sourcesetup, self.crun, self.c_simcleanup, self.c_sourcecleanup = get_kernel()
+    def __init__(self, precision='float64'):
+        if precision == 'float64':
+            self.floating_type = ct.c_double
+        else:
+            self.floating_type = ct.c_float
+        self.c_simsetup, self.c_sourcesetup, self.c_sourcesetup_bowtie, self.crun, self.crun_bowtie, self.c_simcleanup, self.c_sourcecleanup = get_kernel(self.floating_type)
 
-    def setup_simulation(self, shape, spacing, offset, material_map, density_map, lut_shape, lut, energy_imparted):
+    def setup_simulation(self, shape, spacing, offset, material_map, density_map, lut_shape, lut, energy_imparted, use_siddon):
         return self.c_simsetup(
                  shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-                 spacing.ctypes.data_as(ct.POINTER(ct.c_double)),
-                 offset.ctypes.data_as(ct.POINTER(ct.c_double)), 
+                 spacing.ctypes.data_as(ct.POINTER(self.floating_type)),
+                 offset.ctypes.data_as(ct.POINTER(self.floating_type)), 
                  material_map.ctypes.data_as(ct.POINTER(ct.c_int)), 
-                 density_map.ctypes.data_as(ct.POINTER(ct.c_double)), 
+                 density_map.ctypes.data_as(ct.POINTER(self.floating_type)), 
                  lut_shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-                 lut.ctypes.data_as(ct.POINTER(ct.c_double)), 
-                 energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double))
+                 lut.ctypes.data_as(ct.POINTER(self.floating_type)), 
+                 energy_imparted.ctypes.data_as(ct.POINTER(self.floating_type)),
+                 use_siddon.ctypes.data_as(ct.POINTER(ct.c_int)), 
                  ) 
+
                  
-    def setup_source(self, source_position, source_direction, scan_axis, sdd, fov, collimation, weight, specter_cpd, specter_energy):
-        n_specter = np.array(specter_cpd.shape, dtype='int')
+    def setup_source(self, source_position, source_direction, scan_axis, sdd, 
+                     fov, collimation, weight, specter_cpd, specter_energy, n_specter):
+        
         return self.c_sourcesetup(
-                    source_position.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    source_direction.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    scan_axis.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    sdd.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    fov.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    collimation.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    weight.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    specter_cpd.ctypes.data_as(ct.POINTER(ct.c_double)),
-                    specter_energy.ctypes.data_as(ct.POINTER(ct.c_double)),
+                    source_position.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    source_direction.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    scan_axis.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    sdd.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    fov.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    collimation.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    weight.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    specter_cpd.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    specter_energy.ctypes.data_as(ct.POINTER(self.floating_type)),
                     n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
                     )
-                    
+    def setup_source_bowtie(self, source_position, source_direction, scan_axis, 
+                            scan_angle, rot_angle, weight, specter_cpd,
+                            specter_energy, n_specter, bowtie_weight, bowtie_angle, n_bowtie):
+                                
+        
+#        import pdb ; pdb.set_trace()
+        return self.c_sourcesetup_bowtie(
+                    source_position.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    source_direction.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    scan_axis.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    scan_angle.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    rot_angle.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    weight.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    specter_cpd.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    specter_energy.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int)),
+                    bowtie_weight.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    bowtie_angle.ctypes.data_as(ct.POINTER(self.floating_type)),
+                    n_bowtie.ctypes.data_as(ct.POINTER(ct.c_int))
+                    )
     def run(self, source_ptr, n_particles, sim_ptr):
-
-#        try:
         self.crun(source_ptr, 
                    ct.c_size_t(n_particles), 
                    sim_ptr)
-#        except OSError as err:
-#            print(err)
-#            import pdb
-#            pdb.set_trace()
-          
-    def cleanup(self, simulation=None, energy_imparted=None, source=None):
+    def run_bowtie(self, source_ptr, n_particles, sim_ptr):
+        self.crun_bowtie(source_ptr, 
+                         ct.c_size_t(n_particles), 
+                         sim_ptr)
+
+    def cleanup(self, simulation=None,source=None):
         if simulation:
-            if energy_imparted is None:
-                raise ValueError("If simulation is specified energy_imparted must also be specified.")
-            shape = np.array(energy_imparted.shape, dtype='int')
-            self.c_simcleanup(simulation, 
-                          shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
-                          energy_imparted.ctypes.data_as(ct.POINTER(ct.c_double)))
+            self.c_simcleanup(simulation)
         if source:
             self.c_sourcecleanup(source)
             

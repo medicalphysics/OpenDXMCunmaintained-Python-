@@ -7,7 +7,7 @@ Created on Mon Dec 28 22:26:24 2015
 
 import numpy as np
 import scipy.interpolate
-from opendxmc.tube.tungsten import specter
+from opendxmc.tube.tungsten import specter, attinuation
 import logging
 logger = logging.getLogger('OpenDXMC')
 
@@ -28,11 +28,20 @@ def half_shuffle(arr):
     return shuf
 
 
+def bowtie_path_lenght(angles, radius, distance):
+    angle_max = np.arcsin(radius / (radius+distance))
+    angle_max_ind = np.abs(angles ) > angle_max
+    
+    theta = np.arctan(distance*np.tan(angles)/radius)
+    c = radius*(1-np.cos(theta))
+    c[angle_max_ind] = radius
+    return c / np.cos(angles)
+    
 def ct_source_space(simulation, exposure_modulation=None, batch_size=None):
     arglist = ['scan_fov', 'sdd']
     kwarglist = ['start', 'stop', 'exposures', 'histories',
-                 'start_at_exposure_no',
-                 ]
+                 'start_at_exposure_no','tube_start_angle',
+                 'bowtie_distance', 'bowtie_radius']
 
     args = [simulation.get(a) for a in arglist]
     args.append(simulation.get('detector_rows') * simulation.get('detector_width'))
@@ -51,7 +60,7 @@ def ct_source_space(simulation, exposure_modulation=None, batch_size=None):
         kwargs['step'] = simulation.get('step')
         phase_func = ct_seq
 
-    s = specter(simulation.get('kV'), filtration_materials='Al',
+    s = specter(simulation.get('kV'), angle_deg=simulation['anode_angle'], filtration_materials='Al',
                 filtration_mm=simulation.get('al_filtration'))
     kwargs['energy_specter'] = s
 
@@ -72,10 +81,12 @@ def rotation_z_matrix(alpha):
 
 def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               start=0, stop=1, exposures=100, histories=1,
+              tube_start_angle=0.,
               energy=70000., energy_specter=None,
               rotation_center=None,
-              rotation_plane_cosines = None,
-              exposure_modulation=None, start_at_exposure_no=0):
+              rotation_plane_cosines=None,
+              exposure_modulation=None, start_at_exposure_no=0,
+              bowtie_radius=1, bowtie_distance=0):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -135,7 +146,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     t = half_shuffle(t)
 #    print('whole t', t)
     # angle for each z position , i.e the x, y coordinates
-    ang = t / (pitch * total_collimation) * np.pi * 2.
+    ang = t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle)
 
     # rotation matrix along z-axis for an angle x
 
@@ -145,10 +156,10 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     energy_specter = (energy_specter[0],
                       energy_specter[1] / energy_specter[1].sum())
 
-    specter_cpd = np.cumsum(energy_specter[1])
+    specter_cpd = np.cumsum(energy_specter[1]).astype('float64')
     specter_cpd /= specter_cpd.max()
     
-    specter_energy = energy_specter[0]
+    specter_energy = energy_specter[0].astype('float64')
 
 #    if modulation_xy is None:
 #        mod_xy = lambda x: 1.0
@@ -169,7 +180,22 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
                                                fill_value=1.0, kind='nearest')
         else:
             mod_z = lambda x: 1.0
+    fov_arr=np.array([scan_fov], dtype='float64')
+    collimation_arr=np.array([total_collimation], dtype='float64')
+    rot_fan_angle = np.array([np.arctan(fov_arr[0]/sdd) * 2],dtype='float64')
+    scan_fan_angle = np.array([np.arctan(collimation_arr[0] *.5 / sdd) * 2], dtype='float64')
+    
+    bowtie_angle = np.linspace(-rot_fan_angle[0]/2, rot_fan_angle[0]/2, 101, dtype='float64')
+    bowtie_lenghts= bowtie_path_lenght(bowtie_angle, bowtie_radius, bowtie_distance)
+    bowtie_weights = np.empty_like(bowtie_angle, dtype='float64')
+    bowtie_att = attinuation(specter_energy/1000, name='aluminum', density=True).astype('float64')
+    for i in range(bowtie_lenghts.shape[0]):
+        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i])) 
+ 
 
+    n_bowtie = np.array(bowtie_weights.shape, dtype='int')
+    n_specter = np.array(specter_energy.shape, dtype='int') 
+ 
  
     M = world_image_matrix(rotation_plane_cosines)
     rotation_center_image = np.dot(M, rotation_center[[1, 0, 2]])
@@ -180,58 +206,29 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
         scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))        
         ret = (position, direction, scan_axis, 
-               np.array([sdd], dtype='float64'), 
-               np.array([scan_fov], dtype='float64'), 
-               np.array([total_collimation], dtype='float64'),
+               scan_fan_angle,
+               rot_fan_angle,
                np.array([mod_z(t[i])], dtype='float64'), 
-               specter_cpd.astype('float64'), specter_energy.astype('float64'))
+               specter_cpd, specter_energy, n_specter,
+               bowtie_weights, bowtie_angle, n_bowtie)
+#        ret = (position, direction, scan_axis, 
+#               np.array([sdd], dtype='float64'), 
+#               np.array([scan_fov], dtype='float64'), 
+#               np.array([total_collimation], dtype='float64'),
+#               np.array([mod_z(t[i])], dtype='float64'), 
+#               specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 
-#        ind_b = teller * histories
-#        ind_s = (teller + 1) * histories
-#
-#        ret[0, ind_b:ind_s] = -sdd/2.
-#        ret[1, ind_b:ind_s] = 0
-#        ret[2, ind_b:ind_s] = t[i]
-##        print('t', t[i])
-#        ret[0:3, ind_b:ind_s] = np.dot(R, ret[0:3, ind_b:ind_s])
-#        for j in range(2):
-#            ret[j, ind_b:ind_s] += rotation_center_image[j]
-#
-#        ret[3, ind_b:ind_s] = sdd / 2.
-#        ret[4, ind_b:ind_s] = scan_fov /2 * np.random.uniform(-1., 1., histories)
-#        ret[5, ind_b:ind_s] = d_col * np.random.uniform(-1., 1.,
-#                                                        histories)
-#        ret[3:6, ind_b:ind_s] = np.dot(R, ret[3:6, ind_b:ind_s])
-#
-#        lenght = np.sqrt(np.sum(ret[3:6, ind_b:ind_s]**2, axis=0))
-#        ret[3:6, ind_b:ind_s] /= lenght
-#
-#        ret[7, ind_b:ind_s] = mod_z(t[i])  # * mod_xy(t[i])
-#
-#        if ind_s == batch_size:
-#            ret[6, :] = np.random.choice(energy_specter[0],
-#                                         batch_size,
-#                                         p=energy_specter[1])
-##            print('phase space pos', ret[2, :])
-#            yield ret, i, e
-#            teller = 0
-#        else:
-#            teller += 1
-#    if teller > 0:
-#        teller -= 1
-#    if teller > 0:
-#        ret[6, :] = np.random.choice(energy_specter[0],
-#                                     batch_size,
-#                                     p=energy_specter[1])
-#        yield ret[:, :teller * histories], i, e
+
 
 
 def ct_seq(scan_fov, sdd, total_collimation, step=1,
               start=0, stop=1, exposures=100, histories=1,
+              tube_start_angle=0.,
               energy=70000., energy_specter=None,
               rotation_center=None,
               rotation_plane_cosines = None,
+              bowtie_radius=1, bowtie_distance=0,
               exposure_modulation=None, start_at_exposure_no=0):
     """Generate CT phase space, return a iterator.
 
@@ -294,7 +291,7 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
     ang = np.empty((e,))
     for i in range(N):
         t[exposures*i: exposures*(i+1)] = start + step * i
-        ang[exposures*i: exposures*(i+1)] = np.linspace(0, 2*np.pi, exposures)
+        ang[exposures*i: exposures*(i+1)] = np.linspace(0, 2*np.pi, exposures) + np.deg2rad(tube_start_angle)
 
     t = half_shuffle(t)
     ang = half_shuffle(ang)
@@ -304,9 +301,9 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
                           np.array([1.0], dtype=np.double)]
     energy_specter = (energy_specter[0],
                       energy_specter[1] / energy_specter[1].sum())
-    specter_cpd = np.cumsum(energy_specter[1])
+    specter_cpd = np.cumsum(energy_specter[1]).astype('float64')
     specter_cpd /= specter_cpd.max()
-    specter_energy = energy_specter[0]
+    specter_energy = energy_specter[0].astype('float64')
 
 #    if modulation_xy is None:
 #        mod_xy = lambda x: 1.0
@@ -314,6 +311,22 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 #        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
 #                                            copy=False, bounds_error=False,
 #                                            fill_value=1.0)
+
+    fov_arr=np.array([scan_fov], dtype='float64')
+    collimation_arr=np.array([total_collimation], dtype='float64')
+    rot_fan_angle = np.array([np.arctan(fov_arr[0]/sdd) * 2],dtype='float64')
+    scan_fan_angle = np.array([np.arctan(collimation_arr[0] *.5 / sdd) * 2], dtype='float64')
+    
+    bowtie_angle = np.linspace(-rot_fan_angle[0]/2, rot_fan_angle[0]/2, 101, dtype='float64')
+    bowtie_lenghts= bowtie_path_lenght(bowtie_angle, bowtie_radius, bowtie_distance)
+    bowtie_weights = np.empty_like(bowtie_angle, dtype='float64')
+    bowtie_att = attinuation(specter_energy/1000, name='aluminum', density=True).astype('float64')
+    for i in range(bowtie_lenghts.shape[0]):
+        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i])) 
+ 
+    n_bowtie = np.array(bowtie_weights.shape, dtype='int')
+    n_specter = np.array(specter_energy.shape, dtype='int')
+    
 
     if exposure_modulation is None:
         mod_z = lambda x: 1.0
@@ -335,12 +348,20 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 
         position = np.dot(R, np.array([-sdd/2., 0, t[i]], dtype='float64')) + rotation_center_image
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
-        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))        
+        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64')) 
+        
         ret = (position, direction, scan_axis, 
-               np.array([sdd], dtype='float64'), 
-               np.array([scan_fov], dtype='float64'), 
-               np.array([total_collimation], dtype='float64'),
+               scan_fan_angle,
+               rot_fan_angle,
                np.array([mod_z(t[i])], dtype='float64'), 
-               specter_cpd.astype('float64'), specter_energy.astype('float64'))
+               specter_cpd, specter_energy, n_specter,
+               bowtie_weights, bowtie_angle, n_bowtie)        
+        
+#        ret = (position, direction, scan_axis, 
+#               np.array([sdd], dtype='float64'), 
+#               np.array([scan_fov], dtype='float64'), 
+#               np.array([total_collimation], dtype='float64'),
+#               np.array([mod_z(t[i])], dtype='float64'), 
+#               specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 

@@ -6,6 +6,7 @@ Created on Tue Sep  8 10:10:58 2015
 """
 import numpy as np
 from PyQt4 import QtGui, QtCore
+import copy
 from scipy.ndimage.interpolation import affine_transform
 from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator, PROPETIES_DICT_TEMPLATE_GROUPING
 from opendxmc.database.import_phantoms import read_phantoms
@@ -161,6 +162,7 @@ class DatabaseInterface(QtCore.QObject):
     send_simulation_list = QtCore.pyqtSignal(list)
     send_material_list = QtCore.pyqtSignal(list)
     send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
+    send_view_array_bytescaled = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
@@ -172,7 +174,7 @@ class DatabaseInterface(QtCore.QObject):
         self.__db = None
         self.set_database(database_qurl)
         self.array_buffer = ArrayBuffer()
-        self.array_buffer_size = 30
+        self.array_buffer_size = 60
 
     @QtCore.pyqtSlot(QtCore.QUrl)
     def set_database(self, database_qurl):
@@ -238,6 +240,17 @@ class DatabaseInterface(QtCore.QObject):
             pass
         else:
             self.send_view_array.emit(simulation_name, arr, array_name)
+        self.database_busy.emit(False)
+    
+    @QtCore.pyqtSlot(str, str, float, float, bool)
+    def request_view_array_bytescaled(self, simulation_name, array_name, amin, amax, vals_is_modifier):
+        self.database_busy.emit(True)
+        try:
+            arr = self.__db.get_simulation_array_bytescaled(simulation_name, array_name, amin, amax, vals_is_modifier)
+        except ValueError:
+            pass
+        else:
+            self.send_view_array_bytescaled.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(str, str, int, int)
@@ -393,7 +406,7 @@ class Importer(QtCore.QObject):
 class Runner(QtCore.QThread):
     request_write_simulation_arrays = QtCore.pyqtSignal(str, dict)
     request_set_simulation_properties = QtCore.pyqtSignal(dict, bool, bool)
-    request_runner_view_update = QtCore.pyqtSignal(dict, dict)
+    request_runner_view_update = QtCore.pyqtSignal(np.ndarray, float, float, str, bool)
 
     start_timer = QtCore.pyqtSignal()
     def __init__(self, parent=None):
@@ -401,7 +414,7 @@ class Runner(QtCore.QThread):
         self.request_save = False
         self.timer = QtCore.QTimer()
         self.timer.setInterval(600000)
-#        self.time_interval = 600000 # saving data every 10 minutes
+
         self.started.connect(self.timer.start)
         self.timer.setSingleShot(False)
         self.terminated.connect(self.timer.stop)
@@ -414,7 +427,7 @@ class Runner(QtCore.QThread):
         self.material_list = None
 
         self.kill_me = False
-
+        self.is_running=False
 
     @QtCore.pyqtSlot()
     def set_request_save(self):
@@ -427,68 +440,83 @@ class Runner(QtCore.QThread):
         self.kill_me = True
         self.mutex.unlock()
 
-    def update_simulation_iteration(self, name, array_dict, exposure_number, eta, save=True):
+    def update_simulation_iteration(self, name, array_dict=None, exposure_number=None, progressbar_data=None, save=True):
         if self.kill_me:
+            self.request_runner_view_update.emit(np.ones((3, 3)), 1, 1, '', False)
             self.mutex.lock()
             self.kill_me = False
             self.mutex.unlock()
+            self.is_running=False
             self.terminated.emit()
             self.terminate()
-
-        desc = {'name': name,
+            
+        
+        if all([self.request_save, save, array_dict is not None, 
+                exposure_number is not None]):
+            desc = {'name': name,
                 'start_at_exposure_no': exposure_number,
-                'eta': eta}
-        if self.request_save and save:
+                }
             self.request_set_simulation_properties.emit(desc, False, False)
             self.request_write_simulation_arrays.emit(name, array_dict)
             self.mutex.lock()
             self.request_save = False
             self.mutex.unlock()
-
-        self.request_runner_view_update.emit(desc, array_dict)
+        if progressbar_data is not None:
+            self.request_runner_view_update.emit(*progressbar_data)
 
     def run(self):
+        self.is_running=True
         self.mutex.lock()
         self.kill_me = False
+        
+
+        
+
+
+        simulation_properties = self.simulation_properties
+        simulation_arrays = self.simulation_arrays
+        material_list = self.material_list
+        
+    
+        
+        
         self.mutex.unlock()
 
-        if self.simulation_properties is None or self.simulation_arrays is None:
+        if simulation_properties is None or simulation_arrays is None:
             return
-        if self.material_list is None:
+        if material_list is None:
             return
 
-        self.request_set_simulation_properties.emit({'name': self.simulation_properties['name'],
+        self.request_set_simulation_properties.emit({'name': simulation_properties['name'],
                                                      'MC_running': True},
                                                      False, False)
-
         try:
-            props_dict, arr_dict = ct_runner(self.material_list, self.simulation_properties,
+            props_dict, arr_dict = ct_runner(material_list, simulation_properties,
                                              energy_imparted_to_dose_conversion=True,
                                              callback=self.update_simulation_iteration,
-                                             **self.simulation_arrays)
+                                             **simulation_arrays)
         except MemoryError:
-            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(self.simulation_properties['name']))
-            self.simulation_properties['MC_finished'] = False
-            self.simulation_properties['MC_running'] = False
-            self.simulation_properties['MC_ready'] = False
-            self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
+            logger.error('MEMORY ERROR: Could not run simulation {0}, memory to low. Try to increase dose matrix scaling or use 64 bit version of OpenDXMC'.format(simulation_properties['name']))
+            simulation_properties['MC_finished'] = False
+            simulation_properties['MC_running'] = False
+            simulation_properties['MC_ready'] = False
+            self.request_set_simulation_properties.emit(simulation_properties, True, False)
         except ValueError or AssertionError as e:
             print(e)
             raise e
-            logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(self.simulation_properties['name']))
-            self.simulation_properties['MC_finished'] = False
-            self.simulation_properties['MC_running'] = False
-            self.simulation_properties['MC_ready'] = False
+            logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(simulation_properties['name']))
+            simulation_properties['MC_finished'] = False
+            simulation_properties['MC_running'] = False
+            simulation_properties['MC_ready'] = False
             self.request_set_simulation_properties.emit(self.simulation_properties, True, False)
         else:
-            self.request_set_simulation_properties.emit(props_dict, False, False)
             self.request_write_simulation_arrays.emit(props_dict['name'], arr_dict)
             # generating doe array, watching memory
             energy_imparted = arr_dict.get('energy_imparted', None)
             density = arr_dict.get('density', None)
-            c_factor = props_dict.get('conversion_factor_ctdiw')
+            c_factor = props_dict.get('conversion_factor_ctdiair')
             if c_factor == 0:
-                c_factor = props_dict.get('conversion_factor_ctdiair')
+                c_factor = props_dict.get('conversion_factor_ctdiw')
 
             if energy_imparted is not None and density is not None:
                 if c_factor > 0:
@@ -499,16 +527,18 @@ class Runner(QtCore.QThread):
                         logger.error('Memory error in generating dose array')
                     else:
                         self.request_write_simulation_arrays.emit(props_dict['name'], {'dose': dose})
+            self.request_set_simulation_properties.emit(props_dict, False, False)
         self.simulation_properties = None
         self.simulation_arrays = None
         self.material_list = None
         self.request_save = False
+        self.is_running=False
 
 
 class RunManager(QtCore.QObject):
     mc_calculation_running = QtCore.pyqtSignal(bool)
     kill_runner = QtCore.pyqtSignal()
-    def __init__(self, interface, parent=None):
+    def __init__(self, interface, progressbar, parent=None):
         super().__init__(parent)
         self.runner = Runner()
         self.kill_runner.connect(self.runner.cancel_run)
@@ -520,7 +550,9 @@ class RunManager(QtCore.QObject):
         self.runner.finished.connect(self.run_finished)
         self.runner.terminated.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
+        self.runner.request_runner_view_update.connect(progressbar.set_data)
         self.current_simulation = ""
+
 
     @QtCore.pyqtSlot()
     def run_started(self):
@@ -540,17 +572,15 @@ class RunManager(QtCore.QObject):
     @QtCore.pyqtSlot(dict, dict, list)
     def run_simulation(self, props, arrays, mat_list):
         logger.debug('Attemp to start MC thread')
-        if not self.runner.isRunning():
+        
+        if not self.runner.is_running:
             self.runner.simulation_properties = props
             self.runner.simulation_arrays = arrays
             self.runner.material_list = mat_list
             self.current_simulation = props['name']
             self.runner.start()
-#            self.runner.run2()
+#            self.runner.run()
             logger.debug('MC thread started')
-
-
-
 
 
 class ListModel(QtCore.QAbstractListModel):
@@ -677,7 +707,7 @@ class ListView(QtGui.QListView):
             self.setDropIndicatorShown(True)
             self.setDragDropMode(self.DragDrop)
             self.setDefaultDropAction(QtCore.Qt.CopyAction)
-
+            self.setToolTip('Drag DiCOM images or digital phantoms here to import')
         else:
             self.setAcceptDrops(False)
             self.viewport().setAcceptDrops(False)

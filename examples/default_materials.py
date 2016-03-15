@@ -86,7 +86,8 @@ def cone_beam_example():
                                          densities, 
                                          lut_shape, 
                                          lut,
-                                         energy_imparted)
+                                         energy_imparted,
+                                         use_siddon=np.zeros(1, dtype='int'))
     
     
     # Next we setup a beam source
@@ -112,6 +113,7 @@ def cone_beam_example():
     # for each source/beam
     weight = np.array([1], dtype='float64')
     # We now have all we need to specify a beam source, lets create one:
+    n_specter=np.array(specter_cpd.shape, dtype='int')
     beam = engine.setup_source(source_position,
                                source_direction, 
                                scan_axis, 
@@ -120,7 +122,8 @@ def cone_beam_example():
                                collimation, 
                                weight, 
                                specter_cpd, 
-                               specter_energies)
+                               specter_energies,
+                               n_specter)
                                
     # Running the simulation
     n_histories = 1000000
@@ -139,14 +142,15 @@ def cone_beam_example():
                                collimation, 
                                weight, 
                                specter_cpd, 
-                               specter_energies)
+                               specter_energies,
+                               n_specter)
     
     engine.run(beam2, n_histories, simulation)
     print('Simulated another {0} photons in {1} seconds'.format(n_histories, time.clock()-t0))                           
 
     #cleanup of simulation and sources, the monte carlo engine will leak
     # memory if these functions are not called
-    engine.cleanup(simulation=simulation, energy_imparted=energy_imparted)
+    engine.cleanup(simulation=simulation)
     engine.cleanup(source=beam)
     engine.cleanup(source=beam2)
 
