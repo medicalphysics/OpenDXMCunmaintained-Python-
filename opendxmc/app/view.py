@@ -153,20 +153,22 @@ class ViewController(QtCore.QObject):
                 
             
     def view_widget(self):
-        wid = QtGui.QWidget()
+#        wid = QtGui.QWidget()
+        wid = QtGui.QSplitter(QtCore.Qt.Vertical)
+        wid2 = QtGui.QWidget()
         main_layout = QtGui.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         view_layout = QtGui.QVBoxLayout()
         view_layout.setContentsMargins(0, 0, 0, 0)
 
-        menu_widget = QtGui.QMenuBar(wid)
+        menu_widget = QtGui.QMenuBar(wid2)
         menu_widget.setContentsMargins(0, 0, 0, 0)
 
         orientation_action = QtGui.QAction('Orientation', menu_widget)
         orientation_action.triggered.connect(self.selectViewOrientation)
         menu_widget.addAction(orientation_action)
 
-        sceneSelect = SceneSelectGroup(wid)
+        sceneSelect = SceneSelectGroup(wid2)
         for scene_name in self.scenes.keys():
             sceneSelect.addAction(scene_name)
         sceneSelect.scene_selected.connect(self.selectScene)
@@ -176,8 +178,8 @@ class ViewController(QtCore.QObject):
         main_layout.addWidget(self.graphicsview)
         
         for name in self.glwidgets:
-            view_layout.addWidget(self.glwidgets[name])
-
+#            view_layout.addWidget(self.glwidgets[name])
+            wid.addWidget(self.glwidgets[name])
         for action in sceneSelect.actions():
             menu_widget.addAction(action)
             
@@ -186,9 +188,9 @@ class ViewController(QtCore.QObject):
         menu_widget.addAction(cine_action)
         
 #        main_layout.addLayout(view_layout)
-        wid.setLayout(view_layout)
+#        wid.setLayout(view_layout)
         main_layout.addWidget(wid)
-        wid2 = QtGui.QWidget()
+        
         wid2.setLayout(main_layout)
         return wid2, wid
 
@@ -750,7 +752,6 @@ class PositionBarItem(QtGui.QGraphicsItem):
         return QtCore.QRectF(0, 0, y, x)
         
     def mousePressEvent(self, event):
-        print('mouse event')
         if event.button()==QtCore.Qt.LeftButton and self.callback:
             event.accept()
             pos = event.pos()

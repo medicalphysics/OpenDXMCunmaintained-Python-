@@ -47,7 +47,7 @@ PROPETIES_DICT_TEMPLATE = {
     'is_spiral': [True, np.dtype(np.bool), True, True, 'Helical aqusition', 0, 3],
     'pitch': [1, np.dtype(np.double), True, True, 'Pitch', 0, 3],
     'exposures': [1200, np.dtype(np.int), True, True, 'Number of exposures in one rotation', 0, 3],
-    'histories': [100, np.dtype(np.int), True, True, 'Number of photon histories per exposure', 0, 3],
+    'histories': [1000, np.dtype(np.int), True, True, 'Number of photon histories per exposure', 0, 3],
     'start_scan': [0, np.dtype(np.double), False, False, 'CT scan start position [cm]', 0, 2],
     'stop_scan': [0, np.dtype(np.double), False, False, 'CT scan stop position [cm]', 0, 2],
     'start': [0, np.dtype(np.double), True, True, 'Start position [cm]', 2, 3],

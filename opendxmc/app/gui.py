@@ -92,6 +92,7 @@ class SelectDatabaseWidget(QtGui.QWidget):
     @QtCore.pyqtSlot(QtCore.QUrl)    
     def validate_apply(self, url):
         self.path = url
+        self.txtedit.setText(self.path.toLocalFile())
         settings = QtCore.QSettings('OpenDXMC', 'gui')
         settings.setValue('database/path', self.path.toLocalFile())
         self.model.setRootPath(self.path.toLocalFile())
@@ -100,8 +101,8 @@ class SelectDatabaseWidget(QtGui.QWidget):
     def locked(self, val):
         self.setDisabled(val)
         self.applybutton.setDisabled(val)
-        
-
+    
+   
 class StatusBarButton(QtGui.QPushButton):
     def __init__(self, *args):
         super().__init__(*args)

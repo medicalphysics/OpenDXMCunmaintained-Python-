@@ -167,6 +167,7 @@ class DatabaseInterface(QtCore.QObject):
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
 
+    
     send_proper_database_path = QtCore.pyqtSignal(QtCore.QUrl)
 
     def __init__(self, database_qurl, parent=None):
@@ -502,7 +503,6 @@ class Runner(QtCore.QThread):
             simulation_properties['MC_ready'] = False
             self.request_set_simulation_properties.emit(simulation_properties, True, False)
         except ValueError or AssertionError as e:
-            print(e)
             raise e
             logger.error('UNKNOWN ERROR: Could not run simulation {0}'.format(simulation_properties['name']))
             simulation_properties['MC_finished'] = False
@@ -695,19 +695,24 @@ class ListModel(QtCore.QAbstractListModel):
     def supportedDropActions(self):
         return QtCore.Qt.CopyAction | QtCore.Qt.MoveAction
 
+    def __len__(self):
+        return len(self.__data)
 
 class ListView(QtGui.QListView):
     name_activated = QtCore.pyqtSignal(str)
     request_removal = QtCore.pyqtSignal(str)
     def __init__(self, parent=None, simulation=True):
         super().__init__(parent)
+        self.tooltip = ""
         if simulation:
             self.setAcceptDrops(True)
             self.viewport().setAcceptDrops(True)
             self.setDropIndicatorShown(True)
             self.setDragDropMode(self.DragDrop)
             self.setDefaultDropAction(QtCore.Qt.CopyAction)
-            self.setToolTip('Drag DiCOM images or digital phantoms here to import')
+            self.tooltip = 'Drag DiCOM images or digital\nphantoms here to import'
+            self.setToolTip(self.tooltip)
+            
         else:
             self.setAcceptDrops(False)
             self.viewport().setAcceptDrops(False)
@@ -740,6 +745,14 @@ class ListView(QtGui.QListView):
                 if ind.isValid():
                     self.request_removal.emit(ind.data())
 
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if len(self.model()) == 0:
+            painter = QtGui.QPainter(self.viewport())
+            f = painter.font()
+            f.setItalic(True)
+            painter.setFont(f)
+            painter.drawText(self.viewport().rect(),QtCore.Qt.AlignCenter | QtCore.Qt.TextWordWrap, self.tooltip)
 
 
 class PropertiesEditModelItem(QtGui.QStandardItem):
@@ -990,6 +1003,7 @@ class PropertiesEditWidget(QtGui.QWidget):
 class OrganDoseModel(QtCore.QAbstractTableModel):
     request_array = QtCore.pyqtSignal(str, str)
     request_array_slice = QtCore.pyqtSignal(str, str, int, int)
+    hide_view = QtCore.pyqtSignal(bool)
     def __init__(self, database_interface, simulation_list_model, parent=None):
         super().__init__(parent)
         self.current_simulation = ""
@@ -1012,7 +1026,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
 
 
     def headerData(self, section, orientation, role):
-        if orientation == QtCore.Qt.Horizontal:
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             if section == 0:
                 return 'Organ'
             elif section == 1:
@@ -1033,7 +1047,15 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
                 return str(round(self._data[self._data_keys[r]][c] / self._data[self._data_keys[r]][c+1], 2))
             return self._data[self._data_keys[r]][c]
         return None
-
+    def sort(self, column, order):
+        self.layoutAboutToBeChanged.emit()
+        reverse = True if order == QtCore.Qt.DescendingOrder else False
+        if column in [0, 1]:
+            self._data_keys.sort(key=lambda x: self._data[x][column], reverse=reverse)
+        elif column == 2:
+            self._data_keys.sort(key=lambda x: self._data[x][column]/self._data[x][column+1], reverse=reverse)
+        self.layoutChanged.emit()
+    
     def rowCount(self, index):
         return len(self._data)
     def columnCount(self, index):
@@ -1053,6 +1075,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
 
     @QtCore.pyqtSlot(dict)
     def set_simulation_properties(self, props_dict):
+        self.hide_view.emit(True)
         if props_dict.get('name', "") != self.current_simulation:
             return
         self.scale = props_dict.get('scaling', np.ones(3))
@@ -1089,6 +1112,8 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
 #            self.dataChanged.emit(self.index(0, 0), self.index(len(self._data), 2))
             self.request_array_slice.emit(self.current_simulation, 'dose', 0, 0)
             self.layoutChanged.emit()
+            self.hide_view.emit(False)
+        
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
@@ -1119,9 +1144,48 @@ class OrganDoseView(QtGui.QTableView):
     def __init__(self, model, parent=None):
         super().__init__(parent)
         self.setModel(model)
+        self.model().hide_view.connect(self.setHidden)
         self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-        self.horizontalHeader().setVisible(True)
+#        self.horizontalHeader().setVisible(True)
+        self.setSortingEnabled(True)
+        self.setDragEnabled(True)
+        self.setAlternatingRowColors(True)
+        self.setHidden(True)
 
+    
+    def copy_to_clipboard(self):
+        indices = self.selectedIndexes()
+        n_columns = self.model().columnCount(0)
+        indices.sort(key = lambda x: x.row()*n_columns + x.column())
+        
+        c_row=0
+        c_column=0
+        
+        html = "<table><tr>"
+        txt = ""
+        for index in indices:
+            if index.isValid():
+                if index.row() > c_row:
+                    html += "</tr>"+"<tr>"
+                    txt+="\n"
+                if index.column() > c_column:
+                    txt += "; "
+                txt += str(index.data())
+                html += "<td>" + str(index.data()) +"</td>" 
+                c_row = index.row()
+                c_column = index.column()
+        html += "</tr></table>"
+        if len(html) > 0: 
+            mime=QtCore.QMimeData()
+            mime.setHtml(html)
+            mime.setText(txt)
+            QtGui.qApp.clipboard().setMimeData(mime)
+            
 
-
-
+    def keyPressEvent(self, event):
+        if event.matches(QtGui.QKeySequence.Copy):
+            self.copy_to_clipboard()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+            
