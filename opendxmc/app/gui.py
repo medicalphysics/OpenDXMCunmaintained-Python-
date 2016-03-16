@@ -7,7 +7,7 @@ Created on Mon Jul 27 11:42:37 2015
 import sys
 import os
 from PyQt4 import QtGui, QtCore
-from opendxmc.app.view import View, ViewController, RunnerView
+from opendxmc.app.view import ViewController, RunnerView
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget, OrganDoseModel, OrganDoseView
 import logging
 
