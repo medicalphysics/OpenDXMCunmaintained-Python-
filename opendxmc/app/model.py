@@ -294,8 +294,6 @@ class DatabaseInterface(QtCore.QObject):
                 logger.debug('Buffer need update, updating indices {0} in {1}'.format(indices, array_name))
                 self.array_buffer.set_buffer(arr, simulation_name, array_name, indices, orientation)
 
-
-
         self.database_busy.emit(False)
 
     @QtCore.pyqtSlot(list)
@@ -307,7 +305,6 @@ class DatabaseInterface(QtCore.QObject):
             self.__db.copy_simulation(name)
             self.database_busy.emit(False)
             self.emit_simulation_list()
-
 
     @QtCore.pyqtSlot(str)
     def request_simulation_properties(self, name):

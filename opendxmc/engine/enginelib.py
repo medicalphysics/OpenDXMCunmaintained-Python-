@@ -76,11 +76,11 @@ def get_kernel(precision):
     
     
     run = dll.run_simulation
-    run.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]
+    run.argtypes = [ct.c_void_p, ct.c_int64, ct.c_void_p]
     run.restype=None    
     
     run_bowtie = dll.run_simulation_bowtie
-    run_bowtie.argtypes = [ct.c_void_p, ct.c_size_t, ct.c_void_p]    
+    run_bowtie.argtypes = [ct.c_void_p, ct.c_int64, ct.c_void_p]    
     run_bowtie.restype=None    
     
     cleanup = dll.cleanup_simulation
@@ -153,11 +153,11 @@ class Engine(object):
                     )
     def run(self, source_ptr, n_particles, sim_ptr):
         self.crun(source_ptr, 
-                   ct.c_size_t(n_particles), 
+                   ct.c_int64(n_particles), 
                    sim_ptr)
     def run_bowtie(self, source_ptr, n_particles, sim_ptr):
         self.crun_bowtie(source_ptr, 
-                         ct.c_size_t(n_particles), 
+                         ct.c_int64(n_particles), 
                          sim_ptr)
 
     def cleanup(self, simulation=None,source=None):

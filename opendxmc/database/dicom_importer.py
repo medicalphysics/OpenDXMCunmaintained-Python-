@@ -8,7 +8,7 @@ Created on Fri Aug  7 10:07:58 2015
 import numpy as np
 import dicom
 import os
-
+import itertools
 import logging
 from scipy.ndimage.interpolation import affine_transform, spline_filter, zoom
 from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
@@ -85,21 +85,7 @@ def array_from_dicom_list_low_memory(dc_list, scaling):
         
     return arr
 
-#def array_from_dicom_list(dc_list, scaling):
-#    r = int(dc_list[0][0x28, 0x10].value)
-#    c = int(dc_list[0][0x28, 0x11].value)
-#    n = len(dc_list)
-#    arr = np.empty((r, c, n), dtype=np.int16)
-#
-#    for i, dc in enumerate(dc_list):
-#        arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-#                        int(dc[0x28, 0x1052].value))
-#                        
-#    out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
-#    spline_filter(arr, order=3, output=arr)
-#    return affine_transform(arr, scaling, prefilter=False,
-#                            output_shape=out_shape, cval=-1000,
-#                            output=np.int16)
+    
 def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
@@ -112,10 +98,6 @@ def array_from_dicom_list(dc_list, scaling):
                         
     out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
     return rebin(arr, out_shape)
-#    spline_filter(arr, order=3, output=arr)
-#    return affine_transform(arr, scaling, prefilter=False,
-#                            output_shape=out_shape, cval=-1000,
-#                            output=np.int16)
     
     
 def aec_from_dicom_list(dc_list, iop, spacing):

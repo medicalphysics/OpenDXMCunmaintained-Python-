@@ -1535,7 +1535,6 @@ class View3D(gl.GLViewWidget):
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
     def set_requested_array(self, name, data, array_name):
-        
         if name != self.name:
             if self.__glitem is not None:
                 self.removeItem(self.__glitem)
@@ -1544,10 +1543,8 @@ class View3D(gl.GLViewWidget):
         if array_name != self.array_name:
             return
             
-        if self.__glitem is not None:
-            self.removeItem(self.__glitem)
-            self.__glitem = None
-        self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
+        if self.__glitem is None:    
+            self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
 
       
     @QtCore.pyqtSlot(np.ndarray)
@@ -1555,9 +1552,13 @@ class View3D(gl.GLViewWidget):
         if self.__glitem is not None:
             self.removeItem(self.__glitem)
             self.__glitem = None
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-        self.__glitem = gl.GLVolumeItem(d2, glOptions='translucent', smooth=True, sliceDensity=1)
-        #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
+        try:
+            #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
+            self.__glitem = gl.GLVolumeItem(d2, glOptions='translucent', smooth=False, sliceDensity=1)
+            #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
+        except Exception as e:
+            print(e)
+            return
         S = self.spacing * self.scaling
         scaling =((S/(np.sum(S*S))**.5))
 #        scaling = scaling[[0, 2, 1]]
@@ -1565,107 +1566,11 @@ class View3D(gl.GLViewWidget):
         self.__glitem.scale(*scaling)        
 #        self.__glitem.translate(*(-self.shape[[2, 0, 1]] / 2 * scaling))
         self.__glitem.translate(*(-self.shape * .5 * scaling / self.scaling))
-        
-        self.addItem(self.__glitem)
+        try:
+            self.addItem(self.__glitem)
+        except Exception as e:
+            print(e)
+            return
      
         self.show()
 
-#class View3D2(gl.GLViewWidget):
-#    request_array = QtCore.pyqtSignal(str, str, float, float)
-#    request_opengl_array = QtCore.pyqtSignal(list)
-#    def __init__(self, *args, arrays=None, lut_names=None, dim_scale=False, custom_data_range=None, **kwargs):
-#        super().__init__(*args, **kwargs)
-#        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-#        self.name = ''
-#        self.custom_data_range = custom_data_range
-#        if arrays:
-#            self.array_names = arrays
-#        if lut_names:
-#            self.lut_names = lut_names
-#        else:
-#            self.lut_names = ['gray']*len(self.array_names)
-#        self.dim_scaling = dim_scale
-#       
-#        self.shape = np.ones(3, np.int)
-#        self.spacing = np.ones(3, np.double)
-#        self.scaling = np.ones(3, np.double)
-#        
-#        self.worker = View3Dworker()
-#        self.request_opengl_array.connect(self.worker.generate_tf)
-#        self.worker.opengl_array.connect(self.set_gl_array)
-#
-#        self.__glitem = None
-#        self.processed_index = []
-#
-#    def set_metadata(self, sim, index=0):
-#        self.name = sim.get('name', '')
-#        self.spacing = sim.get('spacing', np.ones(3, np.double))
-#        self.shape = sim.get('shape', np.ones(3, np.int))
-#        if self.dim_scaling:
-#            self.scaling = sim.get('scaling', np.ones(3, np.double))
-#        else:
-#            self.scaling = np.ones(3, np.double)
-#        self.opts['distance'] = np.sum((self.shape*self.spacing*self.scaling)**2)**.5 * 4
-#        self.processed_index = []
-#        for arr_name in self.array_names:
-#            self.request_array.emit(self.name, arr_name)
-#        if self.__glitem is not None:
-#            for item in self.__glitem:
-#                self.removeItem(item)
-#            self.__glitem = None
-##        self.index = index % self.shape[self.view_orientation]
-#
-#    @QtCore.pyqtSlot(str, np.ndarray, str)
-#    def set_requested_array(self, name, data, array_name):
-#        if name != self.name:
-#            if self.__glitem is not None:
-#                for item in self.__glitem:
-#                    self.removeItem(item)
-#                self.__glitem = None
-#            return
-#        if array_name not in self.array_names:
-#            return
-#      
-#        index = self.array_names.index(array_name)        
-#        if index not in self.processed_index:
-#            self.processed_index.append(index)
-#        else:
-#            return
-#        
-#        if self.custom_data_range[index] is None:
-#            self.request_opengl_array.emit([data, None, None, None, self.lut_names[index]])
-#        else:
-#            self.request_opengl_array.emit([data, self.custom_data_range[index][0], self.custom_data_range[index][1], 100, self.lut_names[index]])
-#        
-#      
-#        
-#    @QtCore.pyqtSlot(np.ndarray)
-#    def set_gl_array(self, d2):  
-#        print('got an array')
-#        if self.__glitem is None:
-#            self.dumarr = [d2]
-#            self.__glitem=[]
-#        else:
-#            self.dumarr.append(d2)
-#        
-#        if len(self.dumarr) == 2:
-#            
-#            d1 = ((self.dumarr[0]).astype(np.float)) / 255.
-#            d2 = ((self.dumarr[1]).astype(np.float)) / 255.
-#            d12=np.empty_like(d1)
-#            for i in range(3):
-#                d12[...,i] = d1[...,i]  + d2[...,i]*(1.-d1[...,3])
-#            d12[...,3] = d1[...,3] + d2[...,3]*(1.-d1[...,3])                
-#            d12=(d12*255).astype(np.ubyte)
-##            d12 = (self.dumarr[0]//2+self.dumarr[1]//2)
-#            print('composing', d12.dtype, d12[...,3].max(), d12[...,3].min())
-#            self.__glitem.append( gl.GLVolumeItem(d12, glOptions='translucent', smooth=True, sliceDensity=1))
-#        
-#        #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-#        #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
-#            S = self.spacing * self.scaling
-#            scaling =((S/(np.sum(S*S))**.5))
-#            self.__glitem[0].scale(*scaling)
-#            self.__glitem[0].translate(*(-self.shape / 2. * scaling))
-#            self.addItem(self.__glitem[0])
-#            
