@@ -317,32 +317,3 @@ class MainWindow(QtGui.QMainWindow):
         self.mcrunner.runner.finished.emit()
 
 
-def main(args):
-
-    app = QtGui.QApplication(args)
-    app.setOrganizationName("SSHF")
-#    app.setOrganizationDomain("https://code.google.com/p/ctqa-cp/")
-    app.setApplicationName("OpenDXMC")
-    win = MainWindow()
-    win.show()
-
-    return app.exec_()
-
-
-
-def start():
-    # exit code 1 triggers a restart
-    # Also testing for memory error
-    try:
-        while main(sys.argv) == 1:
-            continue
-    except MemoryError:
-        msg = QtGui.QMessageBox()
-        msg.setText("Ouch, OpenDXMC ran out of memory.")
-        msg.setIcon(msg.Critical)
-        msg.exec_()
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    pass
