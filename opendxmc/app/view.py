@@ -1554,7 +1554,7 @@ class View3D(gl.GLViewWidget):
             self.__glitem = None
         try:
             #self.__glitem = gl.GLVolumeItem(d2, glOptions='additive')
-            self.__glitem = gl.GLVolumeItem(d2, glOptions='translucent', smooth=False, sliceDensity=1)
+            self.__glitem = gl.GLVolumeItem(d2, glOptions='translucent', smooth=True, sliceDensity=1)
             #self.__glitem = gl.GLVolumeItem(d2, glOptions='opaque')
         except Exception as e:
             print(e)
