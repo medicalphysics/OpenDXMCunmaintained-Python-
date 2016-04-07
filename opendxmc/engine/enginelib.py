@@ -16,32 +16,40 @@ import ctypes as ct
 import numpy as np
 import os
 import sys
-
+import platform
 
 
 def get_kernel(precision):
     dll_path = os.path.abspath(os.path.dirname(__file__))
-    try:
-        if sys.maxsize > 2**32:
-            dll = ct.CDLL(os.path.join(dll_path, 'enginelib64'))
-        else:
-            dll = ct.CDLL(os.path.join(dll_path, 'enginelib32'))
-    except OSError:
-        if sys.maxsize > 2**32:
-            dll = ct.CDLL('enginelib64')
-        else:
-            dll = ct.CDLL('enginelib32')
+    if platform.system() == 'Windows':
+        try:
+            if sys.maxsize > 2**32:
+                dll = ct.CDLL(os.path.join(dll_path, 'enginelib64'))
+            else:
+                dll = ct.CDLL(os.path.join(dll_path, 'enginelib32'))
+        except OSError:
+            if sys.maxsize > 2**32:
+                dll = ct.CDLL('enginelib64')
+            else:
+                dll = ct.CDLL('enginelib32')
+    elif platform.system() == 'Linux':
+#        dll = ct.CDLL('enginelib.so')
+#        print(os.path.join(dll_path, 'enginelib64.so'))
+        dll = ct.CDLL(os.path.join(dll_path, 'enginelib64.so'))
+    else:
+        raise OSError
+
 
     setup = dll.setup_simulation
     setup.argtypes = [ct.POINTER(ct.c_int), #shape
                       ct.POINTER(precision), #spacing
                       ct.POINTER(precision), #offset
-                      ct.POINTER(ct.c_int), #materialmap
+                      ct.POINTER(ct.c_int32), #materialmap
                       ct.POINTER(precision), #density_map
-                      ct.POINTER(ct.c_int), #lut_shape
+                      ct.POINTER(ct.c_int32), #lut_shape
                       ct.POINTER(precision), #lut
                       ct.POINTER(precision), #energy_imparted
-                      ct.POINTER(ct.c_int) #use_siddon
+                      ct.POINTER(ct.c_int32) #use_siddon
                       ]
     setup.restype = ct.c_void_p
     
@@ -55,7 +63,7 @@ def get_kernel(precision):
                        ct.POINTER(precision), #weigh
                        ct.POINTER(precision), #specter cpd
                        ct.POINTER(precision), #specter energy
-                       ct.POINTER(ct.c_int) #specter size
+                       ct.POINTER(ct.c_int32) #specter size
                        ]
     source.restype = ct.c_void_p   
     
@@ -68,10 +76,10 @@ def get_kernel(precision):
                               ct.POINTER(precision), #weight
                               ct.POINTER(precision), #specter energy
                               ct.POINTER(precision), #spectercpd
-                              ct.POINTER(ct.c_int),    #n_specter
+                              ct.POINTER(ct.c_int32),    #n_specter
                               ct.POINTER(precision), #bowtie_angle 
                               ct.POINTER(precision), #bowtiw weight
-                              ct.POINTER(ct.c_int)]    #n_bowtie                    
+                              ct.POINTER(ct.c_int32)]    #n_bowtie                    
     source_bowtie.restype = ct.c_void_p    
     
     
@@ -104,15 +112,15 @@ class Engine(object):
 
     def setup_simulation(self, shape, spacing, offset, material_map, density_map, lut_shape, lut, energy_imparted, use_siddon):
         return self.c_simsetup(
-                 shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 shape.ctypes.data_as(ct.POINTER(ct.c_int32)), 
                  spacing.ctypes.data_as(ct.POINTER(self.floating_type)),
                  offset.ctypes.data_as(ct.POINTER(self.floating_type)), 
-                 material_map.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 material_map.ctypes.data_as(ct.POINTER(ct.c_int32)), 
                  density_map.ctypes.data_as(ct.POINTER(self.floating_type)), 
-                 lut_shape.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 lut_shape.ctypes.data_as(ct.POINTER(ct.c_int32)), 
                  lut.ctypes.data_as(ct.POINTER(self.floating_type)), 
                  energy_imparted.ctypes.data_as(ct.POINTER(self.floating_type)),
-                 use_siddon.ctypes.data_as(ct.POINTER(ct.c_int)), 
+                 use_siddon.ctypes.data_as(ct.POINTER(ct.c_int32)), 
                  ) 
 
                  
@@ -129,7 +137,7 @@ class Engine(object):
                     weight.ctypes.data_as(ct.POINTER(self.floating_type)),
                     specter_cpd.ctypes.data_as(ct.POINTER(self.floating_type)),
                     specter_energy.ctypes.data_as(ct.POINTER(self.floating_type)),
-                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int))
+                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int32))
                     )
     def setup_source_bowtie(self, source_position, source_direction, scan_axis, 
                             scan_angle, rot_angle, weight, specter_cpd,
@@ -146,10 +154,10 @@ class Engine(object):
                     weight.ctypes.data_as(ct.POINTER(self.floating_type)),
                     specter_cpd.ctypes.data_as(ct.POINTER(self.floating_type)),
                     specter_energy.ctypes.data_as(ct.POINTER(self.floating_type)),
-                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int)),
+                    n_specter.ctypes.data_as(ct.POINTER(ct.c_int32)),
                     bowtie_weight.ctypes.data_as(ct.POINTER(self.floating_type)),
                     bowtie_angle.ctypes.data_as(ct.POINTER(self.floating_type)),
-                    n_bowtie.ctypes.data_as(ct.POINTER(ct.c_int))
+                    n_bowtie.ctypes.data_as(ct.POINTER(ct.c_int32))
                     )
     def run(self, source_ptr, n_particles, sim_ptr):
         self.crun(source_ptr, 
@@ -159,13 +167,20 @@ class Engine(object):
         self.crun_bowtie(source_ptr, 
                          ct.c_int64(n_particles), 
                          sim_ptr)
-
+        
     def cleanup(self, simulation=None,source=None):
         if simulation:
             self.c_simcleanup(simulation)
         if source:
             self.c_sourcecleanup(source)
             
+            
+#            
+#def test():
+#    e = get_kernel('float64')
+#    print(e)
+#    
+#    
 #def test():
 #    import matplotlib.pylab as plt
 #    res = 64

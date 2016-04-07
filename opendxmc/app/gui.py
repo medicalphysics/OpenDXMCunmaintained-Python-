@@ -41,6 +41,12 @@ class LogWidget(QtGui.QTextEdit):
     def closeEvent(self, event):
         self.closed.emit(False)
         super().closeEvent(event)
+    
+    @QtCore.pyqtSlot(str)
+    def insertPlainText(self, txt):
+        self.moveCursor(QtGui.QTextCursor.End)
+        super().insertPlainText(txt)
+        self.ensureCursorVisible()
 
 
 class SelectDatabaseWidget(QtGui.QWidget):

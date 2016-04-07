@@ -122,7 +122,7 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
 #                                 order=0).astype(np.uint8)
         organ = organ[::scale[0], ::scale[1], ::scale[2]]
         material_array = np.asarray(organ, dtype=np.uint8)
-        density_array = np.zeros(organ.shape, dtype=np.double)
+        density_array = np.zeros(organ.shape, dtype='float64')
 
         material_map = {}
         key = 0
@@ -143,7 +143,7 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
 
         # reversing material_map
         material_map = {key: value for value, key in material_map.items()}
-        return material_map, material_array.astype(np.int), density_array
+        return material_map, material_array.astype('int32'), density_array
 
 def attinuation_to_ct_numbers(material_attinuations, air_key, water_key):
     a = 1000./(material_attinuations[water_key] -material_attinuations[air_key])
@@ -168,7 +168,7 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
         """
         if ctarray is None:
             return
-        ctarray = gaussian_filter(ctarray, scale / 2)
+        ctarray = gaussian_filter(ctarray, scale)
 #        ctarray = affine_transform(spline_filter(ctarray,
 #                                                 order=3,
 #                                                 output=np.int16),
@@ -220,9 +220,9 @@ def prepare_geometry_from_ct_array(ctarray, scale ,specter, materials):
             HU_bins[-1] = 300
 
         material_array = np.digitize(
-            ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype(np.int)
+            ctarray.ravel(), HU_bins).reshape(ctarray.shape).astype('int32')
         # Using densities fromdefined materials
-        density_array = np.asarray(material_array, dtype=np.double)
+        density_array = np.asarray(material_array, dtype='float64')
         np.choose(material_array,
                   [material_dens[i] for i, _ in material_HU_list],
                   out=density_array)
@@ -330,7 +330,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 
     phase_space = ct_source_space(simulation, exposure_modulation)
 
-    N = np.array(material.shape, dtype='int')
+    N = np.array(material.shape, dtype='int32')
 
     offset = np.zeros(3, dtype='float64')
     spacing = (simulation['spacing'] * simulation['scaling']).astype('float64')
@@ -350,13 +350,13 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
         coffe_msg = ', go get coffe!'
     else:
         coffe_msg = '.'
-    logger.info('{0}: Starting simulation with {1} histories per '
+    logger.info('{0}: Starting simulation with about {1} histories per '
                 'rotation{2}'.format(time.ctime(), tot_histories, coffe_msg))
 
-    lut_shape = np.array(lut.shape, dtype='int')
+    lut_shape = np.array(lut.shape, dtype='int32')
 
     logger.info('Initializing geometry')
-    use_siddon = np.array([simulation['use_siddon']], dtype=np.int)
+    use_siddon = np.array([simulation['use_siddon']], dtype='int32')
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material, density, lut_shape, lut, energy_imparted, use_siddon)
 
@@ -366,7 +366,6 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
 
     for p, e, n in phase_space:
         source = engine.setup_source_bowtie(*p)
-
         engine.run_bowtie(source, simulation['histories'], geometry)
         engine.cleanup(source=source)
 
