@@ -35,33 +35,54 @@ def rebin(a, factor):
 
 
 def human_time(sec):
-    seconds = [86400., 3600., 60., 1.]
-    names = ['days', 'hours', 'minutes', 'seconds']
+    if sec < 30:
+        return "a moment"
+    elif sec < 120:
+        return 'a minute or so'
+    elif sec < 3600:
+        return "about {} minutes".format(int(sec) // 60)
+    elif sec < 3600*2:
+        minutes = (int(sec) - 3600) // 60
+        if minutes < 5:
+            return "about an hour"
+        return "one hour and {} minutes".format(minutes)
+    elif sec < 3600*3:
+        minutes = (int(sec) - 3600*2) // 60
+        if minutes < 5:
+            return "about two hours"
+        return "two hours and {} minutes".format(minutes)
+    
+    hours = int(sec) // 3600
+    return "about {} hours".format(hours)        
 
-    if sec <= seconds[-1]:
-        return 'less than a {0}'.format(names[-1][:-1])
-    times = []
-    labels = []
-    for i, s in enumerate(seconds):
-        if sec >= s:
-            times.append(int(math.floor(sec/s)))
-            labels.append(names[i])
-            if times[0] == 1:
-                labels[0] = labels[0][:-1]
-            if i < len(seconds) - 1:
-                times.append(int(math.floor((sec - s * times[0])/seconds[i+1])))
-                labels.append(names[i+1])
-                if times[1] == 1:
-                    labels[1] = labels[1][:-1]
-
-            break
-    else:
-        return 'less than a {0}'.format(names[-1][:-1])
-    if len(times) > 1:
-        if times[-1] == 0:
-            return 'about {0} {1}'.format(times[0], labels[0])
-        return 'about {0} {1} and {2} {3}'.format(times[0], labels[0], times[1], labels[1])
-    return 'about {0} {1}'.format(times[0], labels[0])
+#def human_time(sec):
+#    seconds = [86400., 3600., 60., 1.]
+#    names = ['days', 'hours', 'minutes', 'seconds']
+#
+#    if sec <= seconds[-1]:
+#        return 'less than a {0}'.format(names[-1][:-1])
+#    times = []
+#    labels = []
+#    for i, s in enumerate(seconds):
+#        if sec >= s:
+#            times.append(int(math.floor(sec/s)))
+#            labels.append(names[i])
+#            if times[0] == 1:
+#                labels[0] = labels[0][:-1]
+#            if i < len(seconds) - 1:
+#                times.append(int(math.floor((sec - s * times[0])/seconds[i+1])))
+#                labels.append(names[i+1])
+#                if times[1] == 1:
+#                    labels[1] = labels[1][:-1]
+#
+#            break
+#    else:
+#        return 'less than a {0}'.format(names[-1][:-1])
+#    if len(times) > 1:
+#        if times[-1] == 0:
+#            return 'about {0} {1}'.format(times[0], labels[0])
+#        return 'about {0} {1} and {2} {3}'.format(times[0], labels[0], times[1], labels[1])
+#    return 'about {0} {1}'.format(times[0], labels[0])
 
 
 def circle_mask(array_shape, radius, center=None):
@@ -101,5 +122,4 @@ def find_all_files(pathList):
         elif os.path.isfile(path):
             yield os.path.normpath(path)
 
-if __name__ == '__main__':
-    test_rebin_scaling()
+

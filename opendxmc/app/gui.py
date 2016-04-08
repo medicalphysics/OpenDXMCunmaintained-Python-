@@ -293,7 +293,7 @@ class MainWindow(QtGui.QMainWindow):
         organdoseview = OrganDoseView(self.organdosemodel)
         central_splitter.addWidget(organdoseview)
 
-        central_splitter.setSizes([100, 100, 100, 0, 0])
+        central_splitter.setSizes([100, 100, 100, 10, 0])
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)

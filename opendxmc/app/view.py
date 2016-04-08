@@ -15,6 +15,284 @@ import logging
 logger = logging.getLogger('OpenDXMC')
 
 
+## @file
+#
+# Qt Widget Range slider widget. This is a slider with two bars, one of
+# which is used to set the maximum and the other of which is used to
+# set the minimum.
+#
+# Qt Double Spin Box slider widget. This is the range slider grouped
+# with two spin boxes to make the range editable.
+#
+# Hazen 07/14
+#
+
+class QRangeSlider(QtGui.QWidget):
+    doubleClick = QtCore.pyqtSignal(bool)
+    rangeChanged = QtCore.pyqtSignal(float, float)
+
+    ## __init__
+    #
+    # @param slider_range [min, max, step size].
+    # @param values [initial minimum setting, initial maximum setting].
+    # @param parent (Optional) The PyQt parent of this widget.
+    #
+    def __init__(self, slider_range, values, parent = None):
+        super().__init__(parent)
+        self.bar_width = 10
+        self.emit_while_moving = False
+        self.moving = "none"
+        self.old_scale_min = 0.0
+        self.old_scale_max = 0.0
+        self.scale = 0
+        self.setMouseTracking(False)
+        self.single_step = 0.0
+
+        if slider_range:
+            self.setRange(slider_range)
+        else:
+            self.setRange([0.0, 1.0, 0.01])
+        if values:
+            self.setValues(values)
+        else:
+            self.setValues([0.3, 0.6])
+
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+
+    def emitRange(self):
+        if (self.old_scale_min != self.scale_min) or (self.old_scale_max != self.scale_max):
+            self.rangeChanged.emit(self.scale_min, self.scale_max)
+            self.old_scale_min = self.scale_min
+            self.old_scale_max = self.scale_max
+            
+    def getValues(self):
+        return [self.scale_min, self.scale_max]
+
+    def keyPressEvent(self, event):
+        key = event.key()
+
+        # move bars based on arrow keys
+        moving_max = False
+        if key == QtCore.Qt.Key_Up:
+            self.scale_max += self.single_step
+            moving_max = True
+        elif key == QtCore.Qt.Key_Down:
+            self.scale_max -= self.single_step
+            moving_max = True
+        elif key == QtCore.Qt.Key_Left:
+            self.scale_min -= self.single_step
+        elif key == QtCore.Qt.Key_Right:
+            self.scale_min += self.single_step
+
+        # update (if necessary) based on allowed range
+        if moving_max:
+            if (self.scale_max < self.scale_min):
+                self.scale_min = self.scale_max
+        else:
+            if (self.scale_min > self.scale_max):
+                self.scale_max = self.scale_min
+
+        if (self.scale_min < self.start):
+            self.scale_min = self.start
+        if (self.scale_max < self.start):
+            self.scale_max = self.start
+
+        slider_max = self.start + self.scale
+        if (self.scale_min > slider_max):
+            self.scale_min = slider_max
+        if (self.scale_max > slider_max):
+            self.scale_max = slider_max
+
+        self.emitRange()
+        self.updateDisplayValues()
+        self.update()
+
+    
+    def mouseDoubleClickEvent(self, event):
+        self.doubleClick.emit(True)
+
+    def mouseMoveEvent(self, event):
+        size = self.rangeSliderSize()
+        diff = self.start_pos - self.getPos(event)
+        if self.moving == "min":
+            temp = self.start_display_min - diff
+            if (temp >= self.bar_width) and (temp < size - self.bar_width):
+                self.display_min = temp
+                if self.display_max < self.display_min:
+                    self.display_max = self.display_min
+                self.updateScaleValues()
+                if self.emit_while_moving:
+                    self.emitRange()
+        elif self.moving == "max":
+            temp = self.start_display_max - diff
+            if (temp >= self.bar_width) and (temp < size - self.bar_width):
+                self.display_max = temp
+                if self.display_max < self.display_min:
+                    self.display_min = self.display_max
+                self.updateScaleValues()
+                if self.emit_while_moving:
+                    self.emitRange()
+        elif self.moving == "bar":
+            temp = self.start_display_min - diff
+            if (temp >= self.bar_width) and (temp < size - self.bar_width - (self.start_display_max - self.start_display_min)):
+                self.display_min = temp
+                self.display_max = self.start_display_max - diff
+                self.updateScaleValues()
+                if self.emit_while_moving:
+                    self.emitRange()
+
+    def mousePressEvent(self, event):
+        pos = self.getPos(event)
+        if abs(self.display_min - 0.5 * self.bar_width - pos) < (0.5 * self.bar_width):
+            self.moving = "min"
+        elif abs(self.display_max + 0.5 * self.bar_width - pos) < (0.5 * self.bar_width):
+            self.moving = "max"
+        elif (pos > self.display_min) and (pos < self.display_max):
+            self.moving = "bar"
+        self.start_display_min = self.display_min
+        self.start_display_max = self.display_max
+        self.start_pos = pos
+
+    def mouseReleaseEvent(self, event):
+        if not (self.moving == "none"):
+            self.emitRange()
+        self.moving = "none"
+
+    def resizeEvent(self, event):
+        self.updateDisplayValues()
+
+    def setEmitWhileMoving(self, flag):
+        if flag:
+            self.emit_while_moving = True
+        else:
+            self.emit_while_moving = False
+
+    def setRange(self, slider_range):
+        self.start = slider_range[0]
+        self.scale = slider_range[1] - slider_range[0]
+        self.single_step = slider_range[2]
+
+        # Check that the range is a multiple of the step size.
+        steps = self.scale / self.single_step
+        if (abs(steps - round(steps)) > 0.01 * self.single_step):
+            self.single_step = steps
+            
+
+    def setValues(self, values):
+        self.scale_min = values[0]
+        self.scale_max = values[1]
+        self.emitRange()
+        self.updateDisplayValues()
+        self.update()
+
+    def updateDisplayValues(self):
+        size = float(self.rangeSliderSize() - 2 * self.bar_width - 1)
+        self.display_min = int(size * (self.scale_min - self.start)/self.scale) + self.bar_width
+        self.display_max = int(size * (self.scale_max - self.start)/self.scale) + self.bar_width
+
+    def updateScaleValues(self):
+        size = float(self.rangeSliderSize() - 2 * self.bar_width - 1)
+        if (self.moving == "min") or (self.moving == "bar"):
+            self.scale_min = self.start + (self.display_min - self.bar_width)/float(size) * self.scale
+            self.scale_min = float(round(self.scale_min/self.single_step))*self.single_step
+        if (self.moving == "max") or (self.moving == "bar"):
+            self.scale_max = self.start + (self.display_max - self.bar_width)/float(size) * self.scale
+            self.scale_max = float(round(self.scale_max/self.single_step))*self.single_step
+        self.updateDisplayValues()
+        self.update()
+
+
+
+class QHRangeSlider(QRangeSlider):
+
+    ## __init__
+    #
+    # @param slider_range (Optional) [min, max, step size].
+    # @param values (Optional) [initial minimum setting, initial maximum setting].
+    # @param parent (Optional) The PyQt parent of this widget.
+    #
+    def __init__(self, slider_range = None, values = None, parent = None):
+        super().__init__(slider_range, values, parent)
+        if (not parent):
+            self.setGeometry(200, 200, 200, 100)
+
+    def getPos(self, event):
+        return event.x()
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        w = self.width()
+        h = self.height()
+
+        # background
+        painter.setPen(QtCore.Qt.gray)
+        painter.setBrush(QtCore.Qt.lightGray)
+        painter.drawRect(2, 2, w-4, h-4)
+
+        # range bar
+        painter.setPen(QtCore.Qt.darkGray)
+        painter.setBrush(QtCore.Qt.darkGray)
+        painter.drawRect(self.display_min-1, 5, self.display_max-self.display_min+2, h-10)
+
+        # min & max tabs
+        painter.setPen(QtCore.Qt.black)
+        painter.setBrush(QtCore.Qt.gray)
+        painter.drawRect(self.display_min-self.bar_width, 1, self.bar_width, h-2)
+
+        painter.setPen(QtCore.Qt.black)
+        painter.setBrush(QtCore.Qt.gray)
+        painter.drawRect(self.display_max, 1, self.bar_width, h-2)
+
+    def rangeSliderSize(self):
+        return self.width()
+
+class QVRangeSlider(QRangeSlider):
+
+    ## __init__
+    #
+    # @param slider_range (Optional) [min, max, step size].
+    # @param values (Optional) [initial minimum setting, initial maximum setting].
+    # @param parent (Optional) The PyQt parent of this widget.
+    #
+    def __init__(self, slider_range = None, values = None, parent = None):
+        super().__init__(slider_range, values, parent)
+        if (not parent):
+            self.setGeometry(200, 200, 100, 200)
+    def getPos(self, event):
+        return self.height() - event.y()
+    
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        w = self.width()
+        h = self.height()
+
+        # background
+        painter.setPen(QtCore.Qt.gray)
+        painter.setBrush(QtCore.Qt.lightGray)
+        painter.drawRect(2, 2, w-4, h-4)
+
+        # range bar
+        painter.setPen(QtCore.Qt.darkGray)
+        painter.setBrush(QtCore.Qt.darkGray)
+        painter.drawRect(5, h-self.display_max-1, w-10, self.display_max-self.display_min+1)
+
+        # min & max tabs
+        painter.setPen(QtCore.Qt.black)
+        painter.setBrush(QtCore.Qt.gray)
+        painter.drawRect(1, h-self.display_max-self.bar_width-1, w-2, self.bar_width)
+
+        painter.setPen(QtCore.Qt.black)
+        painter.setBrush(QtCore.Qt.gray)
+        painter.drawRect(1, h-self.display_min-1, w-2, self.bar_width)
+
+    ## rangeSliderSize
+    #
+    # @return The current height of the slider widget.
+    #
+    def rangeSliderSize(self):
+        return self.height()
+
+
 class SceneSelectGroup(QtGui.QActionGroup):
     scene_selected = QtCore.pyqtSignal(str)
 
@@ -40,6 +318,56 @@ class SceneSelectGroup(QtGui.QActionGroup):
                 action.setChecked()
                 return
 
+class VolumeViewManager(QtGui.QWidget):
+    def __init__(self, volume_scenes, parent=None):
+        super().__init__(parent)
+        self.setContentsMargins(0, 0, 0, 0)
+        main_layout = QtGui.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setAlignment(QtCore.Qt.AlignTop)
+
+        menu_layout = QtGui.QHBoxLayout()
+        menu_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(menu_layout)
+
+        enable_vrt_button = QtGui.QPushButton('Enable VRTs')
+        enable_vrt_button.setCheckable(True)
+        enable_vrt_button.setFlat(True)
+        enable_vrt_button.setToolTip('Enable VRTs if your graphics card is up for it')
+        enable_vrt_button.setStatusTip('Enable VRTs if your graphics card is up for it')
+        menu_layout.addWidget(enable_vrt_button)
+
+        splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        main_layout.addWidget(splitter)                
+        
+        for name, wid3d in volume_scenes.items():
+            enable_vrt_button.toggled.connect(wid3d.set_showing)
+            wid = QtGui.QWidget()
+            wid.setVisible(False)
+            wid3d.is_showing.connect(wid.setVisible)            
+            
+            v_lay = QtGui.QHBoxLayout()
+            v_lay.setAlignment(QtCore.Qt.AlignRight)
+            v_lay.setContentsMargins(0, 0, 0, 0)
+            v_lay.addWidget(wid3d)
+
+            ranges = list(wid3d.custom_data_range)
+            ranges += [(ranges[1]-ranges[0])/25,]            
+            
+            slider = QVRangeSlider(ranges, [ranges[0], ranges[1]])
+
+            slider.setMinimumWidth(20)
+            slider.setMaximumWidth(20)
+            slider.rangeChanged.connect(wid3d.set_custom_data_range) 
+            
+            v_lay.addWidget(slider)
+            wid.setLayout(v_lay)
+            wid.setContentsMargins(0, 0, 0, 0)
+            splitter.addWidget(wid)
+        enable_vrt_button.clicked.connect(self.update)
+        self.setLayout(main_layout)
+        
+        
 class ViewController(QtCore.QObject):
     request_metadata = QtCore.pyqtSignal(str)
     request_array_slice = QtCore.pyqtSignal(str, str, int, int)
@@ -153,8 +481,8 @@ class ViewController(QtCore.QObject):
                 
             
     def view_widget(self):
-#        wid = QtGui.QWidget()
-        wid = QtGui.QSplitter(QtCore.Qt.Vertical)
+
+#        wid = QtGui.QSplitter(QtCore.Qt.Vertical)
         wid2 = QtGui.QWidget()
         main_layout = QtGui.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -177,21 +505,18 @@ class ViewController(QtCore.QObject):
         
         main_layout.addWidget(self.graphicsview)
         
-        for name in self.glwidgets:
-#            view_layout.addWidget(self.glwidgets[name])
-            wid.addWidget(self.glwidgets[name])
+#        for name in self.glwidgets:
+#            wid.addWidget(self.glwidgets[name])
+        
         for action in sceneSelect.actions():
             menu_widget.addAction(action)
             
         cine_action = QtGui.QAction('Cine', menu_widget)
         cine_action.triggered.connect(self.graphicsview.request_cine_film_creation)
         menu_widget.addAction(cine_action)
-        
-#        main_layout.addLayout(view_layout)
-#        wid.setLayout(view_layout)
-        main_layout.addWidget(wid)
-        
+                
         wid2.setLayout(main_layout)
+        wid = VolumeViewManager(self.glwidgets)
         return wid2, wid
 
 
@@ -1460,18 +1785,17 @@ class View3Dworker(QtCore.QThread):
             d2[...,1] = lut[1][data]
             d2[...,2] = lut[2][data]
     
-            
-               
             d2[...,3] = self.generate_lut(data, magic_value)[data]
             
-#    
             self.opengl_array.emit(d2)
                 
 class View3D(gl.GLViewWidget):
     request_array = QtCore.pyqtSignal(str, str, float, float, bool)
     request_opengl_array = QtCore.pyqtSignal(list)
+    is_showing = QtCore.pyqtSignal(bool)
     def __init__(self, *args, array=None, lut_name=None, dim_scale=False, magic_number=None, custom_data_range=None, smoothness=None, custom_data_range_is_modifier=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__is_showing = False
         self.setMinimumWidth(100)
         self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.name = ''
@@ -1509,6 +1833,26 @@ class View3D(gl.GLViewWidget):
         self.__glitem = None
         self.hide()
 
+
+    @QtCore.pyqtSlot(float, float)
+    def set_custom_data_range(self, minimum, maximum):
+        self.custom_data_range = [minimum, maximum]
+        if self.__glitem is not None:
+            self.removeItem(self.__glitem)
+            self.__glitem = None
+        self.showing()
+
+    def showing(self):
+        if self.__is_showing and self.__glitem == None:
+            self.request_array.emit(self.name, self.array_name, self.custom_data_range[0], self.custom_data_range[1], self.custom_data_range_is_modifier)
+        self.setVisible(self.__is_showing and self.__glitem != None)
+        self.is_showing.emit(self.__is_showing and self.__glitem != None)
+
+    @QtCore.pyqtSlot(bool)
+    def set_showing(self, enabled):
+        self.__is_showing = enabled
+        self.showing()
+        
     def set_metadata(self, sim, index=0):
         if self.name != sim.get('name', ''):
             if self.__glitem is not None:
@@ -1523,14 +1867,12 @@ class View3D(gl.GLViewWidget):
         else:
             self.scaling = np.ones(3, np.double)
             
-        
         self.opts['distance'] = np.sum((self.shape*self.spacing/self.scaling)**2)**.5 * 4
-        self.request_array.emit(self.name, self.array_name, self.custom_data_range[0], self.custom_data_range[1], self.custom_data_range_is_modifier)
-        if self.__glitem is not None:
-            self.removeItem(self.__glitem)
-            self.__glitem = None
-        self.hide()
         
+#        if self.__glitem is not None:
+#            self.removeItem(self.__glitem)
+#            self.__glitem = None
+        self.showing()
 #        self.index = index % self.shape[self.view_orientation]
 
     @QtCore.pyqtSlot(str, np.ndarray, str)
@@ -1571,6 +1913,5 @@ class View3D(gl.GLViewWidget):
         except Exception as e:
             print(e)
             return
-     
-        self.show()
+        self.showing()
 
