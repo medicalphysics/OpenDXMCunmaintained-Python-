@@ -7,9 +7,11 @@ Created on Thu Jul 30 10:38:15 2015
 
 import numpy as np
 from PyQt4 import QtGui, QtCore
+import os
 import pyqtgraph.opengl as gl
+from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE, GL_RGB
 from .dicom_lut import get_lut, get_lut_raw
-from scipy.ndimage.filters import gaussian_filter 
+from scipy.ndimage.filters import gaussian_filter
 from opendxmc.app.ffmpeg_writer import FFMPEG_VideoWriter
 import logging
 logger = logging.getLogger('OpenDXMC')
@@ -64,7 +66,7 @@ class QRangeSlider(QtGui.QWidget):
             self.rangeChanged.emit(self.scale_min, self.scale_max)
             self.old_scale_min = self.scale_min
             self.old_scale_max = self.scale_max
-            
+
     def getValues(self):
         return [self.scale_min, self.scale_max]
 
@@ -107,7 +109,7 @@ class QRangeSlider(QtGui.QWidget):
         self.updateDisplayValues()
         self.update()
 
-    
+
     def mouseDoubleClickEvent(self, event):
         self.doubleClick.emit(True)
 
@@ -176,7 +178,7 @@ class QRangeSlider(QtGui.QWidget):
         steps = self.scale / self.single_step
         if (abs(steps - round(steps)) > 0.01 * self.single_step):
             self.single_step = steps
-            
+
 
     def setValues(self, values):
         self.scale_min = values[0]
@@ -260,7 +262,7 @@ class QVRangeSlider(QRangeSlider):
             self.setGeometry(200, 200, 100, 200)
     def getPos(self, event):
         return self.height() - event.y()
-    
+
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         w = self.width()
@@ -338,36 +340,47 @@ class VolumeViewManager(QtGui.QWidget):
         menu_layout.addWidget(enable_vrt_button)
 
         splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        main_layout.addWidget(splitter)                
-        
+        main_layout.addWidget(splitter)
+
+        button_icon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'copy_icon.png'))
+
         for name, wid3d in volume_scenes.items():
             enable_vrt_button.toggled.connect(wid3d.set_showing)
             wid = QtGui.QWidget()
             wid.setVisible(False)
-            wid3d.is_showing.connect(wid.setVisible)            
-            
+            wid3d.is_showing.connect(wid.setVisible)
+
             v_lay = QtGui.QHBoxLayout()
             v_lay.setAlignment(QtCore.Qt.AlignRight)
             v_lay.setContentsMargins(0, 0, 0, 0)
             v_lay.addWidget(wid3d)
 
             ranges = list(wid3d.custom_data_range)
-            ranges += [(ranges[1]-ranges[0])/25,]            
-            
+            ranges += [(ranges[1]-ranges[0])/25,]
+
             slider = QVRangeSlider(ranges, [ranges[0], ranges[1]])
 
             slider.setMinimumWidth(20)
             slider.setMaximumWidth(20)
-            slider.rangeChanged.connect(wid3d.set_custom_data_range) 
-            
-            v_lay.addWidget(slider)
+            slider.rangeChanged.connect(wid3d.set_custom_data_range)
+            l_lay = QtGui.QVBoxLayout()
+            l_lay.addWidget(slider)
+
+            copy_button = QtGui.QPushButton()
+            copy_button.setFlat(True)
+            copy_button.setToolTip('Copy VRT image to clipboard')
+            copy_button.setIcon(button_icon)
+            copy_button.clicked.connect(wid3d.save_image_to_clipboard)
+            l_lay.addWidget(copy_button)
+
+            v_lay.addLayout(l_lay)
             wid.setLayout(v_lay)
             wid.setContentsMargins(0, 0, 0, 0)
             splitter.addWidget(wid)
         enable_vrt_button.clicked.connect(self.update)
         self.setLayout(main_layout)
-        
-        
+
+
 class ViewController(QtCore.QObject):
     request_metadata = QtCore.pyqtSignal(str)
     request_array_slice = QtCore.pyqtSignal(str, str, int, int)
@@ -396,7 +409,7 @@ class ViewController(QtCore.QObject):
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
                           'dens': View3D(array='density', lut_name='gist_earth', dim_scale=True, custom_data_range=(.9, 1.4), smoothness=1., magic_number = 50),
                           'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 400), smoothness=1., magic_number=50)}
-        
+
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
             scene.update_index.connect(self.update_index)
@@ -418,7 +431,7 @@ class ViewController(QtCore.QObject):
 
     def set_simulation_editor(self, propertieseditmodel):
         self.scenes['planning'].update_simulation_properties.connect(propertieseditmodel.set_simulation_properties)
-    
+
 
     @QtCore.pyqtSlot(str)
     def set_simulation(self, name):
@@ -440,7 +453,7 @@ class ViewController(QtCore.QObject):
         self.selectScene('planning')
         self.update_index(self.current_index)
         self.graphicsview.fitInView(self.graphicsview.sceneRect(), QtCore.Qt.KeepAspectRatio)
-        
+
 
     @QtCore.pyqtSlot(int)
     def update_index(self, index):
@@ -478,8 +491,8 @@ class ViewController(QtCore.QObject):
 ##            self.graphicsview.hide()
 #            self.glwidgets[scene_name].show()
 #            print('showing')
-                
-            
+
+
     def view_widget(self):
 
 #        wid = QtGui.QSplitter(QtCore.Qt.Vertical)
@@ -502,19 +515,19 @@ class ViewController(QtCore.QObject):
         sceneSelect.scene_selected.connect(self.selectScene)
 
         main_layout.addWidget(menu_widget)
-        
+
         main_layout.addWidget(self.graphicsview)
-        
+
 #        for name in self.glwidgets:
 #            wid.addWidget(self.glwidgets[name])
-        
+
         for action in sceneSelect.actions():
             menu_widget.addAction(action)
-            
+
         cine_action = QtGui.QAction('Cine', menu_widget)
         cine_action.triggered.connect(self.graphicsview.request_cine_film_creation)
         menu_widget.addAction(cine_action)
-                
+
         wid2.setLayout(main_layout)
         wid = VolumeViewManager(self.glwidgets)
         return wid2, wid
@@ -648,7 +661,7 @@ def arrayToQImage(array_un, level, lut):
 def qImageToArray(img, copy=False, transpose=True):
     """
     Convert a QImage into numpy array. The image must have format RGB32, ARGB32, or ARGB32_Premultiplied.
-    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if 
+    By default, the image is not copied; changes made to the array will appear in the QImage as well (beware: if
     the QImage is collected before the array, there may be trouble).
     The array will have shape (width, height, (b,g,r,a)).
     """
@@ -660,20 +673,20 @@ def qImageToArray(img, copy=False, transpose=True):
         # Required for Python 2.6, PyQt 4.10
         # If this works on all platforms, then there is no need to use np.asarray..
         arr = np.frombuffer(ptr, np.ubyte, img.byteCount())
-    
+
     if fmt == img.Format_RGB32:
         arr = arr.reshape(img.height(), img.width(), 3)
     elif fmt == img.Format_ARGB32 or fmt == img.Format_ARGB32_Premultiplied:
         arr = arr.reshape(img.height(), img.width(), 4)
-    
+
     if copy:
         arr = arr.copy()
-        
+
     if transpose:
         return arr.transpose((1,0,2))
     else:
         return arr
-        
+
 class NoDataItem(QtGui.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -713,7 +726,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
 
         self.cbar = ColorBarItem(self)
         self.cbar.setParentItem(self)
-        
+
     def qImage(self):
         if self.qimage is None:
             self.render()
@@ -752,7 +765,7 @@ class BlendImageItem(QtGui.QGraphicsItem):
                 alpha = front_alpha
             else:
                 alpha = self.front_alpha
-            lut_raw = get_lut(front_lut, alpha)     
+            lut_raw = get_lut(front_lut, alpha)
             self.front_lut = lut_raw
             self.cbar.set_lut(lut_raw)
             update = True
@@ -1009,7 +1022,7 @@ class ColorBarItem(QtGui.QGraphicsItem):
         self.setFlag(self.ItemIgnoresTransformations, True)
         self.fontMetrics = QtGui.qApp.fontMetrics()
         self.box_size = self.fontMetrics.boundingRect('A').height()
-        
+
         self._qim = None
 
         self._text = ['test', 'lower']
@@ -1018,25 +1031,25 @@ class ColorBarItem(QtGui.QGraphicsItem):
 
     def setUnits(self, units):
         self._units = units
-        
+
     def set_levels(self, level):
         wc, ww = level
         self._text = ["{:.2G} {}".format(wc+ww, self._units), "{:.2G} {}".format(wc-ww, self._units)]
         self.update()
-    
+
     def boundingRect(self):
-        w = max([self._array.shape[1], 
+        w = max([self._array.shape[1],
                  self.fontMetrics.boundingRect(self._text[0]).width(),
                  self.fontMetrics.boundingRect(self._text[1]).width()])
-        h = sum([self._array.shape[0], 
+        h = sum([self._array.shape[0],
                  self.fontMetrics.boundingRect(self._text[0]).height(),
                  self.fontMetrics.boundingRect(self._text[1]).height()])
-        
+
         return QtCore.QRectF(0, 0, w, h)
-    
+
     def set_lut(self, lut):
         self._qim = arrayToQImage(self._array, (.5, .5), lut)
-        
+
     def paint(self, painter, style, widget=None):
         if self._qim is not None:
             im_rect = QtCore.QRectF(0, self.fontMetrics.boundingRect(self._text[0]).height(), self._array.shape[1], self._array.shape[0])
@@ -1050,11 +1063,11 @@ class PositionBarItem(QtGui.QGraphicsItem):
         super().__init__(parent)
         self.axes = np.eye(3)
         self.orientation = 2
-        self.shape = np.ones(3) 
-        self.spacing = np.ones(3) 
-        self.pos = (0, 0)   
+        self.shape = np.ones(3)
+        self.spacing = np.ones(3)
+        self.pos = (0, 0)
         self.callback = callback
-   
+
     def set_data(self, sim):
         self.shape = sim['shape']
         self.spacing = sim['spacing']#*sim['scaling']
@@ -1062,20 +1075,20 @@ class PositionBarItem(QtGui.QGraphicsItem):
         self.pos = [sim['start']/self.spacing[2], sim['stop']/self.spacing[2]]
         self.pos.sort()
         self.update()
-        
+
     def set_orientation(self, orientation):
         self.orientation = orientation
         self.update()
-       
+
     def set_cosines(self, cosines):
         self.axes[0, :] = cosines[:3]
         self.axes[1, :] = cosines[3:6]
         self.axes[2, :] = np.cross(cosines[:3], cosines[3:6])
-        
-    def boundingRect(self):        
+
+    def boundingRect(self):
         x, y = [i for i in range(3) if i != self.orientation]
         return QtCore.QRectF(0, 0, y, x)
-        
+
     def mousePressEvent(self, event):
         if event.button()==QtCore.Qt.LeftButton and self.callback:
             event.accept()
@@ -1086,21 +1099,21 @@ class PositionBarItem(QtGui.QGraphicsItem):
                 self.callback(start=self.pos[0])
             else:
                 self.pos[1] = pos.x()
-                self.callback(stop=self.pos[1])            
-                
+                self.callback(stop=self.pos[1])
+
     def paint(self, painter, style, widget=None):
         if self.orientation == 2:
             return
         i, j = [i for i in range(3) if i != self.orientation]
-       
-        painter.setPen(QtCore.Qt.white) 
+
+        painter.setPen(QtCore.Qt.white)
         x1 = 0
         x2 = self.shape[i]
         for pos in self.pos:
             y1 = pos
             y2 = pos + self.axes[i, 2] / self.spacing[j] * self.shape[j]
             painter.drawLine(y1, x1, y2, x2)
-        
+
 
 class PlanningScene(Scene):
     update_simulation_properties = QtCore.pyqtSignal(dict)
@@ -1405,10 +1418,10 @@ class DoseScene(Scene):
         self.nodata_item = NoDataItem()
         self.addItem(self.nodata_item)
         self.array_names = ['ctarray', 'organ']
-        
+
         self.front_array_name = front_array
-        self.image_item.cbar.setUnits('mGy/100mAs' if front_array == 'dose' else 'eV')        
-        
+        self.image_item.cbar.setUnits('mGy/100mAs' if front_array == 'dose' else 'eV')
+
         self.front_array = None
 
         alpha = 1. -np.exp(-np.linspace(0, 6, 256))
@@ -1441,24 +1454,24 @@ class DoseScene(Scene):
 #            sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
 #            transform = QtGui.QTransform.fromScale(sy / sx, 1.)
 #            self.image_item.setTransform(transform)
-#    
+#
 #            shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
 #            rect = self.image_item.mapRectToScene(QtCore.QRectF(0, 0, shape[1], shape[0]))
 #            c_rect = self.image_item.cbar.boundingRect()
-#            
+#
 #            if rect.height() >= rect.width():
 ##                self.image_item.cbar.setScale(rect.height() / (10 * c_rect.height()))
 #                c_rect = self.image_item.cbar.sceneBoundingRect()
 ##                self.image_item.cbar.setPos(-c_rect.width(), 0)
 #            else:
-#                
-##                self.image_item.cbar.setScale(rect.width()  / (10 * c_rect.height()))                
+#
+##                self.image_item.cbar.setScale(rect.width()  / (10 * c_rect.height()))
 #                c_rect = self.image_item.cbar.sceneBoundingRect()
 ##                self.image_item.cbar.setPos(0, -c_rect.height())
-#                
+#
 #            self.setSceneRect(rect.united(self.image_item.cbar.sceneBoundingRect()))
-#            
-#            
+#
+#
 #        else:
 #            self.setSceneRect(self.nodata_item.sceneBoundingRect())
 
@@ -1484,9 +1497,9 @@ class DoseScene(Scene):
             shape = tuple(sh for ind, sh in enumerate(self.shape) if ind != self.view_orientation)
             rect = self.image_item.mapRectToScene(QtCore.QRectF(0, 0, shape[1], shape[0]))
             self.setSceneRect(rect)
-    
+
     def updateSceneTransform(self):
-    
+
         sx, sy = [self.spacing[i] for i in range(3) if i != self.view_orientation]
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
         self.image_item.setTransform(transform)
@@ -1497,8 +1510,8 @@ class DoseScene(Scene):
             self.setSceneRect(rect)
         else:
             self.setSceneRect(self.nodata_item.boundingRect())
-    
-    
+
+
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
         if name != self.name:
@@ -1545,7 +1558,7 @@ class RunningScene(QtGui.QGraphicsScene):
 
     def set_running_data(self, array, sx, sy, msg):
         self.progress_item.setPlainText(msg)
-        
+
         self.image_item.setLevels(self.defaultLevels(array))
         self.image_item.setImage(array)
         transform = QtGui.QTransform.fromScale(sy / sx, 1.)
@@ -1563,7 +1576,7 @@ class RunnerView(QtGui.QGraphicsView):
                             QtGui.QPainter.TextAntialiasing)
         self.setScene(RunningScene())
         self.hide()
-        
+
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
         if self.isVisible():
@@ -1690,12 +1703,12 @@ class View(QtGui.QGraphicsView):
                                       )
             QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
             qim = self.toQImage(square=False)#.convertToFormat(QtGui.QImage.Format_RGB888)
-            
+
             arr = qImageToArray(qim, transpose=False)
 #            ptr = qim.bits()
 #            ptr.setsize(qim.byteCount())
 #            ptr.setsize(width*height*3)
-            
+
 #            arr = np.array(ptr).reshape(height, -1, 3)
 #            arr = np.array(ptr).reshape(width, height, 3)
 #            arr = np.ascontiguousarray(arr[:,:,:3])
@@ -1736,7 +1749,7 @@ class View(QtGui.QGraphicsView):
 
 class View3Dworker(QtCore.QThread):
     opengl_array = QtCore.pyqtSignal(np.ndarray)
-    
+
     def __init__(self):
         super().__init__()
         self.data = []
@@ -1750,45 +1763,45 @@ class View3Dworker(QtCore.QThread):
         self.start()
     def generate_lut(self, array, magic_value=None):
         data=np.arange(256)
-        
+
         if magic_value is not None:
             corr = (array == int(magic_value)).sum() / (array > 0).sum()
             lut =(np.exp(-(data-magic_value)**2/(15**2))*.1*(1-corr)**2 + .7*np.exp(-(data-255)**2/64**2))*255
-         
+
 #            lut = np.roll(np.kaiser(256, 13), 96) * np.exp(-(255-data)/255) * 128
 #            lut[[0, 1, 2]] = 0
 
         else:
             lut = np.roll(np.kaiser(256, 13), 96) * np.exp(-(255-data)/255) * 50
             lut[[0, 1, 2]] = 0
-            
+
 #            lut = np.roll(np.kaiser(256, 9), 0)*50# * np.exp(-(255-data)/255) * 50
 #            lut[[0, 1, 2]] =0
-            
-            
+
+
         lut[0]=0
         return lut.astype(np.ubyte)
-         
+
     def run(self):
         while len(self.data) > 0:
             self.mutex.lock()
             data, magic_value, lut_name, smoothness = self.data.pop(0)
             self.mutex.unlock()
-#         
+#
 #            data=np.rollaxis(data,2, 1 )
             if smoothness:
                 data = gaussian_filter(data, smoothness)
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
             d2 = np.empty(data.shape + (4,), dtype=np.ubyte)
-            
+
             d2[...,0] = lut[0][data]
             d2[...,1] = lut[1][data]
             d2[...,2] = lut[2][data]
-    
+
             d2[...,3] = self.generate_lut(data, magic_value)[data]
-            
+
             self.opengl_array.emit(d2)
-                
+
 class View3D(gl.GLViewWidget):
     request_array = QtCore.pyqtSignal(str, str, float, float, bool)
     request_opengl_array = QtCore.pyqtSignal(list)
@@ -1812,7 +1825,7 @@ class View3D(gl.GLViewWidget):
             self.smoothness = smoothness
         else:
             self.smoothness = None
-        
+
         if array:
             self.array_name = array
         if lut_name:
@@ -1820,12 +1833,12 @@ class View3D(gl.GLViewWidget):
         else:
             self.lut_name = 'gray'
         self.dim_scaling = dim_scale
-       
+
         self.shape = np.ones(3, np.int)
         self.spacing = np.ones(3, np.double)
         self.scaling = np.ones(3, np.double)
-        
-        
+
+
         self.worker = View3Dworker()
         self.request_opengl_array.connect(self.worker.generate_tf)
         self.worker.opengl_array.connect(self.set_gl_array)
@@ -1833,6 +1846,50 @@ class View3D(gl.GLViewWidget):
         self.__glitem = None
         self.hide()
 
+
+#def readQImage(self):
+#        """
+#        Read the current buffer pixels out as a QImage.
+#        """
+#        w = self.width()
+#        h = self.height()
+#        self.repaint()
+#        pixels = np.empty((h, w, 4), dtype=np.ubyte)
+#        pixels[:] = 128
+#        pixels[...,0] = 50
+#        pixels[...,3] = 255
+#
+#        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+#
+#        # swap B,R channels for Qt
+#        tmp = pixels[...,0].copy()
+#        pixels[...,0] = pixels[...,2]
+#        pixels[...,2] = tmp
+#        pixels = pixels[::-1] # flip vertical
+#
+#        img = fn.makeQImage(pixels, transpose=False)
+#        return img
+
+    @QtCore.pyqtSlot()
+    def save_image_to_clipboard(self):
+        w = self.width()
+        h = self.height()
+        self.repaint()
+        pixels = np.zeros((h, w, 4), dtype=np.ubyte)
+
+        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+
+        # swap B,R channels for Qt
+        tmp = pixels[...,0].copy()
+        pixels[...,0] = pixels[...,2]
+        pixels[...,2] = tmp
+        pixels = pixels[::-1] # flip vertical
+        pixels[:, :, 3] = 255 #setting correct alpha for premultiplied RGB
+        pixels = np.require(pixels, np.ubyte, ['C', 'A'])
+        result = QtGui.QImage(pixels.data, w, h, QtGui.QImage.Format_ARGB32_Premultiplied).convertToFormat(QtGui.QImage.Format_RGB32)
+        result.np_data = pixels
+
+        QtGui.qApp.clipboard().setImage(result)
 
     @QtCore.pyqtSlot(float, float)
     def set_custom_data_range(self, minimum, maximum):
@@ -1852,13 +1909,13 @@ class View3D(gl.GLViewWidget):
     def set_showing(self, enabled):
         self.__is_showing = enabled
         self.showing()
-        
+
     def set_metadata(self, sim, index=0):
         if self.name != sim.get('name', ''):
             if self.__glitem is not None:
                 self.removeItem(self.__glitem)
                 self.__glitem = None
-            
+
         self.name = sim.get('name', '')
         self.spacing = sim.get('spacing', np.ones(3, np.double))
         self.shape = sim.get('shape', np.ones(3, np.int))
@@ -1866,9 +1923,9 @@ class View3D(gl.GLViewWidget):
             self.scaling = sim.get('scaling', np.ones(3, np.double))
         else:
             self.scaling = np.ones(3, np.double)
-            
+
         self.opts['distance'] = np.sum((self.shape*self.spacing/self.scaling)**2)**.5 * 4
-        
+
 #        if self.__glitem is not None:
 #            self.removeItem(self.__glitem)
 #            self.__glitem = None
@@ -1884,11 +1941,11 @@ class View3D(gl.GLViewWidget):
             return
         if array_name != self.array_name:
             return
-            
-        if self.__glitem is None:    
+
+        if self.__glitem is None:
             self.request_opengl_array.emit([data, self.magic_number, self.lut_name, self.smoothness])
 
-      
+
     @QtCore.pyqtSlot(np.ndarray)
     def set_gl_array(self, d2):
         if self.__glitem is not None:
@@ -1905,7 +1962,7 @@ class View3D(gl.GLViewWidget):
         scaling =((S/(np.sum(S*S))**.5))
 #        scaling = scaling[[0, 2, 1]]
 #        self.__glitem.translate(*(sh/2 for sh in d2.shape))
-        self.__glitem.scale(*scaling)        
+        self.__glitem.scale(*scaling)
 #        self.__glitem.translate(*(-self.shape[[2, 0, 1]] / 2 * scaling))
         self.__glitem.translate(*(-self.shape * .5 * scaling / self.scaling))
         try:
