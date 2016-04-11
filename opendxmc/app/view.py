@@ -358,7 +358,7 @@ class VolumeViewManager(QtGui.QWidget):
             ranges = list(wid3d.custom_data_range)
             ranges += [(ranges[1]-ranges[0])/25,]
 
-            slider = QVRangeSlider(ranges, [ranges[0], ranges[1] / 2])
+            slider = QVRangeSlider(ranges, [ranges[0], ranges[1]])
 
             slider.setMinimumWidth(20)
             slider.setMaximumWidth(20)
