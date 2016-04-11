@@ -358,7 +358,7 @@ class VolumeViewManager(QtGui.QWidget):
             ranges = list(wid3d.custom_data_range)
             ranges += [(ranges[1]-ranges[0])/25,]
 
-            slider = QVRangeSlider(ranges, [ranges[0], ranges[1]])
+            slider = QVRangeSlider(ranges, [ranges[0], ranges[1] / 2])
 
             slider.setMinimumWidth(20)
             slider.setMaximumWidth(20)
@@ -404,11 +404,11 @@ class ViewController(QtCore.QObject):
                        'dose': DoseScene(front_array='dose'),
                        }
         self.glwidgets = {#'dose': View3D2(arrays=['ctarray','dose'], lut_names=['gist_earth','jet'], dim_scale=False, custom_data_range=[(0, 500), None]),
-                          'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True, smoothness=1., custom_data_range=(0, .1), custom_data_range_is_modifier=True),
+                          'doseCT': View3D(array='dose', lut_name='jet', dim_scale=True, smoothness=.5, custom_data_range=(0, .15), custom_data_range_is_modifier=True),
 #                          'energy_imparted': View3D(array='energy_imparted', lut_name='pet', dim_scale=True),
 #                          'planning': View3D(array='ctarray', lut_name='hot_metal_green', dim_scale=False, custom_data_range=(0, 500))}
-                          'dens': View3D(array='density', lut_name='gist_earth', dim_scale=True, custom_data_range=(.9, 1.4), smoothness=1., magic_number = 50),
-                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(0, 400), smoothness=1., magic_number=50)}
+                          'dens': View3D(array='density', lut_name='gist_earth', dim_scale=True, custom_data_range=(.5, 2.4), smoothness=.5, magic_number = 50),
+                          'planning': View3D(array='ctarray', lut_name='gist_earth', dim_scale=False, custom_data_range=(-200, 700), smoothness=.5, magic_number=50)}
 
         for name, scene in self.scenes.items():
             # connecting scenes to request array slot
@@ -642,7 +642,7 @@ def arrayToQImage(array_un, level, lut):
     array = np.clip(array_un, WC-WW, WC+WW).astype(np.float)
 
     array -= (WC - WW)
-    array *= 255./(WW*2)
+    array *= 255. / (WW * 2)
 
 
 #    array = (np.clip(array, WC - 0.5 - (WW-1) / 2, WC - 0.5 + (WW - 1) / 2) -
@@ -708,13 +708,18 @@ class NoDataItem(QtGui.QGraphicsItem):
 
 
 class BlendImageItem(QtGui.QGraphicsItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, overlay_adjust_max_only=True):
         super().__init__(parent)
 
         self.back_image = np.zeros((8, 8))
         self.back_level = (0, 500)
         self.front_image = np.zeros((8, 8))
         self.front_level = (1000000, 10000)
+        if overlay_adjust_max_only:
+            self.adjust_front_max_only = True
+        else:
+            self.adjust_front_max_only = False
+
 
         self.back_alpha = 255
         self.front_alpha = 255
@@ -803,11 +808,17 @@ class BlendImageItem(QtGui.QGraphicsItem):
             event.accept()
             dp = event.pos()- event.lastPos()
             x, y = self.front_level
-            x += dp.x()*.01*abs(x)
-            y += dp.y()*.01*abs(y)
+            if self.adjust_front_max_only:
+                x += dp.x() *.01*abs(x)
+                if x < 0:
+                    x=0
+                y = x
+            else:
+                x += dp.x()*.01*abs(x)
+                y += dp.y()*.01*abs(y)
 
-            if y < 0:
-                y=0
+                if y < 0:
+                    y=0
             self.setLevels(front=(x, y))
         elif event.buttons() == QtCore.Qt.MiddleButton:
             event.accept()
@@ -1787,8 +1798,7 @@ class View3Dworker(QtCore.QThread):
             self.mutex.lock()
             data, magic_value, lut_name, smoothness = self.data.pop(0)
             self.mutex.unlock()
-#
-#            data=np.rollaxis(data,2, 1 )
+
             if smoothness:
                 data = gaussian_filter(data, smoothness)
             lut = [np.array(l) for l in get_lut_raw(lut_name)]
@@ -1846,29 +1856,6 @@ class View3D(gl.GLViewWidget):
         self.__glitem = None
         self.hide()
 
-
-#def readQImage(self):
-#        """
-#        Read the current buffer pixels out as a QImage.
-#        """
-#        w = self.width()
-#        h = self.height()
-#        self.repaint()
-#        pixels = np.empty((h, w, 4), dtype=np.ubyte)
-#        pixels[:] = 128
-#        pixels[...,0] = 50
-#        pixels[...,3] = 255
-#
-#        glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-#
-#        # swap B,R channels for Qt
-#        tmp = pixels[...,0].copy()
-#        pixels[...,0] = pixels[...,2]
-#        pixels[...,2] = tmp
-#        pixels = pixels[::-1] # flip vertical
-#
-#        img = fn.makeQImage(pixels, transpose=False)
-#        return img
 
     @QtCore.pyqtSlot()
     def save_image_to_clipboard(self):
