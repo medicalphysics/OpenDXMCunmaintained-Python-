@@ -8,6 +8,7 @@ Created on Thu Jul 30 10:38:15 2015
 import numpy as np
 from PyQt4 import QtGui, QtCore
 import os
+import pyqtgraph
 import pyqtgraph.opengl as gl
 from OpenGL.GL import glReadPixels, GL_RGBA, GL_UNSIGNED_BYTE, GL_RGB
 from .dicom_lut import get_lut, get_lut_raw
@@ -396,6 +397,8 @@ class ViewController(QtCore.QObject):
         self.graphicsview = View()
         self.graphicsview.request_array.connect(database_interface.request_view_array)
         database_interface.send_view_array.connect(self.graphicsview.cine_film_creation)
+        database_interface.send_material_for_viewing.connect(self.view_material)
+
 
         self.scenes = {'planning': PlanningScene(),
 #                       'running':  RunningScene(),
@@ -533,6 +536,36 @@ class ViewController(QtCore.QObject):
         return wid2, wid
 
 
+
+    def make_material_plot_widget(self, material):
+        mw = QtGui.QMainWindow()
+        mw.setWindowTitle(material.name)
+        
+        pw = pyqtgraph.PlotWidget(name=material.name, title=material.name, background='w')
+        mw.setCentralWidget(pw)
+        pw.addLegend()
+#        p = win.addPlot(title='plot_title', background='w')
+        atts = material.attinuation
+        e_ind = atts['energy'] < 500000
+        for j, key in enumerate(['total', 'rayleigh', 'photoelectric', 'compton']):
+            if key == 'total':
+                pen = pyqtgraph.mkPen('k', width=4)
+            else:
+                pen = pyqtgraph.mkPen(pyqtgraph.intColor(j, hues=4, minHue=240), width=2)
+            pw.plot(x=atts['energy'][e_ind], y=atts[key][e_ind], pen=pen, name=key, antialias=True)
+            
+        pw.setLabel('left', "Attenuation", units='cm^2/g')
+        pw.setLabel('bottom', "Energy", units='eV')
+        pw.setLogMode(x=False, y=True)
+        pw.setXRange(0, 50000) # 500 keV
+        return mw
+        
+    @QtCore.pyqtSlot(object)
+    def view_material(self, material):
+        win = self.make_material_plot_widget(material)
+        win.show()
+        self.__plot = win
+        
 
 class Scene(QtGui.QGraphicsScene):
     update_index = QtCore.pyqtSignal(int)

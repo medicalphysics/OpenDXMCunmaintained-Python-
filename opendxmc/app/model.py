@@ -6,7 +6,6 @@ Created on Tue Sep  8 10:10:58 2015
 """
 import numpy as np
 from PyQt4 import QtGui, QtCore
-import copy
 from scipy.ndimage.interpolation import affine_transform
 from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator, PROPETIES_DICT_TEMPLATE_GROUPING
 from opendxmc.database.import_phantoms import read_phantoms
@@ -161,6 +160,7 @@ class DatabaseInterface(QtCore.QObject):
     database_busy = QtCore.pyqtSignal(bool)
     send_simulation_list = QtCore.pyqtSignal(list)
     send_material_list = QtCore.pyqtSignal(list)
+    send_material_for_viewing = QtCore.pyqtSignal(object)
     send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_bytescaled = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
@@ -223,6 +223,17 @@ class DatabaseInterface(QtCore.QObject):
         self.send_material_list.emit(mats)
         self.database_busy.emit(False)
 
+
+    @QtCore.pyqtSlot(str)
+    def emit_material_for_viewing(self, mat_name):
+        self.database_busy.emit(True)
+        try:
+            mat = self.__db.get_material(mat_name)
+        except ValueError:
+            pass
+        else:    
+            self.send_material_for_viewing.emit(mat)
+        self.database_busy.emit(False)
 
 
     @QtCore.pyqtSlot(dict, dict, bool)

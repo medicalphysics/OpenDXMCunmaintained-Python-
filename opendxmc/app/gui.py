@@ -259,6 +259,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.material_list_model = ListModel(self.interface, self,
                                              materials=True)
+        self.material_list_model.request_viewing.connect(self.interface.emit_material_for_viewing)
         material_list_view = ListView()
         material_list_view.setModel(self.material_list_model)
 
