@@ -57,6 +57,13 @@
 #define INLINE inline
 #endif
 
+#ifdef __linux__
+#define EXTERN extern
+#else
+#define EXTERN __declspec(dllexport)
+#endif
+
+
 // CUDA Constants
 #ifdef USINGCUDA
 __device__ __constant__ FLOAT ERRF = 1e-9; // Precision error
@@ -127,23 +134,23 @@ extern "C" {
 
 	typedef bool(*trackingFuncPtr)(size_t *, FLOAT *, int *, FLOAT *, FLOAT *, int *, FLOAT *, int *, FLOAT *, FLOAT *, uint64_t *);
 
-	__declspec(dllexport) int number_of_cuda_devices();
+	EXTERN int number_of_cuda_devices();
 
-	__declspec(dllexport) void cuda_device_name(int device_number, char* name);
+	EXTERN void cuda_device_name(int device_number, char* name);
 
-	__declspec(dllexport) void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *lut, FLOAT *energy_imparted, int *use_siddon);
+	EXTERN void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *lut, FLOAT *energy_imparted, int *use_siddon);
 
-	__declspec(dllexport) void* setup_source(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements);
+	EXTERN void* setup_source(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements);
 
-	__declspec(dllexport) void* setup_source_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements, FLOAT* bowtie_weight, FLOAT* bowtie_angle, int *bowtie_elements);
+	EXTERN void* setup_source_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements, FLOAT* bowtie_weight, FLOAT* bowtie_angle, int *bowtie_elements);
 
-	__declspec(dllexport) void run_simulation(void *source, size_t n_particles, void *simulation);
+	EXTERN void run_simulation(void *source, int64_t n_particles, void *simulation);
 
-	__declspec(dllexport) void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simulation);
+	EXTERN void run_simulation_bowtie(void *dev_source, int64_t n_particles, void *dev_simulation);
 
-	__declspec(dllexport) void cleanup_simulation(void *simulation);
+	EXTERN void cleanup_simulation(void *simulation);
 
-	__declspec(dllexport) void cleanup_source(void *source);
+	EXTERN void cleanup_source(void *source);
 #ifdef __cplusplus
 }
 #endif

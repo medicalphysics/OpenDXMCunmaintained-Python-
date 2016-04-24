@@ -1,2 +1,2 @@
 #
-from opendxmc.app.gui import start
+from opendxmc.app.start import start

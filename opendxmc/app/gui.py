@@ -41,6 +41,12 @@ class LogWidget(QtGui.QTextEdit):
     def closeEvent(self, event):
         self.closed.emit(False)
         super().closeEvent(event)
+    
+    @QtCore.pyqtSlot(str)
+    def insertPlainText(self, txt):
+        self.moveCursor(QtGui.QTextCursor.End)
+        super().insertPlainText(txt)
+        self.ensureCursorVisible()
 
 
 class SelectDatabaseWidget(QtGui.QWidget):
@@ -92,6 +98,7 @@ class SelectDatabaseWidget(QtGui.QWidget):
     @QtCore.pyqtSlot(QtCore.QUrl)    
     def validate_apply(self, url):
         self.path = url
+        self.txtedit.setText(self.path.toLocalFile())
         settings = QtCore.QSettings('OpenDXMC', 'gui')
         settings.setValue('database/path', self.path.toLocalFile())
         self.model.setRootPath(self.path.toLocalFile())
@@ -100,8 +107,8 @@ class SelectDatabaseWidget(QtGui.QWidget):
     def locked(self, val):
         self.setDisabled(val)
         self.applybutton.setDisabled(val)
-        
-
+    
+   
 class StatusBarButton(QtGui.QPushButton):
     def __init__(self, *args):
         super().__init__(*args)
@@ -252,6 +259,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.material_list_model = ListModel(self.interface, self,
                                              materials=True)
+        self.material_list_model.request_viewing.connect(self.interface.emit_material_for_viewing)
         material_list_view = ListView()
         material_list_view.setModel(self.material_list_model)
 
@@ -286,7 +294,7 @@ class MainWindow(QtGui.QMainWindow):
         organdoseview = OrganDoseView(self.organdosemodel)
         central_splitter.addWidget(organdoseview)
 
-        central_splitter.setSizes([100, 100, 100, 0, 0])
+        central_splitter.setSizes([100, 100, 100, 10, 0])
 
         central_widget.setLayout(central_layout)
         self.setCentralWidget(central_widget)
@@ -316,32 +324,3 @@ class MainWindow(QtGui.QMainWindow):
         self.mcrunner.runner.finished.emit()
 
 
-def main(args):
-
-    app = QtGui.QApplication(args)
-    app.setOrganizationName("SSHF")
-#    app.setOrganizationDomain("https://code.google.com/p/ctqa-cp/")
-    app.setApplicationName("OpenDXMC")
-    win = MainWindow()
-    win.show()
-
-    return app.exec_()
-
-
-
-def start():
-    # exit code 1 triggers a restart
-    # Also testing for memory error
-    try:
-        while main(sys.argv) == 1:
-            continue
-    except MemoryError:
-        msg = QtGui.QMessageBox()
-        msg.setText("Ouch, OpenDXMC ran out of memory.")
-        msg.setIcon(msg.Critical)
-        msg.exec_()
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    pass

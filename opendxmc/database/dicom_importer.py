@@ -8,13 +8,13 @@ Created on Fri Aug  7 10:07:58 2015
 import numpy as np
 import dicom
 import os
-
+import itertools
 import logging
 from scipy.ndimage.interpolation import affine_transform, spline_filter, zoom
 from opendxmc.runner.ct_study_runner import ct_runner_validate_simulation
 from opendxmc.utils import find_all_files
 from opendxmc.database.h5database import Validator
-from opendxmc.utils import rebin
+from opendxmc.utils import rebin, rebin_scaling
 
 
 logger = logging.getLogger('OpenDXMC')
@@ -50,74 +50,69 @@ def image_to_world_transform(image_vector, position, orientation, spacing):
     return np.dot(R, image_vector) + position
 
 
-def array_from_dicom_list_low_memory(dc_list, scaling):
-    scaling = np.array(scaling)
-    r = int(dc_list[0][0x28, 0x10].value)
-    c = int(dc_list[0][0x28, 0x11].value)
-    n = len(dc_list)
-    shape = np.ceil(np.array([r, c, n]) / scaling).astype(np.int)
-    stride = int(np.ceil(scaling[2]))
-    
-    arr = np.empty(shape, dtype=np.int16)
-
-    sub_arr = np.empty((r, c, stride), dtype=np.int16)
-    
-    n_ind = 0
-    while (n_ind+1)*stride < n:
-        for i, dc in enumerate(dc_list[n_ind*stride:(n_ind+1)*stride]):
-            sub_arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-                                int(dc[0x28, 0x1052].value))
-#        import pdb
-#        pdb.set_trace()
-        arr[:, : , n_ind] = np.squeeze(zoom(sub_arr, 1./scaling))
-        
-        n_ind += 1 
-    
-    if n_ind*stride < n:
-        
-        for i, dc in enumerate(dc_list[n_ind*stride:]):
-            sub_arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-                                int(dc[0x28, 0x1052].value))
-        for j in range(i, stride):
-            sub_arr[:, :, j] = sub_arr[:, :, i]
-        
-        arr[:, : , n_ind] = np.squeeze(zoom(sub_arr, 1./scaling))
-        
-    return arr
-
-#def array_from_dicom_list(dc_list, scaling):
+#def array_from_dicom_list_low_memory(dc_list, scaling):
+#    scaling = np.array(scaling)
 #    r = int(dc_list[0][0x28, 0x10].value)
 #    c = int(dc_list[0][0x28, 0x11].value)
 #    n = len(dc_list)
-#    arr = np.empty((r, c, n), dtype=np.int16)
+#    shape = np.ceil(np.array([r, c, n]) / scaling).astype(np.int)
+#    stride = int(np.ceil(scaling[2]))
 #
-#    for i, dc in enumerate(dc_list):
-#        arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
-#                        int(dc[0x28, 0x1052].value))
-#                        
-#    out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
-#    spline_filter(arr, order=3, output=arr)
-#    return affine_transform(arr, scaling, prefilter=False,
-#                            output_shape=out_shape, cval=-1000,
-#                            output=np.int16)
+#    arr = np.empty(shape, dtype=np.int16)
+#
+#    sub_arr = np.empty((r, c, stride), dtype=np.int16)
+#
+#    n_ind = 0
+#    while (n_ind+1)*stride < n:
+#        for i, dc in enumerate(dc_list[n_ind*stride:(n_ind+1)*stride]):
+#            sub_arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
+#                                int(dc[0x28, 0x1052].value))
+##        import pdb
+##        pdb.set_trace()
+#        arr[:, : , n_ind] = np.squeeze(zoom(sub_arr, 1./scaling))
+#
+#        n_ind += 1
+#
+#    if n_ind*stride < n:
+#
+#        for i, dc in enumerate(dc_list[n_ind*stride:]):
+#            sub_arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
+#                                int(dc[0x28, 0x1052].value))
+#        for j in range(i, stride):
+#            sub_arr[:, :, j] = sub_arr[:, :, i]
+#
+#        arr[:, : , n_ind] = np.squeeze(zoom(sub_arr, 1./scaling))
+#
+#    return arr
+
+
 def array_from_dicom_list(dc_list, scaling):
     r = int(dc_list[0][0x28, 0x10].value)
     c = int(dc_list[0][0x28, 0x11].value)
     n = len(dc_list)
-    arr = np.empty((r, c, n), dtype=np.int16)
 
-    for i, dc in enumerate(dc_list):
+    arr = np.empty((r, c, scaling[2]), dtype=np.int16)
+    for i in range(min((n, scaling[2]))):
+        dc = dc_list[i]
         arr[:, :, i] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
                         int(dc[0x28, 0x1052].value))
-                        
-    out_shape = np.floor(np.array([r, c, n]) / np.array(scaling)).astype(np.int)
-    return rebin(arr, out_shape)
-#    spline_filter(arr, order=3, output=arr)
-#    return affine_transform(arr, scaling, prefilter=False,
-#                            output_shape=out_shape, cval=-1000,
-#                            output=np.int16)
-    
-    
+    if n <= scaling[2]:
+        return arr[:, :, :n].mean(axis=2)
+
+    arr_r = rebin_scaling(arr, scaling)
+    teller = 0
+    for i in range(scaling[2], n):
+        dc = dc_list[i]
+        arr[:, :, teller] = (dc.pixel_array * int(dc[0x28, 0x1053].value) +
+                        int(dc[0x28, 0x1052].value))
+        teller += 1
+        if teller >= scaling[2]:
+            teller = 0
+            arr_r = np.concatenate((arr_r, rebin_scaling(arr, scaling)), axis=2)
+
+    return arr_r
+
+
 def aec_from_dicom_list(dc_list, iop, spacing):
     n_im = len(dc_list)
     exp = np.empty((n_im, 2), dtype=np.float)
@@ -150,8 +145,8 @@ def z_stop_estimator(iop, spacing, shape):
 def import_ct_series(paths, import_scaling=(2, 2, 2)):
 
     import_scaling=np.rint(np.array(import_scaling)).astype(np.int)
-    import_scaling[import_scaling < 1] = 1    
-    
+    import_scaling[import_scaling < 1] = 1
+
     series = {}
     for p in find_all_files(paths):
         try:
@@ -207,17 +202,17 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
                                                           np.array(dc[0x20, 0x37].value),
                                                           spacing)
 
-        try:
-            patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
-        except MemoryError:
-            logger.warning('Memory error when importing {}. Attempting low memory import method.'.format(name))
-            patient.ctarray = array_from_dicom_list_low_memory(dc_list, import_scaling)
+#        try:
+        patient.ctarray = array_from_dicom_list(dc_list, import_scaling)
+#        except MemoryError:
+#            logger.warning('Memory error when importing {}. Attempting low memory import method.'.format(name))
+#            patient.ctarray = array_from_dicom_list_low_memory(dc_list, import_scaling)
         patient.shape = np.array(patient.ctarray.shape, dtype=np.int)
         patient.spacing = spacing / 10. * np.array(import_scaling)
         patient.image_position = np.array(dc[0x20, 0x32].value) / 10.
         patient.image_orientation = np.array(dc[0x20, 0x37].value)
 
-        
+
 
         try:
             patient.data_center = np.array(dc[0x18, 0x9313].value) / 10. - patient.image_position

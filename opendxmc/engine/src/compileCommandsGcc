@@ -1,0 +1,11 @@
+#remember you need to have both 32 and 64 versions of dependent libraries if crosscompiling 32 and 64 bits
+
+
+gcc -c -Werror -Wall -fpic enginelib.c -lm -fopenmp -m32 -Ofast
+gcc -shared -o enginelib32.so enginelib.o -lgomp -m32
+
+
+gcc -c -Werror -Wall -fpic enginelib.c -lm -fopenmp -m64 -Ofast
+gcc -shared -o enginelib64.so enginelib.o -lgomp -m64
+
+

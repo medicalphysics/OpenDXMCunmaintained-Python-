@@ -15,16 +15,16 @@ from opendxmc.database.import_materials import get_stored_materials
 import logging
 logger = logging.getLogger('OpenDXMC')
 
-PROPETIES_DICT_TEMPLATE_GROUPING = {0: 'Simulation', 
-                                    1: 'Scanner geometry', 
+PROPETIES_DICT_TEMPLATE_GROUPING = {0: 'Simulation',
+                                    1: 'Scanner geometry',
                                     2: 'Aqusition Parameters',
-                                    3: 'MonteCarlo Settings',  
+                                    3: 'MonteCarlo Settings',
                                     4: 'Dose Calibration Settings',
                                     5: 'Miscellaneous'}
-                                    
+
 
 PROPETIES_DICT_TEMPLATE = {
-    #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION, ORDER, GROUPING 
+    #TAG: INIT VALUE, DTYPE, VOLATALE, EDITABLE, DESCRIPTION, ORDER, GROUPING
     'name': ['', np.dtype('a64'), False, False, 'Simulation ID', 0, 0],
     'scan_fov': [50., np.dtype(np.double), True, True, 'Scan field of view [cm]', 0, 1],
     'sdd': [110.,  np.dtype(np.double), True, True, 'Source detector distance [cm]', 0, 1],
@@ -47,7 +47,7 @@ PROPETIES_DICT_TEMPLATE = {
     'is_spiral': [True, np.dtype(np.bool), True, True, 'Helical aqusition', 0, 3],
     'pitch': [1, np.dtype(np.double), True, True, 'Pitch', 0, 3],
     'exposures': [1200, np.dtype(np.int), True, True, 'Number of exposures in one rotation', 0, 3],
-    'histories': [100, np.dtype(np.int), True, True, 'Number of photon histories per exposure', 0, 3],
+    'histories': [1000, np.dtype(np.int), True, True, 'Number of photon histories per exposure', 0, 3],
     'start_scan': [0, np.dtype(np.double), False, False, 'CT scan start position [cm]', 0, 2],
     'stop_scan': [0, np.dtype(np.double), False, False, 'CT scan stop position [cm]', 0, 2],
     'start': [0, np.dtype(np.double), True, True, 'Start position [cm]', 2, 3],
@@ -323,7 +323,7 @@ class Database(object):
 
         # removing array data
         self.remove_node('/simulations', name)
-        
+
         index_to_remove = None
         meta_table = self.get_node('/', 'meta_data')
         for row in meta_table.where('name == b"{}"'.format(name)):
@@ -443,7 +443,7 @@ class Database(object):
             array = Validator().validate_structured_array(array, array_name)
 
         self.get_node(node_path, array_name, create=True, overwrite=True, obj=array)
-        
+
         if ARRAY_TEMPLATES[array_name][2]:
             ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=True, obj=np.dtype([('name', 'a64'), ('min', np.double), ('max', np.double)]))
             arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
@@ -453,8 +453,8 @@ class Database(object):
             else:
                 ex_table.append([(array_name, array.min(), array.max())])
             ex_table.flush()
-            
-        
+
+
         logger.debug('Wrote array {0} to database for simulation {1}'.format(array_name, name))
         self.close()
         return
@@ -503,7 +503,7 @@ class Database(object):
             self.close()
             raise ValueError('No array named {0} for simulation{1}'.format(array_name, name))
             return
-        
+
         if minmax_is_modifier:
             minmod = amin
             maxmod = amax
@@ -511,10 +511,10 @@ class Database(object):
         else:
             minmod = 1.
             maxmod = 1.
-            
+
         if amin == amax:
             ex_table = self.get_node('/simulations/{0}'.format(name), '_array_extreme_values', create=False)
-        
+
             arr_names = [str(row['name'], encoding='utf-8') for row in ex_table]
             if array_name in arr_names:
                 index = arr_names.index(array_name)
@@ -523,10 +523,10 @@ class Database(object):
                 raise ValueError('Array {} in database have no recorded min or max values, remove simulation {} from database.'.format(array_name, name))
 
         amin *= minmod
-        amax *= maxmod    
-        
+        amax *= maxmod
+
         arr = np.empty(node.shape, dtype=np.ubyte)
-        
+
         r_divisor = 255./(amax-amin)
         for ind, r in enumerate(node):
             arr[ind, ...] = np.clip((r-amin)*r_divisor, 0, 255)
@@ -595,9 +595,9 @@ class Database(object):
             logger.debug('Error in array data for {}, removing simulation.'.format(name))
             self.remove_simulation(name)
             return
-        
-            
-            
+
+
+
         if self.test_node(sim_node, 'volatiles'):
             self.db_instance.remove_node(sim_node, 'volatiles', recursive=True)
         if self.test_node('/', 'meta_data'):
@@ -923,7 +923,7 @@ class Validator(object):
     def collimation_width(self, value):
         self._props['collimation_width'] = self.float_validator(value, True)
         self._props['detector_width'] = self.collimation_width / self.detector_rows
-        
+
     @property
     def al_filtration(self):
         return self._props['al_filtration']
@@ -1174,12 +1174,24 @@ class Validator(object):
         elif isinstance(value, str):
             self._props['scaling'] = self.string_to_array_converter('scaling', value)
         else:
-            value=np.array(value)
+            value = np.asarray(value)
             assert isinstance(value, np.ndarray)
             assert value.shape[0] == 3
             assert len(value) == 3
             self._props['scaling'] = value.astype(np.double)
         assert np.all(self._props['scaling'] > 0)
+
+        #array scaling must be a factor of matrix dimension
+        for i in range(3):
+            teller = 0
+            while (self.shape[i] % self._props['scaling'][i]) != 0:
+                teller += 1
+                if teller > 5:
+                    self._props['scaling'][i] -= 1
+                else:
+                    self._props['scaling'][i] += 1
+#            if self._props['scaling'][i] == self.shape[i]:
+#                self._props['scaling'][i] = 1
 
 
     @property
@@ -1265,7 +1277,7 @@ class Validator(object):
         ang = (ang + 360) % 360
         if ang > 180:
             ang -= 360
-        self._props['tube_start_angle'] = self.float_validator(ang)    
+        self._props['tube_start_angle'] = self.float_validator(ang)
 
     @property
     def bowtie_radius(self):
@@ -1274,7 +1286,7 @@ class Validator(object):
     def bowtie_radius(self, value):
         self._props['bowtie_radius'] = self.float_validator(value)
         assert self._props['bowtie_radius'] > 0.
-        
+
     @property
     def bowtie_radius(self):
         return self._props['bowtie_radius']
@@ -1283,7 +1295,7 @@ class Validator(object):
         self._props['bowtie_radius'] = self.float_validator(value)
         if self._props['bowtie_radius'] < 0:
             self._props['bowtie_radius'] = 0
-    
+
     @property
     def bowtie_distance(self):
         return self._props['bowtie_distance']
@@ -1292,7 +1304,7 @@ class Validator(object):
         self._props['bowtie_distance'] = self.float_validator(value)
         if self._props['bowtie_distance'] < 0:
             self._props['bowtie_distance'] = 0
-            
+
     @property
     def material(self):
         return self._arrays['material']

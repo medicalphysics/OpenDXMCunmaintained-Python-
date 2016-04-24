@@ -1175,7 +1175,7 @@ __host__ void run_simulation(void *dev_source, size_t n_particles, void *dev_sim
 	return;
 }
 #else
-void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
+void run_simulation(void *dev_source, int64_t n_particles, void *dev_simulation)
 {
 	// simulating particles
 
@@ -1237,7 +1237,7 @@ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
 	return;
 }
 
-void run_simulation_bowtie(void *dev_source, size_t n_particles, void *dev_simulation)
+void run_simulation_bowtie(void *dev_source, int64_t n_particles, void *dev_simulation)
 {
 	// simulating particles
 

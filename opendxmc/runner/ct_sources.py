@@ -11,9 +11,6 @@ from opendxmc.tube.tungsten import specter, attinuation
 import logging
 logger = logging.getLogger('OpenDXMC')
 
-SHUFFLE_SEED = 100
-
-
 
 def half_shuffle(arr):
     """
@@ -31,13 +28,13 @@ def half_shuffle(arr):
 def bowtie_path_lenght(angles, radius, distance):
     angle_max = np.arcsin(radius / (radius+distance))
     angle_max_ind = np.abs(angles ) > angle_max
-    
+
     theta = np.arctan(distance*np.tan(angles)/radius)
     c = radius*(1-np.cos(theta))
     c[angle_max_ind] = radius
     return c / np.cos(angles)
-    
-def ct_source_space(simulation, exposure_modulation=None, batch_size=None):
+
+def ct_source_space(simulation, exposure_modulation=None):
     arglist = ['scan_fov', 'sdd']
     kwarglist = ['start', 'stop', 'exposures', 'histories',
                  'start_at_exposure_no','tube_start_angle',
@@ -51,7 +48,6 @@ def ct_source_space(simulation, exposure_modulation=None, batch_size=None):
     kwargs['rotation_center'] = simulation.get('data_center')
     kwargs['rotation_plane_cosines'] = simulation.get('image_orientation')
 
-#    'rotation_center', kwargs['rotation_plane_cosines']
 
     if simulation.get('is_spiral'):
         kwargs['pitch'] = simulation.get('pitch')
@@ -131,7 +127,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     rotation_center[2] = 0  # we start spiral at start not center
     if rotation_plane_cosines is None:
         rotation_plane_cosines = np.array([1, 0, 0, 0, 1, 0], dtype=np.double)
-    print('CT phase space start', start, stop)
+#    print('CT phase space start', start, stop)
     # total number of exposures + one total rotation
     exposures = int(exposures)
     e = int((abs(start - stop) / (pitch * total_collimation) + 1) * exposures)
@@ -158,7 +154,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
     specter_cpd = np.cumsum(energy_specter[1]).astype('float64')
     specter_cpd /= specter_cpd.max()
-    
+
     specter_energy = energy_specter[0].astype('float64')
 
 #    if modulation_xy is None:
@@ -184,19 +180,19 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     collimation_arr=np.array([total_collimation], dtype='float64')
     rot_fan_angle = np.array([np.arctan(fov_arr[0]/sdd) * 2],dtype='float64')
     scan_fan_angle = np.array([np.arctan(collimation_arr[0] *.5 / sdd) * 2], dtype='float64')
-    
+
     bowtie_angle = np.linspace(-rot_fan_angle[0]/2, rot_fan_angle[0]/2, 101, dtype='float64')
     bowtie_lenghts= bowtie_path_lenght(bowtie_angle, bowtie_radius, bowtie_distance)
     bowtie_weights = np.empty_like(bowtie_angle, dtype='float64')
     bowtie_att = attinuation(specter_energy/1000, name='aluminum', density=True).astype('float64')
     for i in range(bowtie_lenghts.shape[0]):
-        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i])) 
- 
+        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i]))
+
 
     n_bowtie = np.array(bowtie_weights.shape, dtype='int')
-    n_specter = np.array(specter_energy.shape, dtype='int') 
- 
- 
+    n_specter = np.array(specter_energy.shape, dtype='int')
+
+
     M = world_image_matrix(rotation_plane_cosines)
     rotation_center_image = np.dot(M, rotation_center[[1, 0, 2]])
     for i in range(start_at_exposure_no, e):
@@ -204,18 +200,18 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
         position = np.dot(R, np.array([-sdd/2., 0, t[i]], dtype='float64')) + rotation_center_image
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
-        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))        
-        ret = (position, direction, scan_axis, 
+        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))
+        ret = (position, direction, scan_axis,
                scan_fan_angle,
                rot_fan_angle,
-               np.array([mod_z(t[i])], dtype='float64'), 
+               np.array([mod_z(t[i])], dtype='float64'),
                specter_cpd, specter_energy, n_specter,
                bowtie_weights, bowtie_angle, n_bowtie)
-#        ret = (position, direction, scan_axis, 
-#               np.array([sdd], dtype='float64'), 
-#               np.array([scan_fov], dtype='float64'), 
+#        ret = (position, direction, scan_axis,
+#               np.array([sdd], dtype='float64'),
+#               np.array([scan_fov], dtype='float64'),
 #               np.array([total_collimation], dtype='float64'),
-#               np.array([mod_z(t[i])], dtype='float64'), 
+#               np.array([mod_z(t[i])], dtype='float64'),
 #               specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 
@@ -316,17 +312,17 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
     collimation_arr=np.array([total_collimation], dtype='float64')
     rot_fan_angle = np.array([np.arctan(fov_arr[0]/sdd) * 2],dtype='float64')
     scan_fan_angle = np.array([np.arctan(collimation_arr[0] *.5 / sdd) * 2], dtype='float64')
-    
+
     bowtie_angle = np.linspace(-rot_fan_angle[0]/2, rot_fan_angle[0]/2, 101, dtype='float64')
     bowtie_lenghts= bowtie_path_lenght(bowtie_angle, bowtie_radius, bowtie_distance)
     bowtie_weights = np.empty_like(bowtie_angle, dtype='float64')
     bowtie_att = attinuation(specter_energy/1000, name='aluminum', density=True).astype('float64')
     for i in range(bowtie_lenghts.shape[0]):
-        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i])) 
- 
+        bowtie_weights[i] = np.sum(energy_specter[1]*np.exp(-bowtie_att*bowtie_lenghts[i]))
+
     n_bowtie = np.array(bowtie_weights.shape, dtype='int')
     n_specter = np.array(specter_energy.shape, dtype='int')
-    
+
 
     if exposure_modulation is None:
         mod_z = lambda x: 1.0
@@ -348,20 +344,20 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 
         position = np.dot(R, np.array([-sdd/2., 0, t[i]], dtype='float64')) + rotation_center_image
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
-        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64')) 
-        
-        ret = (position, direction, scan_axis, 
+        scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))
+
+        ret = (position, direction, scan_axis,
                scan_fan_angle,
                rot_fan_angle,
-               np.array([mod_z(t[i])], dtype='float64'), 
+               np.array([mod_z(t[i])], dtype='float64'),
                specter_cpd, specter_energy, n_specter,
-               bowtie_weights, bowtie_angle, n_bowtie)        
-        
-#        ret = (position, direction, scan_axis, 
-#               np.array([sdd], dtype='float64'), 
-#               np.array([scan_fov], dtype='float64'), 
+               bowtie_weights, bowtie_angle, n_bowtie)
+
+#        ret = (position, direction, scan_axis,
+#               np.array([sdd], dtype='float64'),
+#               np.array([scan_fov], dtype='float64'),
 #               np.array([total_collimation], dtype='float64'),
-#               np.array([mod_z(t[i])], dtype='float64'), 
+#               np.array([mod_z(t[i])], dtype='float64'),
 #               specter_cpd.astype('float64'), specter_energy.astype('float64'))
         yield ret, i, e
 

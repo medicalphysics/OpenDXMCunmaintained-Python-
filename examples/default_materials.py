@@ -27,7 +27,7 @@ def cone_beam_example():
     # material indices and a material table
     
     # First we specify dimensions af the voxelized box    
-    N = np.array([128, 128, 128], dtype='int')    
+    N = np.array([128, 128, 128], dtype='int32')    
     # Then spacing of each voxel in cm
     spacing = np.array([0.1, 0.1, 0.1], dtype='float64')    
     
@@ -35,7 +35,7 @@ def cone_beam_example():
     # using. The key in the dictionary corresponds to the values in the 
     # material_indices array
     material_lut = {0: 'air', 1: 'water'}
-    material_indices = np.zeros(N, dtype='int')
+    material_indices = np.zeros(N, dtype='int32')
     #Lets fill a region of the box with water
     material_indices[20:-20, 20:-20, 20:-20] = 1  
     
@@ -76,7 +76,7 @@ def cone_beam_example():
     # we can specify an offset to set the center of our box to origo
     offset = -N * spacing / 2. 
     # we also need the lut shape as an array
-    lut_shape = np.array(lut.shape, dtype='int')
+    lut_shape = np.array(lut.shape, dtype='int32')
     # and an array to store imparted energy
     energy_imparted = np.zeros_like(densities)
     simulation = engine.setup_simulation(N, 
@@ -113,7 +113,7 @@ def cone_beam_example():
     # for each source/beam
     weight = np.array([1], dtype='float64')
     # We now have all we need to specify a beam source, lets create one:
-    n_specter=np.array(specter_cpd.shape, dtype='int')
+    n_specter=np.array(specter_cpd.shape, dtype='int32')
     beam = engine.setup_source(source_position,
                                source_direction, 
                                scan_axis, 
@@ -128,6 +128,7 @@ def cone_beam_example():
     # Running the simulation
     n_histories = 1000000
     t0 = time.clock()
+    import pdb;pdb.set_trace()
     engine.run(beam, n_histories, simulation)
     print('Simulated {0} photons in {1} seconds'.format(n_histories, time.clock()-t0))                           
 
@@ -144,6 +145,7 @@ def cone_beam_example():
                                specter_cpd, 
                                specter_energies,
                                n_specter)
+    
     
     engine.run(beam2, n_histories, simulation)
     print('Simulated another {0} photons in {1} seconds'.format(n_histories, time.clock()-t0))                           
