@@ -7,13 +7,20 @@ out of VideoClips
 import subprocess as sp
 import os
 import numpy as np
+import platform
 
 try:
     from subprocess import DEVNULL  # py3k
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
-FFMPEG_BINARY = "ffmpeg.exe"
+FFMPEG_BINARY = None
+if platform.system() == 'Windows':
+    FFMPEG_BINARY = "ffmpeg.exe"
+elif platform.system() == 'Linux':
+    FFMPEG_BINARY = "ffmpeg"
+else:
+    raise OSError
 
 class FFMPEG_VideoWriter:
     """ A class for FFMPEG-based video writing.
