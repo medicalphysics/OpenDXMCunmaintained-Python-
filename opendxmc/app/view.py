@@ -540,7 +540,7 @@ class ViewController(QtCore.QObject):
     def make_material_plot_widget(self, material):
         mw = QtGui.QMainWindow()
         mw.setWindowTitle(material.name)
-        
+
         pw = pyqtgraph.PlotWidget(name=material.name, title=material.name, background='w')
         mw.setCentralWidget(pw)
         pw.addLegend()
@@ -553,19 +553,19 @@ class ViewController(QtCore.QObject):
             else:
                 pen = pyqtgraph.mkPen(pyqtgraph.intColor(j, hues=4, minHue=240), width=2)
             pw.plot(x=atts['energy'][e_ind], y=atts[key][e_ind], pen=pen, name=key, antialias=True)
-            
+
         pw.setLabel('left', "Attenuation", units='cm^2/g')
         pw.setLabel('bottom', "Energy", units='eV')
         pw.setLogMode(x=False, y=True)
         pw.setXRange(0, 50000) # 500 keV
         return mw
-        
+
     @QtCore.pyqtSlot(object)
     def view_material(self, material):
         win = self.make_material_plot_widget(material)
         win.show()
         self.__plot = win
-        
+
 
 class Scene(QtGui.QGraphicsScene):
     update_index = QtCore.pyqtSignal(int)
@@ -1724,7 +1724,7 @@ class View(QtGui.QGraphicsView):
         try:
             writer = FFMPEG_VideoWriter(filename,
                                         (width, height),
-                                        15, threads=4)
+                                        15, threads=1)
         except FileNotFoundError:
             logger.warning("FFMPEG executable not found")
             return

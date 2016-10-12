@@ -62,8 +62,8 @@ class FFMPEG_VideoWriter:
       encoded.
     """
 
-    def __init__(self, filename, size, fps, codec="libx264", audiofile=None,
-                 preset="medium", bitrate=None, withmask=False,
+    def __init__(self, filename, size, fps, codec="mpeg4", audiofile=None,
+                 preset="placebo", bitrate="5000k", withmask=False,
                  logfile=None, threads=None, ffmpeg_params=None):
 
         if logfile is None:

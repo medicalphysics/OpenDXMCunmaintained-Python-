@@ -10,3 +10,4 @@ air 0.00129
 pmma 1.18
 water 1.0
 lead 11.34
+iodine 4.93
