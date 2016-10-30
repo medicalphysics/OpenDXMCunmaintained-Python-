@@ -167,7 +167,7 @@ class DatabaseInterface(QtCore.QObject):
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
 
-    
+
     send_proper_database_path = QtCore.pyqtSignal(QtCore.QUrl)
 
     def __init__(self, database_qurl, parent=None):
@@ -231,7 +231,7 @@ class DatabaseInterface(QtCore.QObject):
             mat = self.__db.get_material(mat_name)
         except ValueError:
             pass
-        else:    
+        else:
             self.send_material_for_viewing.emit(mat)
         self.database_busy.emit(False)
 
@@ -253,7 +253,7 @@ class DatabaseInterface(QtCore.QObject):
         else:
             self.send_view_array.emit(simulation_name, arr, array_name)
         self.database_busy.emit(False)
-    
+
     @QtCore.pyqtSlot(str, str, float, float, bool)
     def request_view_array_bytescaled(self, simulation_name, array_name, amin, amax, vals_is_modifier):
         self.database_busy.emit(True)
@@ -458,18 +458,18 @@ class Runner(QtCore.QThread):
             self.is_running=False
             self.terminated.emit()
             self.terminate()
-            
-        
-        if all([self.request_save, save, array_dict is not None, 
-                exposure_number is not None]):
-            desc = {'name': name,
-                'start_at_exposure_no': exposure_number,
-                }
-            self.request_set_simulation_properties.emit(desc, False, False)
-            self.request_write_simulation_arrays.emit(name, array_dict)
-            self.mutex.lock()
-            self.request_save = False
-            self.mutex.unlock()
+
+
+#        if all([self.request_save, save, array_dict is not None,
+#                exposure_number is not None]):
+#            desc = {'name': name,
+#                'start_at_exposure_no': exposure_number,
+#                }
+#            self.request_set_simulation_properties.emit(desc, False, False)
+#            self.request_write_simulation_arrays.emit(name, array_dict)
+#            self.mutex.lock()
+#            self.request_save = False
+#            self.mutex.unlock()
         if progressbar_data is not None:
             self.request_runner_view_update.emit(*progressbar_data)
 
@@ -477,18 +477,18 @@ class Runner(QtCore.QThread):
         self.is_running=True
         self.mutex.lock()
         self.kill_me = False
-        
 
-        
+
+
 
 
         simulation_properties = self.simulation_properties
         simulation_arrays = self.simulation_arrays
         material_list = self.material_list
-        
-    
-        
-        
+
+
+
+
         self.mutex.unlock()
 
         if simulation_properties is None or simulation_arrays is None:
@@ -580,7 +580,7 @@ class RunManager(QtCore.QObject):
     @QtCore.pyqtSlot(dict, dict, list)
     def run_simulation(self, props, arrays, mat_list):
         logger.debug('Attemp to start MC thread')
-        
+
         if not self.runner.is_running:
             self.runner.simulation_properties = props
             self.runner.simulation_arrays = arrays
@@ -631,7 +631,7 @@ class ListModel(QtCore.QAbstractListModel):
     @QtCore.pyqtSlot(list)
     def recive_data_list(self, sims):
         self.layoutAboutToBeChanged.emit()
-        self.__data = sims        
+        self.__data = sims
         self.layoutChanged.emit()
 
     @QtCore.pyqtSlot(str)
@@ -720,7 +720,7 @@ class ListView(QtGui.QListView):
             self.setDefaultDropAction(QtCore.Qt.CopyAction)
             self.tooltip = 'Drag DiCOM images or digital\nphantoms here to import'
             self.setToolTip(self.tooltip)
-            
+
         else:
             self.setAcceptDrops(False)
             self.viewport().setAcceptDrops(False)
@@ -827,12 +827,12 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
                 parent_item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE_GROUPING[key])
                 parent_item.font().setBold(True)
                 parent_item.setEditable(False)
-                self.setItem(row, 0, parent_item)    
+                self.setItem(row, 0, parent_item)
                 self.setItem(row, 1, QtGui.QStandardItem(' '))
                 row += 1
                 parent_items[key] = parent_item
-            
-        
+
+
         for key, value in propeties_dict.items():
             parent_ind = PROPETIES_DICT_TEMPLATE[key][6]
             if parent_ind in parent_items.keys():
@@ -841,15 +841,15 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
                 parent_item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE_GROUPING.get(parent_ind, 'Unknown'))
                 parent_item.font().setBold(True)
                 parent_item.setEditable(False)
-                self.setItem(row, 0, parent_item)    
+                self.setItem(row, 0, parent_item)
                 self.setItem(row, 1, QtGui.QStandardItem(' '))
                 row += 1
                 parent_items[parent_ind] = parent_item
-                
+
             item = QtGui.QStandardItem(PROPETIES_DICT_TEMPLATE[key][4])
             item.setEditable(False)
             parent_item.appendRow([item, PropertiesEditModelItem(key, value)])
-        
+
         for parent_item in parent_items.values():
             parent_item.sortChildren(0)
 #            parent_item.setChild(0, 0, item)
@@ -862,7 +862,7 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
         if (ind < 2) and (orient == QtCore.Qt.Horizontal):
             return ['Description', 'Value'][ind]
         return super().headerData(ind, orient, role)
-            
+
 
     def data_item_iterator(self):
         for row in range(self.rowCount()):
@@ -879,9 +879,9 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
     def set_simulation_properties(self, data_dict):
         if data_dict['name'] != self.current_simulation:
             return
-    
+
         self.validator.set_data(props=data_dict, reset=True)
-        
+
         self.unsaved_items = {}
         for item in self.data_item_iterator():
             item.update_data(self.validator._props[item.key])
@@ -927,11 +927,11 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
             else:
                 if item.key not in self.unsaved_items:
                     self.unsaved_items[item.key] = item.value
-                
+
 #                for item in [self.item(i, 1) for i in range(self.rowCount())]:
                 for item in self.data_item_iterator():
                     item.update_data(getattr(self.validator, item.key))
-#                
+#
                 self.test_unsaved_changes()
             return True
         return super().setData(index, value, role)
@@ -975,7 +975,7 @@ class PropertiesEditWidget(QtGui.QWidget):
         self.model = model
         model.request_cancel_simulation.connect(run_manager.cancel_run)
         table.setModel(model)
-        
+
         table.showColumn(0)
         table.showColumn(1)
         layout.addWidget(table)
@@ -1063,7 +1063,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
         elif column == 2:
             self._data_keys.sort(key=lambda x: self._data[x][column]/self._data[x][column+1], reverse=reverse)
         self.layoutChanged.emit()
-    
+
     def rowCount(self, index):
         return len(self._data)
     def columnCount(self, index):
@@ -1121,7 +1121,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
             self.request_array_slice.emit(self.current_simulation, 'dose', 0, 0)
             self.layoutChanged.emit()
             self.hide_view.emit(False)
-        
+
 
     @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
     def reload_slice(self, name, arr, array_name, index, orientation):
@@ -1160,15 +1160,15 @@ class OrganDoseView(QtGui.QTableView):
         self.setAlternatingRowColors(True)
         self.setHidden(True)
 
-    
+
     def copy_to_clipboard(self):
         indices = self.selectedIndexes()
         n_columns = self.model().columnCount(0)
         indices.sort(key = lambda x: x.row()*n_columns + x.column())
-        
+
         c_row=0
         c_column=0
-        
+
         html = "<table><tr>"
         txt = ""
         for index in indices:
@@ -1179,16 +1179,16 @@ class OrganDoseView(QtGui.QTableView):
                 if index.column() > c_column:
                     txt += "; "
                 txt += str(index.data())
-                html += "<td>" + str(index.data()) +"</td>" 
+                html += "<td>" + str(index.data()) +"</td>"
                 c_row = index.row()
                 c_column = index.column()
         html += "</tr></table>"
-        if len(html) > 0: 
+        if len(html) > 0:
             mime=QtCore.QMimeData()
             mime.setHtml(html)
             mime.setText(txt)
             QtGui.qApp.clipboard().setMimeData(mime)
-            
+
 
     def keyPressEvent(self, event):
         if event.matches(QtGui.QKeySequence.Copy):
@@ -1196,4 +1196,4 @@ class OrganDoseView(QtGui.QTableView):
             event.accept()
             return
         super().keyPressEvent(event)
-            
+
