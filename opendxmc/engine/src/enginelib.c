@@ -23,6 +23,7 @@ FLOAT randomduniform(uint64_t *seed)
 }
 
 
+
 #ifdef USINGCUDA
 #ifdef USING_DOUBLE
 __device__ double atomicAdd(double *address, double val)
