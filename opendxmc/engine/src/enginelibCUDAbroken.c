@@ -1,6 +1,9 @@
 
 #include "enginelib.h"
 
+#ifdef USINGCUDA
+__device__
+#endif
 uint64_t xorshift128plus(uint64_t *s) {
 	// init seed must not be zero
 	uint64_t x = s[0];
@@ -11,29 +14,54 @@ uint64_t xorshift128plus(uint64_t *s) {
 	return s[1] + y;
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 FLOAT randomduniform(uint64_t *seed)
 {
 	return (FLOAT)xorshift128plus(seed) / (FLOAT)UINT64_MAX;
 }
 
 
+
+#ifdef USINGCUDA
+#ifdef USING_DOUBLE
+__device__ double atomicAdd(double *address, double val)
+/* Atomic add of FLOAT to array. Returns old value. */
+{
+	unsigned long long int *address_as_ull = (unsigned long long int*)address;
+	unsigned long long int old = *address_as_ull, assumed;
+	do {
+		assumed = old;
+		old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
+
+	} while (assumed != old);
+	return __longlong_as_double(old);
+}
+// atomic add for floats are already implemented by nvidia 
+#endif
+
+#else
 FLOAT atomicAdd(FLOAT *address, FLOAT val)
 {
 #pragma omp atomic
 	address[0] += val;
 	return val;
 }
+#endif
 
-FLOAT sign(FLOAT x)
-{
-	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
-}
 
+#ifdef USINGCUDA
+__device__
+#endif
 FLOAT interp(FLOAT x, FLOAT x1, FLOAT x2, FLOAT y1, FLOAT y2)
 {
 	return y1 + ((y2 - y1) * ((x - x1)) / (x2 - x1));
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void binary_search(FLOAT *arr, FLOAT value, size_t *start, size_t *stop)
 {
 	size_t mid = (stop[0] + start[0]) / 2;
@@ -51,6 +79,9 @@ void binary_search(FLOAT *arr, FLOAT value, size_t *start, size_t *stop)
 	}
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 FLOAT interp_array(FLOAT *xarr, FLOAT *yarr, size_t array_size, FLOAT xval)
 {
 	size_t low = 0;
@@ -70,6 +101,9 @@ FLOAT interp_array(FLOAT *xarr, FLOAT *yarr, size_t array_size, FLOAT xval)
 }
 
 
+#ifdef USINGCUDA
+__device__
+#endif
 FLOAT lut_interpolator(int material, int interaction, FLOAT energy, int *lut_shape, FLOAT *lut, size_t *lower_index)
 {
 	lower_index[0] = material * lut_shape[1] * lut_shape[2];
@@ -79,6 +113,9 @@ FLOAT lut_interpolator(int material, int interaction, FLOAT energy, int *lut_sha
 }
 
 
+#ifdef USINGCUDA
+__device__
+#endif
 size_t particle_array_index(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offset)
 { /*Returns the voxel index for particle in the volume arrays */
 	size_t i = (size_t)((particle[0] - offset[0]) / spacing[0]);
@@ -96,6 +133,9 @@ size_t particle_array_index(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *
 ///////////////////////////////////siddon/////////////////////////////////
 
 
+#ifdef USINGCUDA
+__device__
+#endif
 int min_index3(FLOAT *arr)
 {
 	if ((arr[0] <= arr[1]) && (arr[0] <= arr[2]))
@@ -110,6 +150,9 @@ int min_index3(FLOAT *arr)
 }
 
 
+#ifdef USINGCUDA
+__device__
+#endif
 void normalize_ray(FLOAT *ray)
 {
 	FLOAT inv_len = 1.f / SQRT(ray[3] * ray[3] + ray[4] * ray[4] + ray[5] * ray[5]);
@@ -118,6 +161,9 @@ void normalize_ray(FLOAT *ray)
 	ray[5] *= inv_len;
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void calculate_alphas_extreme(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aupdate, FLOAT *aglobalmin, FLOAT *aglobalmax)
 //calculates alpha for planes , planes : int[3]
 {
@@ -151,6 +197,9 @@ void calculate_alphas_extreme(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset,
 
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void calculate_first_indices(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, FLOAT *aglobalmin, FLOAT *aupdate, size_t *indicesmin, int *indexupdate)
 {
 	FLOAT a_cand = aglobalmin[0] + ERRF;
@@ -184,6 +233,9 @@ void calculate_first_indices(FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, 
 	}
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *max_density, uint64_t *state)
 {
 	/*
@@ -255,6 +307,9 @@ bool siddon_path(size_t *volume_index, FLOAT *ray, int *N, FLOAT *spacing, FLOAT
 
 
 ////////////////////////////////////WOODCOCK////////////////////////////
+#ifdef USINGCUDA
+__device__ 
+#endif
 bool particle_on_plane(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offset, size_t plane_dimension)
 /* Bondary test if the particle is resting on plane p laying on one of the edges of the scoring volume. Returns true if the point on the plane is on the edge of the volume*/
 {
@@ -263,27 +318,33 @@ bool particle_on_plane(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offse
 	{
 		if (i != plane_dimension)
 		{
-			ulim = offset[i] + shape[i] * spacing[i] - ERRF;
-			llim = offset[i] + ERRF;
+			ulim = offset[i] + shape[i] * spacing[i] + ERRF;
+			llim = offset[i] - ERRF;
 			if ((particle[i] < llim) || (particle[i] > ulim)) { return false; }
 		}
 	}
 	return true;
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 bool particle_inside_volume(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offset)
 /* Test for particle inside volume. If inside returns true*/
 {
 	FLOAT llim, ulim;
 	for (size_t i = 0; i < 3; i++)
 	{
-		ulim = offset[i] + shape[i] * spacing[i] - ERRF;
-		llim = offset[i] + ERRF;
+		ulim = offset[i] + shape[i] * spacing[i] + ERRF;
+		llim = offset[i] - ERRF;
 		if ((particle[i] < llim) || (particle[i] > ulim)) { return false; }
 	}
 	return true;
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 bool particle_is_intersecting_volume(FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offset)
 /*Tests if particle intersects with dose scoring volume. If intersecting and outside scoring volume
 the particle is transported along its direction to the volume edge. Returns true if the particle intersects scoring volume,
@@ -293,10 +354,10 @@ returns false if the particle misses scoring volume.*/
 	{
 		return true;
 	}
-	size_t i=0, j=0;
-	FLOAT t[2] = {0, 0};
-	FLOAT t_cand=0;
-	FLOAT pos[3] = { 0, 0 ,0};
+	size_t i, j;
+	FLOAT t[2];
+	FLOAT t_cand;
+	FLOAT pos[3];
 	int plane_intersection = -1;
 	for (i = 0; i < 3; i++)
 	{
@@ -317,11 +378,6 @@ returns false if the particle misses scoring volume.*/
 					t[plane_intersection] = t_cand;
 				}
 			}
-			// we break if we find two intersections
-			if (plane_intersection >= 1)
-			{
-				break;
-			}
 			// highest planes
 			t_cand = (offset[i] + spacing[i] * shape[i] - particle[i]) / particle[i + 3];
 			if (t_cand >= 0)
@@ -336,13 +392,12 @@ returns false if the particle misses scoring volume.*/
 					t[plane_intersection] = t_cand;
 				}
 			}
-			// we break if we find two intersections
-			if (plane_intersection >= 1)
-			{
-				break;
-			}
 		}
-		
+		// we break if we find two intersections
+		if (plane_intersection >= 1)
+		{
+			break;
+		}
 	}
 	// return if we dont find any intersections
 	if (plane_intersection == -1)
@@ -364,15 +419,18 @@ returns false if the particle misses scoring volume.*/
 	{
 		particle[i] = particle[i] + particle[i + 3] * t_cand;
 	}
-	
-
 	return true;
 }
+
+#ifdef USINGCUDA
+__device__
+#endif
 bool woodcock_step(size_t *volume_index, FLOAT *particle, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *max_density, uint64_t *state)
 { /*Make the particle take a woodcock step until an interaction occurs or the particle steps out of volume, returns true if an interaction occurs, then volume index contains the voxel_index for the interaction*/
 
 	bool interaction = false;
 	bool valid = particle_is_intersecting_volume(particle, shape, spacing, offset);
+
 	FLOAT smin, scur, w_step;
 	size_t lut_index;
 	size_t i;
@@ -382,7 +440,7 @@ bool woodcock_step(size_t *volume_index, FLOAT *particle, int *shape, FLOAT *spa
 		smin = FMAX(smin, lut_interpolator((int)i, 1, particle[6], att_shape, attenuation_lut, &lut_index));
 	}
 	smin *= max_density[0];
-	
+
 	while (valid && !interaction)
 	{
 		// sampling distance
@@ -403,7 +461,6 @@ bool woodcock_step(size_t *volume_index, FLOAT *particle, int *shape, FLOAT *spa
 
 			interaction = randomduniform(&state[0]) <= (scur / smin);
 		}
-		
 	}
 	return interaction;
 }
@@ -411,20 +468,26 @@ bool woodcock_step(size_t *volume_index, FLOAT *particle, int *shape, FLOAT *spa
 ////////////////////////////////////////////////////////////////////////
 
 
+
+
+
+#ifdef USINGCUDA
+__device__
+#endif
 void normalize_3Dvector(FLOAT *vector)
 {
-	
 	FLOAT vector_inv_sum = 1.f / SQRT((vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]));
 	vector[0] *= vector_inv_sum;
 	vector[1] *= vector_inv_sum;
 	vector[2] *= vector_inv_sum;
-	
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void rotate_3Dvector(FLOAT *vector, FLOAT *axis, FLOAT angle)
 // angle must be inside (0, PI]
 {
-	
 	FLOAT out[3];
 	FLOAT sang = SIN(angle);
 	FLOAT cang = COS(angle);
@@ -436,15 +499,16 @@ void rotate_3Dvector(FLOAT *vector, FLOAT *axis, FLOAT angle)
 	vector[0] = out[0];
 	vector[1] = out[1];
 	vector[2] = out[2];
-	
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void rotate_particle(FLOAT *particle, FLOAT theta, FLOAT phi)
 // rotates a particle theta degrees from its current direction phi degrees about a random axis orthogonal to the direction vector (this axis is rotated phi degrees about the particles direction vector)
 {
 	// First we find a vector orthogonal to the particle direction
 	// k_xy = v x k   where k = ({1, 0, 0} , {0, 1, 0}, {0, 0, 1}) depending on the smallest magnitude of the particles direction vector (we do this to make the calculation more robust)
-	
 	FLOAT k_xy[3];
 	if ((FABS(particle[3]) < FABS(particle[4])) && (FABS(particle[3]) < FABS(particle[5])))
 	{
@@ -482,40 +546,10 @@ void rotate_particle(FLOAT *particle, FLOAT theta, FLOAT phi)
 	{
 		particle[i+3] = particle[i+3] * tcos + k_xy[i] * tsin;
 	}
-	
-
 }
-
-void rayleigh_event_draw_theta(FLOAT energy, FLOAT *angle, uint64_t *state)
-{
-	FLOAT r, d, A, cosang, f, b, a, beta;
-	
-	r = randomduniform(&state[0]);
-	d = 4.f - 8.f * r;
-	A = -sign(d) * POW((FABS(d) + SQRT(d*d + 4.f)) / 2.f, 1.f / 3.f);
-
-	cosang = A - 1.f / A;
-
-	//preventing rounding off errors
-	if (cosang > 1.0f)
-	{
-		cosang = 1.0f;
-	}
-	else if (cosang < -1.0f)
-	{
-		cosang = -1.0f;
-	}
-
-
-	b = 0.15012f;
-	a = 1.87966f;
-
-	f = b * POW(energy * 0.00004268102079344993f, a);
-	beta = 3.f * f / (1 + 3.f * f);
-
-	angle[0] = ACOS((cosang + beta) / (1.f + beta*cosang));
-}
-/*
+#ifdef USINGCUDA
+__device__
+#endif
 void rayleigh_event_draw_theta(FLOAT *angle, uint64_t *state)
 {
 	FLOAT r, c, A;
@@ -527,7 +561,10 @@ void rayleigh_event_draw_theta(FLOAT *angle, uint64_t *state)
 		A = -POW((FABS(c) + SQRT(c * c + 4.f)) / 2.f, (1.f / 3.f));
 	angle[0] = ACOS(A - 1.f / A);
 }
-*/
+
+#ifdef USINGCUDA
+__device__
+#endif
 FLOAT compton_event_draw_energy_theta(FLOAT energy, FLOAT *theta, uint64_t *state)
 {
 	//Draws scattered energy and angle, based on Geant4 implementation, returns scattered energy and sets theta to scatter angle
@@ -563,6 +600,9 @@ FLOAT compton_event_draw_energy_theta(FLOAT energy, FLOAT *theta, uint64_t *stat
 }
 
 
+#ifdef USINGCUDA
+__device__
+#endif
 void generate_particle(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, FLOAT *particle, uint64_t *state)
 {
 	FLOAT v_rot[3];
@@ -587,9 +627,11 @@ void generate_particle(FLOAT *source_position, FLOAT *source_direction, FLOAT *s
 
 	particle[6] = interp_array(specter_cpd, specter_energy, specter_elements[0], r1);
 	particle[7] = weight[0];
-
 }
 
+#ifdef USINGCUDA
+__device__
+#endif
 void generate_particle_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle,
 FLOAT *particle, uint64_t *state)
 {
@@ -626,14 +668,23 @@ FLOAT *particle, uint64_t *state)
 	{
 		particle[7] *= interp_array(bowtie_angle, bowtie_weight, bowtie_elements[0], r_ang);
 	}
-	
-
 }
 
 
+#ifdef USINGCUDA
+__global__
+#endif
 void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, trackingFuncPtr tracking_func, uint64_t *states)
 {
+#ifdef USINGCUDA
+	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
+	if (id >= n_particles[0])
+	{
+		return;
+	}
+#else
 	size_t id = n_particles[0];
+#endif
 
 	FLOAT particle[8];
 	FLOAT rayleight, photoelectric, r_interaction, scatter_angle, scatter_energy;
@@ -642,8 +693,6 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 
 	while ((*tracking_func)(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
 	{
-		
-		
 		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
 		photoelectric = interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2] * 3], attenuation_lut[lut_index + att_shape[2] * 3 + 1]);
 
@@ -651,8 +700,7 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 
 		if (rayleight > r_interaction) //rayleigh scatter event
 		{
-			rayleigh_event_draw_theta(particle[6], &scatter_angle, &states[id * 2]);
-			
+			rayleigh_event_draw_theta(&scatter_angle, &states[id * 2]);
 			rotate_particle(particle, scatter_angle, (randomduniform(&states[id * 2]) * 2.f - 1.f) * PI);
 		}
 		else if ((rayleight + photoelectric) > r_interaction) //photoelectric event
@@ -688,13 +736,23 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 				break;
 			}
 		}
-		
 	}
 }
 
+#ifdef USINGCUDA
+__global__
+#endif
 void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *scan_axis_fan_angle, FLOAT *rot_axis_fan_angle, FLOAT *weight, int *specter_elements, FLOAT *specter_cpd, FLOAT *specter_energy, int *bowtie_elements, FLOAT *bowtie_weight, FLOAT *bowtie_angle, size_t *n_particles, int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *att_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, FLOAT *max_density, trackingFuncPtr tracking_func, uint64_t *states)
 {
+#ifdef USINGCUDA
+	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
+	if (id >= n_particles[0])
+	{
+		return;
+	}
+#else
 	size_t id = n_particles[0];
+#endif
 
 	FLOAT particle[8];
 	FLOAT rayleight, photoelectric, r_interaction, scatter_angle, scatter_energy;
@@ -703,8 +761,6 @@ void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction,
 
 	while ((*tracking_func)(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
 	{
-		
-		
 		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
 		//Here we take a shortcut, instead of interpolating the array again we just jump to the already calculated index in the lut table and do a between two points interpolation 
 		photoelectric = interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2] * 3], attenuation_lut[lut_index + att_shape[2] * 3 + 1]);
@@ -713,8 +769,7 @@ void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction,
 
 		if (rayleight > r_interaction) //rayleigh scatter event
 		{
-			rayleigh_event_draw_theta(particle[6], &scatter_angle, &states[id * 2]);
-			
+			rayleigh_event_draw_theta(&scatter_angle, &states[id * 2]);
 			rotate_particle(particle, scatter_angle, (randomduniform(&states[id * 2]) * 2.f - 1.f) * PI);
 		}
 		else if ((rayleight + photoelectric) > r_interaction) //photoelectric event
@@ -752,11 +807,25 @@ void transport_particles_bowtie(FLOAT *source_position, FLOAT *source_direction,
 				break;
 			}
 		}
-		
-		
 	}
 }
 
+#ifdef USINGCUDA
+__global__ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
+{
+	size_t id = threadIdx.x + blockIdx.x * blockDim.x;
+	if (id == 0)
+	{
+		states[0] = xorshift128plus(seed);
+		states[1] = xorshift128plus(seed);
+		for (long long int id = 1; id < n_threads[0]; id++)
+		{
+			states[id * 2] = xorshift128plus(&states[id * 2 - 2]);
+			states[id * 2 + 1] = xorshift128plus(&states[id * 2 - 1]);
+		}
+	}
+}
+#else
 void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
 {
 	states[0] = xorshift128plus(seed);
@@ -767,10 +836,109 @@ void init_random_seed(uint64_t *seed, size_t *n_threads, uint64_t *states)
 		states[id * 2 + 1] = xorshift128plus(&states[id * 2 - 1]);
 	}
 }
+#endif
+
+#ifdef USINGCUDA
+__host__ int number_of_cuda_devices()
+{
+	int err;
+	int device_number;
+	err = cudaGetDeviceCount(&device_number);
+	if (err != 0){ return 0;}
+	return device_number;
+}
+#else
+int number_of_cuda_devices(){ return -1; }
+#endif
 
 
+#ifdef USINGCUDA
+__host__ void cuda_device_name(int device_number, char* name )
+{
+	int err;
+	err = cudaGetDeviceCount(&device_number);
+	if (err != 0){return;}
+	struct cudaDeviceProp props;
+	err = cudaGetDeviceProperties(&props, device_number);
+	if (err != 0){ return; }
+	name = props.name;
+}
+#else
+void cuda_device_name(int device_number, char* name){ return; }
+#endif
+
+#ifdef USINGCUDA
+__host__ void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted)
+{
+
+	// device declarations
+	int *shape_dev;
+	FLOAT *spacing_dev;
+	FLOAT *offset_dev;
+	int *material_map_dev;
+	FLOAT *density_map_dev;
+	int *lut_shape_dev;
+	FLOAT *lut_dev;
+	FLOAT *energy_dev;
+	FLOAT *max_dens_dev;
+
+	size_t array_size = shape[0] * shape[1] * shape[2];
+	size_t lut_size = lut_shape[0] * lut_shape[1] * lut_shape[2];
+
+	// device allocations
+	cudaMalloc(&shape_dev, 3 * sizeof(int));
+	cudaMalloc(&spacing_dev, 3 * sizeof(FLOAT));
+	cudaMalloc(&offset_dev, 3 * sizeof(FLOAT));
+	cudaMalloc(&material_map_dev, array_size * sizeof(int));
+	cudaMalloc(&density_map_dev, array_size * sizeof(FLOAT));
+	cudaMalloc(&lut_shape_dev, 3 * sizeof(int));
+	cudaMalloc(&lut_dev, lut_size * sizeof(FLOAT));
+	cudaMalloc(&energy_dev, array_size * sizeof(FLOAT));
+	cudaMalloc(&max_dens_dev, sizeof(FLOAT));
+
+	// check for error
+	cudaError_t error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+
+	FLOAT max_dens[1];
+	max_dens[0] = 0;
+	for (size_t i = 0; i < shape[0] * shape[1] * shape[2]; i++)
+	{
+		max_dens[0] = FMAX(max_dens[0], density_map[i]);
+	}
 
 
+	// memory transfer to device
+	cudaMemcpy(shape_dev, shape, 3 * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(spacing_dev, spacing, 3 * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(offset_dev, offset, 3 * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(material_map_dev, material_map, array_size * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(density_map_dev, density_map, array_size * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(lut_shape_dev, lut_shape, 3 * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(lut_dev, attenuation_lut, lut_size * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(energy_dev, energy_imparted, array_size * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(max_dens_dev, max_dens, sizeof(FLOAT), cudaMemcpyHostToDevice);
+
+	// creating simulation structure
+	Simulation *sim_dev = (Simulation*)malloc(sizeof(Simulation));
+	sim_dev->shape = shape_dev;
+	sim_dev->spacing = spacing_dev;
+	sim_dev->offset = offset_dev;
+	sim_dev->material_map = material_map_dev;
+	sim_dev->density_map = density_map_dev;
+	sim_dev->lut_shape = lut_shape_dev;
+	sim_dev->attenuation_lut = lut_dev;
+	sim_dev->energy_imparted = energy_dev;
+	sim_dev->max_density = max_dens;
+
+	return (void*)sim_dev;
+}
+#else
 void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *attenuation_lut, FLOAT *energy_imparted, int *use_siddon)
 {
 	Simulation *sim_dev = (Simulation*)malloc(sizeof(Simulation));
@@ -799,9 +967,74 @@ void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_
 	(sim_dev->seed)[1] = shape[0];
 	return (void*)sim_dev;
 }
+#endif
 
 
+#ifdef USINGCUDA
+__host__ void* setup_source(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements)
+{
+	// device declarations
+	FLOAT *source_position_dev;
+	FLOAT *source_direction_dev;
+	FLOAT *scan_axis_dev;
+	FLOAT *sdd_dev;
+	FLOAT *fov_dev;
+	FLOAT *collimation_dev;
+	FLOAT *weight_dev;
+	int *specter_elements_dev;
+	FLOAT *specter_cpd_dev;
+	FLOAT *specter_energy_dev;
 
+	// device allocations
+	cudaMalloc(&source_position_dev, 3 * sizeof(FLOAT));
+	cudaMalloc(&source_direction_dev, 3 * sizeof(FLOAT));
+	cudaMalloc(&scan_axis_dev, 3 * sizeof(FLOAT));
+	cudaMalloc(&sdd_dev, sizeof(FLOAT));
+	cudaMalloc(&fov_dev, sizeof(FLOAT));
+	cudaMalloc(&collimation_dev, sizeof(FLOAT));
+	cudaMalloc(&weight_dev, sizeof(FLOAT));
+	cudaMalloc(&specter_elements_dev, sizeof(int));
+	cudaMalloc(&specter_cpd_dev, specter_elements[0] * sizeof(FLOAT));
+	cudaMalloc(&specter_energy_dev, specter_elements[0] * sizeof(FLOAT));
+
+	// check for error
+	cudaError_t error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+
+	// memory transfer to device
+	cudaMemcpy(source_position_dev, source_position, 3 * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(source_direction_dev, source_direction, 3 * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(scan_axis_dev, scan_axis, 3 * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(sdd_dev, sdd, sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(fov_dev, fov, sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(collimation_dev, collimation, sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(weight_dev, weight, sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(specter_elements_dev, specter_elements, sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(specter_cpd_dev, specter_cpd, specter_elements[0] * sizeof(FLOAT), cudaMemcpyHostToDevice);
+	cudaMemcpy(specter_energy_dev, specter_energy, specter_elements[0] * sizeof(FLOAT), cudaMemcpyHostToDevice);
+
+
+	// creating source structure
+	Source *source_dev = (Source*)malloc(sizeof(Source));
+	source_dev->source_position = source_position_dev;
+	source_dev->source_direction = source_direction_dev;
+	source_dev->scan_axis = scan_axis_dev;
+	source_dev->sdd = sdd_dev;
+	source_dev->fov = fov_dev;
+	source_dev->collimation = collimation_dev;
+	source_dev->weight = weight_dev;
+	source_dev->specter_elements = specter_elements_dev;
+	source_dev->specter_cpd = specter_cpd_dev;
+	source_dev->specter_energy = specter_energy_dev;
+	return (void*)source_dev;
+}
+
+#else
 void* setup_source(FLOAT *source_position, FLOAT *source_direction, FLOAT *scan_axis, FLOAT *sdd, FLOAT *fov, FLOAT *collimation, FLOAT *weight, FLOAT *specter_cpd, FLOAT *specter_energy, int *specter_elements)
 {
 	Source *source_dev = (Source*)malloc(sizeof(Source));
@@ -834,11 +1067,115 @@ void* setup_source_bowtie(FLOAT *source_position, FLOAT *source_direction, FLOAT
 	source_dev->bowtie_angle = bowtie_angle;
 	return (void*)source_dev;
 }
+#endif
 
 
 
 
+#ifdef USINGCUDA
+__host__ void run_simulation(void *dev_source, size_t n_particles, void *dev_simulation)
+{
+	dim3 blocks((int)(n_particles / 512 + 1), 1, 1);
+	dim3 threads(512, 1, 1);
+	cudaError_t error;
 
+	uint64_t seed = time(NULL);
+
+
+	// initialize device pointers
+	size_t *dev_n_particles;
+	uint64_t *dev_states;
+	uint64_t *dev_seed;
+
+	//allocate memory on device
+	cudaMalloc(&dev_n_particles, sizeof(size_t));
+	cudaMalloc(&dev_states, n_particles * 2 * sizeof(uint64_t));
+	cudaMalloc(&dev_seed, sizeof(uint64_t));
+	// check for error
+	error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+
+	// transfer data to device
+	cudaMemcpy(dev_n_particles, &n_particles, sizeof(size_t), cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_seed, &seed, sizeof(uint64_t), cudaMemcpyHostToDevice);
+
+	// check for error
+	error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error in memory copy: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+
+	// setting up random number generators 
+	init_random_seed <<< blocks, threads >>>(dev_seed, dev_n_particles, dev_states);	
+	//init_random_seed <<< blocks, threads >>>(1337, dev_n_particles, dev_states);	
+	cudaDeviceSynchronize();
+	// check for error
+	error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error init random seed: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+
+	// simulating particles
+
+	transport_particles <<< blocks, threads >>>
+		(
+		((Source*)dev_source)->source_position,
+		((Source*)dev_source)->source_direction,
+		((Source*)dev_source)->scan_axis,
+		((Source*)dev_source)->sdd,
+		((Source*)dev_source)->fov,
+		((Source*)dev_source)->collimation,
+		((Source*)dev_source)->weight,
+		((Source*)dev_source)->specter_elements,
+		((Source*)dev_source)->specter_cpd,
+		((Source*)dev_source)->specter_energy,
+		dev_n_particles,
+		((Simulation*)dev_simulation)->shape,
+		((Simulation*)dev_simulation)->spacing,
+		((Simulation*)dev_simulation)->offset,
+		((Simulation*)dev_simulation)->material_map,
+		((Simulation*)dev_simulation)->density_map,
+		((Simulation*)dev_simulation)->lut_shape,
+		((Simulation*)dev_simulation)->attenuation_lut,
+		((Simulation*)dev_simulation)->energy_imparted,
+		((Simulation*)dev_simulation)->max_density,
+		dev_states);
+
+	cudaDeviceSynchronize();
+	// check for error
+	error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+	// free device memory
+	cudaFree(dev_n_particles);
+	cudaFree(dev_states);
+	cudaFree(dev_seed);
+	// check for error
+	error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error: %s\n", cudaGetErrorString(error));
+		exit(-1);
+	}
+	return;
+}
+#else
 void run_simulation(void *dev_source, int64_t n_particles, void *dev_simulation)
 {
 	// simulating particles
@@ -965,8 +1302,35 @@ void run_simulation_bowtie(void *dev_source, int64_t n_particles, void *dev_simu
 	}
 	return;
 }
+#endif
 
+#ifdef USINGCUDA
+__host__ void cleanup_simulation(void *dev_simulation, int *shape, FLOAT *energy_imparted)
+{
+	//struct Simulation *dev_sim = ((struct Simulation*)dev_simulation);
+	//copy energy_imparted from device memory to host
+	cudaError_t err;
+	err = cudaMemcpy(energy_imparted, ((Simulation*)dev_simulation)->energy_imparted, shape[0] * shape[1] * shape[2] * sizeof(FLOAT), cudaMemcpyDeviceToHost);
+	if (err != cudaSuccess)
+	{
+		printf("CUDA error: %s\n", cudaGetErrorString(err));
+		exit(-1);
+	}
+	// free device memory
+	cudaFree(((Simulation*)dev_simulation)->shape);
+	cudaFree(((Simulation*)dev_simulation)->spacing);
+	cudaFree(((Simulation*)dev_simulation)->offset);
+	cudaFree(((Simulation*)dev_simulation)->material_map);
+	cudaFree(((Simulation*)dev_simulation)->density_map);
+	cudaFree(((Simulation*)dev_simulation)->lut_shape);
+	cudaFree(((Simulation*)dev_simulation)->attenuation_lut);
+	cudaFree(((Simulation*)dev_simulation)->energy_imparted);
+	cudaFree(((Simulation*)dev_simulation)->max_density);
+	free(dev_simulation);
 
+	return;
+}
+#else
 void cleanup_simulation(void *dev_simulation)
 {
 	// free memory
@@ -975,8 +1339,27 @@ void cleanup_simulation(void *dev_simulation)
 	free(dev_simulation);
 	return;
 }
+#endif
 
+#ifdef USINGCUDA
+__host__ void cleanup_source(void *dev_source)
+{
+	// free device memory
+	cudaFree(((Source*)dev_source)->source_position);
+	cudaFree(((Source*)dev_source)->source_direction);
+	cudaFree(((Source*)dev_source)->scan_axis);
+	cudaFree(((Source*)dev_source)->sdd);
+	cudaFree(((Source*)dev_source)->fov);
+	cudaFree(((Source*)dev_source)->collimation);
+	cudaFree(((Source*)dev_source)->weight);
+	cudaFree(((Source*)dev_source)->specter_elements);
+	cudaFree(((Source*)dev_source)->specter_cpd);
+	cudaFree(((Source*)dev_source)->specter_energy);
 
+	free(dev_source);
+	return;
+}
+#else
 void cleanup_source(void *dev_source)
 {
 	/*
@@ -994,8 +1377,8 @@ void cleanup_source(void *dev_source)
 	free(dev_source);
 	return;
 }
-
-
+#endif
+//}
 
 
 
