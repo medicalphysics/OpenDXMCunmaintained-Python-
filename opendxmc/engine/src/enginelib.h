@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <omp.h>
 //#define USING_FLOAT
-//#define USINGCUDA
 
 #ifndef USING_FLOAT
 #define FLOAT double
@@ -42,14 +42,6 @@
 #define CEIL ceilf
 #endif
 
-//#define USINGCUDA
-#ifndef USINGCUDA
-//#include <omp.h>
-#include <stdbool.h>
-#else
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#endif
 
 #ifdef _MSC_VER
 #define INLINE __forceinline
@@ -63,23 +55,13 @@
 #define EXTERN __declspec(dllexport)
 #endif
 
-
-// CUDA Constants
-#ifdef USINGCUDA
-__device__ __constant__ FLOAT ERRF = 1e-9; // Precision error
-__device__ __constant__ FLOAT ELECTRON_MASS = 510998.9;  //  eV/(c*c)
-__device__ __constant__ FLOAT PI = 3.14159265359;
-__device__ __constant__ FLOAT ENERGY_CUTOFF = 1000; // eV
-__device__ __constant__ FLOAT WEIGHT_CUTOFF = 0.01;
-__device__ __constant__ FLOAT RUSSIAN_RULETTE_CHANCE = .2;  // CHANCE probability of photon survival
-#else
+// Some constants
 const FLOAT ERRF = 1e-6; // Precision error
 const FLOAT ELECTRON_MASS = 510998.9;  //  eV/(c*c)
 const FLOAT PI = 3.14159265359;
 const FLOAT ENERGY_CUTOFF = 1000; // eV
 const FLOAT WEIGHT_CUTOFF = 0.01;
 const FLOAT RUSSIAN_RULETTE_CHANCE = .2; //CHANCE probability of photon survival
-#endif
 
 
 
@@ -133,10 +115,6 @@ extern "C" {
 	}SourceBowtie;
 
 	typedef bool(*trackingFuncPtr)(size_t *, FLOAT *, int *, FLOAT *, FLOAT *, int *, FLOAT *, int *, FLOAT *, FLOAT *, uint64_t *);
-
-	EXTERN int number_of_cuda_devices();
-
-	EXTERN void cuda_device_name(int device_number, char* name);
 
 	EXTERN void* setup_simulation(int *shape, FLOAT *spacing, FLOAT *offset, int *material_map, FLOAT *density_map, int *lut_shape, FLOAT *lut, FLOAT *energy_imparted, int *use_siddon);
 

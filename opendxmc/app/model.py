@@ -201,8 +201,13 @@ class DatabaseInterface(QtCore.QObject):
         path = QtCore.QFileInfo(folder.absolutePath() + folder.separator() + fname)
 
         logger.debug('Attemting to use database in {0}'.format(path.absoluteFilePath()))
-
-        self.__db = Database(path.absoluteFilePath())
+        for_revert = self.__db
+        try:
+            self.__db = Database(path.absoluteFilePath())
+        except OSError:    
+            self.database_busy.emit(False)
+            self.__db = for_revert            
+            logger.debug('Failed to use database in {0}'.format(path.absoluteFilePath()))
         self.database_busy.emit(False)
         self.emit_material_list()
         self.emit_simulation_list()
