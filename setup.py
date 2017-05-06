@@ -25,7 +25,7 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-    version='0.3.0',
+    version='0.3.1',
 
     description='Monte Carlo dose simulation for diagnostic x-rays',
     long_description=long_description,
