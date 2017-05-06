@@ -642,8 +642,6 @@ void transport_particles(FLOAT *source_position, FLOAT *source_direction, FLOAT 
 
 	while ((*tracking_func)(&volume_index, particle, shape, spacing, offset, material_map, density_map, att_shape, attenuation_lut, max_density, &states[id * 2]))
 	{
-		
-		
 		rayleight = lut_interpolator(material_map[volume_index], 2, particle[6], att_shape, attenuation_lut, &lut_index);
 		photoelectric = interp(particle[6], attenuation_lut[lut_index], attenuation_lut[lut_index + 1], attenuation_lut[lut_index + att_shape[2] * 3], attenuation_lut[lut_index + att_shape[2] * 3 + 1]);
 
