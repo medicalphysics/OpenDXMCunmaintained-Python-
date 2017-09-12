@@ -73,7 +73,7 @@ PROPETIES_DICT_TEMPLATE = {
     'use_siddon': [False, np.dtype(np.bool), True, True, 'Use Siddon tracking, default is Woodcock tracking', 0, 3],
     'anode_angle': [12., np.dtype(np.double), True, True, 'Angle of anode in x-ray tube [deg]', 0, 3],
     'tube_start_angle_A': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],
-    'tube_start_angle_B': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],                           
+    'tube_start_angle_B': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube B) [deg]', 0, 3],                           
     'bowtie_radius': [15, np.dtype(np.double), True, True, 'Bowtie filter radius', 0, 3],
     'bowtie_distance': [10, np.dtype(np.double), True, True, 'Bowtie filter distance factor', 2, 3],
     }
