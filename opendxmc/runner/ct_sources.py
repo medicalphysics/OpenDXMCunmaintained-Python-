@@ -18,11 +18,11 @@ def half_shuffle(arr):
     Shuffles an array in a predictable manner
     """
     assert len(arr.shape) == 1
-    n = arr.shape[0]
-    shuf = np.zeros_like(arr)
-    d = n / 2
-    shuf[::2] = arr[d:]
-    shuf[1::2] = arr[:d][::-1]
+    
+    h = arr.shape[0] // 2
+    shuf = np.empty_like(arr)
+    shuf[::2] = arr[h:]
+    shuf[1::2] = arr[:h][::-1]
     return shuf
 
 
