@@ -73,7 +73,7 @@ PROPETIES_DICT_TEMPLATE = {
     'use_siddon': [False, np.dtype(np.bool), True, True, 'Use Siddon tracking, default is Woodcock tracking', 0, 3],
     'anode_angle': [12., np.dtype(np.double), True, True, 'Angle of anode in x-ray tube [deg]', 0, 3],
     'tube_start_angle_A': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],
-    'tube_start_angle_B': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],                           
+    'tube_start_angle_B': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube B) [deg]', 0, 3],                           
     'bowtie_radius': [15, np.dtype(np.double), True, True, 'Bowtie filter radius', 0, 3],
     'bowtie_distance': [10, np.dtype(np.double), True, True, 'Bowtie filter distance factor', 2, 3],
     }
@@ -1094,9 +1094,12 @@ class Validator(object):
         return self._props['start']
     @start.setter
     def start(self, value):
-        self._props['start'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['start'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['start'] = vval
+        
 
 
     @property
@@ -1104,9 +1107,14 @@ class Validator(object):
         return self._props['stop']
     @stop.setter
     def stop(self, value):
-        self._props['stop'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['stop'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['stop'] = vval
+        
+    
+        
 
     @property
     def step(self):

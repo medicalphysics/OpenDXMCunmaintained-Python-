@@ -121,6 +121,7 @@ def aec_from_dicom_list(dc_list, iop, spacing):
     for i, dc in enumerate(dc_list):
         exp[i, 1] = float(dc[0x18, 0x1152].value)
         exp[i, 0] = image_to_world_transform(np.array([0, 0, i]), pos, iop, spacing)[2]
+    exp[:,0] /= 10.0 # for cm units
     return exp
 
 

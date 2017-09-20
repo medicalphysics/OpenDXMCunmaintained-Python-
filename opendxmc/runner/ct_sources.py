@@ -18,11 +18,11 @@ def half_shuffle(arr):
     Shuffles an array in a predictable manner
     """
     assert len(arr.shape) == 1
-    n = arr.shape[0]
-    shuf = np.zeros_like(arr)
-    d = n / 2
-    shuf[::2] = arr[d:]
-    shuf[1::2] = arr[:d][::-1]
+    
+    h = arr.shape[0] // 2
+    shuf = np.empty_like(arr)
+    shuf[::2] = arr[h:]
+    shuf[1::2] = arr[:h][::-1]
     return shuf
 
 
@@ -43,8 +43,8 @@ def ct_source_space(simulation, exposure_modulation=None):
         wS = wA + wB
         
         return itertools.chain(
-            ct_source_space_single(simulation, exposure_modulation, tube='A', weight=wA/wS),
-            ct_source_space_single(simulation, exposure_modulation, tube='B', weight=wB/wS),
+            ct_source_space_single(simulation, exposure_modulation, tube='A', weight=2*wA/wS),
+            ct_source_space_single(simulation, exposure_modulation, tube='B', weight=2*wB/wS),
         )
     else :
         return ct_source_space_single(simulation, exposure_modulation, tube='A')
@@ -66,7 +66,7 @@ def ct_source_space_single(simulation, exposure_modulation=None, tube='A', weigh
     kwargs['rotation_center'] = simulation.get('data_center')
     kwargs['rotation_plane_cosines'] = simulation.get('image_orientation')
     kwargs['tube_start_angle'] = simulation.get('tube_start_angle_'+tube)
-
+    kwargs['weight'] = weight
 
     if simulation.get('is_spiral'):
         kwargs['pitch'] = simulation.get('pitch')
@@ -162,10 +162,10 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     t = np.linspace(start-d_col, stop + d_col, e)
 #    # we shuffle the positions to take generate conservative ETA estimates
     t = half_shuffle(t)
-#    print('whole t', t)
-    # angle for each z position , i.e the x, y coordinates
-    ang = t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle)
 
+    # angle for each z position , i.e the x, y coordinates
+    ang = np.mod(t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle), 2*np.pi)
+    logger.info('Tube start angle: {}, first angle {}, second angle {}'.format(tube_start_angle, np.rad2deg(ang[0]), np.rad2deg(ang[1])))
     # rotation matrix along z-axis for an angle x
 
     if energy_specter is None:
@@ -185,7 +185,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 #        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
 #                                            copy=False, bounds_error=False,
 #                                            fill_value=1.0)
-
+    
     if exposure_modulation is None:
         mod_z = lambda x: weight
     else:
@@ -236,6 +236,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 #               np.array([total_collimation], dtype='float64'),
 #               np.array([mod_z(t[i])], dtype='float64'),
 #               specter_cpd.astype('float64'), specter_energy.astype('float64'))
+#        print('Weight: {}'.format(ret[5]), exposure_modulation[0, 0], t[i] ,exposure_modulation[-1, 0] )
         yield ret, i, e
 
 
