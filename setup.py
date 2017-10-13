@@ -26,7 +26,6 @@ setup(
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
 
-#    version='0.3.4',
     version = opendxmc.VERSION,
 
     description='Monte Carlo dose simulation for diagnostic x-rays',
