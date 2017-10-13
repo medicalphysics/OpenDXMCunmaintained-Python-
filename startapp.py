@@ -5,6 +5,7 @@ Created on Tue Sep  8 10:04:26 2015
 """
 
 from opendxmc.app import start
+import opendxmc
 import logging
 logger = logging.getLogger('OpenDXMC')
 logger.addHandler(logging.StreamHandler())
@@ -14,7 +15,8 @@ LOG_FORMAT = ("[%(asctime)s %(name)s %(levelname)s]  -  %(message)s  -  in metho
 
 
 def main():
-    start()
+    logger.info('Starting OpenDXMC version {}'.format(opendxmc.VERSION))
+    start(version=opendxmc.VERSION)
 
 if __name__ == '__main__':
     main()

@@ -40,8 +40,8 @@ PROPETIES_DICT_TEMPLATE = {
     'kV_A': [120., np.dtype(np.double), True, True, 'Simulation tube potential (Tube A) [kV]', 0, 3],
     'kV_B': [120., np.dtype(np.double), True, True, 'Simulation tube potential (Tube B) [kV]', 0, 3],
     'tube_weight_A': [1., np.dtype(np.double), True, True, 'Tube weight factor (Tube A)', 0, 3],
-    'tube_weight_B': [0., np.dtype(np.double), True, True, 'Tube weight factor (Tube B)', 0, 3],
-    'use_tube_B': [False, np.dtype(np.bool), True, True, 'Use second x-ray tube', 0, 3],
+    'tube_weight_B': [1., np.dtype(np.double), True, True, 'Tube weight factor (Tube B)', 0, 3],
+    'use_tube_B': [False, np.dtype(np.bool), True, True, 'Use second x-ray tube (Tube B)', 0, 3],
     'aquired_kV': [0., np.dtype(np.double), False, False, 'Images aquired with tube potential [kV]', 0, 2],
     'region': ['abdomen', np.dtype('a64'), False, False, 'Examination region', 0, 5],
     # per 1000000 histories
@@ -73,9 +73,10 @@ PROPETIES_DICT_TEMPLATE = {
     'use_siddon': [False, np.dtype(np.bool), True, True, 'Use Siddon tracking, default is Woodcock tracking', 0, 3],
     'anode_angle': [12., np.dtype(np.double), True, True, 'Angle of anode in x-ray tube [deg]', 0, 3],
     'tube_start_angle_A': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],
-    'tube_start_angle_B': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],                           
+    'tube_start_angle_B': [90, np.dtype(np.double), True, True, 'Tube start angle (Tube B) [deg]', 0, 3],                           
     'bowtie_radius': [15, np.dtype(np.double), True, True, 'Bowtie filter radius', 0, 3],
     'bowtie_distance': [10, np.dtype(np.double), True, True, 'Bowtie filter distance factor', 2, 3],
+    'use_AEC': [True, np.dtype(np.bool), True, True, 'Use AEC for CT series (only if exposure data is present in DiCOM images)', 0, 3],
     }
 
 ARRAY_TEMPLATES = {
@@ -1094,9 +1095,12 @@ class Validator(object):
         return self._props['start']
     @start.setter
     def start(self, value):
-        self._props['start'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['start'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['start'] = vval
+        
 
 
     @property
@@ -1104,9 +1108,14 @@ class Validator(object):
         return self._props['stop']
     @stop.setter
     def stop(self, value):
-        self._props['stop'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['stop'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['stop'] = vval
+        
+    
+        
 
     @property
     def step(self):
@@ -1292,6 +1301,14 @@ class Validator(object):
     def use_siddon(self, value):
         self._props['use_siddon'] = self.bool_validator(value)
 
+    @property
+    def use_AEC(self):
+        return self._props['use_AEC']
+    @use_AEC.setter
+    def use_AEC(self, value):
+        self._props['use_AEC'] = self.bool_validator(value)
+
+        
     @property
     def anode_angle(self):
         return self._props['anode_angle']

@@ -6,7 +6,8 @@ Created on Mon Mar 28 22:27:17 2016
 """
 from PyQt4 import QtGui, QtCore
 import sys
-def main(args):
+
+def main(args, version=None):
 
     app = QtGui.QApplication(args)
     splash_pix = QtGui.QPixmap('splash_loading.png')
@@ -15,8 +16,7 @@ def main(args):
     splash.show()
     app.processEvents()
     app.setOrganizationName("SSHF")
-    
-    app.setApplicationName("OpenDXMC")
+    app.setApplicationName("OpenDXMC {}".format(version))
     import time
     time.sleep(5)
     from opendxmc.app.gui import MainWindow
@@ -28,11 +28,11 @@ def main(args):
 
 
 
-def start():
+def start(version=None):
     # exit code 1 triggers a restart
     # Also testing for memory error
     try:
-        while main(sys.argv) == 1:
+        while main(sys.argv, version=version) == 1:
             continue
     except MemoryError:
         msg = QtGui.QMessageBox()

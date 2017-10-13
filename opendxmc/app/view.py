@@ -1564,6 +1564,7 @@ class DoseScene(Scene):
             if self.front_array is not None:
                 index_front = (index % self.shape[self.view_orientation]) // self.scaling[self.view_orientation]
                 index_front %= self.front_array.shape[self.view_orientation]
+                index_front = int(index_front)
                 if self.view_orientation == 0:
                     im = np.squeeze(self.front_array[index_front, :, :])[:, :]
                 elif self.view_orientation == 1:

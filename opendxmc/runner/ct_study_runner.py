@@ -120,7 +120,8 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
 #                                 output_shape=np.floor(np.array(organ.shape)/scale),
 #                                 cval=0, output=np.uint8, prefilter=True,
 #                                 order=0).astype(np.uint8)
-        organ = organ[::scale[0], ::scale[1], ::scale[2]]
+        scale_int = list([int(s) for s in scale])
+        organ = organ[::scale_int[0], ::scale_int[1], ::scale_int[2]]
         material_array = np.asarray(organ, dtype=np.uint8)
         density_array = np.zeros(organ.shape, dtype='float64')
 
@@ -373,7 +374,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
             eta = log_elapsed_time(time_start, e+1, n, start_exposure)
             if callback is not None:
                 callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=0)), spacing[1] ,spacing[2] ,eta, True])
-                simulation['start_at_exposure_no'] = e + 1
+#                simulation['start_at_exposure_no'] = e + 1
             exposure_time = time.clock()
 
 
