@@ -169,7 +169,6 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 
     # angle for each z position , i.e the x, y coordinates
     ang = np.mod(t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle), 2*np.pi)
-    logger.info('Tube start angle: {}, first angle {}, second angle {}'.format(tube_start_angle, np.rad2deg(ang[0]), np.rad2deg(ang[1])))
     # rotation matrix along z-axis for an angle x
 
     if energy_specter is None:

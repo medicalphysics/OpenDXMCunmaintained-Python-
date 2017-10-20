@@ -31,7 +31,7 @@ def get_stored_materials(material_data_path=None):
     density_file = os.path.join(material_data_path, "densities.txt")
     organic_file = os.path.join(material_data_path, "organics.txt")
 
-    for p in find_all_files([os.path.join(material_data_path, 'attinuation')]):
+    for p in find_all_files([os.path.join(material_data_path, 'attenuation')]):
         name = str(os.path.splitext(os.path.basename(p))[0])
         # test for valid material name
         if re.match('^[\w-]+$', name) is None:
