@@ -219,7 +219,7 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
             patient.data_center = np.array(dc[0x18, 0x9313].value) / 10. - patient.image_position
         except KeyError:
             patient.data_center = image_to_world_transform(np.array(patient.shape) / 2.,
-                                                           patient.image_position,
+                                                           np.zeroes(3),
                                                            patient.image_orientation,
                                                            patient.spacing)
 
