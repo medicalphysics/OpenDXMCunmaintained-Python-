@@ -7,7 +7,7 @@ Created on Fri Aug 28 14:30:02 2015
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform, spline_filter
 from scipy.ndimage.filters import gaussian_filter
-
+import itertools
 from opendxmc.engine import Engine
 
 from opendxmc.tube.tungsten import specter as tungsten_specter
@@ -120,7 +120,8 @@ def prepare_geometry_from_organ_array(organ, organ_material_map, scale, material
 #                                 output_shape=np.floor(np.array(organ.shape)/scale),
 #                                 cval=0, output=np.uint8, prefilter=True,
 #                                 order=0).astype(np.uint8)
-        organ = organ[::scale[0], ::scale[1], ::scale[2]]
+        scale_int = list([int(s) for s in scale])
+        organ = organ[::scale_int[0], ::scale_int[1], ::scale_int[2]]
         material_array = np.asarray(organ, dtype=np.uint8)
         density_array = np.zeros(organ.shape, dtype='float64')
 
@@ -373,7 +374,7 @@ def ct_runner(materials, simulation, ctarray=None, organ=None,
             eta = log_elapsed_time(time_start, e+1, n, start_exposure)
             if callback is not None:
                 callback(simulation['name'], progressbar_data=[np.squeeze(energy_imparted.max(axis=0)), spacing[1] ,spacing[2] ,eta, True])
-                simulation['start_at_exposure_no'] = e + 1
+#                simulation['start_at_exposure_no'] = e + 1
             exposure_time = time.clock()
 
 
@@ -442,9 +443,7 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     lut_shape = np.array(lut.shape, dtype='int32')
     dose = np.zeros_like(density_array, dtype='float64')
 
-    en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
-                                  filtration_materials='Al',
-                                  filtration_mm=simulation['al_filtration'])
+    
     total_collimation = simulation['detector_rows'] * simulation['detector_width']
 
 
@@ -455,18 +454,61 @@ def obtain_ctdiair_conversion_factor(simulation, air_material, callback=None):
     center = np.floor(N / 2).astype(np.int)
     center_dose = 0
     t1 = time.clock()
-    while center_dose < en_specter[0].max()*1000:
+    while center_dose < 150000:
         if teller > 0:
             logger.debug('Not sufficient data, running again. Dose in center is now {0}, max dose: {1}.'.format(center_dose, dose.max()))
         teller += 1
-        phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
-                             total_collimation, start=0, stop=0, step=1,
-                             exposures=simulation['exposures'],
-                             histories=simulation['histories'],
-                             energy_specter=en_specter,
-                             bowtie_radius=simulation['bowtie_radius'],
-                             bowtie_distance=simulation['bowtie_distance']
-                             )
+        
+        if simulation['use_tube_B']:
+            wA = simulation.get('tube_weight_A')
+            wB = simulation.get('tube_weight_A')
+            wS = wA + wB
+            en_specter_A = tungsten_specter(simulation['kV_A'], 
+                              angle_deg=simulation['anode_angle'],
+                              filtration_materials='Al',
+                              filtration_mm=simulation['al_filtration'])
+        
+            phase_space_A = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                                 total_collimation, start=0, stop=0, step=1,
+                                 exposures=simulation['exposures'],
+                                 histories=simulation['histories'],
+                                 energy_specter=en_specter_A,
+                                 bowtie_radius=simulation['bowtie_radius'],
+                                 bowtie_distance=simulation['bowtie_distance'],
+                                 weight=wA/wS                
+                                 )
+            en_specter_B = tungsten_specter(simulation['kV_B'], 
+                              angle_deg=simulation['anode_angle'],
+                              filtration_materials='Al',
+                              filtration_mm=simulation['al_filtration'])
+        
+            phase_space_B = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                                 total_collimation, start=0, stop=0, step=1,
+                                 exposures=simulation['exposures'],
+                                 histories=simulation['histories'],
+                                 energy_specter=en_specter_B,
+                                 bowtie_radius=simulation['bowtie_radius'],
+                                 bowtie_distance=simulation['bowtie_distance'],
+                                 weight=wB/wS                
+                                 )
+            phase_space = itertools.chain(phase_space_A, phase_space_B)
+            
+        else:
+    
+            en_specter = tungsten_specter(simulation['kV_A'], 
+                                          angle_deg=simulation['anode_angle'],
+                                          filtration_materials='Al',
+                                          filtration_mm=simulation['al_filtration'])
+            
+            phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                                 total_collimation, start=0, stop=0, step=1,
+                                 exposures=simulation['exposures'],
+                                 histories=simulation['histories']/2,
+                                 energy_specter=en_specter,
+                                 bowtie_radius=simulation['bowtie_radius'],
+                                 bowtie_distance=simulation['bowtie_distance']
+                                 )
+
 
         for batch, e, n in phase_space:
             source = engine.setup_source_bowtie(*batch)
@@ -547,18 +589,64 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
 
     dose = np.zeros_like(density_array, dtype='float64')
 
-    en_specter = tungsten_specter(simulation['kV'], angle_deg=10.,
-                                  filtration_materials='Al',
-                                  filtration_mm=simulation['al_filtration'])
     total_collimation = simulation['detector_rows'] * simulation['detector_width']
-    phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
-                         total_collimation, start=0, stop=0, step=1,
-                         exposures=simulation['exposures'],
-                         histories=simulation['histories'],
-                         energy_specter=en_specter,
-                         bowtie_radius=simulation['bowtie_radius'],
-                         bowtie_distance=simulation['bowtie_distance']
-                         )
+
+
+    
+    
+    if simulation['use_tube_B']:
+        wA = simulation.get('tube_weight_A')
+        wB = simulation.get('tube_weight_A')
+        wS = wA + wB
+        en_specter_A = tungsten_specter(simulation['kV_A'], 
+                          angle_deg=simulation['anode_angle'],
+                          filtration_materials='Al',
+                          filtration_mm=simulation['al_filtration'])
+    
+        phase_space_A = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                             total_collimation, start=0, stop=0, step=1,
+                             exposures=simulation['exposures'],
+                             histories=simulation['histories'],
+                             energy_specter=en_specter_A,
+                             bowtie_radius=simulation['bowtie_radius'],
+                             bowtie_distance=simulation['bowtie_distance'],
+                             weight=wA/wS                
+                             )
+        en_specter_B = tungsten_specter(simulation['kV_B'], 
+                          angle_deg=simulation['anode_angle'],
+                          filtration_materials='Al',
+                          filtration_mm=simulation['al_filtration'])
+    
+        phase_space_B = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                             total_collimation, start=0, stop=0, step=1,
+                             exposures=simulation['exposures'],
+                             histories=simulation['histories'],
+                             energy_specter=en_specter_B,
+                             bowtie_radius=simulation['bowtie_radius'],
+                             bowtie_distance=simulation['bowtie_distance'],
+                             weight=wB/wS                
+                             )
+        phase_space = itertools.chain(phase_space_A, phase_space_B)
+        
+    else:
+
+        en_specter = tungsten_specter(simulation['kV_A'], 
+                                      angle_deg=simulation['anode_angle'],
+                                      filtration_materials='Al',
+                                      filtration_mm=simulation['al_filtration'])
+        
+        phase_space = ct_seq(simulation['scan_fov'], simulation['sdd'],
+                             total_collimation, start=0, stop=0, step=1,
+                             exposures=simulation['exposures'],
+                             histories=simulation['histories']/2,
+                             energy_specter=en_specter,
+                             bowtie_radius=simulation['bowtie_radius'],
+                             bowtie_distance=simulation['bowtie_distance']
+                             )
+
+    
+                         
+                         
     use_siddon = np.array([simulation['use_siddon']], dtype=np.int)
     engine = Engine()
     geometry = engine.setup_simulation(N, spacing, offset, material_array,

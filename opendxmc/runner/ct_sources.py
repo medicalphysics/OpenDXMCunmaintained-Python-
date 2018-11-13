@@ -7,6 +7,7 @@ Created on Mon Dec 28 22:26:24 2015
 
 import numpy as np
 import scipy.interpolate
+import itertools
 from opendxmc.tube.tungsten import specter, attinuation
 import logging
 logger = logging.getLogger('OpenDXMC')
@@ -17,11 +18,11 @@ def half_shuffle(arr):
     Shuffles an array in a predictable manner
     """
     assert len(arr.shape) == 1
-    n = arr.shape[0]
-    shuf = np.zeros_like(arr)
-    d = n / 2
-    shuf[::2] = arr[d:]
-    shuf[1::2] = arr[:d][::-1]
+    
+    h = arr.shape[0] // 2
+    shuf = np.empty_like(arr)
+    shuf[::2] = arr[h:]
+    shuf[1::2] = arr[:h][::-1]
     return shuf
 
 
@@ -34,20 +35,42 @@ def bowtie_path_lenght(angles, radius, distance):
     c[angle_max_ind] = radius
     return c / np.cos(angles)
 
+
 def ct_source_space(simulation, exposure_modulation=None):
+    if simulation.get('use_tube_B'):
+        wA = simulation.get('tube_weight_A')
+        wB = simulation.get('tube_weight_A')
+        wS = wA + wB
+        
+        return itertools.chain(
+            ct_source_space_single(simulation, exposure_modulation, tube='A', weight=2*wA/wS),
+            ct_source_space_single(simulation, exposure_modulation, tube='B', weight=2*wB/wS),
+        )
+    else :
+        return ct_source_space_single(simulation, exposure_modulation, tube='A')
+    
+
+def ct_source_space_single(simulation, exposure_modulation=None, tube='A', weight=1.0):
+
+    
     arglist = ['scan_fov', 'sdd']
     kwarglist = ['start', 'stop', 'exposures', 'histories',
-                 'start_at_exposure_no','tube_start_angle',
+                 'start_at_exposure_no',
                  'bowtie_distance', 'bowtie_radius']
 
     args = [simulation.get(a) for a in arglist]
     args.append(simulation.get('detector_rows') * simulation.get('detector_width'))
-    kwargs = {'exposure_modulation': exposure_modulation}
+#    import pdb;pdb.set_trace()
+    if simulation['use_AEC']:
+        kwargs = {'exposure_modulation': exposure_modulation}
+    else:
+        kwargs = dict()
     for a in kwarglist:
         kwargs[a] = simulation.get(a)
     kwargs['rotation_center'] = simulation.get('data_center')
     kwargs['rotation_plane_cosines'] = simulation.get('image_orientation')
-
+    kwargs['tube_start_angle'] = simulation.get('tube_start_angle_'+tube)
+    kwargs['weight'] = weight
 
     if simulation.get('is_spiral'):
         kwargs['pitch'] = simulation.get('pitch')
@@ -56,7 +79,7 @@ def ct_source_space(simulation, exposure_modulation=None):
         kwargs['step'] = simulation.get('step')
         phase_func = ct_seq
 
-    s = specter(simulation.get('kV'), angle_deg=simulation['anode_angle'], filtration_materials='Al',
+    s = specter(simulation.get('kV_'+tube), angle_deg=simulation['anode_angle'], filtration_materials='Al',
                 filtration_mm=simulation.get('al_filtration'))
     kwargs['energy_specter'] = s
 
@@ -82,7 +105,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               rotation_center=None,
               rotation_plane_cosines=None,
               exposure_modulation=None, start_at_exposure_no=0,
-              bowtie_radius=1, bowtie_distance=0):
+              bowtie_radius=1, bowtie_distance=0,
+              weight=1.0):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -116,6 +140,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             (ndarray(position), ndarray(scale_factors))
         start_at_exposure_no: int
             Starting at this exposure number, used for resuming a simulation
+        weight: float
+            weight of phasespace 
     OUTPUT:
         Iterator returning ndarrays of shape (8, batch_size),
         one row is equal to photon (start_x, start_y, star_z, direction_x,
@@ -140,10 +166,9 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     t = np.linspace(start-d_col, stop + d_col, e)
 #    # we shuffle the positions to take generate conservative ETA estimates
     t = half_shuffle(t)
-#    print('whole t', t)
-    # angle for each z position , i.e the x, y coordinates
-    ang = t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle)
 
+    # angle for each z position , i.e the x, y coordinates
+    ang = np.mod(t / (pitch * total_collimation) * np.pi * 2. + np.deg2rad(tube_start_angle), 2*np.pi)
     # rotation matrix along z-axis for an angle x
 
     if energy_specter is None:
@@ -163,19 +188,20 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 #        mod_xy = scipy.interpolate.interp1d(modulation_xy[0], modulation_xy[1],
 #                                            copy=False, bounds_error=False,
 #                                            fill_value=1.0)
-
+    
     if exposure_modulation is None:
-        mod_z = lambda x: 1.0
+        mod_z = lambda x: weight
     else:
         if np.abs(np.mean(exposure_modulation[:, 1])) > 0.000001:
-            exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
-
+            modulator_array = exposure_modulation[:, 1]
+            modulator_array /= np.mean(modulator_array)
+            modulator_array *= weight
             mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
-                                               exposure_modulation[:, 1],
+                                               modulator_array,
                                                copy=True, bounds_error=False,
-                                               fill_value=1.0, kind='nearest')
+                                               fill_value=weight, kind='nearest')
         else:
-            mod_z = lambda x: 1.0
+            mod_z = lambda x: weight
     fov_arr=np.array([scan_fov], dtype='float64')
     collimation_arr=np.array([total_collimation], dtype='float64')
     rot_fan_angle = np.array([np.arctan(fov_arr[0]/sdd) * 2],dtype='float64')
@@ -213,6 +239,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
 #               np.array([total_collimation], dtype='float64'),
 #               np.array([mod_z(t[i])], dtype='float64'),
 #               specter_cpd.astype('float64'), specter_energy.astype('float64'))
+#        print('Weight: {}'.format(ret[5]), exposure_modulation[0, 0], t[i] ,exposure_modulation[-1, 0] )
         yield ret, i, e
 
 
@@ -225,7 +252,8 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
               rotation_center=None,
               rotation_plane_cosines = None,
               bowtie_radius=1, bowtie_distance=0,
-              exposure_modulation=None, start_at_exposure_no=0):
+              exposure_modulation=None, start_at_exposure_no=0,
+              weight=1.0):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -325,17 +353,18 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
 
 
     if exposure_modulation is None:
-        mod_z = lambda x: 1.0
+        mod_z = lambda x: weight
     else:
         if np.abs(np.mean(exposure_modulation[:, 1])) > 0.000001:
-            exposure_modulation[:, 1] /= np.mean(exposure_modulation[:, 1])
-
+            modulator_array = exposure_modulation[:, 1]
+            modulator_array /= np.mean(modulator_array)
+            modulator_array *= weight
             mod_z = scipy.interpolate.interp1d(exposure_modulation[:, 0],
-                                               exposure_modulation[:, 1],
+                                               modulator_array,
                                                copy=True, bounds_error=False,
-                                               fill_value=1.0, kind='nearest')
+                                               fill_value=weight, kind='nearest')
         else:
-            mod_z = lambda x: 1.0
+            mod_z = lambda x: weight
 
     M = world_image_matrix(rotation_plane_cosines)
     rotation_center_image = np.dot(M, rotation_center[[1, 0, 2]])

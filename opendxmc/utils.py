@@ -26,11 +26,11 @@ def rebin(a, factor):
     shape = a.shape
     lenShape = len(shape)
     factor = np.asarray(factor, dtype=np.int)
-    args = np.asarray(shape) / factor
+    args = (np.asarray(shape) / factor).astype(np.int)
     evList = ['a.reshape('] + \
-             ['args[%d],factor[%d],'%(i,i) for i in range(lenShape)] + \
-             [')'] + ['.sum(%d)'%(i+1) for i in range(lenShape)] + \
-             ['//factor[%d]'%i for i in range(lenShape)]
+             ['args[{}],factor[{}],'.format(i,i) for i in range(lenShape)] + \
+             [')'] + ['.sum({})'.format(i+1) for i in range(lenShape)] + \
+             ['//factor[{}]'.format(i) for i in range(lenShape)]
     return eval(''.join(evList))
 
 
@@ -88,13 +88,14 @@ def human_time(sec):
 def circle_mask(array_shape, radius, center=None):
     a = np.zeros(array_shape, np.int)
     if not center:
-        cx = array_shape[0] / 2
-        cy = array_shape[1] / 2
+        cx = array_shape[0] // 2
+        cy = array_shape[1] // 2
     else:
-        cx, cy = center
-    y, x = np.ogrid[-radius: radius, -radius: radius]
+        cx, cy = (int(c) for c in center)
+    rint = int(np.ceil(radius))
+    y, x = np.ogrid[-rint: rint+1, -rint: rint+1]
     index = x**2 + y**2 <= radius**2
-    a[cx-radius:cx+radius+1, cy-radius:cy+radius+1][index] = 1
+    a[cx-rint:cx+rint+1, cy-rint:cy+rint+1][index] = 1
     return a
 
 

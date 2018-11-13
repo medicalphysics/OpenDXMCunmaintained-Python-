@@ -151,3 +151,14 @@ Cu_attinuation = np.array([[1.00E+00, 1.10E+00, 1.10E+00, 1.50E+00, 2.00E+00,
                             1.47E-01, 1.46E-01, 1.44E-01, 1.44E-01, 1.06E-01,
                             9.09E-02, 8.16E-02, 7.48E-02, 6.52E-02, 5.85E-02]
                            ], dtype=np.double)
+if __name__ == '__main__':
+    print(W_attinuation.shape)
+    ind = np.squeeze(W_attinuation[0,:]) <= 151.
+    print(ind)
+    e = W_attinuation[0, ind]
+    a = W_attinuation[1, ind]
+    print(a)
+    
+
+
+

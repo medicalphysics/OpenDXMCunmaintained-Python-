@@ -176,7 +176,7 @@ def __Nobserved_char(hv, T0):
     u = np.linspace(.1, 1, 200).astype(np.double)
     px = np.linspace(0, 16, 100).astype(np.double)
     du = u[1] - u[0]
-    dpx = dpx = (px[1] - px[0]) / 1000  # converting from mg/cm to g/cm
+    dpx = (px[1] - px[0]) / 1000  # converting from mg/cm to g/cm
     a = np.repeat(__cross_section_SRMEBH(hv, u, T0).reshape((-1, 1)),
                   px.shape[0], axis=-1)
     corr_a = np.nan_to_num(a * __f(u, T0, px)).sum(axis=0)

@@ -9,6 +9,7 @@ import os
 from PyQt4 import QtGui, QtCore
 from opendxmc.app.view import ViewController, RunnerView
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget, OrganDoseModel, OrganDoseView
+import opendxmc
 import logging
 
 logger = logging.getLogger('OpenDXMC')
@@ -180,7 +181,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'icon.png')))
         self.setWindowIconText('OpenDXMC')
-        self.setWindowTitle('OpenDXMC')        
+        self.setWindowTitle('OpenDXMC {}'.format(opendxmc.VERSION))        
         
         database_busywidget = BusyWidget(tooltip='Writing or Reading to Database')
         simulation_busywidget = BusyWidget(tooltip='Monte Carlo simulation in progress')

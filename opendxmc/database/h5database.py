@@ -37,7 +37,11 @@ PROPETIES_DICT_TEMPLATE = {
     'ctdi_vol100': [0., np.dtype(np.double), True, True, 'CTDIvol [mGy/100mAs/pitch]', 2, 4],
     'ctdi_w100': [0., np.dtype(np.double), True, True, 'CTDIw [mGy/100mAs]', 2, 4],
     'ctdi_phantom_diameter': [32., np.dtype(np.double), True, True, 'CTDI phantom diameter [cm]', 2, 4],
-    'kV': [120., np.dtype(np.double), True, True, 'Simulation tube potential [kV]', 0, 3],
+    'kV_A': [120., np.dtype(np.double), True, True, 'Simulation tube potential (Tube A) [kV]', 0, 3],
+    'kV_B': [120., np.dtype(np.double), True, True, 'Simulation tube potential (Tube B) [kV]', 0, 3],
+    'tube_weight_A': [1., np.dtype(np.double), True, True, 'Tube weight factor (Tube A)', 0, 3],
+    'tube_weight_B': [1., np.dtype(np.double), True, True, 'Tube weight factor (Tube B)', 0, 3],
+    'use_tube_B': [False, np.dtype(np.bool), True, True, 'Use second x-ray tube (Tube B)', 0, 3],
     'aquired_kV': [0., np.dtype(np.double), False, False, 'Images aquired with tube potential [kV]', 0, 2],
     'region': ['abdomen', np.dtype('a64'), False, False, 'Examination region', 0, 5],
     # per 1000000 histories
@@ -68,9 +72,11 @@ PROPETIES_DICT_TEMPLATE = {
     'is_phantom': [False, np.dtype(np.bool), False, False, 'Matematical phantom', 0, 5],
     'use_siddon': [False, np.dtype(np.bool), True, True, 'Use Siddon tracking, default is Woodcock tracking', 0, 3],
     'anode_angle': [12., np.dtype(np.double), True, True, 'Angle of anode in x-ray tube [deg]', 0, 3],
-    'tube_start_angle': [0, np.dtype(np.double), True, True, 'Tube start angle [deg]', 0, 3],
+    'tube_start_angle_A': [0, np.dtype(np.double), True, True, 'Tube start angle (Tube A) [deg]', 0, 3],
+    'tube_start_angle_B': [90, np.dtype(np.double), True, True, 'Tube start angle (Tube B) [deg]', 0, 3],                           
     'bowtie_radius': [15, np.dtype(np.double), True, True, 'Bowtie filter radius', 0, 3],
     'bowtie_distance': [10, np.dtype(np.double), True, True, 'Bowtie filter distance factor', 2, 3],
+    'use_AEC': [True, np.dtype(np.bool), True, True, 'Use AEC for CT series (only if exposure data is present in DiCOM images)', 0, 3],
     }
 
 ARRAY_TEMPLATES = {
@@ -108,7 +114,7 @@ class Database(object):
     def __init__(self, database_path):
         self.db_path = os.path.abspath(database_path)
         self.db_instance = None
-        self.filters = tb.Filters(complevel=1, complib='blosc', fletcher32=False, shuffle=False)
+        self.filters = tb.Filters(complevel=1, complib='zlib', fletcher32=False, shuffle=False)
         self.init_new_database()
 
     def init_new_database(self):
@@ -977,11 +983,39 @@ class Validator(object):
         self._props['aquired_kV'] = self.float_validator(value, True)
 
     @property
-    def kV(self):
-        return self._props['kV']
-    @kV.setter
-    def kV(self, value):
-        self._props['kV'] = self.float_validator(value, True, 40)
+    def kV_A(self):
+        return self._props['kV_A']
+    @kV_A.setter
+    def kV_A(self, value):
+        self._props['kV_A'] = self.float_validator(value, True, 40)
+    @property
+    def kV_B(self):
+        return self._props['kV_B']
+    @kV_B.setter
+    def kV_B(self, value):
+        self._props['kV_B'] = self.float_validator(value, True, 40)
+
+    @property
+    def use_tube_B(self):
+        return self._props['use_tube_B']
+    @use_tube_B.setter
+    def use_tube_B(self, value):
+        self._props['use_tube_B'] = self.bool_validator(value)
+
+    @property
+    def tube_weight_A(self):
+        return self._props['tube_weight_A']
+    @tube_weight_A.setter
+    def tube_weight_A(self, value):
+        self._props['tube_weight_A'] = self.float_validator(value, True, 0.0)
+    @property
+    def tube_weight_B(self):
+        return self._props['tube_weight_B']
+    @tube_weight_B.setter
+    def tube_weight_B(self, value):
+        self._props['tube_weight_B'] = self.float_validator(value, True, 0.0)
+
+
 
     @property
     def region(self):
@@ -1061,9 +1095,12 @@ class Validator(object):
         return self._props['start']
     @start.setter
     def start(self, value):
-        self._props['start'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['start'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['start'] = vval
+        
 
 
     @property
@@ -1071,9 +1108,14 @@ class Validator(object):
         return self._props['stop']
     @stop.setter
     def stop(self, value):
-        self._props['stop'] = self.float_validator(value)
-        rng = [self.start_scan, self.stop_scan]
-        assert min(rng) <= self._props['stop'] <= max(rng)
+        vval = self.float_validator(value)
+        vval = min([self.stop_scan, vval])
+        vval = max([self.start_scan, vval])
+        
+        self._props['stop'] = vval
+        
+    
+        
 
     @property
     def step(self):
@@ -1260,6 +1302,14 @@ class Validator(object):
         self._props['use_siddon'] = self.bool_validator(value)
 
     @property
+    def use_AEC(self):
+        return self._props['use_AEC']
+    @use_AEC.setter
+    def use_AEC(self, value):
+        self._props['use_AEC'] = self.bool_validator(value)
+
+        
+    @property
     def anode_angle(self):
         return self._props['anode_angle']
     @anode_angle.setter
@@ -1268,16 +1318,28 @@ class Validator(object):
         assert self._props['anode_angle'] > 0.
 
     @property
-    def tube_start_angle(self):
-        return self._props['tube_start_angle']
-    @tube_start_angle.setter
-    def tube_start_angle(self, value):
+    def tube_start_angle_A(self):
+        return self._props['tube_start_angle_A']
+    @tube_start_angle_A.setter
+    def tube_start_angle_A(self, value):
         ang = self.float_validator(value)
         ang = ang % 360
         ang = (ang + 360) % 360
         if ang > 180:
             ang -= 360
-        self._props['tube_start_angle'] = self.float_validator(ang)
+        self._props['tube_start_angle_A'] = self.float_validator(ang)
+
+    @property
+    def tube_start_angle_B(self):
+        return self._props['tube_start_angle_B']
+    @tube_start_angle_B.setter
+    def tube_start_angle_B(self, value):
+        ang = self.float_validator(value)
+        ang = ang % 360
+        ang = (ang + 360) % 360
+        if ang > 180:
+            ang -= 360
+        self._props['tube_start_angle_B'] = self.float_validator(ang)
 
     @property
     def bowtie_radius(self):

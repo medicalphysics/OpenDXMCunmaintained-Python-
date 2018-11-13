@@ -1106,7 +1106,7 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
         if array_name == 'organ':
             self.organ_array = affine_transform(array,
                                  self.scale,
-                                 output_shape=np.floor(np.array(array.shape)/self.scale),
+                                 output_shape=np.floor(np.array(array.shape)/self.scale).astype(np.int),
                                  cval=0, output=np.uint8, prefilter=True,
                                  order=0).astype(np.uint8)
         elif array_name == 'organ_map':
