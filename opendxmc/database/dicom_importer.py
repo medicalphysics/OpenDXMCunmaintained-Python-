@@ -6,7 +6,7 @@ Created on Fri Aug  7 10:07:58 2015
 """
 
 import numpy as np
-import dicom
+import pydicom as dicom
 import os
 import itertools
 import logging
@@ -161,7 +161,8 @@ def import_ct_series(paths, import_scaling=(2, 2, 2)):
             except KeyError:
                 logger.debug('Not imported: {} -No SOP UID for file.'.format(p))
                 continue
-            if sop_class_uid == "CT Image Storage":
+            
+            if sop_class_uid == "1.2.840.10008.5.1.4.1.1.2":
                 axial_image = str(dc[0x8, 0x8].value[2]).lower()
                 if axial_image == 'axial':
                     series_uid = str(dc[0x20, 0xe].value)

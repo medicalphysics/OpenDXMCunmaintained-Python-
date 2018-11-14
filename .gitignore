@@ -70,5 +70,6 @@ OpenDXMC/data/phantoms
 OpenDXMC/phantoms/golem/segm_golem
 OpenDXMC/engine/cyrandom.pyd
 OpenDXMC/engine/_siddon_func.pyd
+.spyproject/
 #*.pyd
 OpenDXMC/engine/_interaction_func.pyd

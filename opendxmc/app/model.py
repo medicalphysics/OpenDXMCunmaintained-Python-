@@ -5,7 +5,7 @@ Created on Tue Sep  8 10:10:58 2015
 @author: erlean
 """
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from scipy.ndimage.interpolation import affine_transform
 from opendxmc.database import Database, PROPETIES_DICT_TEMPLATE, Validator, PROPETIES_DICT_TEMPLATE_GROUPING
 from opendxmc.database.import_phantoms import read_phantoms
@@ -67,7 +67,7 @@ class ImportScalingValidator(QtGui.QValidator):
         return state, rstr, pos
 
 
-class ImportScalingEdit(QtGui.QLineEdit):
+class ImportScalingEdit(QtWidgets.QLineEdit):
     request_set_import_scaling = QtCore.pyqtSignal(tuple)
     def __init__(self, importer, parent=None):
         super().__init__(parent)
@@ -163,7 +163,7 @@ class DatabaseInterface(QtCore.QObject):
     send_material_for_viewing = QtCore.pyqtSignal(object)
     send_view_array = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
     send_view_array_bytescaled = QtCore.pyqtSignal(str, np.ndarray, str)  # simulation dict, array_slice, array_name, index, orientation
-    send_view_array_slice = QtCore.pyqtSignal(str, np.ndarray, str, int, int)  # simulation dict, array_slice, array_name, index, orientation
+    send_view_array_slice = QtCore.pyqtSignal(str,str,  np.ndarray, int, int)  # simulation dict, array_slice, array_name, index, orientation
     send_view_sim_propeties = QtCore.pyqtSignal(dict)
     send_MC_ready_simulation = QtCore.pyqtSignal(dict, dict, list)
 
@@ -277,7 +277,7 @@ class DatabaseInterface(QtCore.QObject):
         if buffer_has_index:
             logger.debug('Buffer has index {0} in {1}'.format(index, array_name))
             arr = self.array_buffer.get_slice(simulation_name, array_name, index, orientation)
-            self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
+            self.send_view_array_slice.emit(simulation_name, array_name, arr, index, orientation)
 
             if buffer_direction != 0:
                 if buffer_direction > 0:
@@ -298,7 +298,7 @@ class DatabaseInterface(QtCore.QObject):
             except:
                 pass
             else:
-                self.send_view_array_slice.emit(simulation_name, arr, array_name, index, orientation)
+                self.send_view_array_slice.emit(simulation_name, array_name, arr, index, orientation)
 
             indices = np.arange(self.array_buffer_size, dtype=np.int) + index - self.array_buffer_size // 2
 
@@ -431,7 +431,7 @@ class Runner(QtCore.QThread):
 
         self.started.connect(self.timer.start)
         self.timer.setSingleShot(False)
-        self.terminated.connect(self.timer.stop)
+#        self.terminated.connect(self.timer.stop)
         self.finished.connect(self.timer.stop)
 
         self.timer.timeout.connect(self.set_request_save)
@@ -557,11 +557,11 @@ class RunManager(QtCore.QObject):
         self.kill_runner.connect(self.runner.cancel_run)
         interface.send_MC_ready_simulation.connect(self.run_simulation)
         self.runner.finished.connect(interface.request_MC_ready_simulation)
-        self.runner.terminated.connect(interface.request_MC_ready_simulation)
+#        self.runner.terminated.connect(interface.request_MC_ready_simulation)
         self.runner.request_set_simulation_properties.connect(interface.set_simulation_properties)
         self.runner.request_write_simulation_arrays.connect(interface.write_simulation_arrays)
         self.runner.finished.connect(self.run_finished)
-        self.runner.terminated.connect(self.run_finished)
+#        self.runner.terminated.connect(self.run_finished)
         self.runner.started.connect(self.run_started)
         self.runner.request_runner_view_update.connect(progressbar.set_data)
         self.current_simulation = ""
@@ -686,7 +686,7 @@ class ListModel(QtCore.QAbstractListModel):
         mimedata = QtCore.QMimeData()
         names = [self.__data[index.row()] for index in index_list if index.isValid()]
         if len(names) > 0:
-            mimedata.setData('text/plain', ','.join(names))
+            mimedata.setData('text/plain', (','.join(names)).encode('ascii'))
         return mimedata
 
     def mimeTypes(self):
@@ -711,7 +711,7 @@ class ListModel(QtCore.QAbstractListModel):
     def __len__(self):
         return len(self.__data)
 
-class ListView(QtGui.QListView):
+class ListView(QtWidgets.QListView):
     name_activated = QtCore.pyqtSignal(str)
     request_removal = QtCore.pyqtSignal(str)
     def __init__(self, parent=None, simulation=True):
@@ -968,13 +968,13 @@ class PropertiesEditModel(QtGui.QStandardItemModel):
 
 
 
-class PropertiesEditWidget(QtGui.QWidget):
+class PropertiesEditWidget(QtWidgets.QWidget):
     def __init__(self, database_interface, simulation_list_model, run_manager, parent=None):
         super().__init__(parent)
-        layout = QtGui.QVBoxLayout()
-        table = QtGui.QTreeView()
-#        table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-        table.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        layout = QtWidgets.QVBoxLayout()
+        table = QtWidgets.QTreeView()
+#        table.horizontalHeader().setResizeMode(QtWidgets.QHeaderView.Stretch)
+        table.header().setResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         table.setAnimated(True)
         model = PropertiesEditModel(database_interface, simulation_list_model)
         self.model = model
@@ -984,12 +984,12 @@ class PropertiesEditWidget(QtGui.QWidget):
         table.showColumn(0)
         table.showColumn(1)
         layout.addWidget(table)
-        sub_layout = QtGui.QHBoxLayout()
+        sub_layout = QtWidgets.QHBoxLayout()
         layout.addLayout(sub_layout)
-        apply_button = QtGui.QPushButton()
-        reset_button = QtGui.QPushButton()
-        run_button = QtGui.QPushButton()
-        cancel_button = QtGui.QPushButton()
+        apply_button = QtWidgets.QPushButton()
+        reset_button = QtWidgets.QPushButton()
+        run_button = QtWidgets.QPushButton()
+        cancel_button = QtWidgets.QPushButton()
         apply_button.setText('Apply')
         reset_button.setText('Reset')
         run_button.setText('Run')
@@ -1128,8 +1128,8 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
             self.hide_view.emit(False)
 
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
-    def reload_slice(self, name, arr, array_name, index, orientation):
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, name, array_name, arr, index, orientation):
         if orientation != 0 or array_name != 'dose' or name != self.current_simulation:
             return
         if self.organ_array is None:
@@ -1153,12 +1153,12 @@ class OrganDoseModel(QtCore.QAbstractTableModel):
             self.request_array_slice.emit(self.current_simulation, 'dose', self.dose_z_lenght[0], 0)
 
 
-class OrganDoseView(QtGui.QTableView):
+class OrganDoseView(QtWidgets.QTableView):
     def __init__(self, model, parent=None):
         super().__init__(parent)
         self.setModel(model)
         self.model().hide_view.connect(self.setHidden)
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setResizeMode(QtWidgets.QHeaderView.Stretch)
 #        self.horizontalHeader().setVisible(True)
         self.setSortingEnabled(True)
         self.setDragEnabled(True)
@@ -1192,7 +1192,7 @@ class OrganDoseView(QtGui.QTableView):
             mime=QtCore.QMimeData()
             mime.setHtml(html)
             mime.setText(txt)
-            QtGui.qApp.clipboard().setMimeData(mime)
+            QtWidgets.qApp.clipboard().setMimeData(mime)
 
 
     def keyPressEvent(self, event):

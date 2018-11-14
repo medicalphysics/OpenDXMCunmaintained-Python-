@@ -6,7 +6,7 @@ Created on Mon Jul 27 11:42:37 2015
 """
 import sys
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from opendxmc.app.view import ViewController, RunnerView
 from opendxmc.app.model import DatabaseInterface, ListView, ListModel, RunManager, Importer, ImportScalingEdit, PropertiesEditWidget, OrganDoseModel, OrganDoseView
 import opendxmc
@@ -32,7 +32,7 @@ class LogHandler(QtCore.QObject, logging.Handler):
         self.message.emit(self.format(log_record) + os.linesep)
 
 
-class LogWidget(QtGui.QTextEdit):
+class LogWidget(QtWidgets.QTextEdit):
     closed = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent=None):
@@ -50,11 +50,11 @@ class LogWidget(QtGui.QTextEdit):
         self.ensureCursorVisible()
 
 
-class SelectDatabaseWidget(QtGui.QWidget):
+class SelectDatabaseWidget(QtWidgets.QWidget):
     set_database_path = QtCore.pyqtSignal(QtCore.QUrl)
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setLayout(QtGui.QHBoxLayout())
+        self.setLayout(QtWidgets.QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.setContentsMargins(0, 0, 0, 0)
   
@@ -68,17 +68,17 @@ class SelectDatabaseWidget(QtGui.QWidget):
             self.path = QtCore.QUrl.fromLocalFile(os.path.join(os.path.dirname(sys.argv[0]), 'database.h5'))
             settings.setValue('database/path', self.path.toLocalFile())
         
-        self.applybutton = QtGui.QToolButton()
+        self.applybutton = QtWidgets.QToolButton()
         self.applybutton.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
         self.applybutton.setText('Apply')
         self.applybutton.setContentsMargins(0, 0, 0, 0)
         
-        self.txtedit = QtGui.QLineEdit()
+        self.txtedit = QtWidgets.QLineEdit()
         self.txtedit.setToolTip(help_msg)
         self.txtedit.setContentsMargins(0, 0, 0, 0)
         self.txtedit.setText(self.path.toLocalFile())
-        completer = QtGui.QCompleter(self)
-        self.model = QtGui.QFileSystemModel(completer)
+        completer = QtWidgets.QCompleter(self)
+        self.model = QtWidgets.QFileSystemModel(completer)
         self.model.setRootPath(os.path.dirname(self.path.toLocalFile()))
         completer.setModel(self.model)
         self.txtedit.setCompleter(completer)
@@ -89,7 +89,7 @@ class SelectDatabaseWidget(QtGui.QWidget):
         self.applybutton.clicked.connect(self.apply)    
         self.applybutton.setToolTip(help_msg)
 #        self.setMaximumHeight(max([self.txtedit.minimumHeight(), self.applybutton.minimumHeight()]))
-        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
     
     @QtCore.pyqtSlot()    
     def apply(self):
@@ -110,14 +110,14 @@ class SelectDatabaseWidget(QtGui.QWidget):
         self.applybutton.setDisabled(val)
     
    
-class StatusBarButton(QtGui.QPushButton):
+class StatusBarButton(QtWidgets.QPushButton):
     def __init__(self, *args):
         super().__init__(*args)
         self.setFlat(True)
         self.setCheckable(True)
 
 
-class BusyWidget(QtGui.QWidget):
+class BusyWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, tooltip=''):
         super().__init__(parent)
         self.timer = QtCore.QTimer()
@@ -126,15 +126,15 @@ class BusyWidget(QtGui.QWidget):
         self.progress = 0
         self.pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.white), 50.,
                               cap=QtCore.Qt.RoundCap)
-        self.setLayout(QtGui.QHBoxLayout())
-        label = QtGui.QLabel('!')
+        self.setLayout(QtWidgets.QHBoxLayout())
+        label = QtWidgets.QLabel('!')
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setToolTip(tooltip)
         self.setToolTip(tooltip)
         self.layout().addWidget(label)
         self.layout().setContentsMargins(0, 0, 0, 0)
 
-        self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, 'OpenDXMC'))
+        self.setMinimumSize(QtWidgets.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, 'OpenDXMC'))
 
         self.setVisible(False)
 
@@ -144,7 +144,7 @@ class BusyWidget(QtGui.QWidget):
 
     @QtCore.pyqtSlot(bool)
     def busy(self, start):
-        self.setMinimumSize(QtGui.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, '!!!')*2)
+        self.setMinimumSize(QtWidgets.qApp.fontMetrics().size(QtCore.Qt.TextSingleLine, '!!!')*2)
         if start and not self.isVisible():
             self.timer.start(50)
             self.show()
@@ -175,7 +175,7 @@ class BusyWidget(QtGui.QWidget):
         p.drawArc(rect, self.progress + 2880, 960)
 
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -191,7 +191,7 @@ class MainWindow(QtGui.QMainWindow):
         mc_progressbar = RunnerView()
 
         # statusbar
-        status_bar = QtGui.QStatusBar()
+        status_bar = QtWidgets.QStatusBar()
         statusbar_log_button = StatusBarButton('Log', None)
         status_bar.addPermanentWidget(importer_busywidget)
         status_bar.addPermanentWidget(importer_phantoms_busywidget)
@@ -210,11 +210,11 @@ class MainWindow(QtGui.QMainWindow):
         logger.addHandler(self.log_handler)
 
         # central widget setup
-        central_widget = QtGui.QWidget()
+        central_widget = QtWidgets.QWidget()
         central_widget.setContentsMargins(0, 0, 0, 0)
         self.setContentsMargins(0, 0, 0, 0)
-        central_layout = QtGui.QHBoxLayout()
-        central_splitter = QtGui.QSplitter(central_widget)
+        central_layout = QtWidgets.QHBoxLayout()
+        central_splitter = QtWidgets.QSplitter(central_widget)
         central_layout.addWidget(central_splitter)
         central_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -266,9 +266,9 @@ class MainWindow(QtGui.QMainWindow):
 
         # Widgets
 
-        list_view_collection_widget = QtGui.QWidget()
+        list_view_collection_widget = QtWidgets.QWidget()
         list_view_collection_widget.setContentsMargins(0, 0, 0, 0)
-        list_view_collection_widget.setLayout(QtGui.QVBoxLayout())
+        list_view_collection_widget.setLayout(QtWidgets.QVBoxLayout())
         list_view_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
         list_view_collection_widget.layout().addWidget(import_scaling_widget, 1)
         list_view_collection_widget.layout().addWidget(database_selector_widget, 1)
@@ -276,9 +276,9 @@ class MainWindow(QtGui.QMainWindow):
         list_view_collection_widget.layout().addWidget(material_list_view, 100)
         central_splitter.addWidget(list_view_collection_widget)
 
-        properties_collection_widget = QtGui.QWidget()
+        properties_collection_widget = QtWidgets.QWidget()
         properties_collection_widget.setContentsMargins(0, 0, 0, 0)
-        properties_collection_widget.setLayout(QtGui.QVBoxLayout())
+        properties_collection_widget.setLayout(QtWidgets.QVBoxLayout())
         properties_collection_widget.layout().setContentsMargins(0, 0, 0, 0)
         properties_collection_widget.layout().addWidget(import_scaling_widget, 1)
         

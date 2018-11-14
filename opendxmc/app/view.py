@@ -6,7 +6,7 @@ Created on Thu Jul 30 10:38:15 2015
 """
 
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import os
 import pyqtgraph
 import pyqtgraph.opengl as gl
@@ -30,7 +30,7 @@ logger = logging.getLogger('OpenDXMC')
 # Hazen 07/14
 #
 
-class QRangeSlider(QtGui.QWidget):
+class QRangeSlider(QtWidgets.QWidget):
     doubleClick = QtCore.pyqtSignal(bool)
     rangeChanged = QtCore.pyqtSignal(float, float)
 
@@ -296,7 +296,7 @@ class QVRangeSlider(QRangeSlider):
         return self.height()
 
 
-class SceneSelectGroup(QtGui.QActionGroup):
+class SceneSelectGroup(QtWidgets.QActionGroup):
     scene_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -321,37 +321,37 @@ class SceneSelectGroup(QtGui.QActionGroup):
                 action.setChecked()
                 return
 
-class VolumeViewManager(QtGui.QWidget):
+class VolumeViewManager(QtWidgets.QWidget):
     def __init__(self, volume_scenes, parent=None):
         super().__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
-        main_layout = QtGui.QVBoxLayout()
+        main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setAlignment(QtCore.Qt.AlignTop)
 
-        menu_layout = QtGui.QHBoxLayout()
+        menu_layout = QtWidgets.QHBoxLayout()
         menu_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(menu_layout)
 
-        enable_vrt_button = QtGui.QPushButton('Enable VRTs')
+        enable_vrt_button = QtWidgets.QPushButton('Enable VRTs')
         enable_vrt_button.setCheckable(True)
         enable_vrt_button.setFlat(True)
         enable_vrt_button.setToolTip('Enable VRTs if your graphics card is up for it')
         enable_vrt_button.setStatusTip('Enable VRTs if your graphics card is up for it')
         menu_layout.addWidget(enable_vrt_button)
 
-        splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         main_layout.addWidget(splitter)
 
         button_icon = QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'copy_icon.png'))
 
         for name, wid3d in volume_scenes.items():
             enable_vrt_button.toggled.connect(wid3d.set_showing)
-            wid = QtGui.QWidget()
+            wid = QtWidgets.QWidget()
             wid.setVisible(False)
             wid3d.is_showing.connect(wid.setVisible)
 
-            v_lay = QtGui.QHBoxLayout()
+            v_lay = QtWidgets.QHBoxLayout()
             v_lay.setAlignment(QtCore.Qt.AlignRight)
             v_lay.setContentsMargins(0, 0, 0, 0)
             v_lay.addWidget(wid3d)
@@ -364,10 +364,10 @@ class VolumeViewManager(QtGui.QWidget):
             slider.setMinimumWidth(20)
             slider.setMaximumWidth(20)
             slider.rangeChanged.connect(wid3d.set_custom_data_range)
-            l_lay = QtGui.QVBoxLayout()
+            l_lay = QtWidgets.QVBoxLayout()
             l_lay.addWidget(slider)
 
-            copy_button = QtGui.QPushButton()
+            copy_button = QtWidgets.QPushButton()
             copy_button.setFlat(True)
             copy_button.setToolTip('Copy VRT image to clipboard')
             copy_button.setIcon(button_icon)
@@ -498,14 +498,14 @@ class ViewController(QtCore.QObject):
 
     def view_widget(self):
 
-#        wid = QtGui.QSplitter(QtCore.Qt.Vertical)
-        wid2 = QtGui.QWidget()
-        main_layout = QtGui.QVBoxLayout()
+#        wid = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        wid2 = QtWidgets.QWidget()
+        main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
-        view_layout = QtGui.QVBoxLayout()
+        view_layout = QtWidgets.QVBoxLayout()
         view_layout.setContentsMargins(0, 0, 0, 0)
 
-        menu_widget = QtGui.QMenuBar(wid2)
+        menu_widget = QtWidgets.QMenuBar(wid2)
         menu_widget.setContentsMargins(0, 0, 0, 0)
 
         orientation_action = QtGui.QAction('Orientation', menu_widget)
@@ -538,7 +538,7 @@ class ViewController(QtCore.QObject):
 
 
     def make_material_plot_widget(self, material):
-        mw = QtGui.QMainWindow()
+        mw = QtWidgets.QMainWindow()
         mw.setWindowTitle(material.name)
 
         pw = pyqtgraph.PlotWidget(name=material.name, title=material.name, background='w')
@@ -567,7 +567,7 @@ class ViewController(QtCore.QObject):
         self.__plot = win
 
 
-class Scene(QtGui.QGraphicsScene):
+class Scene(QtWidgets.QGraphicsScene):
     update_index = QtCore.pyqtSignal(int)
     request_array = QtCore.pyqtSignal(str, str)
     def __init__(self, parent=None):
@@ -594,8 +594,8 @@ class Scene(QtGui.QGraphicsScene):
 
 
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
-    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, simulation_name, array_name, arr, index, orientation):
         pass
 
     def set_view_orientation(self, orientation, index):
@@ -720,10 +720,10 @@ def qImageToArray(img, copy=False, transpose=True):
     else:
         return arr
 
-class NoDataItem(QtGui.QGraphicsItem):
+class NoDataItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.fontMetrics = QtGui.qApp.fontMetrics()
+        self.fontMetrics = QtWidgets.qApp.fontMetrics()
         self.msg = "Sorry, no data here yet.\nRun a simulation to compute."
         self.rect = QtCore.QRectF(self.fontMetrics.boundingRect(self.msg))
         self.rect.setHeight(self.rect.height()*2.5)
@@ -740,7 +740,7 @@ class NoDataItem(QtGui.QGraphicsItem):
 
 
 
-class BlendImageItem(QtGui.QGraphicsItem):
+class BlendImageItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None, overlay_adjust_max_only=True):
         super().__init__(parent)
 
@@ -868,10 +868,10 @@ class BlendImageItem(QtGui.QGraphicsItem):
         super().setVisible(visible)
 
 
-class BitImageItem(QtGui.QGraphicsItem):
+class BitImageItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
         self.image = np.zeros((8, 8), dtype=np.uint8)
         self.prepareGeometryChange()
         self.qimage = None
@@ -911,10 +911,10 @@ class BitImageItem(QtGui.QGraphicsItem):
     def paint(self, painter, style, widget=None):
         painter.drawImage(QtCore.QPointF(0, 0), self.qImage())
 
-class ImageItem(QtGui.QGraphicsItem):
+class ImageItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
         self.image = np.zeros((8, 8))
         self.level = (0, 700)
         self.qimage = None
@@ -971,7 +971,7 @@ class ImageItem(QtGui.QGraphicsItem):
                 y=1
             self.setLevels((x, y))
 
-class AecItem(QtGui.QGraphicsItem):
+class AecItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.aec = np.zeros((5, 2))
@@ -1058,13 +1058,13 @@ class AecItem(QtGui.QGraphicsItem):
         painter.setRenderHint(painter.Antialiasing, True)
         painter.drawPath(self.aec_path())
 
-class ColorBarItem(QtGui.QGraphicsItem):
+class ColorBarItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self._array = np.outer(np.linspace(0, 1, 128)[::-1], np.ones(20))
         self.setFlag(self.ItemIgnoresTransformations, True)
-        self.fontMetrics = QtGui.qApp.fontMetrics()
+        self.fontMetrics = QtWidgets.qApp.fontMetrics()
         self.box_size = self.fontMetrics.boundingRect('A').height()
 
         self._qim = None
@@ -1102,7 +1102,7 @@ class ColorBarItem(QtGui.QGraphicsItem):
             painter.drawText(im_rect.topLeft(), self._text[0])
             painter.drawText(self.boundingRect().bottomLeft(), self._text[1])
 
-class PositionBarItem(QtGui.QGraphicsItem):
+class PositionBarItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None, callback=None):
         super().__init__(parent)
         self.axes = np.eye(3)
@@ -1240,8 +1240,8 @@ class PlanningScene(Scene):
             self.aec_item.setPos(self.image_item.mapRectToScene(rect).bottomLeft())
             self.setSceneRect(self.image_item.mapRectToScene(rect).united(self.aec_item.sceneBoundingRect()))
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
-    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, simulation_name, array_name, arr, index, orientation):
         if simulation_name != self.name:
             return
 
@@ -1339,10 +1339,10 @@ class PlanningScene(Scene):
 #        pass
 
 
-class MaterialMapItem(QtGui.QGraphicsItem):
+class MaterialMapItem(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.fontMetrics = QtGui.qApp.fontMetrics()
+        self.fontMetrics = QtWidgets.qApp.fontMetrics()
         self.box_size = self.fontMetrics.boundingRect('A').height()
         self.rect = QtCore.QRectF(0, 0, self.box_size, self.box_size)
         self.map = []
@@ -1443,8 +1443,8 @@ class MaterialScene(Scene):
         self.map_item.setPos(self.image_item.mapRectToScene(rect).topRight())
         self.setSceneRect(self.image_item.mapRectToScene(rect).united(self.map_item.sceneBoundingRect()))
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
-    def reload_slice(self, simulation_name, arr, array_name, index, orientation):
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, simulation_name, array_name, arr, index, orientation):
         if simulation_name != self.name:
             return
         if array_name != 'material':
@@ -1556,8 +1556,8 @@ class DoseScene(Scene):
             self.setSceneRect(self.nodata_item.boundingRect())
 
 
-    @QtCore.pyqtSlot(str, np.ndarray, str, int, int)
-    def reload_slice(self, name, arr, array_name, index, orientation):
+    @QtCore.pyqtSlot(str, str, np.ndarray, int, int)
+    def reload_slice(self, name, array_name, arr, index, orientation):
         if name != self.name:
             return
         if array_name in self.array_names:
@@ -1582,7 +1582,7 @@ class DoseScene(Scene):
         self.updateSceneTransform()
 
 
-class RunningScene(QtGui.QGraphicsScene):
+class RunningScene(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.image_item = ImageItem()
@@ -1611,7 +1611,7 @@ class RunningScene(QtGui.QGraphicsScene):
         self.setSceneRect(self.image_item.sceneBoundingRect())
 
 
-class RunnerView(QtGui.QGraphicsView):
+class RunnerView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setContentsMargins(0, 0, 0, 0)
@@ -1644,7 +1644,7 @@ class RunnerView(QtGui.QGraphicsView):
         else:
             self.hide()
 
-class View(QtGui.QGraphicsView):
+class View(QtWidgets.QGraphicsView):
     request_array = QtCore.pyqtSignal(str, str)
 
     def __init__(self, parent=None):
@@ -1675,7 +1675,7 @@ class View(QtGui.QGraphicsView):
     def mouseMoveEvent(self, e):
         if e.buttons() == QtCore.Qt.LeftButton:
             dist = self.mouse_down_pos - e.globalPos()
-            if dist.manhattanLength() > QtGui.QApplication.startDragDistance():
+            if dist.manhattanLength() > QtWidgets.qApplication.startDragDistance():
                 e.accept()
                 drag = QtGui.QDrag(self)
                 # creating mimedata
@@ -1718,7 +1718,7 @@ class View(QtGui.QGraphicsView):
         rect = self.toQImage(square=False).rect()
         height, width = rect.height(), rect.width()
 
-        filename = QtGui.QFileDialog.getSaveFileName(self,
+        filename = QtWidgets.QFileDialog.getSaveFileName(self,
                                                      "Save cineloop",
                                                      "/cine.mp4",
                                                      "Movie (*.mp4)")
@@ -1741,12 +1741,12 @@ class View(QtGui.QGraphicsView):
                 arr_slice = np.ascontiguousarray(np.squeeze(array[:,:,index]))
 
             self.scene().reload_slice(self.cine_film_data['name'],
-                                      arr_slice,
                                       array_name,
+                                      arr_slice,
                                       index,
                                       self.cine_film_data['view_orientation']
                                       )
-            QtGui.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
+            QtWidgets.qApp.processEvents(flags=QtCore.QEventLoop.ExcludeUserInputEvents)
             qim = self.toQImage(square=False)#.convertToFormat(QtGui.QImage.Format_RGB888)
 
             arr = qImageToArray(qim, transpose=False)
@@ -1910,7 +1910,7 @@ class View3D(gl.GLViewWidget):
         result = QtGui.QImage(pixels.data, w, h, QtGui.QImage.Format_ARGB32_Premultiplied).convertToFormat(QtGui.QImage.Format_RGB32)
         result.np_data = pixels
 
-        QtGui.qApp.clipboard().setImage(result)
+        QtWidgets.qApp.clipboard().setImage(result)
 
     @QtCore.pyqtSlot(float, float)
     def set_custom_data_range(self, minimum, maximum):

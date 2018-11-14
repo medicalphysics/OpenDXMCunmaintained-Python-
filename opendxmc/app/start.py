@@ -4,14 +4,14 @@ Created on Mon Mar 28 22:27:17 2016
 
 @author: ander
 """
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import sys
 
 def main(args, version=None):
 
-    app = QtGui.QApplication(args)
+    app = QtWidgets.QApplication(args)
     splash_pix = QtGui.QPixmap('splash_loading.png')
-    splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+    splash = QtWidgets.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
     splash.setMask(splash_pix.mask())
     splash.show()
     app.processEvents()
@@ -35,7 +35,7 @@ def start(version=None):
         while main(sys.argv, version=version) == 1:
             continue
     except MemoryError:
-        msg = QtGui.QMessageBox()
+        msg = QtWidgets.QMessageBox()
         msg.setText("Ouch, OpenDXMC ran out of memory.")
         msg.setIcon(msg.Critical)
         msg.exec_()

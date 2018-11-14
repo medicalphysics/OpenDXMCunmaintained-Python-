@@ -72,6 +72,8 @@ def ct_source_space_single(simulation, exposure_modulation=None, tube='A', weigh
     kwargs['tube_start_angle'] = simulation.get('tube_start_angle_'+tube)
     kwargs['weight'] = weight
 
+    kwargs['xcare'] = simulation.get('xcare')
+
     if simulation.get('is_spiral'):
         kwargs['pitch'] = simulation.get('pitch')
         phase_func = ct_spiral
@@ -106,7 +108,7 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
               rotation_plane_cosines=None,
               exposure_modulation=None, start_at_exposure_no=0,
               bowtie_radius=1, bowtie_distance=0,
-              weight=1.0):
+              weight=1.0, xcare=False):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -142,6 +144,8 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
             Starting at this exposure number, used for resuming a simulation
         weight: float
             weight of phasespace 
+        xcare: bool
+            Use XCare
     OUTPUT:
         Iterator returning ndarrays of shape (8, batch_size),
         one row is equal to photon (start_x, start_y, star_z, direction_x,
@@ -218,7 +222,16 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
     n_bowtie = np.array(bowtie_weights.shape, dtype='int')
     n_specter = np.array(specter_energy.shape, dtype='int')
 
-
+    if xcare:
+        xcare_ang = np.deg2rad(np.array([-60, -40, 40, 60], dtype='float64')+90.0)
+        xcare_weight = np.array([1.25, 0.25, 0.25, 1.25], dtype='float64')
+        xcare_mod = scipy.interpolate.interp1d(xcare_ang,
+                                               xcare_weight,
+                                               copy=True, bounds_error=False,
+                                               fill_value=(xcare_weight[0], xcare_weight[-1]), kind='linear')
+    else:
+        xcare_mod = lambda ang: 1.0
+        
     M = world_image_matrix(rotation_plane_cosines)
     rotation_center_image = np.dot(M, rotation_center[[1, 0, 2]])
     for i in range(start_at_exposure_no, e):
@@ -227,10 +240,12 @@ def ct_spiral(scan_fov, sdd, total_collimation, pitch=1,
         position = np.dot(R, np.array([-sdd/2., 0, t[i]], dtype='float64')) + rotation_center_image
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
         scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))
+        exposure_weight = np.array([mod_z(t[i])], dtype='float64')
+        exposure_weight *= xcare_mod(ang[i])
         ret = (position, direction, scan_axis,
                scan_fan_angle,
                rot_fan_angle,
-               np.array([mod_z(t[i])], dtype='float64'),
+               exposure_weight,
                specter_cpd, specter_energy, n_specter,
                bowtie_weights, bowtie_angle, n_bowtie)
 #        ret = (position, direction, scan_axis,
@@ -253,7 +268,7 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
               rotation_plane_cosines = None,
               bowtie_radius=1, bowtie_distance=0,
               exposure_modulation=None, start_at_exposure_no=0,
-              weight=1.0):
+              weight=1.0, xcare=False):
     """Generate CT phase space, return a iterator.
 
     INPUT:
@@ -351,6 +366,15 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
     n_bowtie = np.array(bowtie_weights.shape, dtype='int')
     n_specter = np.array(specter_energy.shape, dtype='int')
 
+    if xcare:
+        xcare_ang = np.deg2rad(np.array([-60, -40, 40, 60], dtype='float64') +90.0)
+        xcare_weight = np.array([1.25, 0.25, 0.25, 1.25], dtype='float64')
+        xcare_mod = scipy.interpolate.interp1d(xcare_ang,
+                                               xcare_weight,
+                                               copy=True, bounds_error=False,
+                                               fill_value=(xcare_weight[0], xcare_weight[-1]), kind='linear')
+    else:
+        xcare_mod = lambda ang: 1.0
 
     if exposure_modulation is None:
         mod_z = lambda x: weight
@@ -374,11 +398,13 @@ def ct_seq(scan_fov, sdd, total_collimation, step=1,
         position = np.dot(R, np.array([-sdd/2., 0, t[i]], dtype='float64')) + rotation_center_image
         direction = np.dot(R, np.array([1., 0, 0], dtype='float64'))
         scan_axis = np.dot(R, np.array([0, 0, 1], dtype='float64'))
-
+        
+        exposure_weight = np.array([mod_z(t[i])], dtype='float64')
+        exposure_weight *= xcare_mod(ang[i])
         ret = (position, direction, scan_axis,
                scan_fan_angle,
                rot_fan_angle,
-               np.array([mod_z(t[i])], dtype='float64'),
+               exposure_weight,
                specter_cpd, specter_energy, n_specter,
                bowtie_weights, bowtie_angle, n_bowtie)
 
