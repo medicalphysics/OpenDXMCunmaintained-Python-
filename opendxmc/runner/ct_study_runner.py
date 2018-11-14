@@ -610,7 +610,8 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                              energy_specter=en_specter_A,
                              bowtie_radius=simulation['bowtie_radius'],
                              bowtie_distance=simulation['bowtie_distance'],
-                             weight=wA/wS                
+                             weight=wA/wS,
+                             xcare=simulation['xcare']
                              )
         en_specter_B = tungsten_specter(simulation['kV_B'], 
                           angle_deg=simulation['anode_angle'],
@@ -624,7 +625,8 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                              energy_specter=en_specter_B,
                              bowtie_radius=simulation['bowtie_radius'],
                              bowtie_distance=simulation['bowtie_distance'],
-                             weight=wB/wS                
+                             weight=wB/wS,
+                             xcare=simulation['xcare']
                              )
         phase_space = itertools.chain(phase_space_A, phase_space_B)
         
@@ -641,8 +643,8 @@ def obtain_ctdiw_conversion_factor(simulation, pmma, air,
                              histories=simulation['histories']/2,
                              energy_specter=en_specter,
                              bowtie_radius=simulation['bowtie_radius'],
-                             bowtie_distance=simulation['bowtie_distance']
-                             )
+                             bowtie_distance=simulation['bowtie_distance'],
+                             xcare=simulation['xcare'])
 
     
                          

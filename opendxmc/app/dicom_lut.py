@@ -5,7 +5,7 @@ Created on Tue Aug  4 11:12:55 2015
 @author: erlean
 """
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 import logging
 logger = logging.getLogger('OpenDXMC')
 

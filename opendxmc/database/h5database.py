@@ -32,7 +32,7 @@ PROPETIES_DICT_TEMPLATE = {
     'detector_rows': [64, np.dtype(np.int), True, True, 'Detector rows', 0, 1],
     'collimation_width': [0.06 * 64,  np.dtype(np.double), True, True, 'Total collimation width [cm]', 0, 1],
     'al_filtration': [7., np.dtype(np.double), True, True, 'Filtration of primary beam [mmAl]', 0, 2],
-    'xcare': [False, np.dtype(np.bool), True, True, 'XCare [NOT IMPLEMENTED YET]', 0, 2],
+    'xcare': [False, np.dtype(np.bool), True, True, 'XCare [Only implemented for HFS pat. ori.]', 0, 3],
     'ctdi_air100': [0., np.dtype(np.double), True, True, 'CTDIair [mGy/100mAs]', 0, 4],
     'ctdi_vol100': [0., np.dtype(np.double), True, True, 'CTDIvol [mGy/100mAs/pitch]', 2, 4],
     'ctdi_w100': [0., np.dtype(np.double), True, True, 'CTDIw [mGy/100mAs]', 2, 4],
